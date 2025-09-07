@@ -19,50 +19,44 @@ export async function POST(req: Request) {
 
     const userBlock = `
 Date: ${date || "today"}
-Stakes: ${String(stakes)}
-Position: ${position}
-Hero Cards: ${cards}
+Stakes: ${String(stakes || "")}
+Position: ${position || ""}
+Hero Cards: ${cards || ""}
 Board/Street Info: ${board}
-Villain Action: ${villainAction}
+Villain Action: ${villainAction || ""}
 Additional Notes: ${notes}
-`;
+`.trim();
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-5",
+      // Use a model you already use successfully in /api/parse
+      model: "gpt-4o-mini",
       temperature: 0.2,
       messages: [
         {
           role: "system",
           content:
-            "You are a poker strategy assistant. Given a parsed hand, return: (1) concise GTO line with bet sizes; (2) clear exploit deviations by pool tendency; (3) 1–3 learning tags. Keep it practical and specific.",
+            "You are a poker strategy assistant. Return only JSON with: gto_strategy (string), exploit_deviation (string), learning_tag (array of 1–3 strings). Be concise and specific."
         },
         {
           role: "user",
-          content:
-            userBlock +
-            `
-Return JSON with EXACT keys: 
-{
-  "gto_strategy": "...",
-  "exploit_deviation": "...",
-  "learning_tag": ["Tag1", "Tag2"]
-}`,
-        },
+          content: userBlock
+        }
       ],
+      // force a valid JSON object back
+      response_format: { type: "json_object" }
     });
 
-    const text = completion?.choices?.[0]?.message?.content?.trim() || "";
-
-    let out = { gto_strategy: "", exploit_deviation: "", learning_tag: [] as string[] };
-    try {
-      out = JSON.parse(text);
-    } catch {
-      out.gto_strategy = text; // fallback if JSON parse fails
-    }
-
+    const text = completion?.choices?.[0]?.message?.content ?? "{}";
+    const out = JSON.parse(text); // will be { gto_strategy, exploit_deviation, learning_tag }
     return NextResponse.json(out);
-  } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: "Failed to analyze hand" }, { status: 500 });
+  } catch (err: any) {
+    // bubble up the real cause so the UI shows it
+    const msg =
+      err?.response?.data?.error?.message ||
+      err?.error?.message ||
+      err?.message ||
+      "Analyze failed";
+    console.error("[analyze-hand] error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
