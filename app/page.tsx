@@ -3,29 +3,54 @@ import { useState } from 'react';
 
 type Fields = {
   date?: string | null;
-  stakes?: string | null;               // text (e.g., "1/3" or "$2/$5")
+  stakes?: string | number | null;
   position?: string | null;
   cards?: string | null;
   villain_action?: string | null;
   gto_strategy?: string | null;
   exploit_deviation?: string | null;
-  learning_tag?: string[];
-  // optional extras (safe to keep)
-  board?: string | null;
-  notes?: string | null;
+  learning_tag?: string[] | null;
 };
 
 export default function Home() {
   const [input, setInput] = useState('');
   const [fields, setFields] = useState<Fields | null>(null);
-  const [saving, setSaving] = useState(false);
+
+  const [sending, setSending] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
+
+  const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
-  async function analyzeParsedHand(parsed: Fields) {
+  async function handleSend() {
+    setStatus(null);
     setAiError(null);
-    setAiLoading(true);
+    setSending(true);
+    try {
+      // 1) Parse
+      const r = await fetch('/api/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input }),
+      });
+      const parsed = (await r.json()) as Fields;
+      setFields(parsed);
+
+      // 2) Analyze to fill GTO / Exploit / Tags
+      if (parsed) {
+        await analyzeParsedHand(parsed);
+      }
+    } catch (e: any) {
+      setStatus(e?.message || 'Failed to parse');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function analyzeParsedHand(parsed: Fields) {
+    setAiBusy(true);
+    setAiError(null);
     try {
       const payload = {
         date: parsed.date ?? undefined,
@@ -33,10 +58,9 @@ export default function Home() {
         position: parsed.position ?? undefined,
         cards: parsed.cards ?? undefined,
         villainAction: parsed.villain_action ?? undefined,
-        board: parsed.board ?? '',
-        notes: parsed.notes ?? '',
+        board: '',
+        notes: '',
       };
-
       const r = await fetch('/api/analyze-hand', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -45,7 +69,7 @@ export default function Home() {
 
       if (!r.ok) {
         const err = await r.json().catch(() => ({}));
-        throw new Error(err?.error || `AI analyze failed (${r.status})`);
+        throw new Error(err?.error || `Analyze failed (${r.status})`);
       }
 
       const data = await r.json();
@@ -57,322 +81,212 @@ export default function Home() {
             : [];
 
       setFields(prev => ({
-        ...(prev ?? parsed ?? {}),
+        ...(prev ?? {}),
         gto_strategy: data.gto_strategy || '',
         exploit_deviation: data.exploit_deviation || '',
         learning_tag: tags,
       }));
     } catch (e: any) {
-      console.error(e);
-      setAiError(e.message || 'AI analysis error');
+      setAiError(e?.message || 'Failed to analyze hand');
     } finally {
-      setAiLoading(false);
+      setAiBusy(false);
     }
-  }
-
-  async function handleParse() {
-    setStatus(null);
-    setAiError(null);
-    const res = await fetch('/api/parse', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ input }),
-    });
-    const data: Fields = await res.json();
-    setFields(data);
-    if (data) analyzeParsedHand(data);
   }
 
   async function handleSave() {
     if (!fields) return;
-    setSaving(true);
+    setSaveLoading(true);
     setStatus(null);
     try {
-      const res = await fetch('/api/notion', {
+      const r = await fetch('/api/notion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fields }),
       });
-      const data = await res.json();
+      const data = await r.json();
       if (data.ok) setStatus(`Saved! Open in Notion: ${data.url}`);
-      else setStatus(data.error || 'Failed');
+      else setStatus(data.error || 'Failed to save to Notion');
     } catch (e: any) {
-      setStatus(e.message);
+      setStatus(e?.message || 'Save failed');
     } finally {
-      setSaving(false);
+      setSaveLoading(false);
     }
   }
 
+  function clearAll() {
+    setInput('');
+    setFields(null);
+    setStatus(null);
+    setAiError(null);
+  }
+
+  const tagChips = fields?.learning_tag?.filter(Boolean) ?? [];
+
   return (
-    <main className="wrap">
-      <div className="header">
-        <div className="title">Notion Poker Ingest</div>
-        <div className="breadcrumb">Paste → <b>Send</b> → Analyze → Save</div>
-      </div>
+    <main className="page">
+      <div className="container">
+        <header className="brand">
+          <h1>Notion Poker Ingest</h1>
+          <div className="crumbs">Paste <span>→</span> <b>Send</b> <span>→</span> Analyze <span>→</span> Save</div>
+        </header>
 
-      <div className="grid">
-        {/* Left card */}
-        <section className="card">
-          <div className="cardTitle">HAND PLAYED</div>
-          <div className="textareaWrap">
-            <textarea
-              className="textarea"
-              placeholder="Paste the hand history or describe the hand in plain English..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-            />
-          </div>
-
-          <div className="actions">
-            <button
-              className="btnPrimary"
-              onClick={handleParse}
-              disabled={!input.trim() || aiLoading}
-            >
-              {aiLoading ? 'Analyzing…' : 'Send'}
-            </button>
-            <button
-              className="btnGhost"
-              onClick={() => { setFields(null); setInput(''); setStatus(null); setAiError(null); }}
-            >
-              Clear
-            </button>
-          </div>
-
-          {status && <div className="meta">{status}</div>}
-          {aiError && <div className="error">{aiError}</div>}
-        </section>
-
-        {/* Right card */}
-        <section className="card">
-          {/* HEADER — show TAGS as title; fallback to date */}
-          <div className="rightHeader">
-            <div className="tagsRow">
-              {fields?.learning_tag?.length
-                ? fields.learning_tag!.map(t => (
-                    <span key={t} className="chipMain">{t}</span>
-                  ))
-                : <div className="bigTitle">{fields?.date || '—'}</div>
-              }
+        <section className="grid">
+          {/* LEFT PANEL */}
+          <div className="panel">
+            <div className="panel-title">HAND PLAYED</div>
+            <div className="editor">
+              <textarea
+                aria-label="Hand text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Paste the hand history or describe the hand in plain English..."
+              />
             </div>
-            <div className="rightMeta">
-              {[fields?.stakes || '—', fields?.cards || '—'].filter(Boolean).join(' • ')}
+            <div className="panel-actions">
+              <button className="btn btn-primary" onClick={handleSend} disabled={!input.trim() || sending}>
+                {sending ? 'Sending…' : 'Send'}
+              </button>
+              <button className="btn btn-ghost" onClick={clearAll}>Clear</button>
             </div>
+            {(status || aiError) && (
+              <div className={`status ${aiError ? 'is-error' : ''}`}>{aiError || status}</div>
+            )}
           </div>
 
-          {/* Properties */}
-          <PropertyRow name="Cards" value={fields?.cards ?? '—'} />
-          <PropertyRow name="Date" value={fields?.date ?? '—'} />
-          <PropertyRow name="Position" value={fields?.position ?? '—'} />
-          <PropertyRow name="Stakes" value={fields?.stakes ?? '—'} />
-          <PropertyRow name="Villain Action" value={fields?.villain_action ?? '—'} />
-
-          <PropertyRow
-            name="GTO Strategy"
-            value={fields?.gto_strategy ?? ''}
-            long
-          />
-          <PropertyRow
-            name="Exploit Deviation"
-            value={fields?.exploit_deviation ?? ''}
-            long
-          />
-
-          <div className="row">
-            <span className="label">Learning Tag</span>
-            <div className="value">
-              {(fields?.learning_tag ?? []).length === 0 ? (
-                <span className="muted">—</span>
-              ) : (
-                (fields!.learning_tag ?? []).map(t => (
-                  <span key={t} className="chip">{t}</span>
-                ))
-              )}
+          {/* RIGHT PANEL */}
+          <div className="card">
+            <div className="card-head">
+              <div className="chips">
+                {tagChips.length > 0
+                  ? tagChips.map((t) => <span key={t} className="chip">{t}</span>)
+                  : <span className="chip chip-muted">Tags</span>}
+              </div>
+              <div className="meta">
+                {fields?.stakes ? <span>{String(fields.stakes)}</span> : <span>—</span>}
+                <span>•</span>
+                {fields?.cards ? <span>{fields.cards}</span> : <span>—</span>}
+              </div>
             </div>
-          </div>
 
-          <div className="footerActions">
-            <button
-              className="btnGhost"
-              onClick={handleParse}
-              disabled={!input.trim() || aiLoading}
-            >
-              Analyze Again
-            </button>
-            <button
-              className="btnPrimary"
-              onClick={handleSave}
-              disabled={saving || !fields}
-            >
-              {saving ? 'Saving…' : 'Confirm & Save to Notion'}
-            </button>
+            <KV label="Cards">{fields?.cards || '—'}</KV>
+            <KV label="Position">{fields?.position || '—'}</KV>
+            <KV label="Stakes">{fields?.stakes ? String(fields.stakes) : '—'}</KV>
+            <KV label="Villain Action">{fields?.villain_action || '—'}</KV>
+
+            <KV label="GTO Strategy">
+              <div className="valueBox">{fields?.gto_strategy || (aiBusy ? 'Analyzing…' : '—')}</div>
+            </KV>
+
+            <KV label="Exploit Deviation">
+              <div className="valueBox">{fields?.exploit_deviation || (aiBusy ? 'Analyzing…' : '—')}</div>
+            </KV>
+
+            <div className="card-actions">
+              <button className="btn btn-ghost" onClick={() => fields && analyzeParsedHand(fields)} disabled={!fields || aiBusy}>
+                {aiBusy ? 'Analyzing…' : 'Analyze Again'}
+              </button>
+              <button className="btn btn-strong" onClick={handleSave} disabled={!fields || saveLoading}>
+                {saveLoading ? 'Saving…' : 'Confirm & Save to Notion'}
+              </button>
+            </div>
           </div>
         </section>
       </div>
 
-      {/* Styles */}
-      <style jsx>{`
-        .wrap {
-          min-height: 100vh;
-          background: #f7f8fb;
-          padding: 28px 20px 60px;
-          color: #0f172a;
-          font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Noto Sans;
+      {/* Styles — all here so the format stays consistent */}
+      <style jsx global>{`
+        :root{
+          --bg:#0b1020;
+          --card:#ffffff;
+          --ink:#0f172a;
+          --muted:#6b7280;
+          --ring:rgba(15,23,42,.08);
+          --pill:#eef2ff;
+          --pill-ink:#3730a3;
+          --chip:#eef6ff;
+          --chip-ink:#0b5fd7;
+          --primary:#2d55ff;
+          --primary-ink:#ffffff;
+          --ghost:#e5e7eb;
+          --ghost-ink:#111827;
+          --value-bg:#f8fafc;
+          --value-ring:#e5e7eb;
+          --error:#c1121f;
         }
-        .header { max-width: 1200px; margin: 0 auto 16px auto; }
-        .title { font-size: 28px; font-weight: 800; }
-        .breadcrumb { color: #6b7280; margin-top: 4px; }
-
-        .grid {
-          max-width: 1200px;
-          margin: 0 auto;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 24px;
+        *{box-sizing:border-box}
+        body{margin:0;background:#f6f7fb;color:var(--ink);font:16px/1.45 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+        .page{padding:32px 20px}
+        .container{max-width:1200px;margin:0 auto}
+        .brand h1{margin:0 0 6px 0;font-size:28px;font-weight:800;letter-spacing:.2px}
+        .crumbs{color:var(--muted);margin-bottom:18px}
+        .crumbs span{margin:0 .35rem;color:#9ca3af}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+        @media (max-width:1000px){.grid{grid-template-columns:1fr;}}
+        .panel{
+          background:var(--card);
+          border-radius:18px;
+          box-shadow:0 10px 24px rgba(2,6,23,.04), 0 1px 0 var(--ring);
+          padding:18px;
         }
-        @media (max-width: 1100px) {
-          .grid { grid-template-columns: 1fr; }
+        .panel-title{font-size:13px;font-weight:800;letter-spacing:.08em;color:#374151;margin:6px 6px 10px}
+        .editor{padding:8px 10px;border-radius:14px;border:1px solid var(--ring);background:#fff;overflow:hidden}
+        .editor textarea{
+          width:100%;height:320px;border:0;outline:0;resize:vertical;
+          font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+          font-size:16px;line-height:1.55;color:#0b1220;background:#fff;
         }
-
-        .card {
-          background: #fff;
-          border-radius: 16px;
-          box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
-          padding: 18px 18px 16px;
+        .panel-actions{display:flex;gap:12px;align-items:center;margin:12px 4px 0}
+        .card{
+          background:var(--card);
+          border-radius:18px;
+          box-shadow:0 10px 24px rgba(2,6,23,.04), 0 1px 0 var(--ring);
+          padding:18px;
         }
-        .cardTitle {
-          font-weight: 700;
-          letter-spacing: .02em;
-          color: #0f1c55;
-          margin: 6px 6px 12px;
+        .card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+        .chips{display:flex;gap:8px;flex-wrap:wrap}
+        .chip{
+          background:var(--chip);color:var(--chip-ink);
+          padding:.35rem .6rem;border-radius:999px;font-size:13px;font-weight:700;
+          box-shadow:inset 0 0 0 1px rgba(11,95,215,.18);
         }
-        .textareaWrap {
-          border: 1px solid #e5e7eb;
-          border-radius: 12px;
-          overflow: hidden;
-          background: #fcfdff;
+        .chip-muted{background:#f3f4f6;color:#6b7280;box-shadow:inset 0 0 0 1px #e5e7eb}
+        .meta{display:flex;gap:8px;color:var(--muted);font-weight:600}
+        .kv{padding:10px 12px;border-radius:14px;border:1px solid var(--ring);background:#fff;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;margin:8px 0}
+        .pill{
+          background:var(--pill);color:var(--pill-ink);
+          padding:.25rem .6rem;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.04em;white-space:nowrap;
+          box-shadow:inset 0 0 0 1px rgba(55,48,163,.2);
         }
-        .textarea {
-          width: 100%;
-          min-height: 270px;
-          resize: vertical;
-          padding: 14px;
-          line-height: 1.55;
-          font-size: 16px;
-          border: none;
-          outline: none;
-          background: transparent;
-          color: #0f172a;
+        .kv .val{font-weight:600;color:#0f172a}
+        .valueBox{
+          background:var(--value-bg);
+          border-radius:12px;
+          padding:10px 12px;
+          border:1px solid var(--value-ring);
+          white-space:pre-line;
+          line-height:1.5;
+          color:#0f172a;
         }
-
-        .actions {
-          display: flex;
-          gap: 12px;
-          align-items: center;
-          padding: 14px 4px 2px;
+        .card-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:12px}
+        .btn{
+          appearance:none;border:0;border-radius:999px;padding:.65rem 1rem;font-weight:800;letter-spacing:.02em;cursor:pointer;transition:transform .02s ease;
         }
-        .btnPrimary {
-          background: #2643ff;
-          color: #fff;
-          padding: 10px 18px;
-          border-radius: 12px;
-          border: none;
-          box-shadow: 0 6px 18px rgba(38, 67, 255, .28);
-          font-weight: 700;
-          cursor: pointer;
-        }
-        .btnPrimary:disabled {
-          opacity: .6;
-          cursor: not-allowed;
-          box-shadow: none;
-        }
-        .btnGhost {
-          background: #fff;
-          color: #0f172a;
-          padding: 10px 16px;
-          border-radius: 12px;
-          border: 1px solid #e5e7eb;
-          font-weight: 700;
-          cursor: pointer;
-        }
-
-        .meta { margin: 10px 6px 0; color: #374151; font-size: 14px; }
-        .error { margin: 10px 6px 0; color: #b91c1c; font-size: 14px; }
-
-        .rightHeader {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          padding: 6px 6px 14px;
-        }
-        .tagsRow { display: flex; gap: 8px; flex-wrap: wrap; }
-        .chipMain {
-          background: #e9eeff;
-          color: #2947f0;
-          border-radius: 999px;
-          font-weight: 700;
-          padding: 6px 12px;
-          font-size: 14px;
-        }
-        .bigTitle { font-size: 26px; font-weight: 800; }
-        .rightMeta { color: #6b7280; margin-left: 10px; white-space: nowrap; }
-
-        .row {
-          display: grid;
-          grid-template-columns: 160px 1fr;
-          gap: 14px;
-          align-items: flex-start;
-          padding: 10px 6px;
-          border-top: 1px dashed #edf0f6;
-        }
-        .label {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          height: 28px;
-          padding: 0 12px;
-          border-radius: 999px;
-          background: #eef2ff;
-          color: #1e2aa8;
-          font-weight: 700;
-          font-size: 13px;
-          white-space: nowrap;
-        }
-        .value { color: #111827; line-height: 1.55; }
-        .muted { color: #9ca3af; }
-
-        .long { white-space: pre-wrap; }
-
-        .chip {
-          display: inline-flex;
-          align-items: center;
-          height: 28px;
-          padding: 0 12px;
-          border-radius: 999px;
-          background: #f1f5f9;
-          color: #0f172a;
-          margin: 0 8px 8px 0;
-          font-weight: 600;
-          font-size: 13px;
-        }
-
-        .footerActions {
-          display: flex;
-          justify-content: flex-end;
-          gap: 12px;
-          padding: 14px 6px 2px;
-        }
+        .btn:active{transform:translateY(1px)}
+        .btn-primary{background:var(--primary);color:var(--primary-ink);box-shadow:0 6px 14px rgba(45,85,255,.22)}
+        .btn-ghost{background:var(--ghost);color:var(--ghost-ink)}
+        .btn-strong{background:#0b5fd7;color:#fff;box-shadow:0 6px 14px rgba(11,95,215,.22)}
+        .status{margin-top:10px;color:#0b5fd7;font-weight:700}
+        .status.is-error{color:var(--error)}
       `}</style>
     </main>
   );
 }
 
-/** Property row with a pill label */
-function PropertyRow({ name, value, long = false }: { name: string; value: string; long?: boolean }) {
+function KV({ label, children }: { label: string; children: any }) {
   return (
-    <div className="row">
-      <span className="label">{name}</span>
-      <div className={`value ${long ? 'long' : ''}`}>{value || <span className="muted">—</span>}</div>
+    <div className="kv">
+      <span className="pill">{label}</span>
+      <div className="val">{children}</div>
     </div>
   );
 }
