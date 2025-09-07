@@ -20,24 +20,23 @@ export default function Home() {
   const [fields, setFields] = useState<Fields | null>(null);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);        // NEW: show AI progress
+  const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
-  // ---- (3) helper: call our /api/analyze-hand and fill GTO/Exploit/Tags ----
+  // Call /api/analyze-hand and fill GTO/Exploit/Tags
   async function analyzeParsedHand(parsed: Fields) {
     setAiError(null);
     setAiLoading(true);
     try {
-      // Map UI field names -> API payload field names
       const payload = {
         date: parsed.date ?? undefined,
         stakes: parsed.stakes ?? undefined,
         position: parsed.position ?? undefined,
         cards: parsed.cards ?? undefined,
-        villainAction: parsed.villian_action ?? parsed.villain_action ?? undefined, // tolerate typo
+        villainAction: parsed.villain_action ?? undefined, // <-- fixed key
         board: parsed.board ?? '',
         notes: parsed.notes ?? '',
-      } as any;
+      };
 
       const r = await fetch('/api/analyze-hand', {
         method: 'POST',
@@ -51,7 +50,7 @@ export default function Home() {
       }
 
       const data = await r.json();
-      // Merge the AI results into our editable fields object
+
       setFields(prev => {
         const base = prev ?? parsed ?? {};
         const tags: string[] =
@@ -75,7 +74,7 @@ export default function Home() {
     }
   }
 
-  // ---- existing parse -> now calls analyzeParsedHand at the end ----
+  // Parse -> then auto-run AI
   async function handleParse() {
     setStatus(null);
     setAiError(null);
@@ -86,11 +85,7 @@ export default function Home() {
     });
     const data: Fields = await res.json();
     setFields(data);
-
-    // (2) kick off AI to auto-fill GTO/Exploit/Tags
-    if (data) {
-      analyzeParsedHand(data);
-    }
+    if (data) analyzeParsedHand(data);
   }
 
   async function handleSave() {
