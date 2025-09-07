@@ -3,121 +3,19 @@ import { useState } from 'react';
 
 type Fields = {
   date?: string | null;
-  stakes?: string | null;        // text like "1/3", "$2/$5"
+  stakes?: string | null;               // text (e.g., "1/3" or "$2/$5")
   position?: string | null;
   cards?: string | null;
   villain_action?: string | null;
   gto_strategy?: string | null;
   exploit_deviation?: string | null;
   learning_tag?: string[];
+  // optional extras (safe to keep)
   board?: string | null;
   notes?: string | null;
 };
 
-/* ---------- Small UI bits with INLINE styles ---------- */
-const pillStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '6px 12px',
-  borderRadius: 999,
-  fontWeight: 800,
-  fontSize: 12,
-  letterSpacing: .3,
-  background: '#eef2ff',
-  border: '1px solid #c7d2fe',
-  color: '#1e3a8a',
-  whiteSpace: 'nowrap'
-};
-
-const primaryBtn: React.CSSProperties = {
-  background: 'linear-gradient(135deg,#1e3a8a,#1d4ed8)',
-  color: '#fff',
-  border: 'none',
-  boxShadow: '0 6px 14px rgba(37,99,235,.28)',
-  transition: 'transform .04s ease-in-out',
-  cursor:'pointer'
-};
-
-const lightBtn: React.CSSProperties = {
-  background: '#f2f6ff',
-  color: '#0f1c3a',
-  border: '1px solid #dbe6ff',
-  cursor:'pointer'
-};
-
-const dangerGhostBtn: React.CSSProperties = {
-  background: '#fff1f1',
-  color: '#b91c1c',
-  border: '1px solid #ffd3d3',
-  cursor:'pointer'
-};
-
-function LabelPill({ children }: { children: React.ReactNode }) {
-  return <span style={pillStyle}>{children}</span>;
-}
-
-function Row({
-  label,
-  children
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div style={{display:'flex', gap:14, alignItems:'flex-start', padding:'14px 0', borderTop:'1px dashed #e9edf7'}}>
-      <div style={{minWidth:126}}><LabelPill>{label}</LabelPill></div>
-      <div style={{flex:1}}>{children}</div>
-    </div>
-  );
-}
-
-function TagEditor({
-  tags,
-  onAdd,
-  onClear
-}: {
-  tags: string[];
-  onAdd: (t:string)=>void;
-  onClear: ()=>void;
-}) {
-  const [txt, setTxt] = useState('');
-  return (
-    <>
-      <div style={{display:'flex', flexWrap:'wrap', gap:8, marginBottom:8}}>
-        {tags.length ? tags.map((t,i)=>
-          <span key={i} style={{...pillStyle, background:'#e0e7ff', border:'1px solid #c7d2fe'}}>{t}</span>
-        ) : <span style={{...pillStyle, opacity:.65}}>No tags</span>}
-      </div>
-      <div style={{display:'flex', gap:8}}>
-        <input
-          value={txt}
-          onChange={e=>setTxt(e.target.value)}
-          onKeyDown={e=>{ if(e.key==='Enter' && txt.trim()){ onAdd(txt.trim()); setTxt(''); } }}
-          placeholder="Add tag and press Enter"
-          style={{
-            flex:1, padding:'10px 12px', borderRadius:999, outline:'none',
-            border:'1px solid #dbe6ff', background:'#fff'
-          }}
-        />
-        <button
-          onClick={()=>{ if(txt.trim()){ onAdd(txt.trim()); setTxt(''); } }}
-          style={{padding:'9px 12px', borderRadius:999, border:'1px solid #dbe6ff', background:'#fff', fontWeight:800, cursor:'pointer'}}
-        >
-          Add
-        </button>
-        <button
-          onClick={onClear}
-          style={{padding:'9px 12px', borderRadius:999, border:'1px solid #dbe6ff', background:'#fff', fontWeight:800, cursor:'pointer'}}
-        >
-          Clear
-        </button>
-      </div>
-    </>
-  );
-}
-
-export default function Page() {
+export default function Home() {
   const [input, setInput] = useState('');
   const [fields, setFields] = useState<Fields | null>(null);
   const [saving, setSaving] = useState(false);
@@ -151,46 +49,38 @@ export default function Page() {
       }
 
       const data = await r.json();
-      setFields(prev => {
-        const base = prev ?? parsed ?? {};
-        const tags: string[] =
-          Array.isArray(data.learning_tag)
-            ? data.learning_tag
-            : typeof data.learning_tag === 'string'
-              ? data.learning_tag.split(',').map((s: string) => s.trim()).filter(Boolean)
-              : [];
-        return {
-          ...base,
-          gto_strategy: data.gto_strategy || '',
-          exploit_deviation: data.exploit_deviation || '',
-          learning_tag: tags,
-        };
-      });
+      const tags: string[] =
+        Array.isArray(data.learning_tag)
+          ? data.learning_tag
+          : typeof data.learning_tag === 'string'
+            ? data.learning_tag.split(',').map((s: string) => s.trim()).filter(Boolean)
+            : [];
+
+      setFields(prev => ({
+        ...(prev ?? parsed ?? {}),
+        gto_strategy: data.gto_strategy || '',
+        exploit_deviation: data.exploit_deviation || '',
+        learning_tag: tags,
+      }));
     } catch (e: any) {
+      console.error(e);
       setAiError(e.message || 'AI analysis error');
     } finally {
       setAiLoading(false);
     }
   }
 
-  async function handleSend() {
-    if (!input.trim() || aiLoading) return;
+  async function handleParse() {
     setStatus(null);
     setAiError(null);
-
     const res = await fetch('/api/parse', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ input })
+      body: JSON.stringify({ input }),
     });
-
     const data: Fields = await res.json();
     setFields(data);
     if (data) analyzeParsedHand(data);
-  }
-
-  function handleAnalyzeAgain() {
-    if (fields && !aiLoading) analyzeParsedHand(fields);
   }
 
   async function handleSave() {
@@ -201,7 +91,7 @@ export default function Page() {
       const res = await fetch('/api/notion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields })
+        body: JSON.stringify({ fields }),
       });
       const data = await res.json();
       if (data.ok) setStatus(`Saved! Open in Notion: ${data.url}`);
@@ -214,139 +104,275 @@ export default function Page() {
   }
 
   return (
-    <main style={{fontFamily:'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial', color:'#0f172a', boxSizing:'border-box'}}>
-      <div style={{maxWidth:1100, margin:'0 auto', padding:'22px 20px 10px'}}>
-        <h1 style={{margin:0, fontSize:28}}>Notion Poker Ingest</h1>
-        <p style={{margin:0, color:'#334155'}}>Paste → <b>Send</b> → Analyze → Save</p>
+    <main className="wrap">
+      <div className="header">
+        <div className="title">Notion Poker Ingest</div>
+        <div className="breadcrumb">Paste → <b>Send</b> → Analyze → Save</div>
       </div>
 
-      <div style={{maxWidth:1100, margin:'0 auto', padding:'0 20px 28px'}}>
-        <div style={{display:'grid', gap:20, gridTemplateColumns:'1fr 1fr'}}>
-          {/* Left card */}
-          <section style={{
-            background:'#fff', border:'1px solid #e9edf7', borderRadius:16, padding:16,
-            boxShadow:'0 10px 24px rgba(2,6,23,.05)'
-          }}>
-            <div style={{margin:'6px 0 10px', fontSize:12, fontWeight:900, letterSpacing:.35, color:'#1e40af'}}>HAND PLAYED</div>
+      <div className="grid">
+        {/* Left card */}
+        <section className="card">
+          <div className="cardTitle">HAND PLAYED</div>
+          <div className="textareaWrap">
+            <textarea
+              className="textarea"
+              placeholder="Paste the hand history or describe the hand in plain English..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+            />
+          </div>
 
-            <div style={{
-              border:'1px solid #e9edf7',
-              borderRadius:12,
-              background:'#ffffff',
-              padding:10,
-              overflow:'hidden'
-            }}>
-              <textarea
-                placeholder="Paste the hand history or describe the hand in plain English..."
-                value={input}
-                onChange={(e)=>setInput(e.target.value)}
-                style={{
-                  width:'100%',
-                  minHeight:320,
-                  resize:'vertical',
-                  padding:'8px 10px',
-                  border:'none',
-                  borderRadius:8,
-                  outline:'none',
-                  fontSize:15,
-                  lineHeight:1.55,
-                  background:'#fff',
-                  boxSizing:'border-box',
-                }}
-              />
+          <div className="actions">
+            <button
+              className="btnPrimary"
+              onClick={handleParse}
+              disabled={!input.trim() || aiLoading}
+            >
+              {aiLoading ? 'Analyzing…' : 'Send'}
+            </button>
+            <button
+              className="btnGhost"
+              onClick={() => { setFields(null); setInput(''); setStatus(null); setAiError(null); }}
+            >
+              Clear
+            </button>
+          </div>
+
+          {status && <div className="meta">{status}</div>}
+          {aiError && <div className="error">{aiError}</div>}
+        </section>
+
+        {/* Right card */}
+        <section className="card">
+          {/* HEADER — show TAGS as title; fallback to date */}
+          <div className="rightHeader">
+            <div className="tagsRow">
+              {fields?.learning_tag?.length
+                ? fields.learning_tag!.map(t => (
+                    <span key={t} className="chipMain">{t}</span>
+                  ))
+                : <div className="bigTitle">{fields?.date || '—'}</div>
+              }
             </div>
-
-            <div style={{display:'flex', gap:10, marginTop:12}}>
-              <button
-                onClick={handleSend}
-                style={{padding:'10px 18px', borderRadius:999, fontWeight:800, ...primaryBtn}}
-              >
-                {aiLoading ? 'Sending…' : 'Send'}
-              </button>
-
-              <button
-                onClick={()=>{ setInput(''); setFields(null); setStatus(null); setAiError(null); }}
-                style={{padding:'10px 18px', borderRadius:999, fontWeight:800, ...dangerGhostBtn}}
-              >
-                Clear
-              </button>
+            <div className="rightMeta">
+              {[fields?.stakes || '—', fields?.cards || '—'].filter(Boolean).join(' • ')}
             </div>
+          </div>
 
-            {aiError && <div style={{marginTop:10, color:'#ef4444', fontSize:13}}>⚠ {aiError}</div>}
-            {status && <div style={{marginTop:10, color:'#334155', fontSize:13}}>{status}</div>}
-          </section>
+          {/* Properties */}
+          <PropertyRow name="Cards" value={fields?.cards ?? '—'} />
+          <PropertyRow name="Date" value={fields?.date ?? '—'} />
+          <PropertyRow name="Position" value={fields?.position ?? '—'} />
+          <PropertyRow name="Stakes" value={fields?.stakes ?? '—'} />
+          <PropertyRow name="Villain Action" value={fields?.villain_action ?? '—'} />
 
-          {/* Right card */}
-          <section style={{
-            background:'#fbfcff', border:'1px solid #e9edf7', borderRadius:16, padding:16,
-            boxShadow:'0 10px 24px rgba(2,6,23,.05)'
-          }}>
-            {!fields ? (
-              <div style={{textAlign:'center', color:'#334155', padding:'40px 0'}}>
-                <div style={{fontSize:38, marginBottom:8}}>🃏</div>
-                <div style={{fontWeight:800, color:'#0f172a'}}>Nothing parsed yet</div>
-                <div style={{marginTop:6}}>Paste a hand on the left and hit <b>Send</b>.</div>
-              </div>
-            ) : (
-              <>
-                <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', padding:'6px 6px 10px'}}>
-                  <div style={{fontSize:20, fontWeight:900}}>{fields.date || 'New Page'}</div>
-                  <div style={{fontSize:14, color:'#334155'}}>{(fields.stakes || '—')} • {fields.cards || '—'}</div>
-                </div>
+          <PropertyRow
+            name="GTO Strategy"
+            value={fields?.gto_strategy ?? ''}
+            long
+          />
+          <PropertyRow
+            name="Exploit Deviation"
+            value={fields?.exploit_deviation ?? ''}
+            long
+          />
 
-                {/* ORDER UPDATED per your request */}
-                <div>
-                  <Row label="Cards"><div>{fields.cards || '—'}</div></Row>
-                  <Row label="Date"><div>{fields.date || '—'}</div></Row>
-                  <Row label="Position"><div>{fields.position || '—'}</div></Row>
-                  <Row label="Stakes"><div>{fields.stakes || '—'}</div></Row>
-                  <Row label="Villain Action"><div style={{whiteSpace:'pre-wrap'}}>{fields.villain_action || '—'}</div></Row>
+          <div className="row">
+            <span className="label">Learning Tag</span>
+            <div className="value">
+              {(fields?.learning_tag ?? []).length === 0 ? (
+                <span className="muted">—</span>
+              ) : (
+                (fields!.learning_tag ?? []).map(t => (
+                  <span key={t} className="chip">{t}</span>
+                ))
+              )}
+            </div>
+          </div>
 
-                  {/* GTO then Exploit */}
-                  <Row label="GTO Strategy">
-                    <div style={{whiteSpace:'pre-wrap', lineHeight:1.55}}>
-                      {fields.gto_strategy || '—'}
-                    </div>
-                  </Row>
-                  <Row label="Exploit Deviation">
-                    <div style={{whiteSpace:'pre-wrap', lineHeight:1.55}}>
-                      {fields.exploit_deviation || '—'}
-                    </div>
-                  </Row>
-
-                  {/* Learning Tag LAST */}
-                  <Row label="Learning Tag">
-                    <TagEditor
-                      tags={fields.learning_tag ?? []}
-                      onAdd={(t)=>setFields({...fields!, learning_tag:[...(fields!.learning_tag ?? []), t]})}
-                      onClear={()=>setFields({...fields!, learning_tag:[]})}
-                    />
-                  </Row>
-                </div>
-
-                <div style={{display:'flex', gap:10, justifyContent:'flex-end', marginTop:16}}>
-                  <button
-                    onClick={handleAnalyzeAgain}
-                    style={{padding:'10px 18px', borderRadius:999, fontWeight:800, ...lightBtn}}
-                  >
-                    {aiLoading ? 'Analyzing…' : 'Analyze Again'}
-                  </button>
-                  <button
-                    onClick={handleSave}
-                    disabled={saving}
-                    style={{
-                      padding:'10px 18px', borderRadius:999, fontWeight:800,
-                      ...(saving ? { background:'#e6ecff', color:'#26324d', border:'1px solid #dfe7ff', cursor:'not-allowed' } : primaryBtn)
-                    }}
-                  >
-                    {saving ? 'Saving…' : 'Confirm & Save to Notion'}
-                  </button>
-                </div>
-              </>
-            )}
-          </section>
-        </div>
+          <div className="footerActions">
+            <button
+              className="btnGhost"
+              onClick={handleParse}
+              disabled={!input.trim() || aiLoading}
+            >
+              Analyze Again
+            </button>
+            <button
+              className="btnPrimary"
+              onClick={handleSave}
+              disabled={saving || !fields}
+            >
+              {saving ? 'Saving…' : 'Confirm & Save to Notion'}
+            </button>
+          </div>
+        </section>
       </div>
+
+      {/* Styles */}
+      <style jsx>{`
+        .wrap {
+          min-height: 100vh;
+          background: #f7f8fb;
+          padding: 28px 20px 60px;
+          color: #0f172a;
+          font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Noto Sans;
+        }
+        .header { max-width: 1200px; margin: 0 auto 16px auto; }
+        .title { font-size: 28px; font-weight: 800; }
+        .breadcrumb { color: #6b7280; margin-top: 4px; }
+
+        .grid {
+          max-width: 1200px;
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 24px;
+        }
+        @media (max-width: 1100px) {
+          .grid { grid-template-columns: 1fr; }
+        }
+
+        .card {
+          background: #fff;
+          border-radius: 16px;
+          box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+          padding: 18px 18px 16px;
+        }
+        .cardTitle {
+          font-weight: 700;
+          letter-spacing: .02em;
+          color: #0f1c55;
+          margin: 6px 6px 12px;
+        }
+        .textareaWrap {
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          overflow: hidden;
+          background: #fcfdff;
+        }
+        .textarea {
+          width: 100%;
+          min-height: 270px;
+          resize: vertical;
+          padding: 14px;
+          line-height: 1.55;
+          font-size: 16px;
+          border: none;
+          outline: none;
+          background: transparent;
+          color: #0f172a;
+        }
+
+        .actions {
+          display: flex;
+          gap: 12px;
+          align-items: center;
+          padding: 14px 4px 2px;
+        }
+        .btnPrimary {
+          background: #2643ff;
+          color: #fff;
+          padding: 10px 18px;
+          border-radius: 12px;
+          border: none;
+          box-shadow: 0 6px 18px rgba(38, 67, 255, .28);
+          font-weight: 700;
+          cursor: pointer;
+        }
+        .btnPrimary:disabled {
+          opacity: .6;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+        .btnGhost {
+          background: #fff;
+          color: #0f172a;
+          padding: 10px 16px;
+          border-radius: 12px;
+          border: 1px solid #e5e7eb;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        .meta { margin: 10px 6px 0; color: #374151; font-size: 14px; }
+        .error { margin: 10px 6px 0; color: #b91c1c; font-size: 14px; }
+
+        .rightHeader {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          padding: 6px 6px 14px;
+        }
+        .tagsRow { display: flex; gap: 8px; flex-wrap: wrap; }
+        .chipMain {
+          background: #e9eeff;
+          color: #2947f0;
+          border-radius: 999px;
+          font-weight: 700;
+          padding: 6px 12px;
+          font-size: 14px;
+        }
+        .bigTitle { font-size: 26px; font-weight: 800; }
+        .rightMeta { color: #6b7280; margin-left: 10px; white-space: nowrap; }
+
+        .row {
+          display: grid;
+          grid-template-columns: 160px 1fr;
+          gap: 14px;
+          align-items: flex-start;
+          padding: 10px 6px;
+          border-top: 1px dashed #edf0f6;
+        }
+        .label {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          height: 28px;
+          padding: 0 12px;
+          border-radius: 999px;
+          background: #eef2ff;
+          color: #1e2aa8;
+          font-weight: 700;
+          font-size: 13px;
+          white-space: nowrap;
+        }
+        .value { color: #111827; line-height: 1.55; }
+        .muted { color: #9ca3af; }
+
+        .long { white-space: pre-wrap; }
+
+        .chip {
+          display: inline-flex;
+          align-items: center;
+          height: 28px;
+          padding: 0 12px;
+          border-radius: 999px;
+          background: #f1f5f9;
+          color: #0f172a;
+          margin: 0 8px 8px 0;
+          font-weight: 600;
+          font-size: 13px;
+        }
+
+        .footerActions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 12px;
+          padding: 14px 6px 2px;
+        }
+      `}</style>
     </main>
+  );
+}
+
+/** Property row with a pill label */
+function PropertyRow({ name, value, long = false }: { name: string; value: string; long?: boolean }) {
+  return (
+    <div className="row">
+      <span className="label">{name}</span>
+      <div className={`value ${long ? 'long' : ''}`}>{value || <span className="muted">—</span>}</div>
+    </div>
   );
 }
