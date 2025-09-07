@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { openai } from "../../lib/openai"; // relative path
+import { openai } from "../../../lib/openai"; // relative path
 
 const SYSTEM = `You are a poker study parser. Extract concise fields from the user's free text.
 Return STRICT JSON with keys: date (YYYY-MM-DD), stakes (number), position (UTG|MP|CO|BTN|SB|BB), cards,
