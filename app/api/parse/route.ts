@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { openai } from "@/lib/openai";
+import { openai } from "../../lib/openai"; // relative path
 
 const SYSTEM = `You are a poker study parser. Extract concise fields from the user's free text.
 Return STRICT JSON with keys: date (YYYY-MM-DD), stakes (number), position (UTG|MP|CO|BTN|SB|BB), cards,
@@ -10,7 +10,6 @@ export async function POST(req: Request) {
   if (!input || typeof input !== "string") {
     return NextResponse.json({ error: "Missing input" }, { status: 400 });
   }
-
   const today = new Date().toISOString().slice(0, 10);
   const user = `Text: ${input}\nToday: ${today}\nRules: If date missing, use Today. Stakes should be numeric only (no $).`;
 
