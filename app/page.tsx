@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 
-/* ---------- Types ---------- */
 type Fields = {
   date?: string | null;
   stakes?: string | null;        // text like "1/3", "$2/$5"
@@ -36,19 +35,22 @@ const primaryBtn: React.CSSProperties = {
   color: '#fff',
   border: 'none',
   boxShadow: '0 6px 14px rgba(37,99,235,.28)',
-  transition: 'transform .04s ease-in-out'
+  transition: 'transform .04s ease-in-out',
+  cursor:'pointer'
 };
 
 const lightBtn: React.CSSProperties = {
   background: '#f2f6ff',
   color: '#0f1c3a',
-  border: '1px solid #dbe6ff'
+  border: '1px solid #dbe6ff',
+  cursor:'pointer'
 };
 
 const dangerGhostBtn: React.CSSProperties = {
   background: '#fff1f1',
   color: '#b91c1c',
-  border: '1px solid #ffd3d3'
+  border: '1px solid #ffd3d3',
+  cursor:'pointer'
 };
 
 function LabelPill({ children }: { children: React.ReactNode }) {
@@ -100,13 +102,13 @@ function TagEditor({
         />
         <button
           onClick={()=>{ if(txt.trim()){ onAdd(txt.trim()); setTxt(''); } }}
-          style={{padding:'9px 12px', borderRadius:999, border:'1px solid #dbe6ff', background:'#fff', fontWeight:800}}
+          style={{padding:'9px 12px', borderRadius:999, border:'1px solid #dbe6ff', background:'#fff', fontWeight:800, cursor:'pointer'}}
         >
           Add
         </button>
         <button
           onClick={onClear}
-          style={{padding:'9px 12px', borderRadius:999, border:'1px solid #dbe6ff', background:'#fff', fontWeight:800}}
+          style={{padding:'9px 12px', borderRadius:999, border:'1px solid #dbe6ff', background:'#fff', fontWeight:800, cursor:'pointer'}}
         >
           Clear
         </button>
@@ -115,9 +117,6 @@ function TagEditor({
   );
 }
 
-/* ============================================================
-   PAGE
-============================================================ */
 export default function Page() {
   const [input, setInput] = useState('');
   const [fields, setFields] = useState<Fields | null>(null);
@@ -216,7 +215,6 @@ export default function Page() {
 
   return (
     <main style={{fontFamily:'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial', color:'#0f172a', boxSizing:'border-box'}}>
-      {/* Top nav */}
       <div style={{maxWidth:1100, margin:'0 auto', padding:'22px 20px 10px'}}>
         <h1 style={{margin:0, fontSize:28}}>Notion Poker Ingest</h1>
         <p style={{margin:0, color:'#334155'}}>Paste → <b>Send</b> → Analyze → Save</p>
@@ -231,7 +229,6 @@ export default function Page() {
           }}>
             <div style={{margin:'6px 0 10px', fontSize:12, fontWeight:900, letterSpacing:.35, color:'#1e40af'}}>HAND PLAYED</div>
 
-            {/* SUB-BOX WRAPPER for the textarea (keeps it visually inside the card) */}
             <div style={{
               border:'1px solid #e9edf7',
               borderRadius:12,
@@ -249,7 +246,7 @@ export default function Page() {
                   resize:'vertical',
                   padding:'8px 10px',
                   border:'none',
-                  borderRadius:8,     // radius INSIDE the sub-box, not the outer card
+                  borderRadius:8,
                   outline:'none',
                   fontSize:15,
                   lineHeight:1.55,
@@ -262,17 +259,14 @@ export default function Page() {
             <div style={{display:'flex', gap:10, marginTop:12}}>
               <button
                 onClick={handleSend}
-                style={{
-                  padding:'10px 18px', borderRadius:999, fontWeight:800, cursor:'pointer',
-                  ...primaryBtn
-                }}
+                style={{padding:'10px 18px', borderRadius:999, fontWeight:800, ...primaryBtn}}
               >
                 {aiLoading ? 'Sending…' : 'Send'}
               </button>
 
               <button
                 onClick={()=>{ setInput(''); setFields(null); setStatus(null); setAiError(null); }}
-                style={{padding:'10px 18px', borderRadius:999, fontWeight:800, cursor:'pointer', ...dangerGhostBtn}}
+                style={{padding:'10px 18px', borderRadius:999, fontWeight:800, ...dangerGhostBtn}}
               >
                 Clear
               </button>
@@ -295,31 +289,32 @@ export default function Page() {
               </div>
             ) : (
               <>
-                {/* Header row */}
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', padding:'6px 6px 10px'}}>
                   <div style={{fontSize:20, fontWeight:900}}>{fields.date || 'New Page'}</div>
                   <div style={{fontSize:14, color:'#334155'}}>{(fields.stakes || '—')} • {fields.cards || '—'}</div>
                 </div>
 
-                {/* Attribute rows */}
+                {/* ORDER UPDATED per your request */}
                 <div>
                   <Row label="Cards"><div>{fields.cards || '—'}</div></Row>
                   <Row label="Date"><div>{fields.date || '—'}</div></Row>
+                  <Row label="Position"><div>{fields.position || '—'}</div></Row>
+                  <Row label="Stakes"><div>{fields.stakes || '—'}</div></Row>
+                  <Row label="Villain Action"><div style={{whiteSpace:'pre-wrap'}}>{fields.villain_action || '—'}</div></Row>
 
-                  {/* FULL TEXT (no truncation) */}
+                  {/* GTO then Exploit */}
+                  <Row label="GTO Strategy">
+                    <div style={{whiteSpace:'pre-wrap', lineHeight:1.55}}>
+                      {fields.gto_strategy || '—'}
+                    </div>
+                  </Row>
                   <Row label="Exploit Deviation">
                     <div style={{whiteSpace:'pre-wrap', lineHeight:1.55}}>
                       {fields.exploit_deviation || '—'}
                     </div>
                   </Row>
 
-                  {/* FULL TEXT (no truncation) */}
-                  <Row label="GTO Strategy">
-                    <div style={{whiteSpace:'pre-wrap', lineHeight:1.55}}>
-                      {fields.gto_strategy || '—'}
-                    </div>
-                  </Row>
-
+                  {/* Learning Tag LAST */}
                   <Row label="Learning Tag">
                     <TagEditor
                       tags={fields.learning_tag ?? []}
@@ -327,16 +322,12 @@ export default function Page() {
                       onClear={()=>setFields({...fields!, learning_tag:[]})}
                     />
                   </Row>
-                  <Row label="Position"><div>{fields.position || '—'}</div></Row>
-                  <Row label="Stakes"><div>{fields.stakes || '—'}</div></Row>
-                  <Row label="Villain Action"><div style={{whiteSpace:'pre-wrap'}}>{fields.villain_action || '—'}</div></Row>
                 </div>
 
-                {/* Footer buttons */}
                 <div style={{display:'flex', gap:10, justifyContent:'flex-end', marginTop:16}}>
                   <button
                     onClick={handleAnalyzeAgain}
-                    style={{padding:'10px 18px', borderRadius:999, fontWeight:800, cursor:'pointer', ...lightBtn}}
+                    style={{padding:'10px 18px', borderRadius:999, fontWeight:800, ...lightBtn}}
                   >
                     {aiLoading ? 'Analyzing…' : 'Analyze Again'}
                   </button>
@@ -344,8 +335,8 @@ export default function Page() {
                     onClick={handleSave}
                     disabled={saving}
                     style={{
-                      padding:'10px 18px', borderRadius:999, fontWeight:800, cursor:'pointer',
-                      ...(saving ? { background:'#e6ecff', color:'#26324d', border:'1px solid #dfe7ff' } : primaryBtn)
+                      padding:'10px 18px', borderRadius:999, fontWeight:800,
+                      ...(saving ? { background:'#e6ecff', color:'#26324d', border:'1px solid #dfe7ff', cursor:'not-allowed' } : primaryBtn)
                     }}
                   >
                     {saving ? 'Saving…' : 'Confirm & Save to Notion'}
