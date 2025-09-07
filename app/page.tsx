@@ -3,15 +3,13 @@ import { useState } from 'react';
 
 type Fields = {
   date?: string | null;
-  stakes?: number | null;
+  stakes?: string | null;                 // <-- text
   position?: string | null;
   cards?: string | null;
-  villain_action?: string | null;
-  villian_action?: string | null; 
+  villain_action?: string | null;         // <-- correct key only
   gto_strategy?: string | null;
   exploit_deviation?: string | null;
   learning_tag?: string[];
-  // optional extras if you add them later
   board?: string | null;
   notes?: string | null;
 };
@@ -24,17 +22,16 @@ export default function Home() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
-  // Call /api/analyze-hand and fill GTO/Exploit/Tags
   async function analyzeParsedHand(parsed: Fields) {
     setAiError(null);
     setAiLoading(true);
     try {
       const payload = {
         date: parsed.date ?? undefined,
-        stakes: parsed.stakes ?? undefined,
+        stakes: parsed.stakes ?? undefined,        // string
         position: parsed.position ?? undefined,
         cards: parsed.cards ?? undefined,
-        villainAction: parsed.villain_action ?? undefined, // <-- fixed key
+        villainAction: parsed.villain_action ?? undefined,
         board: parsed.board ?? '',
         notes: parsed.notes ?? '',
       };
@@ -44,12 +41,10 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
       if (!r.ok) {
         const err = await r.json().catch(() => ({}));
         throw new Error(err?.error || `AI analyze failed (${r.status})`);
       }
-
       const data = await r.json();
 
       setFields(prev => {
@@ -75,7 +70,6 @@ export default function Home() {
     }
   }
 
-  // Parse -> then auto-run AI
   async function handleParse() {
     setStatus(null);
     setAiError(null);
@@ -151,12 +145,11 @@ export default function Home() {
                 />
               </L>
 
-              <L label="Stakes (number)">
+              <L label="Stakes (text)">
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
                   value={fields.stakes ?? ''}
-                  onChange={e=>setFields({ ...fields, stakes: e.target.value===''? null: Number(e.target.value) })}
+                  onChange={e=>setFields({ ...fields, stakes: e.target.value })}
                   className="input"
                 />
               </L>
