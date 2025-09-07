@@ -2,10 +2,18 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
 export async function POST(req: Request) {
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json(
+        { error: "Missing OPENAI_API_KEY (set it in .env.local or Vercel → Settings → Environment Variables)" },
+        { status: 500 }
+      );
+    }
+
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const body = await req.json();
     const {
       date,
@@ -16,16 +24,6 @@ export async function POST(req: Request) {
       board = "",
       notes = "",
     } = body || {};
-
-    const userBlock = `
-Date: ${date || "today"}
-Stakes: ${String(stakes || "")}
-Position: ${position || ""}
-Hero Cards: ${cards || ""}
-Board/Street Info: ${board}
-Villain Action: ${villainAction || ""}
-Additional Notes: ${notes}
-`;
 
     const system = `
 You are a poker strategy assistant.
@@ -45,35 +43,62 @@ Rules:
 - Focus on what to do, not narrating hole cards.
 `.trim();
 
+    const userBlock = `
+Date: ${date || "today"}
+Stakes: ${String(stakes || "")}
+Position: ${position || ""}
+Hero Cards: ${cards || ""}
+Board/Street Info: ${board}
+Villain Action: ${villainAction || ""}
+Additional Notes: ${notes}
+`.trim();
+
     const completion = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: MODEL,
       temperature: 0.2,
+      response_format: { type: "json_object" },
       messages: [
         { role: "system", content: system },
+        { role: "user", content: userBlock },
         {
           role: "user",
-          content: userBlock,
-        },
-        {
-          role: "user",
-          content: `Return JSON with exactly:
-{ "gto_strategy": "...", "exploit_deviation": "...", "learning_tag": ["Tag1","Tag2"] }`,
+          content:
+            `Return JSON with exactly:\n` +
+            `{ "gto_strategy": "...", "exploit_deviation": "...", "learning_tag": ["Tag1","Tag2"] }`,
         },
       ],
     });
 
-    const text = completion?.choices?.[0]?.message?.content?.trim() || "";
-    let out = { gto_strategy: "", exploit_deviation: "", learning_tag: [] as string[] };
+    const text = completion?.choices?.[0]?.message?.content?.trim() || "{}";
 
+    // Robust JSON parse (with fallback extraction)
+    let parsed: any = {};
     try {
-      out = JSON.parse(text);
+      parsed = JSON.parse(text);
     } catch {
-      out.gto_strategy = text; // fallback if JSON parsing fails
+      const m = text.match(/\{[\s\S]*\}/);
+      if (m) parsed = JSON.parse(m[0]);
     }
 
+    const out = {
+      gto_strategy: parsed?.gto_strategy || "",
+      exploit_deviation: parsed?.exploit_deviation || "",
+      learning_tag: Array.isArray(parsed?.learning_tag)
+        ? parsed.learning_tag
+        : parsed?.learning_tag
+        ? [String(parsed.learning_tag)]
+        : [],
+    };
+
     return NextResponse.json(out);
-  } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: "Failed to analyze hand" }, { status: 500 });
+  } catch (err: any) {
+    // Surface the real reason, not a generic message
+    const msg =
+      err?.error?.message ||
+      err?.response?.data?.error?.message ||
+      err?.message ||
+      "Analyze error";
+    console.error("analyze-hand error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
