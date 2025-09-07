@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 type Fields = {
   date?: string | null;
-  stakes?: string | null;            // text (e.g., "1/3", "$2/$5")
+  stakes?: string | null;            // text like "1/3" or "$2/$5"
   position?: string | null;
   cards?: string | null;
   villain_action?: string | null;
@@ -22,7 +22,6 @@ export default function Home() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
-  // ---------- AI: analyze parsed hand and fill GTO/Exploit/Tags ----------
   async function analyzeParsedHand(parsed: Fields) {
     setAiError(null);
     setAiLoading(true);
@@ -72,7 +71,6 @@ export default function Home() {
     }
   }
 
-  // ---------- Parse raw text with /api/parse, then call analyzer ----------
   async function handleSend() {
     setStatus(null);
     setAiError(null);
@@ -86,7 +84,6 @@ export default function Home() {
     if (data) analyzeParsedHand(data);
   }
 
-  // ---------- Save to Notion ----------
   async function handleSave() {
     if (!fields) return;
     setSaving(true);
@@ -118,7 +115,7 @@ export default function Home() {
 
       <div className="shell">
         <div className="grid">
-          {/* LEFT: Editor */}
+          {/* LEFT */}
           <section className="card">
             <div className="card__title">
               <span className="dot dot--brand" />
@@ -139,7 +136,7 @@ export default function Home() {
                 {aiLoading ? 'Sending…' : 'Send'}
               </button>
               <button
-                className="btn btn--muted"
+                className="btn btn--secondary"
                 onClick={() => { setFields(null); setInput(''); setStatus(null); setAiError(null); }}
               >
                 Clear
@@ -149,7 +146,7 @@ export default function Home() {
             {status && <div className="note">{status}</div>}
           </section>
 
-          {/* RIGHT: Notion-style Preview */}
+          {/* RIGHT */}
           <section className="card card--glass">
             {!fields ? (
               <div className="empty">
@@ -160,12 +157,8 @@ export default function Home() {
             ) : (
               <>
                 <div className="titlebar">
-                  <div className="title">
-                    {fields.date || 'New Page'}
-                  </div>
-                  <div className="subtitle">
-                    {(fields.stakes || '—') + ' • ' + (fields.cards || '—')}
-                  </div>
+                  <div className="title">{fields.date || 'New Page'}</div>
+                  <div className="subtitle">{(fields.stakes || '—') + ' • ' + (fields.cards || '—')}</div>
                 </div>
 
                 <div className="props">
@@ -248,32 +241,36 @@ export default function Home() {
         </div>
       </div>
 
-      {/* -------- STYLES: high-contrast light theme -------- */}
       <style jsx>{`
         :root{
-          --bg: #f3f6fb;
-          --ink: #0f172a;     /* main text */
-          --ink-2: #334155;   /* secondary */
-          --ink-3: #64748b;   /* muted */
+          --bg: #eef3fb;
+          --ink: #0f172a;
+          --ink-2: #334155;
+          --ink-3: #64748b;
           --card: #ffffff;
-          --glass: rgba(255,255,255,0.92);
+          --glass: rgba(255,255,255,0.94);
           --line: #e5e7eb;
-          --brand: #2563eb;   /* blue */
-          --brand-2: #06b6d4; /* cyan */
-          --accent: #16a34a;  /* green */
-          --danger: #dc2626;  /* red */
+
+          --brand: #2563eb;        /* primary blue */
+          --brand-strong:#1d4ed8;
+          --brand-bg: #eaf2ff;     /* soft blue for badges */
+          --brand-border: #c7ddff;
+          --brand-ink: #14367a;
+
+          --accent: #16a34a;       /* green */
+          --danger: #dc2626;       /* red */
+          --secondary: #475569;    /* slate */
         }
+
         *{ box-sizing: border-box; }
         body{ margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:var(--bg); color:var(--ink); }
 
-        .page{ min-height:100vh; }
         .hero{
           background:
-            radial-gradient(900px 400px at 10% -10%, rgba(37,99,235,.15), transparent 60%),
-            radial-gradient(900px 400px at 90% -10%, rgba(6,182,212,.15), transparent 60%),
-            linear-gradient(180deg, #f8fbff 0%, #f3f6fb 100%);
+            radial-gradient(900px 400px at 10% -10%, rgba(37,99,235,.10), transparent 60%),
+            radial-gradient(900px 400px at 90% -10%, rgba(6,182,212,.10), transparent 60%),
+            linear-gradient(180deg, #f9fbff 0%, #eef3fb 100%);
           padding: 46px 0 20px;
-          color: var(--ink);
           border-bottom: 1px solid var(--line);
         }
         .hero__inner{ max-width:1100px; margin:0 auto; padding:0 20px; }
@@ -281,30 +278,20 @@ export default function Home() {
         .hero p{ margin:6px 0 0; color:var(--ink-3); }
 
         .shell{ max-width:1100px; margin:-22px auto 48px; padding:0 20px; }
-        .grid{
-          display:grid; gap:22px;
-          grid-template-columns: 1fr 1fr;
-        }
-        @media (max-width: 980px){
-          .grid{ grid-template-columns: 1fr; }
-        }
+        .grid{ display:grid; gap:22px; grid-template-columns: 1fr 1fr; }
+        @media (max-width: 980px){ .grid{ grid-template-columns: 1fr; } }
 
         .card{
           background: var(--card);
           border: 1px solid var(--line);
           border-radius: 18px;
           padding: 18px;
-          box-shadow:
-            0 10px 30px rgba(2,6,23,.05),
-            0 2px 6px rgba(2,6,23,.04);
+          box-shadow: 0 10px 30px rgba(2,6,23,.05), 0 2px 6px rgba(2,6,23,.04);
         }
-        .card--glass{
-          background: var(--glass);
-          backdrop-filter: blur(6px);
-        }
+        .card--glass{ background: var(--glass); backdrop-filter: blur(6px); }
 
         .card__title{
-          font-size:13px; font-weight:700; color:var(--brand);
+          font-size:13px; font-weight:800; color:var(--brand);
           display:flex; align-items:center; gap:8px; margin-bottom:10px;
           letter-spacing:.35px; text-transform:uppercase;
         }
@@ -314,25 +301,43 @@ export default function Home() {
         .text{
           width:100%; height:420px; resize:vertical;
           padding:14px 16px; border-radius:12px; border:1px solid var(--line);
-          background:#ffffff; color:var(--ink);
+          background:#fff; color:var(--ink);
           outline:none; font-size:15px; line-height:1.55;
-          box-shadow: inset 0 1px 0 #f8fafc;
         }
         .text:focus{ border-color: var(--brand); box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
 
         .actions{ display:flex; gap:10px; margin-top:12px; }
         .btn{
-          appearance:none; border:1px solid var(--line); background:#fff;
-          color:var(--ink); padding:10px 14px; border-radius:12px;
-          font-weight:700; cursor:pointer;
+          appearance:none; border:1px solid var(--line);
+          padding:11px 16px; border-radius:12px; font-weight:800; cursor:pointer;
+          transition: transform .03s ease, filter .15s ease;
         }
-        .btn:hover{ background:#f8fafc; }
-        .btn:disabled{ opacity:.65; cursor:not-allowed; }
-        .btn--muted{ background:#f8fafc; }
-        .btn--primary{ background: linear-gradient(135deg, var(--brand), #3b82f6); color:#fff; border:none; }
-        .btn--primary:hover{ filter: brightness(1.05); }
-        .btn--success{ background: linear-gradient(135deg, var(--accent), #34d399); color:#fff; border:none; }
-        .btn--success:hover{ filter: brightness(1.05); }
+        .btn:hover{ transform: translateY(-1px); }
+        .btn:active{ transform: translateY(0); }
+
+        /* Strong, visible blue button (even when disabled) */
+        .btn--primary{
+          color:#fff; border:none;
+          background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+          box-shadow: 0 6px 14px rgba(37,99,235,.25);
+        }
+        .btn--primary:disabled{
+          opacity:.65; filter: grayscale(.1) brightness(.95);
+        }
+
+        .btn--secondary{
+          color:#fff; border:none;
+          background: linear-gradient(135deg, #64748b, #475569);
+          box-shadow: 0 4px 10px rgba(71,85,105,.24);
+        }
+        .btn--secondary:hover{ filter: brightness(1.05); }
+
+        .btn--success{
+          color:#fff; border:none;
+          background: linear-gradient(135deg, var(--accent), #34d399);
+          box-shadow: 0 6px 14px rgba(22,163,74,.25);
+        }
+        .btn--success:disabled{ opacity:.7; }
 
         .note{ margin-top:10px; font-size:13px; color:var(--ink-2); }
         .note--error{ color: var(--danger); }
@@ -346,45 +351,51 @@ export default function Home() {
         .title{ font-size:22px; font-weight:800; color:var(--ink); }
         .subtitle{ margin-top:4px; color:var(--ink-2); font-size:14px; }
 
-        .props{ margin-top:16px; display:flex; flex-direction:column; gap:10px; }
-        .prop{
-          display:flex; gap:14px; align-items:flex-start;
-          padding:10px 8px; border-radius:12px;
-        }
-        .prop + .prop{ border-top: 1px dashed #eef2f7; padding-top:14px; }
-        .prop__name{
-          width:140px; min-width:140px;
-          color:var(--brand); font-weight:800; text-transform:uppercase; letter-spacing:.35px;
+        .props{ margin-top:16px; display:flex; flex-direction:column; gap:12px; }
+        .prop{ display:flex; gap:14px; align-items:flex-start; }
+        .prop + .prop{ border-top: 1px dashed #e8edf7; padding-top:12px; }
+
+        /* BADGE = CLEAR visual separation of attribute names */
+        .prop__name{ width:160px; min-width:160px; display:flex; justify-content:flex-start; }
+        .badge{
+          display:inline-block;
+          background: var(--brand-bg);
+          border: 1px solid var(--brand-border);
+          color: var(--brand-ink);
+          padding:6px 10px;
+          border-radius: 999px;
+          font-weight:800;
+          letter-spacing:.25px;
+          font-size:12px;
+          text-transform:uppercase;
         }
         .prop__value{ flex:1; }
 
-        /* VIEW mode = boxed values for clear separation */
+        /* Value boxes */
         .inline{
           min-height:42px; padding:10px 12px; border-radius:10px;
-          border:1px solid var(--line); background:#fff; color:var(--ink);
+          border:1px solid #dbe6ff; background:#fff; color:var(--ink);
           cursor:text; line-height:1.5;
         }
         .inline--ghost{ color:#9aa3b2; }
-        .inline:hover{ background:#fbfdff; }
-        .inline:focus{ outline:none; border-color: var(--brand); background:#fff; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+        .inline:hover{ border-color:#b7ccff; background:#fbfdff; }
+        .inline:focus{ outline:none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
 
         .area{
-          width:100%; min-height:100px; resize:vertical; padding:12px 12px;
-          border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--ink);
+          width:100%; min-height:110px; resize:vertical; padding:12px 12px;
+          border-radius:10px; border:1px solid #dbe6ff; background:#fff; color:var(--ink);
           line-height:1.5; outline:none;
         }
+        .area:hover{ border-color:#b7ccff; background:#fbfdff; }
         .area:focus{ border-color: var(--brand); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
 
         .tags{ display:flex; flex-wrap:wrap; gap:8px; }
-        .pill{
-          background:#e0e7ff; color:#1e3a8a; border:1px solid #c7d2fe;
-          padding:4px 10px; border-radius:999px; font-size:13px; font-weight:700;
-        }
+        .pill{ background:#e0e7ff; color:#1e3a8a; border:1px solid #c7d2fe; padding:4px 10px; border-radius:999px; font-size:13px; font-weight:700; }
         .pill--muted{ background:#f1f5f9; color:#0f172a; border-color:#e2e8f0; }
 
         .tagEdit{ margin-top:8px; display:flex; gap:8px; }
         .tagInput{
-          flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
+          flex:1; padding:10px 12px; border-radius:10px; border:1px solid #dbe6ff;
           outline:none; background:#fff; color:var(--ink);
         }
         .save{ margin-top:14px; }
@@ -393,12 +404,14 @@ export default function Home() {
   );
 }
 
-/* ---------- “Notion-like” property rows & editors ---------- */
+/* ---------- Notion-like components ---------- */
 
 function Prop({ name, children }: { name: string; children: any }) {
   return (
     <div className="prop">
-      <div className="prop__name">{name}</div>
+      <div className="prop__name">
+        <span className="badge">{name}</span>
+      </div>
       <div className="prop__value">{children}</div>
     </div>
   );
@@ -464,9 +477,7 @@ function TagEditor({
   tags, onChange
 }: { tags: string[]; onChange:(arr:string[])=>void }) {
   const [text, setText] = useState('');
-  const pills = (tags || []).map((t, i) => (
-    <span key={i} className="pill">{t}</span>
-  ));
+  const pills = (tags || []).map((t, i) => <span key={i} className="pill">{t}</span>);
   return (
     <>
       <div className="tags">
@@ -486,7 +497,7 @@ function TagEditor({
           }}
         />
         <button
-          className="btn btn--muted"
+          className="btn btn--secondary"
           onClick={()=>{
             if (text.trim()) {
               onChange([...(tags||[]), text.trim()]);
@@ -496,7 +507,7 @@ function TagEditor({
         >Add</button>
         {!!(tags && tags.length) && (
           <button
-            className="btn btn--muted"
+            className="btn btn--secondary"
             onClick={()=>onChange([])}
             title="Clear all tags"
           >Clear</button>
