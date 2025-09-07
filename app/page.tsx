@@ -121,12 +121,14 @@ export default function Home() {
               <span className="dot dot--brand" />
               Hand Played
             </div>
+
             <textarea
               className="text"
               placeholder="Paste your hand exactly as you played it…"
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
+
             <div className="actions">
               <button
                 className="btn btn--primary"
@@ -142,6 +144,7 @@ export default function Home() {
                 Clear
               </button>
             </div>
+
             {aiError && <div className="note note--error">⚠ {aiError}</div>}
             {status && <div className="note">{status}</div>}
           </section>
@@ -163,66 +166,82 @@ export default function Home() {
 
                 <div className="props">
                   <Prop name="Cards">
-                    <InlineInput
-                      value={fields.cards ?? ''}
-                      onChange={(v) => setFields({ ...fields, cards: v })}
-                      placeholder="A♠K♦"
-                    />
+                    <ValueBox>
+                      <InlineInput
+                        value={fields.cards ?? ''}
+                        onChange={(v) => setFields({ ...fields, cards: v })}
+                        placeholder="A♠K♦"
+                      />
+                    </ValueBox>
                   </Prop>
 
                   <Prop name="Date">
-                    <InlineInput
-                      type="date"
-                      value={fields.date ?? ''}
-                      onChange={(v) => setFields({ ...fields, date: v })}
-                    />
+                    <ValueBox>
+                      <InlineInput
+                        type="date"
+                        value={fields.date ?? ''}
+                        onChange={(v) => setFields({ ...fields, date: v })}
+                      />
+                    </ValueBox>
                   </Prop>
 
                   <Prop name="Exploit Deviation">
-                    <InlineArea
-                      value={fields.exploit_deviation ?? ''}
-                      onChange={(v) => setFields({ ...fields, exploit_deviation: v })}
-                      placeholder="Short, practical exploit notes…"
-                    />
+                    <ValueBox>
+                      <InlineArea
+                        value={fields.exploit_deviation ?? ''}
+                        onChange={(v) => setFields({ ...fields, exploit_deviation: v })}
+                        placeholder="Short, practical exploit notes…"
+                      />
+                    </ValueBox>
                   </Prop>
 
                   <Prop name="GTO Strategy">
-                    <InlineArea
-                      value={fields.gto_strategy ?? ''}
-                      onChange={(v) => setFields({ ...fields, gto_strategy: v })}
-                      placeholder={`Preflop: …\nFlop: …\nTurn: …\nRiver: …`}
-                    />
+                    <ValueBox>
+                      <InlineArea
+                        value={fields.gto_strategy ?? ''}
+                        onChange={(v) => setFields({ ...fields, gto_strategy: v })}
+                        placeholder={`Preflop: …\nFlop: …\nTurn: …\nRiver: …`}
+                      />
+                    </ValueBox>
                   </Prop>
 
                   <Prop name="Learning Tag">
-                    <TagEditor
-                      tags={fields.learning_tag ?? []}
-                      onChange={(arr) => setFields({ ...fields, learning_tag: arr })}
-                    />
+                    <ValueBox>
+                      <TagEditor
+                        tags={fields.learning_tag ?? []}
+                        onChange={(arr) => setFields({ ...fields, learning_tag: arr })}
+                      />
+                    </ValueBox>
                   </Prop>
 
                   <Prop name="Position">
-                    <InlineInput
-                      value={fields.position ?? ''}
-                      onChange={(v) => setFields({ ...fields, position: v })}
-                      placeholder="SB / BB / BTN…"
-                    />
+                    <ValueBox>
+                      <InlineInput
+                        value={fields.position ?? ''}
+                        onChange={(v) => setFields({ ...fields, position: v })}
+                        placeholder="SB / BB / BTN…"
+                      />
+                    </ValueBox>
                   </Prop>
 
                   <Prop name="Stakes">
-                    <InlineInput
-                      value={fields.stakes ?? ''}
-                      onChange={(v) => setFields({ ...fields, stakes: v })}
-                      placeholder="1/3"
-                    />
+                    <ValueBox>
+                      <InlineInput
+                        value={fields.stakes ?? ''}
+                        onChange={(v) => setFields({ ...fields, stakes: v })}
+                        placeholder="1/3"
+                      />
+                    </ValueBox>
                   </Prop>
 
                   <Prop name="Villain Action">
-                    <InlineArea
-                      value={fields.villain_action ?? ''}
-                      onChange={(v) => setFields({ ...fields, villain_action: v })}
-                      placeholder="Raise to…, calls 3-bet…, etc."
-                    />
+                    <ValueBox>
+                      <InlineArea
+                        value={fields.villain_action ?? ''}
+                        onChange={(v) => setFields({ ...fields, villain_action: v })}
+                        placeholder="Raise to…, calls 3-bet…, etc."
+                      />
+                    </ValueBox>
                   </Prop>
                 </div>
 
@@ -253,9 +272,8 @@ export default function Home() {
 
           --brand: #2563eb;        /* primary blue */
           --brand-strong:#1d4ed8;
-          --brand-bg: #eaf2ff;     /* soft blue for badges */
-          --brand-border: #c7ddff;
-          --brand-ink: #14367a;
+          --chip-grad-1:#2563eb;   /* label chip gradient */
+          --chip-grad-2:#5b8cff;
 
           --accent: #16a34a;       /* green */
           --danger: #dc2626;       /* red */
@@ -268,7 +286,7 @@ export default function Home() {
         .hero{
           background:
             radial-gradient(900px 400px at 10% -10%, rgba(37,99,235,.10), transparent 60%),
-            radial-gradient(900px 400px at 90% -10%, rgba(6,182,212,.10), transparent 60%),
+            radial-gradient(900px 400px at 90% -10%, rgba(6,182,212,.08), transparent 60%),
             linear-gradient(180deg, #f9fbff 0%, #eef3fb 100%);
           padding: 46px 0 20px;
           border-bottom: 1px solid var(--line);
@@ -290,8 +308,10 @@ export default function Home() {
         }
         .card--glass{ background: var(--glass); backdrop-filter: blur(6px); }
 
+        /* moved down a bit as requested */
         .card__title{
-          font-size:13px; font-weight:800; color:var(--brand);
+          margin-top: 10px;
+          font-size:13px; font-weight:800; color:#173a9e;
           display:flex; align-items:center; gap:8px; margin-bottom:10px;
           letter-spacing:.35px; text-transform:uppercase;
         }
@@ -315,29 +335,35 @@ export default function Home() {
         .btn:hover{ transform: translateY(-1px); }
         .btn:active{ transform: translateY(0); }
 
-        /* Strong, visible blue button (even when disabled) */
         .btn--primary{
           color:#fff; border:none;
           background: linear-gradient(135deg, var(--brand), var(--brand-strong));
           box-shadow: 0 6px 14px rgba(37,99,235,.25);
         }
-        .btn--primary:disabled{
-          opacity:.65; filter: grayscale(.1) brightness(.95);
-        }
-
         .btn--secondary{
           color:#fff; border:none;
           background: linear-gradient(135deg, #64748b, #475569);
           box-shadow: 0 4px 10px rgba(71,85,105,.24);
         }
-        .btn--secondary:hover{ filter: brightness(1.05); }
-
         .btn--success{
           color:#fff; border:none;
           background: linear-gradient(135deg, var(--accent), #34d399);
           box-shadow: 0 6px 14px rgba(22,163,74,.25);
         }
-        .btn--success:disabled{ opacity:.7; }
+
+        /* HIGH CONTRAST when disabled (so text is readable) */
+        .btn--primary:disabled{
+          color: var(--ink);
+          background: #eaf1ff;
+          border: 1px solid #cfe0ff;
+          box-shadow: none;
+        }
+        .btn--success:disabled{
+          color: var(--ink);
+          background: #e9f9ef;
+          border: 1px solid #c9f1da;
+          box-shadow: none;
+        }
 
         .note{ margin-top:10px; font-size:13px; color:var(--ink-2); }
         .note--error{ color: var(--danger); }
@@ -355,39 +381,40 @@ export default function Home() {
         .prop{ display:flex; gap:14px; align-items:flex-start; }
         .prop + .prop{ border-top: 1px dashed #e8edf7; padding-top:12px; }
 
-        /* BADGE = CLEAR visual separation of attribute names */
+        /* LABEL CHIP — shaded like Send, clearly separated from value */
         .prop__name{ width:160px; min-width:160px; display:flex; justify-content:flex-start; }
-        .badge{
-          display:inline-block;
-          background: var(--brand-bg);
-          border: 1px solid var(--brand-border);
-          color: var(--brand-ink);
-          padding:6px 10px;
-          border-radius: 999px;
-          font-weight:800;
-          letter-spacing:.25px;
-          font-size:12px;
-          text-transform:uppercase;
+        .chip{
+          display:inline-flex; align-items:center; gap:6px;
+          padding:8px 12px; border-radius:999px;
+          background: linear-gradient(135deg, var(--chip-grad-1), var(--chip-grad-2));
+          color:#fff; font-weight:900; letter-spacing:.35px; text-transform:uppercase; font-size:12px;
+          box-shadow: 0 4px 10px rgba(37,99,235,.18);
         }
-        .prop__value{ flex:1; }
+        .chip::before{
+          content:'';
+          width:6px; height:6px; border-radius:50%; background:#fff; opacity:.9;
+        }
 
-        /* Value boxes */
+        /* VALUE BOX */
+        .value{
+          width:100%;
+          background:#fff; border:1px solid #dbe6ff; border-radius:12px;
+          padding:10px 12px;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+        }
+
         .inline{
-          min-height:42px; padding:10px 12px; border-radius:10px;
-          border:1px solid #dbe6ff; background:#fff; color:var(--ink);
-          cursor:text; line-height:1.5;
+          width:100%;
+          min-height:24px; padding:2px 0; border:none; outline:none;
+          background:transparent; color:var(--ink); font-size:15px;
         }
         .inline--ghost{ color:#9aa3b2; }
-        .inline:hover{ border-color:#b7ccff; background:#fbfdff; }
-        .inline:focus{ outline:none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
 
         .area{
-          width:100%; min-height:110px; resize:vertical; padding:12px 12px;
-          border-radius:10px; border:1px solid #dbe6ff; background:#fff; color:var(--ink);
-          line-height:1.5; outline:none;
+          width:100%; min-height:110px; resize:vertical;
+          border:none; outline:none; background:transparent; color:var(--ink);
+          font-size:15px; line-height:1.5;
         }
-        .area:hover{ border-color:#b7ccff; background:#fbfdff; }
-        .area:focus{ border-color: var(--brand); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
 
         .tags{ display:flex; flex-wrap:wrap; gap:8px; }
         .pill{ background:#e0e7ff; color:#1e3a8a; border:1px solid #c7d2fe; padding:4px 10px; border-radius:999px; font-size:13px; font-weight:700; }
@@ -398,6 +425,7 @@ export default function Home() {
           flex:1; padding:10px 12px; border-radius:10px; border:1px solid #dbe6ff;
           outline:none; background:#fff; color:var(--ink);
         }
+
         .save{ margin-top:14px; }
       `}</style>
     </main>
@@ -410,11 +438,15 @@ function Prop({ name, children }: { name: string; children: any }) {
   return (
     <div className="prop">
       <div className="prop__name">
-        <span className="badge">{name}</span>
+        <span className="chip">{name}</span>
       </div>
       <div className="prop__value">{children}</div>
     </div>
   );
+}
+
+function ValueBox({ children }: { children: any }) {
+  return <div className="value">{children}</div>;
 }
 
 function InlineInput({
