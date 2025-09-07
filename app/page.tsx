@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 type Fields = {
   date?: string | null;
-  stakes?: string | null;            // text, e.g. "1/3" or "$2/$5"
+  stakes?: string | null;            // text (e.g., "1/3", "$2/$5")
   position?: string | null;
   cards?: string | null;
   villain_action?: string | null;
@@ -22,7 +22,7 @@ export default function Home() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
-  // ---- AI: analyze parsed hand and fill GTO/Exploit/Tags ----
+  // ---------- AI: analyze parsed hand and fill GTO/Exploit/Tags ----------
   async function analyzeParsedHand(parsed: Fields) {
     setAiError(null);
     setAiLoading(true);
@@ -72,7 +72,7 @@ export default function Home() {
     }
   }
 
-  // ---- Parse raw text with your /api/parse, then call analyzer ----
+  // ---------- Parse raw text with /api/parse, then call analyzer ----------
   async function handleParse() {
     setStatus(null);
     setAiError(null);
@@ -86,7 +86,7 @@ export default function Home() {
     if (data) analyzeParsedHand(data);
   }
 
-  // ---- Save to Notion ----
+  // ---------- Save to Notion ----------
   async function handleSave() {
     if (!fields) return;
     setSaving(true);
@@ -108,236 +108,393 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-6xl p-6">
-        <h1 className="text-2xl font-semibold mb-4">Notion Poker Ingest</h1>
+    <main className="page">
+      <header className="hero">
+        <div className="hero__inner">
+          <h1>Notion Poker Ingest</h1>
+          <p>Paste → Parse → Analyze → Save</p>
+        </div>
+      </header>
 
-        {/* 2-pane layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-          {/* Left: big input box */}
-          <div className="bg-white border rounded-xl p-4">
-            <div className="text-sm text-gray-600 mb-2">Hand Text</div>
+      <div className="shell">
+        <div className="grid">
+          {/* LEFT: Editor */}
+          <section className="card">
+            <div className="card__title">
+              <span className="dot dot--green" />
+              Hand Text
+            </div>
             <textarea
-              className="w-full h-[420px] p-3 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Paste your hand history or notes..."
+              className="text"
+              placeholder="Paste your hand history or notes…"
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
-            <div className="mt-3 flex gap-2">
+            <div className="actions">
               <button
+                className="btn btn--primary"
                 onClick={handleParse}
-                className="px-4 py-2 rounded-lg bg-black text-white disabled:opacity-50"
-                disabled={!input.trim()}
+                disabled={!input.trim() || aiLoading}
               >
-                {aiLoading ? 'Parsing…' : 'Parse'}
+                {aiLoading ? 'Analyzing…' : 'Parse & Analyze'}
               </button>
               <button
+                className="btn"
                 onClick={() => { setFields(null); setInput(''); setStatus(null); setAiError(null); }}
-                className="px-4 py-2 rounded-lg border"
               >
                 Clear
               </button>
             </div>
-            {aiLoading && <div className="mt-2 text-sm text-gray-500">Analyzing hand with AI…</div>}
-            {aiError && <div className="mt-2 text-sm text-rose-600">{aiError}</div>}
-          </div>
+            {aiError && <div className="note note--error">⚠ {aiError}</div>}
+            {status && <div className="note">{status}</div>}
+          </section>
 
-          {/* Right: Notion-style detail card */}
-          <div className="bg-white border rounded-xl overflow-hidden">
+          {/* RIGHT: Notion-style Preview */}
+          <section className="card card--glass">
             {!fields ? (
-              <div className="p-10 text-center text-gray-500">
-                Paste text on the left and click <b>Parse</b> to preview here.
+              <div className="empty">
+                <div className="emoji">🃏</div>
+                <div className="empty__title">Nothing parsed yet</div>
+                <div className="empty__text">Paste a hand on the left and click <b>Parse & Analyze</b>.</div>
               </div>
             ) : (
               <>
-                {/* Title bar */}
-                <div className="px-6 pt-6 pb-2">
-                  <div className="text-2xl font-semibold mb-1">
-                    {fields.date || 'New page'}
+                <div className="titlebar">
+                  <div className="title">
+                    {fields.date || 'New Page'}
+                  </div>
+                  <div className="subtitle">
+                    {(fields.stakes || '—') + ' • ' + (fields.cards || '—')}
                   </div>
                 </div>
 
-                <div className="px-6 pb-6 space-y-3">
+                <div className="props">
+                  <Prop name="Cards">
+                    <InlineInput
+                      value={fields.cards ?? ''}
+                      onChange={(v) => setFields({ ...fields, cards: v })}
+                      placeholder="A♠K♦"
+                    />
+                  </Prop>
 
-                  <Property
-                    name="Cards"
-                    value={fields.cards ?? ''}
-                    onChange={(v)=>setFields({ ...fields, cards: v })}
-                  />
+                  <Prop name="Date">
+                    <InlineInput
+                      type="date"
+                      value={fields.date ?? ''}
+                      onChange={(v) => setFields({ ...fields, date: v })}
+                    />
+                  </Prop>
 
-                  <Property
-                    name="Date"
-                    value={fields.date ?? ''}
-                    type="date"
-                    onChange={(v)=>setFields({ ...fields, date: v })}
-                  />
+                  <Prop name="Exploit Deviation">
+                    <InlineArea
+                      value={fields.exploit_deviation ?? ''}
+                      onChange={(v) => setFields({ ...fields, exploit_deviation: v })}
+                      placeholder="Short, practical exploit notes…"
+                    />
+                  </Prop>
 
-                  <PropertyArea
-                    name="Exploit Deviation"
-                    value={fields.exploit_deviation ?? ''}
-                    placeholder="Short, practical exploit notes…"
-                    onChange={(v)=>setFields({ ...fields, exploit_deviation: v })}
-                  />
+                  <Prop name="GTO Strategy">
+                    <InlineArea
+                      value={fields.gto_strategy ?? ''}
+                      onChange={(v) => setFields({ ...fields, gto_strategy: v })}
+                      placeholder={`Preflop: …\nFlop: …\nTurn: …\nRiver: …`}
+                    />
+                  </Prop>
 
-                  <PropertyArea
-                    name="GTO Strategy"
-                    value={fields.gto_strategy ?? ''}
-                    placeholder="Preflop/Flop/Turn/River plan…"
-                    onChange={(v)=>setFields({ ...fields, gto_strategy: v })}
-                  />
+                  <Prop name="Learning Tag">
+                    <TagEditor
+                      tags={fields.learning_tag ?? []}
+                      onChange={(arr) => setFields({ ...fields, learning_tag: arr })}
+                    />
+                  </Prop>
 
-                  <PropertyTags
-                    name="Learning Tag"
-                    tags={fields.learning_tag ?? []}
-                    onChange={(arr)=>setFields({ ...fields, learning_tag: arr })}
-                  />
+                  <Prop name="Position">
+                    <InlineInput
+                      value={fields.position ?? ''}
+                      onChange={(v) => setFields({ ...fields, position: v })}
+                      placeholder="SB / BB / BTN…"
+                    />
+                  </Prop>
 
-                  <Property
-                    name="Position"
-                    value={fields.position ?? ''}
-                    onChange={(v)=>setFields({ ...fields, position: v })}
-                  />
+                  <Prop name="Stakes">
+                    <InlineInput
+                      value={fields.stakes ?? ''}
+                      onChange={(v) => setFields({ ...fields, stakes: v })}
+                      placeholder="1/3"
+                    />
+                  </Prop>
 
-                  <Property
-                    name="Stakes"
-                    value={fields.stakes ?? ''}
-                    onChange={(v)=>setFields({ ...fields, stakes: v })}
-                  />
+                  <Prop name="Villain Action">
+                    <InlineArea
+                      value={fields.villain_action ?? ''}
+                      onChange={(v) => setFields({ ...fields, villain_action: v })}
+                      placeholder="Raise to…, calls 3-bet…, etc."
+                    />
+                  </Prop>
+                </div>
 
-                  <PropertyArea
-                    name="Villain Action"
-                    value={fields.villain_action ?? ''}
-                    onChange={(v)=>setFields({ ...fields, villain_action: v })}
-                  />
-
-                  <div className="pt-2">
-                    <button
-                      onClick={handleSave}
-                      disabled={saving}
-                      className="px-4 py-2 rounded-lg bg-emerald-600 text-white disabled:opacity-50"
-                    >
-                      {saving? 'Saving…' : 'Confirm & Save to Notion'}
-                    </button>
-                    {status && <span className="ml-3 text-sm">{status}</span>}
-                  </div>
+                <div className="save">
+                  <button
+                    className="btn btn--success"
+                    onClick={handleSave}
+                    disabled={saving}
+                  >
+                    {saving ? 'Saving…' : 'Confirm & Save to Notion'}
+                  </button>
                 </div>
               </>
             )}
-          </div>
+          </section>
         </div>
       </div>
 
-      {/* tiny global styles */}
-      <style jsx global>{`
-        body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Noto Sans, Apple Color Emoji, Segoe UI Emoji; }
+      {/* -------- STYLES (no Tailwind required) -------- */}
+      <style jsx>{`
+        :root{
+          --bg: #0b1020;
+          --ink: #0f172a;
+          --ink-2: #334155;
+          --ink-3: #64748b;
+          --card: #ffffff;
+          --glass: rgba(255,255,255,0.08);
+          --line: rgba(15,23,42,0.08);
+          --brand: #6366f1;
+          --brand-2: #22d3ee;
+          --accent: #10b981;
+          --danger: #ef4444;
+        }
+        *{ box-sizing: border-box; }
+        body{ margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:#0b1020; color:#0b1020; }
+
+        .page{ min-height:100vh; }
+        .hero{
+          background:
+            radial-gradient(1200px 500px at 20% -10%, rgba(34,211,238,.25), transparent 60%),
+            radial-gradient(1200px 500px at 80% -10%, rgba(99,102,241,.25), transparent 60%),
+            linear-gradient(180deg, #0b1020 0%, #0b1020 60%, #0e1326 100%);
+          padding: 52px 0 24px;
+          color: #e5e7eb;
+          border-bottom: 1px solid rgba(255,255,255,.08);
+        }
+        .hero__inner{ max-width:1100px; margin:0 auto; padding:0 20px; }
+        .hero h1{ margin:0; font-size:28px; letter-spacing:.2px; }
+        .hero p{ margin:6px 0 0; opacity:.8; }
+
+        .shell{ max-width:1100px; margin:-28px auto 48px; padding:0 20px; }
+        .grid{
+          display:grid; gap:22px;
+          grid-template-columns: 1fr 1fr;
+        }
+        @media (max-width: 980px){
+          .grid{ grid-template-columns: 1fr; }
+        }
+
+        .card{
+          background: var(--card);
+          border: 1px solid var(--line);
+          border-radius: 18px;
+          padding: 18px;
+          box-shadow:
+            0 10px 30px rgba(2,6,23,.08),
+            0 2px 6px rgba(2,6,23,.06);
+        }
+        .card--glass{
+          background: linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,.75));
+          backdrop-filter: blur(6px);
+        }
+
+        .card__title{
+          font-size:13px; font-weight:600; color:var(--ink-2);
+          display:flex; align-items:center; gap:8px; margin-bottom:10px;
+          letter-spacing:.2px; text-transform:uppercase;
+        }
+        .dot{ width:8px; height:8px; border-radius:50%; background:#94a3b8; }
+        .dot--green{ background: var(--accent); }
+
+        .text{
+          width:100%; height:420px; resize:vertical;
+          padding:14px 16px; border-radius:12px; border:1px solid var(--line);
+          background:#fbfbfd; color:var(--ink);
+          outline:none; font-size:15px; line-height:1.45;
+        }
+        .text:focus{ border-color: var(--brand); box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+
+        .actions{ display:flex; gap:10px; margin-top:12px; }
+        .btn{
+          appearance:none; border:1px solid var(--line); background:#fff;
+          color:var(--ink); padding:10px 14px; border-radius:12px;
+          font-weight:600; cursor:pointer;
+        }
+        .btn:hover{ background:#f8fafc; }
+        .btn:disabled{ opacity:.6; cursor:not-allowed; }
+        .btn--primary{ background: linear-gradient(135deg, var(--brand), #7c83ff); color:#fff; border:none; }
+        .btn--primary:hover{ filter: brightness(1.05); }
+        .btn--success{ background: linear-gradient(135deg, var(--accent), #34d399); color:#fff; border:none; }
+        .btn--success:hover{ filter: brightness(1.05); }
+
+        .note{ margin-top:10px; font-size:13px; color:var(--ink-2); }
+        .note--error{ color: var(--danger); }
+
+        .empty{ text-align:center; padding:40px 16px; color:var(--ink-3); }
+        .emoji{ font-size:38px; margin-bottom:8px; }
+        .empty__title{ font-weight:700; color:var(--ink); }
+        .empty__text{ margin-top:6px; }
+
+        .titlebar{ padding:4px 6px 2px; }
+        .title{ font-size:22px; font-weight:700; color:var(--ink); }
+        .subtitle{ margin-top:4px; color:var(--ink-3); font-size:14px; }
+
+        .props{ margin-top:16px; display:flex; flex-direction:column; gap:10px; }
+        .prop{
+          display:flex; gap:14px; align-items:flex-start;
+          padding:10px 8px; border-radius:12px;
+        }
+        .prop:hover{ background:#f6f7fb; }
+        .prop__name{ width:140px; min-width:140px; color:var(--ink-3); font-weight:600; }
+        .prop__value{ flex:1; }
+
+        .inline{
+          min-height:40px; padding:10px 12px; border-radius:10px;
+          border:1px dashed transparent; cursor:text; color:var(--ink);
+          background:transparent; line-height:1.45;
+        }
+        .inline--ghost{ color:#9aa3b2; }
+        .inline:focus{ outline:none; border-color: var(--brand); background:#fff; }
+
+        .area{
+          width:100%; min-height:84px; resize:vertical; padding:12px 12px;
+          border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--ink);
+          line-height:1.45; outline:none;
+        }
+        .area:focus{ border-color: var(--brand); box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+
+        .tags{ display:flex; flex-wrap:wrap; gap:8px; }
+        .pill{
+          background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe;
+          padding:4px 10px; border-radius:999px; font-size:13px; font-weight:600;
+        }
+        .pill--muted{ background:#f1f5f9; color:#0f172a; border-color:#e2e8f0; }
+
+        .tagEdit{
+          margin-top:8px; display:flex; gap:8px;
+        }
+        .tagInput{
+          flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
+          outline:none; background:#fff; color:var(--ink);
+        }
+        .save{ margin-top:14px; }
       `}</style>
     </main>
   );
 }
 
-/* ---------- Small components for “Notion-like” property rows ---------- */
+/* ---------- “Notion-like” property rows & editors ---------- */
 
-function Property({
-  name, value, onChange, type='text', placeholder=''
-}: { name:string; value:string; onChange:(v:string)=>void; type?:'text'|'date'; placeholder?:string }) {
-  const [editing, setEditing] = useState(false);
+function Prop({ name, children }: { name: string; children: any }) {
   return (
-    <div className="flex items-start gap-4">
-      <div className="w-40 shrink-0 text-gray-500">{name}</div>
-      <div className="flex-1">
-        {editing ? (
-          <input
-            type={type}
-            value={value}
-            placeholder={placeholder}
-            onChange={(e)=>onChange(e.target.value)}
-            onBlur={()=>setEditing(false)}
-            className="w-full border rounded-lg px-3 py-2"
-            autoFocus
-          />
-        ) : (
-          <div
-            className={`px-3 py-2 rounded-lg hover:bg-gray-50 cursor-text ${value ? 'text-gray-900' : 'text-gray-400'}`}
-            onClick={()=>setEditing(true)}
-            title="Click to edit"
-          >
-            {value || '—'}
-          </div>
-        )}
-      </div>
+    <div className="prop">
+      <div className="prop__name">{name}</div>
+      <div className="prop__value">{children}</div>
     </div>
   );
 }
 
-function PropertyArea({
-  name, value, onChange, placeholder=''
-}: { name:string; value:string; onChange:(v:string)=>void; placeholder?:string }) {
+function InlineInput({
+  value, onChange, placeholder = '', type = 'text'
+}: { value: string; onChange: (v: string) => void; placeholder?: string; type?: 'text'|'date' }) {
   const [editing, setEditing] = useState(false);
+  if (editing) {
+    return (
+      <input
+        className="inline"
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e)=>onChange(e.target.value)}
+        onBlur={()=>setEditing(false)}
+        autoFocus
+      />
+    );
+  }
   return (
-    <div className="flex items-start gap-4">
-      <div className="w-40 shrink-0 text-gray-500">{name}</div>
-      <div className="flex-1">
-        {editing ? (
-          <textarea
-            rows={4}
-            value={value}
-            placeholder={placeholder}
-            onChange={(e)=>onChange(e.target.value)}
-            onBlur={()=>setEditing(false)}
-            className="w-full border rounded-lg px-3 py-2"
-            autoFocus
-          />
-        ) : (
-          <div
-            className={`px-3 py-2 rounded-lg hover:bg-gray-50 cursor-text whitespace-pre-wrap ${value ? 'text-gray-900' : 'text-gray-400'}`}
-            onClick={()=>setEditing(true)}
-            title="Click to edit"
-          >
-            {value || '—'}
-          </div>
-        )}
-      </div>
+    <div
+      className={`inline ${value ? '' : 'inline--ghost'}`}
+      onClick={()=>setEditing(true)}
+    >
+      {value || '—'}
     </div>
   );
 }
 
-function PropertyTags({
-  name, tags, onChange
-}: { name:string; tags:string[]; onChange:(t:string[])=>void }) {
+function InlineArea({
+  value, onChange, placeholder = ''
+}: { value: string; onChange: (v: string)=>void; placeholder?: string }) {
   const [editing, setEditing] = useState(false);
-  const [text, setText] = useState(tags.join(', '));
+  if (editing) {
+    return (
+      <textarea
+        className="area"
+        value={value}
+        placeholder={placeholder}
+        onChange={(e)=>onChange(e.target.value)}
+        onBlur={()=>setEditing(false)}
+        autoFocus
+      />
+    );
+  }
+  return (
+    <div
+      className={`inline ${value ? '' : 'inline--ghost'}`}
+      onClick={()=>setEditing(true)}
+      style={{whiteSpace:'pre-wrap'}}
+    >
+      {value || '—'}
+    </div>
+  );
+}
+
+function TagEditor({
+  tags, onChange
+}: { tags: string[]; onChange:(arr:string[])=>void }) {
+  const [text, setText] = useState('');
   const pills = (tags || []).map((t, i) => (
-    <span key={i} className="inline-flex items-center px-2.5 py-1 rounded-full text-sm bg-gray-100 text-gray-800 mr-1 mt-1">
-      {t}
-    </span>
+    <span key={i} className="pill">{t}</span>
   ));
   return (
-    <div className="flex items-start gap-4">
-      <div className="w-40 shrink-0 text-gray-500">{name}</div>
-      <div className="flex-1">
-        {editing ? (
-          <input
-            value={text}
-            onChange={(e)=>setText(e.target.value)}
-            onBlur={()=>{
-              setEditing(false);
-              onChange(text.split(',').map(s=>s.trim()).filter(Boolean));
-            }}
-            className="w-full border rounded-lg px-3 py-2"
-            autoFocus
-            placeholder="comma, separated, tags"
-          />
-        ) : (
-          <div
-            className="px-2 py-1 rounded-lg hover:bg-gray-50 cursor-text"
-            onClick={()=>setEditing(true)}
-            title="Click to edit"
-          >
-            {pills.length ? pills : <span className="text-gray-400">—</span>}
-          </div>
+    <>
+      <div className="tags">
+        {pills.length ? pills : <span className="pill pill--muted">No tags</span>}
+      </div>
+      <div className="tagEdit">
+        <input
+          className="tagInput"
+          placeholder="Add tag and press Enter…"
+          value={text}
+          onChange={(e)=>setText(e.target.value)}
+          onKeyDown={(e)=>{
+            if (e.key === 'Enter' && text.trim()) {
+              onChange([...(tags||[]), text.trim()]);
+              setText('');
+            }
+          }}
+        />
+        <button
+          className="btn"
+          onClick={()=>{
+            if (text.trim()) {
+              onChange([...(tags||[]), text.trim()]);
+              setText('');
+            }
+          }}
+        >Add</button>
+        {!!(tags && tags.length) && (
+          <button
+            className="btn"
+            onClick={()=>onChange([])}
+            title="Clear all tags"
+          >Clear</button>
         )}
       </div>
-    </div>
+    </>
   );
 }
