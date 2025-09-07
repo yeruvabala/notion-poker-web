@@ -15,7 +15,7 @@ type Fields = {
   notes?: string | null;
 };
 
-/* ---------- Small UI bits with INLINE styles (cannot be overridden) ---------- */
+/* ---------- Small UI bits with INLINE styles ---------- */
 const pillStyle: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
@@ -287,16 +287,21 @@ export default function Page() {
                 <div>
                   <Row label="Cards"><div>{fields.cards || '—'}</div></Row>
                   <Row label="Date"><div>{fields.date || '—'}</div></Row>
+
+                  {/* FULL TEXT (no truncation) */}
                   <Row label="Exploit Deviation">
-                    <div style={{display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical', overflow:'hidden'}}>
+                    <div style={{whiteSpace:'pre-wrap', lineHeight:1.55}}>
                       {fields.exploit_deviation || '—'}
                     </div>
                   </Row>
+
+                  {/* FULL TEXT (no truncation) */}
                   <Row label="GTO Strategy">
-                    <div style={{display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical', overflow:'hidden'}}>
+                    <div style={{whiteSpace:'pre-wrap', lineHeight:1.55}}>
                       {fields.gto_strategy || '—'}
                     </div>
                   </Row>
+
                   <Row label="Learning Tag">
                     <TagEditor
                       tags={fields.learning_tag ?? []}
@@ -306,7 +311,7 @@ export default function Page() {
                   </Row>
                   <Row label="Position"><div>{fields.position || '—'}</div></Row>
                   <Row label="Stakes"><div>{fields.stakes || '—'}</div></Row>
-                  <Row label="Villain Action"><div>{fields.villain_action || '—'}</div></Row>
+                  <Row label="Villain Action"><div style={{whiteSpace:'pre-wrap'}}>{fields.villain_action || '—'}</div></Row>
                 </div>
 
                 {/* Footer buttons */}
