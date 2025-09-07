@@ -13,5 +13,11 @@
     "openai": "4.56.0",
     "@notionhq/client": "2.2.15"
   },
+  "devDependencies": {
+  "typescript": "^5.4.5",
+  "@types/react": "^18.2.66",
+  "@types/node": "^20.11.30"
+  },
   "type": "module"
+  
 }
