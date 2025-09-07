@@ -1,9 +1,11 @@
+// app/api/parse/route.ts
 import { NextResponse } from "next/server";
 import { openai } from "../../../lib/openai";
 
 const SYSTEM = `You are a poker study parser. Extract concise fields from the user's free text.
-Return STRICT JSON with keys: date (YYYY-MM-DD), stakes (number), position (UTG|MP|CO|BTN|SB|BB), cards,
-villain_action, gto_strategy, exploit_deviation, learning_tag (array of strings). If unknown, use null or []`;
+Return STRICT JSON with keys: date (YYYY-MM-DD), stakes (string), position (UTG|MP|CO|BTN|SB|BB), cards,
+villain_action, gto_strategy, exploit_deviation, learning_tag (array of strings).
+If unknown, use null or [].`;
 
 export async function POST(req: Request) {
   const { input } = await req.json();
@@ -11,7 +13,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing input" }, { status: 400 });
   }
   const today = new Date().toISOString().slice(0, 10);
-  const user = `Text: ${input}\nToday: ${today}\nRules: If date missing, use Today. Stakes should be numeric only (no $).`;
+  const user = `Text: ${input}\nToday: ${today}\nRules: If date missing, use Today. Stakes is a free-form string (e.g., "$2/$5" or "25").`;
 
   const resp = await openai.chat.completions.create({
     model: "gpt-4o-mini",
