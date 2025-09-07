@@ -35,7 +35,8 @@ const primaryBtn: React.CSSProperties = {
   background: 'linear-gradient(135deg,#1e3a8a,#1d4ed8)',
   color: '#fff',
   border: 'none',
-  boxShadow: '0 6px 14px rgba(37,99,235,.28)'
+  boxShadow: '0 6px 14px rgba(37,99,235,.28)',
+  transition: 'transform .04s ease-in-out'
 };
 
 const lightBtn: React.CSSProperties = {
@@ -214,7 +215,7 @@ export default function Page() {
   }
 
   return (
-    <main style={{fontFamily:'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial', color:'#0f172a'}}>
+    <main style={{fontFamily:'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial', color:'#0f172a', boxSizing:'border-box'}}>
       {/* Top nav */}
       <div style={{maxWidth:1100, margin:'0 auto', padding:'22px 20px 10px'}}>
         <h1 style={{margin:0, fontSize:28}}>Notion Poker Ingest</h1>
@@ -228,18 +229,35 @@ export default function Page() {
             background:'#fff', border:'1px solid #e9edf7', borderRadius:16, padding:16,
             boxShadow:'0 10px 24px rgba(2,6,23,.05)'
           }}>
-            <div style={{margin:'6px 0 8px', fontSize:12, fontWeight:900, letterSpacing:.35, color:'#1e40af'}}>HAND PLAYED</div>
+            <div style={{margin:'6px 0 10px', fontSize:12, fontWeight:900, letterSpacing:.35, color:'#1e40af'}}>HAND PLAYED</div>
 
-            <textarea
-              placeholder="Paste the hand history or describe the hand in plain English..."
-              value={input}
-              onChange={(e)=>setInput(e.target.value)}
-              style={{
-                width:'100%', height:360, resize:'vertical', padding:'14px 16px',
-                borderRadius:12, border:'1px solid #e9edf7', background:'#fff',
-                outline:'none', fontSize:15, lineHeight:1.55
-              }}
-            />
+            {/* SUB-BOX WRAPPER for the textarea (keeps it visually inside the card) */}
+            <div style={{
+              border:'1px solid #e9edf7',
+              borderRadius:12,
+              background:'#ffffff',
+              padding:10,
+              overflow:'hidden'
+            }}>
+              <textarea
+                placeholder="Paste the hand history or describe the hand in plain English..."
+                value={input}
+                onChange={(e)=>setInput(e.target.value)}
+                style={{
+                  width:'100%',
+                  minHeight:320,
+                  resize:'vertical',
+                  padding:'8px 10px',
+                  border:'none',
+                  borderRadius:8,     // radius INSIDE the sub-box, not the outer card
+                  outline:'none',
+                  fontSize:15,
+                  lineHeight:1.55,
+                  background:'#fff',
+                  boxSizing:'border-box',
+                }}
+              />
+            </div>
 
             <div style={{display:'flex', gap:10, marginTop:12}}>
               <button
