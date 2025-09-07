@@ -4,7 +4,7 @@ import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// --- Strong, reusable system prompt that forces a detailed plan ---
+// Strong system prompt that forces a detailed plan
 const SYSTEM = `
 You are a poker strategy assistant. Return ONLY JSON.
 
@@ -45,7 +45,7 @@ River: (card spelled out; note if improves/neutral/bricks)
 
 Rules:
 - Use % pot or bb sizes everywhere (e.g., 10–12bb, 25–33%, 50–60%, ≥75%).
-- Keep gto_strategy <= 160 lines, but sufficiently detailed (not high-level).
+- Keep gto_strategy sufficiently detailed (not high-level).
 - DO NOT mention “Hero’s hand:”/“Villain’s hand:” literally—just give the strategy.
 - No markdown, no extra keys, return JSON object ONLY.
 
@@ -54,10 +54,21 @@ Write exploit_deviation as 2–4 crisp sentences with pool-adjustments (e.g., li
 Write learning_tag as 1–3 short tags, e.g. ["SB vs CO 3-bet pot","Small-bet low boards","Overfold big river"].
 `.trim();
 
-// small checker: do we have required detail?
+// ---- helpers ----
+function normalizeToLowerString(val: any): string {
+  // Safely coerce whatever came back into a lowercased string
+  try {
+    if (typeof val === "string") return val.toLowerCase();
+    if (val == null) return "";
+    // stringify objects/arrays/numbers, then lowercase
+    return String(typeof val === "object" ? JSON.stringify(val) : val).toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
 function looksDetailed(json: any) {
-  const s: string = (json?.gto_strategy ?? "").toLowerCase();
-  if (!s) return false;
+  const s = normalizeToLowerString(json?.gto_strategy);
   const hasSections =
     s.includes("preflop:") &&
     s.includes("flop:") &&
@@ -70,16 +81,19 @@ function looksDetailed(json: any) {
 }
 
 function normalizeTags(val: any): string[] {
-  if (Array.isArray(val)) return val.map(String).map(t => t.trim()).filter(Boolean);
-  if (typeof val === "string")
-    return val.split(",").map(s => s.trim()).filter(Boolean).slice(0, 3);
-  return [];
+  try {
+    if (Array.isArray(val)) return val.map(String).map(t => t.trim()).filter(Boolean).slice(0, 3);
+    if (typeof val === "string")
+      return val.split(",").map(s => s.trim()).filter(Boolean).slice(0, 3);
+    return [];
+  } catch {
+    return [];
+  }
 }
 
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
-
     const {
       date,
       stakes,
@@ -106,7 +120,7 @@ Task
 Use the above to produce the detailed JSON as required in the SYSTEM.
 `.trim();
 
-    // First attempt
+    // 1) First attempt
     const first = await openai.chat.completions.create({
       model,
       temperature: 0.1,
@@ -118,9 +132,7 @@ Use the above to produce the detailed JSON as required in the SYSTEM.
       response_format: { type: "json_object" },
     });
 
-    const text1 =
-      first?.choices?.[0]?.message?.content?.trim() || "{}";
-
+    const text1 = first?.choices?.[0]?.message?.content?.trim() || "{}";
     let out: any;
     try {
       out = JSON.parse(text1);
@@ -128,10 +140,12 @@ Use the above to produce the detailed JSON as required in the SYSTEM.
       out = { gto_strategy: "", exploit_deviation: "", learning_tag: [] };
     }
 
-    // Quality guard: if not detailed enough, reprompt to "fix" ONLY gto_strategy
+    // 2) Quality guard & repair pass if too light
     if (!looksDetailed(out)) {
       const fixPrompt = `
-Here is the JSON you returned. Rewrite ONLY the gto_strategy field to conform strictly to the SYSTEM format (full Preflop/Flop/Turn/River with multiple bet-size reactions). Keep exploit_deviation and learning_tag unchanged. Return JSON only.
+Rewrite ONLY the gto_strategy field to strictly follow the SYSTEM's format
+(Preflop/Flop/Turn/River with size-specific reactions). Keep exploit_deviation and
+learning_tag unchanged. Return JSON only.
 
 JSON:
 ${JSON.stringify(out)}
@@ -159,6 +173,14 @@ ${JSON.stringify(out)}
 
     // Normalize tags
     out.learning_tag = normalizeTags(out.learning_tag);
+
+    // Make sure gto_strategy/exploit_deviation are strings
+    if (typeof out.gto_strategy !== "string") {
+      out.gto_strategy = String(out.gto_strategy ?? "");
+    }
+    if (typeof out.exploit_deviation !== "string") {
+      out.exploit_deviation = String(out.exploit_deviation ?? "");
+    }
 
     return NextResponse.json(out);
   } catch (err: any) {
