@@ -73,7 +73,7 @@ export default function Home() {
   }
 
   // ---------- Parse raw text with /api/parse, then call analyzer ----------
-  async function handleParse() {
+  async function handleSend() {
     setStatus(null);
     setAiError(null);
     const res = await fetch('/api/parse', {
@@ -112,7 +112,7 @@ export default function Home() {
       <header className="hero">
         <div className="hero__inner">
           <h1>Notion Poker Ingest</h1>
-          <p>Paste → Parse → Analyze → Save</p>
+          <p>Paste → <b>Send</b> → Analyze → Save</p>
         </div>
       </header>
 
@@ -121,25 +121,25 @@ export default function Home() {
           {/* LEFT: Editor */}
           <section className="card">
             <div className="card__title">
-              <span className="dot dot--green" />
-              Hand Text
+              <span className="dot dot--brand" />
+              Hand Played
             </div>
             <textarea
               className="text"
-              placeholder="Paste your hand history or notes…"
+              placeholder="Paste your hand exactly as you played it…"
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
             <div className="actions">
               <button
                 className="btn btn--primary"
-                onClick={handleParse}
+                onClick={handleSend}
                 disabled={!input.trim() || aiLoading}
               >
-                {aiLoading ? 'Analyzing…' : 'Parse & Analyze'}
+                {aiLoading ? 'Sending…' : 'Send'}
               </button>
               <button
-                className="btn"
+                className="btn btn--muted"
                 onClick={() => { setFields(null); setInput(''); setStatus(null); setAiError(null); }}
               >
                 Clear
@@ -155,7 +155,7 @@ export default function Home() {
               <div className="empty">
                 <div className="emoji">🃏</div>
                 <div className="empty__title">Nothing parsed yet</div>
-                <div className="empty__text">Paste a hand on the left and click <b>Parse & Analyze</b>.</div>
+                <div className="empty__text">Paste a hand on the left and hit <b>Send</b>.</div>
               </div>
             ) : (
               <>
@@ -248,39 +248,39 @@ export default function Home() {
         </div>
       </div>
 
-      {/* -------- STYLES (no Tailwind required) -------- */}
+      {/* -------- STYLES: high-contrast light theme -------- */}
       <style jsx>{`
         :root{
-          --bg: #0b1020;
-          --ink: #0f172a;
-          --ink-2: #334155;
-          --ink-3: #64748b;
+          --bg: #f3f6fb;
+          --ink: #0f172a;     /* main text */
+          --ink-2: #334155;   /* secondary */
+          --ink-3: #64748b;   /* muted */
           --card: #ffffff;
-          --glass: rgba(255,255,255,0.08);
-          --line: rgba(15,23,42,0.08);
-          --brand: #6366f1;
-          --brand-2: #22d3ee;
-          --accent: #10b981;
-          --danger: #ef4444;
+          --glass: rgba(255,255,255,0.92);
+          --line: #e5e7eb;
+          --brand: #2563eb;   /* blue */
+          --brand-2: #06b6d4; /* cyan */
+          --accent: #16a34a;  /* green */
+          --danger: #dc2626;  /* red */
         }
         *{ box-sizing: border-box; }
-        body{ margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:#0b1020; color:#0b1020; }
+        body{ margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:var(--bg); color:var(--ink); }
 
         .page{ min-height:100vh; }
         .hero{
           background:
-            radial-gradient(1200px 500px at 20% -10%, rgba(34,211,238,.25), transparent 60%),
-            radial-gradient(1200px 500px at 80% -10%, rgba(99,102,241,.25), transparent 60%),
-            linear-gradient(180deg, #0b1020 0%, #0b1020 60%, #0e1326 100%);
-          padding: 52px 0 24px;
-          color: #e5e7eb;
-          border-bottom: 1px solid rgba(255,255,255,.08);
+            radial-gradient(900px 400px at 10% -10%, rgba(37,99,235,.15), transparent 60%),
+            radial-gradient(900px 400px at 90% -10%, rgba(6,182,212,.15), transparent 60%),
+            linear-gradient(180deg, #f8fbff 0%, #f3f6fb 100%);
+          padding: 46px 0 20px;
+          color: var(--ink);
+          border-bottom: 1px solid var(--line);
         }
         .hero__inner{ max-width:1100px; margin:0 auto; padding:0 20px; }
         .hero h1{ margin:0; font-size:28px; letter-spacing:.2px; }
-        .hero p{ margin:6px 0 0; opacity:.8; }
+        .hero p{ margin:6px 0 0; color:var(--ink-3); }
 
-        .shell{ max-width:1100px; margin:-28px auto 48px; padding:0 20px; }
+        .shell{ max-width:1100px; margin:-22px auto 48px; padding:0 20px; }
         .grid{
           display:grid; gap:22px;
           grid-template-columns: 1fr 1fr;
@@ -295,39 +295,41 @@ export default function Home() {
           border-radius: 18px;
           padding: 18px;
           box-shadow:
-            0 10px 30px rgba(2,6,23,.08),
-            0 2px 6px rgba(2,6,23,.06);
+            0 10px 30px rgba(2,6,23,.05),
+            0 2px 6px rgba(2,6,23,.04);
         }
         .card--glass{
-          background: linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,.75));
+          background: var(--glass);
           backdrop-filter: blur(6px);
         }
 
         .card__title{
-          font-size:13px; font-weight:600; color:var(--ink-2);
+          font-size:13px; font-weight:700; color:var(--brand);
           display:flex; align-items:center; gap:8px; margin-bottom:10px;
-          letter-spacing:.2px; text-transform:uppercase;
+          letter-spacing:.35px; text-transform:uppercase;
         }
         .dot{ width:8px; height:8px; border-radius:50%; background:#94a3b8; }
-        .dot--green{ background: var(--accent); }
+        .dot--brand{ background: var(--brand); }
 
         .text{
           width:100%; height:420px; resize:vertical;
           padding:14px 16px; border-radius:12px; border:1px solid var(--line);
-          background:#fbfbfd; color:var(--ink);
-          outline:none; font-size:15px; line-height:1.45;
+          background:#ffffff; color:var(--ink);
+          outline:none; font-size:15px; line-height:1.55;
+          box-shadow: inset 0 1px 0 #f8fafc;
         }
-        .text:focus{ border-color: var(--brand); box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+        .text:focus{ border-color: var(--brand); box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
 
         .actions{ display:flex; gap:10px; margin-top:12px; }
         .btn{
           appearance:none; border:1px solid var(--line); background:#fff;
           color:var(--ink); padding:10px 14px; border-radius:12px;
-          font-weight:600; cursor:pointer;
+          font-weight:700; cursor:pointer;
         }
         .btn:hover{ background:#f8fafc; }
-        .btn:disabled{ opacity:.6; cursor:not-allowed; }
-        .btn--primary{ background: linear-gradient(135deg, var(--brand), #7c83ff); color:#fff; border:none; }
+        .btn:disabled{ opacity:.65; cursor:not-allowed; }
+        .btn--muted{ background:#f8fafc; }
+        .btn--primary{ background: linear-gradient(135deg, var(--brand), #3b82f6); color:#fff; border:none; }
         .btn--primary:hover{ filter: brightness(1.05); }
         .btn--success{ background: linear-gradient(135deg, var(--accent), #34d399); color:#fff; border:none; }
         .btn--success:hover{ filter: brightness(1.05); }
@@ -337,47 +339,50 @@ export default function Home() {
 
         .empty{ text-align:center; padding:40px 16px; color:var(--ink-3); }
         .emoji{ font-size:38px; margin-bottom:8px; }
-        .empty__title{ font-weight:700; color:var(--ink); }
+        .empty__title{ font-weight:800; color:var(--ink); }
         .empty__text{ margin-top:6px; }
 
         .titlebar{ padding:4px 6px 2px; }
-        .title{ font-size:22px; font-weight:700; color:var(--ink); }
-        .subtitle{ margin-top:4px; color:var(--ink-3); font-size:14px; }
+        .title{ font-size:22px; font-weight:800; color:var(--ink); }
+        .subtitle{ margin-top:4px; color:var(--ink-2); font-size:14px; }
 
         .props{ margin-top:16px; display:flex; flex-direction:column; gap:10px; }
         .prop{
           display:flex; gap:14px; align-items:flex-start;
           padding:10px 8px; border-radius:12px;
         }
-        .prop:hover{ background:#f6f7fb; }
-        .prop__name{ width:140px; min-width:140px; color:var(--ink-3); font-weight:600; }
+        .prop + .prop{ border-top: 1px dashed #eef2f7; padding-top:14px; }
+        .prop__name{
+          width:140px; min-width:140px;
+          color:var(--brand); font-weight:800; text-transform:uppercase; letter-spacing:.35px;
+        }
         .prop__value{ flex:1; }
 
+        /* VIEW mode = boxed values for clear separation */
         .inline{
-          min-height:40px; padding:10px 12px; border-radius:10px;
-          border:1px dashed transparent; cursor:text; color:var(--ink);
-          background:transparent; line-height:1.45;
+          min-height:42px; padding:10px 12px; border-radius:10px;
+          border:1px solid var(--line); background:#fff; color:var(--ink);
+          cursor:text; line-height:1.5;
         }
         .inline--ghost{ color:#9aa3b2; }
-        .inline:focus{ outline:none; border-color: var(--brand); background:#fff; }
+        .inline:hover{ background:#fbfdff; }
+        .inline:focus{ outline:none; border-color: var(--brand); background:#fff; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
 
         .area{
-          width:100%; min-height:84px; resize:vertical; padding:12px 12px;
+          width:100%; min-height:100px; resize:vertical; padding:12px 12px;
           border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--ink);
-          line-height:1.45; outline:none;
+          line-height:1.5; outline:none;
         }
-        .area:focus{ border-color: var(--brand); box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+        .area:focus{ border-color: var(--brand); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
 
         .tags{ display:flex; flex-wrap:wrap; gap:8px; }
         .pill{
-          background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe;
-          padding:4px 10px; border-radius:999px; font-size:13px; font-weight:600;
+          background:#e0e7ff; color:#1e3a8a; border:1px solid #c7d2fe;
+          padding:4px 10px; border-radius:999px; font-size:13px; font-weight:700;
         }
         .pill--muted{ background:#f1f5f9; color:#0f172a; border-color:#e2e8f0; }
 
-        .tagEdit{
-          margin-top:8px; display:flex; gap:8px;
-        }
+        .tagEdit{ margin-top:8px; display:flex; gap:8px; }
         .tagInput{
           flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
           outline:none; background:#fff; color:var(--ink);
@@ -420,6 +425,7 @@ function InlineInput({
     <div
       className={`inline ${value ? '' : 'inline--ghost'}`}
       onClick={()=>setEditing(true)}
+      title="Click to edit"
     >
       {value || '—'}
     </div>
@@ -446,6 +452,7 @@ function InlineArea({
     <div
       className={`inline ${value ? '' : 'inline--ghost'}`}
       onClick={()=>setEditing(true)}
+      title="Click to edit"
       style={{whiteSpace:'pre-wrap'}}
     >
       {value || '—'}
@@ -479,7 +486,7 @@ function TagEditor({
           }}
         />
         <button
-          className="btn"
+          className="btn btn--muted"
           onClick={()=>{
             if (text.trim()) {
               onChange([...(tags||[]), text.trim()]);
@@ -489,7 +496,7 @@ function TagEditor({
         >Add</button>
         {!!(tags && tags.length) && (
           <button
-            className="btn"
+            className="btn btn--muted"
             onClick={()=>onChange([])}
             title="Clear all tags"
           >Clear</button>
