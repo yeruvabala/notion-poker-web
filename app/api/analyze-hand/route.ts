@@ -2,225 +2,176 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// ---------- Helpers to normalize cards & extract facts from raw text ----------
-const rankMap: Record<string, string> = {
-  a: 'A',
-  k: 'K',
-  q: 'Q',
-  j: 'J',
-  t: 'T',
-  '10': 'T',
-  '9': '9',
-  '8': '8',
-  '7': '7',
-  '6': '6',
-  '5': '5',
-  '4': '4',
-  '3': '3',
-  '2': '2',
-};
+// ---------- helpers ----------
 const suitUnicode = { d: '♦', c: '♣', h: '♥', s: '♠' } as const;
 const unicodeToLetter: Record<string, 'd' | 'c' | 'h' | 's'> = {
-  '♦': 'd',
-  '♣': 'c',
-  '♥': 'h',
-  '♠': 's',
+  '♦': 'd', '♣': 'c', '♥': 'h', '♠': 's',
 };
-function normalizeOneCard(token: string): string | null {
-  if (!token) return null;
+const rankMap: Record<string, string> = {
+  a: 'A', k: 'K', q: 'Q', j: 'J', t: 'T',
+  '10': 'T', '9': '9','8':'8','7':'7','6':'6','5':'5','4':'4','3':'3','2':'2',
+};
 
-  // Examples: '4d', '8s', '2c', 'Ad', 'A♦', '9♥'
-  let raw = token.trim().toLowerCase();
+function normalizeOneCard(tok: string): string | null {
+  if (!tok) return null;
+  let raw = tok.trim().toLowerCase();
 
-  // handle unicode suit
-  const uniSuit = raw[raw.length - 1];
-  if (unicodeToLetter[uniSuit]) {
-    const r = raw.slice(0, raw.length - 1);
-    const R =
-      rankMap[r] ||
-      rankMap[r.replace(/[^a-z0-9]/g, '')] ||
-      r.toUpperCase();
-    return `${R}${suitUnicode[unicodeToLetter[uniSuit]]}`;
+  // unicode suit like "4♦"
+  const u = raw.slice(-1);
+  if (unicodeToLetter[u]) {
+    const r = raw.slice(0, -1);
+    const R = rankMap[r] || rankMap[r.replace(/[^a-z0-9]/g, '')] || r.toUpperCase();
+    return `${R}${u}`;
   }
 
-  // handle letter suit
-  const last = raw[raw.length - 1];
-  if (/[cdhs]/.test(last)) {
-    const suit = suitUnicode[last as 'c' | 'd' | 'h' | 's'];
-    let core = raw.slice(0, -1);
-    const R =
-      rankMap[core] ||
-      rankMap[core.replace(/[^a-z0-9]/g, '')] ||
-      core.toUpperCase();
+  // letter suit like "4d"
+  const s = raw.slice(-1);
+  if (/[cdhs]/.test(s)) {
+    const suit = suitUnicode[s as 'c'|'d'|'h'|'s'];
+    const core = raw.slice(0, -1);
+    const R = rankMap[core] || rankMap[core.replace(/[^a-z0-9]/g, '')] || core.toUpperCase();
     return `${R}${suit}`;
-  }
-
-  // already normalized like A♠?
-  if (raw.length === 2 && unicodeToLetter[raw[1]]) {
-    const R =
-      rankMap[raw[0]] || raw[0].toUpperCase();
-    return `${R}${raw[1]}`;
   }
 
   return null;
 }
 
+function allMatches(re: RegExp, text: string): RegExpMatchArray[] {
+  const out: RegExpMatchArray[] = [];
+  re.lastIndex = 0;
+  let m: RegExpMatchArray | null;
+  while ((m = re.exec(text)) !== null) out.push(m);
+  return out;
+}
+
+// Prefer “… bb eff/effective”; else choose the largest “NN bb”
 function extractEffStackBB(text: string): number | null {
-  const m =
-    text.match(/(\d{2,3})\s*bb\s*(?:eff|effective)?/i) ||
-    text.match(/eff\s*(\d{2,3})\s*bb/i);
-  if (m) {
-    const n = parseInt(m[1], 10);
-    if (!isNaN(n)) return n;
-  }
+  // prefer effective
+  const eff = allMatches(/(\d{2,3})\s*bb\b[^\n]{0,20}\b(eff|effective)\b/gi, text)
+    .map(m => parseInt(m[1], 10))
+    .filter(n => !Number.isNaN(n));
+  if (eff.length) return Math.max(...eff);
+
+  // otherwise take max NN bb (word boundary)
+  const plain = allMatches(/(\d{2,3})\s*bb\b/gi, text)
+    .map(m => parseInt(m[1], 10))
+    .filter(n => !Number.isNaN(n));
+  if (plain.length) return Math.max(...plain);
+
   return null;
 }
 
 function extractFlop(text: string): string[] | null {
-  // "flop comes 4d 8s 2c", "flop 4♦ 8♠ 2♣"
-  const line =
-    text.match(/flop[^a-z0-9]*([akqjt2-9][cdhs♦♣♥♠])[^a-z0-9]+([akqjt2-9][cdhs♦♣♥♠])[^a-z0-9]+([akqjt2-9][cdhs♦♣♥♠])/i);
-  if (!line) return null;
-  const c1 = normalizeOneCard(line[1]);
-  const c2 = normalizeOneCard(line[2]);
-  const c3 = normalizeOneCard(line[3]);
-  if (c1 && c2 && c3) return [c1, c2, c3];
-  return null;
+  const m = text.match(
+    /flop[^a-z0-9]*([akqjt2-9][cdhs♦♣♥♠])[^a-z0-9]+([akqjt2-9][cdhs♦♣♥♠])[^a-z0-9]+([akqjt2-9][cdhs♦♣♥♠])/i
+  );
+  if (!m) return null;
+  const c1 = normalizeOneCard(m[1]);
+  const c2 = normalizeOneCard(m[2]);
+  const c3 = normalizeOneCard(m[3]);
+  return c1 && c2 && c3 ? [c1, c2, c3] : null;
 }
 function extractTurn(text: string): string | null {
   const m = text.match(/turn[^a-z0-9]*([akqjt2-9][cdhs♦♣♥♠])/i);
-  if (!m) return null;
-  return normalizeOneCard(m[1]);
+  return m ? normalizeOneCard(m[1]) : null;
 }
 function extractRiver(text: string): string | null {
   const m = text.match(/river[^a-z0-9]*([akqjt2-9][cdhs♦♣♥♠])/i);
-  if (!m) return null;
-  return normalizeOneCard(m[1]);
+  return m ? normalizeOneCard(m[1]) : null;
 }
 
 function safeJsonParse<T = any>(s: string): T | null {
   try {
-    const start = s.indexOf('{');
-    const end = s.lastIndexOf('}');
-    if (start >= 0 && end > start) {
-      return JSON.parse(s.slice(start, end + 1)) as T;
-    }
-  } catch (e) {
-    // ignore
-  }
+    const a = s.indexOf('{');
+    const b = s.lastIndexOf('}');
+    if (a >= 0 && b > a) return JSON.parse(s.slice(a, b + 1));
+  } catch {}
   return null;
+}
+
+function coerceGtoStrategy(v: any): string {
+  if (!v) return '—';
+  if (typeof v === 'string') return v;
+  if (typeof v === 'object') {
+    const pre = v.preflop || v.Preflop;
+    const flp = v.flop || v.Flop;
+    const trn = v.turn || v.Turn;
+    const rvr = v.river || v.River;
+    return [pre, flp, trn, rvr].filter(Boolean).join('\n');
+  }
+  return String(v);
 }
 
 // ---------- Route ----------
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-
-    const rawText: string = (body?.rawText || '').toString();
-    const position: string = (body?.position || '').toString();
-    const stakes: string = (body?.stakes || '').toString();
-    const villainAction: string = (body?.villainAction || '').toString();
-    const cards: string = (body?.cards || '').toString();
-
-    // Extract facts from the user’s text; if missing, leave null to avoid hallucination.
-    const effStackBB = extractEffStackBB(rawText);
-    const flop = extractFlop(rawText);
-    const turn = extractTurn(rawText);
-    const river = extractRiver(rawText);
+    const rawText = String(body?.rawText || '');
+    const position = String(body?.position || '');
+    const stakes = String(body?.stakes || '');
+    const villainAction = String(body?.villainAction || '');
+    const cards = String(body?.cards || '');
 
     const facts = {
       position: position || null,
       stakes: stakes || null,
       cards: cards || null,
-      effStackBB: effStackBB || null,
-      flop, // array or null
-      turn: turn || null,
-      river: river || null,
+      effStackBB: extractEffStackBB(rawText),
+      flop: extractFlop(rawText),
+      turn: extractTurn(rawText),
+      river: extractRiver(rawText),
       villainAction: villainAction || null,
     };
 
-    // Build a tight prompt that forces these facts into the 4-line GTO summary,
-    // and also returns a structured "expanded" branch map.
     const system = `
 You are a poker strategy assistant. Return ONLY JSON.
 Keys:
-- gto_strategy (string): EXACTLY 4 lines, each keyed to street and embedding the facts we provide:
-  1) "Preflop (SB vs CO, <stack>bb): 3-bet 10–12bb; Axs/A4s mixes (≈20–35%). Fold to 4-bets at this depth." (use exact stack)
-  2) "Flop <C1><C2><C3> (OOP, 3-bet pot): ..." (use exact flop cards)
-  3) "Turn <card>: ..." (use exact turn card)
-  4) "River <card>: ..." (use exact river card)
-  Keep each line specific with size guidelines (e.g., 25–33%, 50–60%, 66–75%, overbet), and how to respond to raises.
+- gto_strategy (string or object): If object, use keys {preflop, flop, turn, river}. Each line must embed provided facts where available:
+  "Preflop (SB vs CO, <stack>bb): …"
+  "Flop <F1><F2><F3> (OOP, 3-bet pot): …"
+  "Turn <card>: …"
+  "River <card>: …"
 - exploit_deviation (string): 2–4 concise sentences; pool exploits only.
 - learning_tag (array of 1–3 short strings).
-- gto_expanded (string): a branch map with *numbered* items for Preflop / Flop / Turn / River. Under each, include size-conditioned responses (e.g., "if raised to 3–3.5× → fold", "vs 33–50% → call", "vs 66–75% → mix/fold", "vs overbet → fold"). Embed the exact board/street cards in Flop/Turn/River headers.
+- gto_expanded (string): Numbered branch map with size-conditioned responses.
 
-Style constraints:
-- No markdown. No extra keys. JSON object only. No code fences.
-- Must embed the provided facts verbatim where applicable (stack, flop, turn, river).
-- If a fact is missing, write "unknown".
-`;
+No markdown, no extra keys, JSON object only. Mirror provided facts verbatim if present; use "unknown" if absent.`;
 
     const user = {
       role: 'user' as const,
-      content: JSON.stringify(
-        {
-          facts,
-          guidance: {
-            // A minimal nudge for A4s in SB vs CO; model should still reason from facts
-            preflop_baseline: 'SB vs CO, 150bb typical: 3-bet 10–12bb; A4s mixes as a low-frequency bluff. Fold to 4-bets at 150bb.',
-            flop_baseline:
-              'OOP in 3-bet pots on low/rainbow boards: small c-bet 25–33% at decent frequency; fold to large raises with bottom pair.',
-          },
-        },
-        null,
-        2
-      ),
+      content: JSON.stringify({ facts }, null, 2),
     };
 
     const resp = await openai.chat.completions.create({
       model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
       temperature: 0.2,
-      messages: [
-        { role: 'system', content: system.trim() },
-        user,
-      ],
+      messages: [{ role: 'system', content: system.trim() }, user],
     });
 
     const raw = resp.choices?.[0]?.message?.content || '';
-    const parsed = safeJsonParse<{
-      gto_strategy?: string;
-      exploit_deviation?: string;
-      learning_tag?: string[];
-      gto_expanded?: string;
-    }>(raw);
+    const parsed = safeJsonParse<any>(raw) || {};
 
-    // Build safe response
     const out = {
-      gto_strategy: (parsed?.gto_strategy || '—').toString(),
-      exploit_deviation: (parsed?.exploit_deviation || '—').toString(),
-      learning_tag: Array.isArray(parsed?.learning_tag)
-        ? parsed!.learning_tag.slice(0, 3).map((s) => s.toString())
+      gto_strategy: coerceGtoStrategy(parsed.gto_strategy),
+      exploit_deviation: String(parsed.exploit_deviation || '—'),
+      learning_tag: Array.isArray(parsed.learning_tag)
+        ? parsed.learning_tag.slice(0, 3).map((s: any) => String(s))
         : [],
-      gto_expanded: (parsed?.gto_expanded || '—').toString(),
+      gto_expanded: String(parsed.gto_expanded || '—'),
       facts: {
-        effStackBB,
-        flop,
-        turn,
-        river,
+        effStackBB: facts.effStackBB,
+        flop: facts.flop,
+        turn: facts.turn,
+        river: facts.river,
         position: facts.position,
       },
     };
 
     return NextResponse.json(out);
-  } catch (err: any) {
-    console.error('analyze-hand error', err);
-    return NextResponse.json(
-      { error: 'Failed to analyze hand' },
-      { status: 500 }
-    );
+  } catch (e) {
+    console.error('analyze-hand error', e);
+    return NextResponse.json({ error: 'Failed to analyze hand' }, { status: 500 });
   }
 }
