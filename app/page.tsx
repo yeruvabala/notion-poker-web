@@ -1,229 +1,186 @@
+// app/page.tsx
 'use client';
 
-import { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
-type Fields = {
-  date?: string | null;
-  stakes?: string | number | null; // text for your Notion mapping
-  position?: string | null;
-  cards?: string | null;
-  villain_action?: string | null;
-
-  // analysis
-  gto_strategy?: string | null;
-  exploit_deviation?: string | null;
+type Analysis = {
+  gto_strategy?: string;
+  exploit_deviation?: string;
   learning_tag?: string[];
-  gto_expanded?: string | null; // full branch map
+  gto_expanded?: string;
+  facts?: {
+    effStackBB?: number | null;
+    flop?: string[] | null;
+    turn?: string | null;
+    river?: string | null;
+    position?: string | null;
+  };
 };
 
-export default function Home() {
-  const [input, setInput] = useState<string>('');            // user hand text
-  const [fields, setFields] = useState<Fields | null>(null); // parsed + AI filled, starts empty
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
+export default function Page() {
+  // LEFT: the freeform input
+  const [rawText, setRawText] = useState('');
+
+  // RIGHT: parsed/editable-ish fields you already show
+  const [fields, setFields] = useState({
+    cards: '',
+    position: '',
+    stakes: '',
+    villain_action: '',
+  });
+
+  // API response
+  const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  const [loading, setLoading] = useState(false);
   const [showExpanded, setShowExpanded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Helpers
-  const safe = (v?: string | null) => (v && v.trim().length ? v : '—');
-  const canSend = input.trim().length > 0 && !aiLoading;
+  const chips = useMemo(() => {
+    const f = analysis?.facts;
+    if (!f) return [];
+    return [
+      f.effStackBB ? `Stack: ${f.effStackBB}bb` : null,
+      f.flop?.length ? `Flop: ${f.flop.join(' ')}` : null,
+      f.turn ? `Turn: ${f.turn}` : null,
+      f.river ? `River: ${f.river}` : null,
+    ].filter(Boolean) as string[];
+  }, [analysis]);
 
-  async function handleSend() {
-    if (!input.trim()) return;
-    setAiError(null);
-    setStatus(null);
-    setAiLoading(true);
+  async function handleAnalyze() {
+    setError(null);
+    setLoading(true);
     setShowExpanded(false);
-
     try {
-      // 1) parse
-      const p = await fetch('/api/parse', {
+      const res = await fetch('/api/analyze-hand', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input })
+        body: JSON.stringify({
+          rawText,
+          position: fields.position,
+          stakes: fields.stakes,
+          villainAction: fields.villain_action,
+          cards: fields.cards,
+        }),
       });
-      if (!p.ok) {
-        const err = await p.json().catch(() => ({} as any));
-        throw new Error(err?.error || `Parse failed (${p.status})`);
+
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j?.error || 'Request failed');
       }
-      const parsed: Partial<Fields> = await p.json();
-
-      // 2) analyze
-      const payload = {
-        date: parsed.date ?? undefined,
-        stakes: parsed.stakes ?? undefined,
-        position: parsed.position ?? undefined,
-        cards: parsed.cards ?? undefined,
-        villainAction: parsed.villain_action ?? undefined,
-      };
-      const a = await fetch('/api/analyze-hand', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!a.ok) {
-        const err = await a.json().catch(() => ({} as any));
-        throw new Error(err?.error || `Analyze failed (${a.status})`);
-      }
-      const analyzed = await a.json();
-
-      // Normalize tags
-      const tags: string[] =
-        Array.isArray(analyzed.learning_tag)
-          ? analyzed.learning_tag
-          : typeof analyzed.learning_tag === 'string'
-            ? analyzed.learning_tag
-                .split(',')
-                .map((s: string) => s.trim())
-                .filter(Boolean)
-            : [];
-
-      setFields({
-        date: parsed.date ?? null,
-        stakes: parsed.stakes ?? null,
-        position: parsed.position ?? null,
-        cards: parsed.cards ?? null,
-        villain_action: parsed.villain_action ?? null,
-
-        gto_strategy: analyzed.gto_strategy ?? null,
-        exploit_deviation: analyzed.exploit_deviation ?? null,
-        learning_tag: tags,
-        gto_expanded: analyzed.gto_expanded ?? null,
-      });
+      const data = (await res.json()) as Analysis;
+      setAnalysis(data);
     } catch (e: any) {
-      setAiError(e?.message || 'Analyze error');
+      setError(e?.message || 'Failed to analyze hand');
+      setAnalysis(null);
     } finally {
-      setAiLoading(false);
+      setLoading(false);
     }
   }
 
   function handleClear() {
-    setInput('');
-    setFields(null);
-    setAiError(null);
-    setStatus(null);
+    setRawText('');
+    setFields({
+      cards: '',
+      position: '',
+      stakes: '',
+      villain_action: '',
+    });
+    setAnalysis(null);
     setShowExpanded(false);
-  }
-
-  async function handleSave() {
-    if (!fields) return;
-    setSaving(true);
-    setStatus(null);
-    try {
-      const r = await fetch('/api/notion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields }),
-      });
-      const data = await r.json();
-      if (data?.ok) setStatus(`Saved! Open in Notion: ${data.url}`);
-      else setStatus(data?.error || 'Failed to save');
-    } catch (e: any) {
-      setStatus(e?.message || 'Failed to save');
-    } finally {
-      setSaving(false);
-    }
+    setError(null);
   }
 
   return (
-    <main style={{ maxWidth: 1200, margin: '0 auto', padding: '20px' }}>
-      {/* Top crumbs */}
-      <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>
-        Paste → <strong>Send</strong> → Analyze → Save
+    <main style={{ padding: '16px', maxWidth: 1280, margin: '0 auto' }}>
+      {/* Top breadcrumbs (unchanged) */}
+      <div style={{ opacity: 0.75, fontSize: 14, marginBottom: 8 }}>
+        Paste → Send → Analyze → Save
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-        {/* Left: Hand Played */}
-        <section
-          style={{
-            border: '1px solid #e5e7eb',
-            borderRadius: 12,
-            padding: 16,
-            background: '#fff'
-          }}
-        >
-          <h2 style={{ margin: '4px 0 8px', fontWeight: 700, letterSpacing: 0.3 }}>
-            HAND PLAYED
-          </h2>
+      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1fr 1fr' }}>
+        {/* LEFT COLUMN */}
+        <section>
+          <h2 style={{ margin: '0 0 8px' }}>HAND PLAYED</h2>
 
           <textarea
-            placeholder="Paste the hand history or describe the hand"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
+            value={rawText}
+            onChange={(e) => setRawText(e.target.value)}
+            rows={14}
             style={{
               width: '100%',
-              minHeight: 260,
-              border: '1px solid #e5e7eb',
-              borderRadius: 8,
+              resize: 'vertical',
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
               padding: 12,
-              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-              fontSize: 16,
-              outline: 'none'
+              borderRadius: 8,
+              border: '1px solid var(--border, #333)',
+              background: 'var(--panel, #0B1220)',
+              color: 'var(--fg, #E6EAF2)',
             }}
+            placeholder="Paste the hand history or describe the hand in plain English..."
           />
 
-          <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+          <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
             <button
-              onClick={handleSend}
-              disabled={!canSend}
+              onClick={handleAnalyze}
+              disabled={loading}
               style={{
                 padding: '8px 14px',
-                borderRadius: 10,
-                border: '1px solid #1d4ed8',
-                background: canSend ? '#2563eb' : '#93c5fd',
-                color: '#fff',
-                cursor: canSend ? 'pointer' : 'not-allowed'
+                borderRadius: 12,
+                border: 'none',
+                background:
+                  'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+                color: 'white',
+                cursor: 'pointer',
+                opacity: loading ? 0.7 : 1,
               }}
             >
-              {aiLoading ? 'Analyzing…' : 'Send'}
+              {loading ? 'Analyzing…' : 'Send'}
             </button>
+
             <button
               onClick={handleClear}
               style={{
                 padding: '8px 14px',
-                borderRadius: 10,
-                border: '1px solid #e5e7eb',
-                background: '#fff'
+                borderRadius: 12,
+                border: '1px solid var(--border, #333)',
+                background: 'var(--panel, #0B1220)',
+                color: 'var(--fg, #E6EAF2)',
+                cursor: 'pointer',
               }}
             >
               Clear
             </button>
           </div>
 
-          {/* Error / status */}
-          <div style={{ marginTop: 10, minHeight: 22 }}>
-            {aiError && (
-              <span style={{ color: '#dc2626' }}>{aiError}</span>
-            )}
-            {status && (
-              <span style={{ color: '#065f46' }}>{status}</span>
-            )}
-          </div>
+          {!!error && (
+            <div style={{ color: '#ef4444', marginTop: 8 }}>
+              {error}
+            </div>
+          )}
         </section>
 
-        {/* Right: Result column */}
+        {/* RIGHT COLUMN */}
         <section
           style={{
-            border: '1px solid #e5e7eb',
             borderRadius: 12,
-            padding: 16,
-            background: '#fff'
+            padding: 12,
+            background: 'var(--panel, #0B1220)',
+            color: 'var(--fg, #E6EAF2)',
+            border: '1px solid var(--border, #333)',
           }}
         >
-          {/* Optional chips from learning_tag */}
-          {fields?.learning_tag?.length ? (
+          {/* Chips row from learning tags (if you want to surface them) */}
+          {analysis?.learning_tag?.length ? (
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-              {fields.learning_tag.map((t, i) => (
+              {analysis.learning_tag.map((t, i) => (
                 <span
-                  key={`${t}-${i}`}
+                  key={i}
                   style={{
-                    background: '#eef2ff',
-                    color: '#3730a3',
-                    border: '1px solid #c7d2fe',
-                    padding: '6px 10px',
+                    padding: '4px 10px',
                     borderRadius: 999,
-                    fontSize: 12
+                    background: 'rgba(59,130,246,0.15)',
+                    border: '1px solid rgba(59,130,246,0.4)',
+                    fontSize: 12,
                   }}
                 >
                   {t}
@@ -232,128 +189,241 @@ export default function Home() {
             </div>
           ) : null}
 
-          <Field name="Cards" value={safe(fields?.cards)} />
-          <Field name="Position" value={safe(fields?.position)} />
-          <Field name="Stakes" value={safe(String(fields?.stakes ?? ''))} />
-          <Field name="Villain Action" value={safe(fields?.villain_action)} large />
+          {/* Cards */}
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 4 }}>
+              Cards
+            </div>
+            <input
+              value={fields.cards}
+              onChange={(e) =>
+                setFields((f) => ({ ...f, cards: e.target.value }))
+              }
+              placeholder="A♠4♠"
+              style={{
+                width: '100%',
+                padding: 10,
+                borderRadius: 10,
+                background: 'var(--panel, #0B1220)',
+                border: '1px solid var(--border, #333)',
+                color: 'var(--fg, #E6EAF2)',
+              }}
+            />
+          </div>
 
-          <Field name="GTO Strategy" value={safe(fields?.gto_strategy)} large />
+          {/* Position */}
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 4 }}>
+              Position
+            </div>
+            <input
+              value={fields.position}
+              onChange={(e) =>
+                setFields((f) => ({ ...f, position: e.target.value }))
+              }
+              placeholder="SB / BTN / BB …"
+              style={{
+                width: '100%',
+                padding: 10,
+                borderRadius: 10,
+                background: 'var(--panel, #0B1220)',
+                border: '1px solid var(--border, #333)',
+                color: 'var(--fg, #E6EAF2)',
+              }}
+            />
+          </div>
 
-          {/* GTO Expanded toggle only when we actually have it */}
-          {fields?.gto_expanded ? (
-            <div style={{ marginBottom: 10 }}>
+          {/* Stakes */}
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 4 }}>
+              Stakes
+            </div>
+            <input
+              value={fields.stakes}
+              onChange={(e) =>
+                setFields((f) => ({ ...f, stakes: e.target.value }))
+              }
+              placeholder="1/3, 2/5 Live …"
+              style={{
+                width: '100%',
+                padding: 10,
+                borderRadius: 10,
+                background: 'var(--panel, #0B1220)',
+                border: '1px solid var(--border, #333)',
+                color: 'var(--fg, #E6EAF2)',
+              }}
+            />
+          </div>
+
+          {/* Villain Action */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 4 }}>
+              Villain Action
+            </div>
+            <textarea
+              value={fields.villain_action}
+              onChange={(e) =>
+                setFields((f) => ({ ...f, villain_action: e.target.value }))
+              }
+              rows={2}
+              placeholder="raises to 2.55bb, calls 3-bet, calls flop bet, bets turn, calls river"
+              style={{
+                width: '100%',
+                padding: 10,
+                borderRadius: 10,
+                background: 'var(--panel, #0B1220)',
+                border: '1px solid var(--border, #333)',
+                color: 'var(--fg, #E6EAF2)',
+                fontFamily: 'inherit',
+              }}
+            />
+          </div>
+
+          {/* GTO Strategy + Facts chips */}
+          <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>GTO Strategy</div>
+            {chips.length > 0 && (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {chips.map((c, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      padding: '2px 8px',
+                      borderRadius: 999,
+                      border: '1px solid rgba(148,163,184,0.35)',
+                      background: 'rgba(148,163,184,0.08)',
+                      fontSize: 12,
+                    }}
+                  >
+                    {c}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <textarea
+            value={analysis?.gto_strategy || ''}
+            readOnly
+            rows={4}
+            placeholder="Preflop/Flop/Turn/River plan…"
+            style={{
+              width: '100%',
+              padding: 10,
+              borderRadius: 10,
+              background: 'var(--panel, #0B1220)',
+              border: '1px solid var(--border, #333)',
+              color: 'var(--fg, #E6EAF2)',
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+              marginBottom: 8,
+            }}
+          />
+
+          {/* Toggle for expanded */}
+          <div style={{ marginBottom: 12 }}>
+            {!showExpanded ? (
               <button
-                onClick={() => setShowExpanded((s) => !s)}
+                onClick={() => setShowExpanded(true)}
                 style={{
-                  padding: '6px 10px',
-                  borderRadius: 8,
-                  border: '1px solid #e5e7eb',
-                  background: '#fff',
-                  fontSize: 14
+                  padding: '6px 12px',
+                  borderRadius: 10,
+                  border: '1px solid var(--border, #333)',
+                  background: 'var(--panel, #0B1220)',
+                  color: 'var(--fg, #E6EAF2)',
+                  cursor: 'pointer',
                 }}
               >
-                {showExpanded ? 'Hide GTO Expanded' : 'Show GTO Expanded'}
+                Show GTO Expanded
               </button>
-            </div>
-          ) : null}
+            ) : (
+              <button
+                onClick={() => setShowExpanded(false)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 10,
+                  border: '1px solid var(--border, #333)',
+                  background: 'var(--panel, #0B1220)',
+                  color: 'var(--fg, #E6EAF2)',
+                  cursor: 'pointer',
+                }}
+              >
+                Hide GTO Expanded
+              </button>
+            )}
+          </div>
 
-          {showExpanded && fields?.gto_expanded ? (
+          {showExpanded && (
             <pre
               style={{
                 whiteSpace: 'pre-wrap',
-                border: '1px solid #e5e7eb',
-                background: '#fafafa',
-                borderRadius: 8,
-                padding: 10,
-                fontFamily:
-                  'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-                fontSize: 13,
-                marginTop: 8,
-                marginBottom: 12,
+                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                border: '1px solid var(--border, #333)',
+                background: 'var(--panel, #0B1220)',
+                color: 'var(--fg, #E6EAF2)',
+                borderRadius: 10,
+                padding: 12,
+                marginBottom: 16,
+                maxHeight: 360,
+                overflow: 'auto',
               }}
             >
-              {fields.gto_expanded}
+              {analysis?.gto_expanded || ''}
             </pre>
-          ) : null}
+          )}
 
-          <Field name="Exploit Deviation" value={safe(fields?.exploit_deviation)} large />
+          {/* Exploit Deviation */}
+          <div style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
+            Exploit Deviation
+          </div>
+          <textarea
+            value={analysis?.exploit_deviation || ''}
+            readOnly
+            rows={3}
+            placeholder="Pool exploits / deviations…"
+            style={{
+              width: '100%',
+              padding: 10,
+              borderRadius: 10,
+              background: 'var(--panel, #0B1220)',
+              border: '1px solid var(--border, #333)',
+              color: 'var(--fg, #E6EAF2)',
+              fontFamily: 'inherit',
+            }}
+          />
 
-          <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+          {/* Footer actions (leave as-is; hook to your Notion save if you have) */}
+          <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
             <button
-              onClick={handleSend}
-              disabled={!input.trim() || aiLoading}
+              onClick={handleAnalyze}
+              disabled={loading}
               style={{
-                padding: '8px 14px',
+                padding: '8px 12px',
                 borderRadius: 10,
-                border: '1px solid #e5e7eb',
-                background: '#f3f4f6',
-                color: '#111827',
-                cursor: input.trim() && !aiLoading ? 'pointer' : 'not-allowed'
+                border: '1px solid var(--border, #333)',
+                background: 'var(--panel, #0B1220)',
+                color: 'var(--fg, #E6EAF2)',
+                cursor: 'pointer',
               }}
             >
               Analyze Again
             </button>
             <button
-              onClick={handleSave}
-              disabled={!fields || saving}
+              // Hook this to your Notion POST if you already had it wired
+              onClick={() => alert('Hook this to your Notion save route')}
               style={{
-                padding: '8px 14px',
+                padding: '8px 12px',
                 borderRadius: 10,
-                border: '1px solid #1d4ed8',
-                background: fields && !saving ? '#2563eb' : '#93c5fd',
-                color: '#fff',
-                cursor: fields && !saving ? 'pointer' : 'not-allowed'
+                border: '1px solid var(--border, #333)',
+                background: 'var(--panel, #0B1220)',
+                color: 'var(--fg, #E6EAF2)',
+                cursor: 'pointer',
               }}
             >
-              {saving ? 'Saving…' : 'Confirm & Save to Notion'}
+              Confirm & Save to Notion
             </button>
           </div>
         </section>
       </div>
     </main>
-  );
-}
-
-/** Labeled field block that matches your light theme */
-function Field({
-  name,
-  value,
-  large = false,
-}: {
-  name: string;
-  value: string;
-  large?: boolean;
-}) {
-  return (
-    <div style={{ marginBottom: 12 }}>
-      <div
-        style={{
-          display: 'inline-block',
-          fontSize: 12,
-          fontWeight: 700,
-          color: '#374151',
-          background: '#eef2ff',
-          border: '1px solid #c7d2fe',
-          padding: '6px 10px',
-          borderRadius: 999,
-          marginBottom: 6,
-        }}
-      >
-        {name}
-      </div>
-      <div
-        style={{
-          border: '1px solid #e5e7eb',
-          borderRadius: 8,
-          padding: 12,
-          minHeight: large ? 64 : 42,
-          fontSize: 14,
-          background: '#fff',
-          whiteSpace: 'pre-wrap',
-        }}
-      >
-        {value || '—'}
-      </div>
-    </div>
   );
 }
