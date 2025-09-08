@@ -4,7 +4,12 @@ import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Strong system prompt that forces a detailed plan
+/**
+ * SYSTEM prompt forces:
+ * - Explicit street cards printed (with suits if provided) in each street header
+ * - Detailed, size-specific plan per street
+ * - JSON-only output with fixed keys
+ */
 const SYSTEM = `
 You are a poker strategy assistant. Return ONLY JSON.
 
@@ -13,30 +18,36 @@ JSON OBJECT MUST HAVE EXACT KEYS:
 - exploit_deviation (string)
 - learning_tag (array of 1–3 short strings)
 
+CRITICAL: Extract the actual street cards from the user's text:
+- Look in "Board/Street Info" and "Villain Action" for phrases like:
+  "flop comes K♣7♦2♣", "turn is 5♥", "river is 9♣", "Flop: Ah Kd 2c", etc.
+- If suits are present, include them (e.g., "K♣ 7♦ 2♣"). If suits are absent, use ranks only (e.g., "K 7 2").
+- If a street is truly unknown, write "unknown" for that street.
+
 Write gto_strategy as a DETAILED street-by-street checklist for THIS EXACT HAND.
 Use concise bullet sentences, and ALWAYS include specific sizes and reactions.
 
-REQUIRED gto_strategy TEMPLATE (fill with the user's hand info):
+REQUIRED gto_strategy TEMPLATE (fill with the user's info AND show street cards):
 Preflop: (villain position, hero position, stack depth)
 - 3-bet size (in bb) and frequency for THIS combo
 - Vs 4-bet (25–30bb typical): exact response for THIS combo at this depth (fold / 5-bet bluff % / call)
 
-Flop: (board spelled out, say who is OOP/IP)
+Flop: [SHOW CARDS e.g., "4♣ 8♦ 2♠"] (state texture: rainbow/two-tone/monotone; say who is OOP/IP)
 - Range plan (check/c-bet mix; give % if useful)
-- With THIS combo (name it implicitly): preferred action
+- With THIS combo (implicitly): preferred action
   - If face 25–33% bet: action
   - If face 50–60% bet: action
   - If face ≥75% bet: action
   - If you c-bet 25–33% and face ~3x raise: action
 
-Turn: (card spelled out; note equity/interaction)
+Turn: [SHOW CARD e.g., "5♥"] (note equity/interaction)
 - Range plan (who increases EV, who slows)
 - With THIS combo:
   - If face 40–60%: action
   - If face 75%+: action
   - If checked through: when to stab and size
 
-River: (card spelled out; note if improves/neutral/bricks)
+River: [SHOW CARD e.g., "9♣"] (note if improves/neutral/bricks)
 - Default action for THIS combo
 - Vs 25–40%: action
 - Vs 60–75%: action
@@ -56,11 +67,9 @@ Write learning_tag as 1–3 short tags, e.g. ["SB vs CO 3-bet pot","Small-bet lo
 
 // ---- helpers ----
 function normalizeToLowerString(val: any): string {
-  // Safely coerce whatever came back into a lowercased string
   try {
     if (typeof val === "string") return val.toLowerCase();
     if (val == null) return "";
-    // stringify objects/arrays/numbers, then lowercase
     return String(typeof val === "object" ? JSON.stringify(val) : val).toLowerCase();
   } catch {
     return "";
@@ -117,10 +126,11 @@ Hand Summary
 - If date is present: ${date ?? "n/a"}
 
 Task
-Use the above to produce the detailed JSON as required in the SYSTEM.
+Use the above to produce the detailed JSON as required in the SYSTEM,
+AND print explicit street cards in each street header (Flop/Turn/River) if you can extract them.
 `.trim();
 
-    // 1) First attempt
+    // First pass
     const first = await openai.chat.completions.create({
       model,
       temperature: 0.1,
@@ -140,11 +150,11 @@ Use the above to produce the detailed JSON as required in the SYSTEM.
       out = { gto_strategy: "", exploit_deviation: "", learning_tag: [] };
     }
 
-    // 2) Quality guard & repair pass if too light
+    // If too light, repair pass
     if (!looksDetailed(out)) {
       const fixPrompt = `
 Rewrite ONLY the gto_strategy field to strictly follow the SYSTEM's format
-(Preflop/Flop/Turn/River with size-specific reactions). Keep exploit_deviation and
+(including explicit Flop/Turn/River cards if available). Keep exploit_deviation and
 learning_tag unchanged. Return JSON only.
 
 JSON:
@@ -167,20 +177,14 @@ ${JSON.stringify(out)}
         const fixed = JSON.parse(text2);
         if (looksDetailed(fixed)) out = fixed;
       } catch {
-        // keep original out if parse fails
+        // keep original if parse fails
       }
     }
 
-    // Normalize tags
+    // Normalize types
     out.learning_tag = normalizeTags(out.learning_tag);
-
-    // Make sure gto_strategy/exploit_deviation are strings
-    if (typeof out.gto_strategy !== "string") {
-      out.gto_strategy = String(out.gto_strategy ?? "");
-    }
-    if (typeof out.exploit_deviation !== "string") {
-      out.exploit_deviation = String(out.exploit_deviation ?? "");
-    }
+    if (typeof out.gto_strategy !== "string") out.gto_strategy = String(out.gto_strategy ?? "");
+    if (typeof out.exploit_deviation !== "string") out.exploit_deviation = String(out.exploit_deviation ?? "");
 
     return NextResponse.json(out);
   } catch (err: any) {
