@@ -1,21 +1,20 @@
-// app/page.tsx
 "use client";
 import { useState } from "react";
 
 type Fields = {
   date?: string | null;
-  stakes?: string | null;              // text format
+  stakes?: string | null;            // text format
   position?: string | null;
   cards?: string | null;
   villain_action?: string | null;
 
-  gto_strategy?: string | null;        // concise 4 lines
+  gto_strategy?: string | null;      // concise 4 lines
   exploit_deviation?: string | null;
   learning_tag?: string[];
 
-  gto_expanded?: string | null;        // full branch map
+  gto_expanded?: string | null;      // full branch map
 
-  // optional extras you may add later
+  // optional extras
   board?: string | null;
   notes?: string | null;
 };
@@ -45,17 +44,14 @@ export default function Home() {
       if (!res.ok) throw new Error("Failed to parse");
       const data: Fields = await res.json();
 
-      // Always store parsed fields first
       setFields(data);
-
-      // Kick off AI
       if (data) analyzeParsedHand(data);
     } catch (e: any) {
       setAiError(e.message || "Parse failed");
     }
   }
 
-  // Call /api/analyze-hand -> fill concise + expanded
+  // Call AI to get concise + expanded
   async function analyzeParsedHand(parsed: Fields) {
     setAiError(null);
     setAiLoading(true);
@@ -85,15 +81,12 @@ export default function Home() {
 
       const data = await r.json();
 
-      setFields((prev) => {
+      setFields(prev => {
         const base = prev ?? parsed ?? {};
         const tags: string[] = Array.isArray(data.learning_tag)
           ? data.learning_tag
           : typeof data.learning_tag === "string"
-          ? data.learning_tag
-              .split(",")
-              .map((s: string) => s.trim())
-              .filter(Boolean)
+          ? data.learning_tag.split(",").map((s: string) => s.trim()).filter(Boolean)
           : [];
 
         return {
@@ -134,16 +127,16 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen p-6 bg-[#0f172a] text-white">
+    <main className="min-h-screen p-6 bg-gray-50 text-black">
       <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Left: Hand text */}
-        <section className="rounded-2xl bg-[#0b1220] shadow-lg border border-white/10">
-          <div className="px-5 pt-5 pb-3 text-sm uppercase tracking-wider text-white/70">
+        {/* LEFT: Hand text (unchanged look) */}
+        <section className="rounded-2xl bg-white shadow border border-black/10">
+          <div className="px-5 pt-5 pb-3 text-sm uppercase tracking-wider text-gray-600">
             Hand Played
           </div>
           <div className="px-5 pb-4">
             <textarea
-              className="w-full h-64 p-3 bg-[#0b1220] rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+              className="w-full h-64 p-3 bg-white rounded-xl border border-black/10 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
               placeholder="Paste the hand history or describe the hand in plain English..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -152,7 +145,7 @@ export default function Home() {
               <button
                 onClick={handleParse}
                 disabled={!input.trim() || aiLoading}
-                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50"
+                className="px-5 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
               >
                 {aiLoading ? "Analyzing…" : "Send"}
               </button>
@@ -164,32 +157,31 @@ export default function Home() {
                   setStatus(null);
                   setShowExpanded(false);
                 }}
-                className="px-4 py-2 rounded-xl bg-[#192338] hover:bg-[#22314f]"
+                className="px-4 py-2 rounded-xl border border-black/10 bg-white hover:bg-gray-50"
               >
                 Clear
               </button>
             </div>
             {aiError && (
-              <div className="mt-3 text-rose-400 text-sm">{aiError}</div>
+              <div className="mt-3 text-rose-600 text-sm">{aiError}</div>
             )}
           </div>
         </section>
 
-        {/* Right: Parsed + AI results */}
-        <section className="rounded-2xl bg-[#0b1220] shadow-lg border border-white/10 p-5">
-          {/* Chips row */}
+        {/* RIGHT: Parsed + AI results (unchanged look; only toggle added) */}
+        <section className="rounded-2xl bg-white shadow border border-black/10 p-5">
+          {/* Chips row (unchanged) */}
           <div className="flex flex-wrap gap-2 mb-3">
             {(fields?.learning_tag ?? []).map((t) => (
               <span
                 key={t}
-                className="px-3 py-1 rounded-full bg-blue-900/40 text-blue-200 text-xs"
+                className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs border border-blue-200"
               >
                 {t}
               </span>
             ))}
           </div>
 
-          {/* Cards */}
           <Row label="Cards">
             <input
               className="input"
@@ -201,7 +193,6 @@ export default function Home() {
             />
           </Row>
 
-          {/* Position */}
           <Row label="Position">
             <input
               className="input"
@@ -213,7 +204,6 @@ export default function Home() {
             />
           </Row>
 
-          {/* Stakes (text) */}
           <Row label="Stakes">
             <input
               className="input"
@@ -225,7 +215,6 @@ export default function Home() {
             />
           </Row>
 
-          {/* Villain Action */}
           <Row label="Villain Action">
             <textarea
               className="input min-h-[70px]"
@@ -240,7 +229,7 @@ export default function Home() {
             />
           </Row>
 
-          {/* GTO Strategy (concise 4 lines, required format) */}
+          {/* Concise GTO strategy (same box) */}
           <Row label="GTO Strategy">
             <textarea
               className="input min-h-[110px] font-mono"
@@ -255,17 +244,17 @@ River 9♥: ...`}
             />
           </Row>
 
-          {/* NEW: GTO Expanded toggle & panel */}
+          {/* NEW: Toggle for expanded details (just this feature added) */}
           <div className="mt-2">
             <button
               onClick={() => setShowExpanded((s) => !s)}
-              className="text-sm px-3 py-1 rounded-lg bg-[#192338] hover:bg-[#22314f]"
+              className="text-sm px-3 py-1 rounded-lg border border-black/10 bg-white hover:bg-gray-50"
             >
               {showExpanded ? "Hide GTO Expanded" : "Show GTO Expanded"}
             </button>
 
             {showExpanded && (
-              <div className="mt-3 p-3 rounded-xl bg-[#0e1a2f] border border-white/10">
+              <div className="mt-3 p-3 rounded-xl border border-black/10 bg-gray-50">
                 <pre className="whitespace-pre-wrap text-sm leading-6">
                   {fields?.gto_expanded?.trim() || "—"}
                 </pre>
@@ -273,7 +262,6 @@ River 9♥: ...`}
             )}
           </div>
 
-          {/* Exploit Deviation */}
           <Row label="Exploit Deviation">
             <textarea
               className="input min-h-[90px]"
@@ -292,7 +280,7 @@ River 9♥: ...`}
             <button
               onClick={() => fields && analyzeParsedHand(fields)}
               disabled={aiLoading}
-              className="px-4 py-2 rounded-xl bg-[#192338] hover:bg-[#22314f] disabled:opacity-50"
+              className="px-4 py-2 rounded-xl border border-black/10 bg-white hover:bg-gray-50 disabled:opacity-50"
             >
               Analyze Again
             </button>
@@ -300,30 +288,31 @@ River 9♥: ...`}
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50"
+              className="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
             >
               {saving ? "Saving…" : "Confirm & Save to Notion"}
             </button>
 
             {status && (
-              <span className="text-xs text-white/70">{status}</span>
+              <span className="text-xs text-gray-600">{status}</span>
             )}
           </div>
         </section>
       </div>
 
+      {/* keep your original simple input style */}
       <style jsx global>{`
         .input {
           width: 100%;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(0, 0, 0, 0.1);
           border-radius: 0.75rem;
           padding: 0.6rem 0.8rem;
-          background: #0b1220;
+          background: #ffffff;
           outline: none;
         }
         .input:focus {
           border-color: rgba(59, 130, 246, 0.7);
-          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
         }
       `}</style>
     </main>
@@ -339,7 +328,7 @@ function Row({
 }) {
   return (
     <div className="mb-4">
-      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-blue-200/80">
+      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-600">
         {label}
       </div>
       {children}
