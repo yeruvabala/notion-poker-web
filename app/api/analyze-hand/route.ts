@@ -1,32 +1,29 @@
 // app/api/analyze-hand/route.ts
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { openai } from "@/lib/openai";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const SYSTEM = `You are a poker strategy assistant.
+Return ONLY JSON with EXACT keys:
+{
+  "gto_strategy": "string",
+  "exploit_deviation": "string",
+  "learning_tag": ["string", "string?"]
+}
+Requirements:
+- Make gto_strategy a compact but specific Preflop/Flop/Turn/River plan with sizes (bb or % pot).
+- Make exploit_deviation 2–4 concise sentences about pool tendencies and how to deviate.
+- learning_tag = 1–3 short tags (e.g., "SB vs CO 3-bet pot", "Small-bet low boards", "Overfold big river").
+- No markdown or extra keys. JSON object only.`;
 
-/**
- * Coerce any value (string | array | object) into a readable multiline string.
- * - Objects become "Key: value" lines (Preflop/Flop/Turn/River headers preserved)
- * - Arrays join with new lines
- * - Null/undefined -> ""
- */
-function toMultilineText(v: any): string {
-  if (typeof v === "string") return v;
+/** Coerce any value into readable text (never [object Object]) */
+function asText(v: any): string {
   if (v == null) return "";
-  if (Array.isArray(v)) {
-    return v.map(toMultilineText).filter(Boolean).join("\n");
-  }
-  if (typeof v === "object") {
+  if (typeof v === "string") return v;
+  if (Array.isArray(v)) return v.map(asText).join("\n");
+  if (typeof v === "object")
     return Object.entries(v)
-      .map(([k, val]) => {
-        const key = String(k).trim();
-        const header = /^(preflop|flop|turn|river)$/i.test(key)
-          ? `${key[0].toUpperCase()}${key.slice(1)}`
-          : key;
-        return `${header}: ${toMultilineText(val)}`.trim();
-      })
+      .map(([k, val]) => `${k}: ${asText(val)}`)
       .join("\n");
-  }
   return String(v);
 }
 
@@ -38,86 +35,54 @@ export async function POST(req: Request) {
       stakes,
       position,
       cards,
-      villainAction,
+      villainAction = "",
       board = "",
       notes = "",
-    } = body || {};
+    } = body ?? {};
 
     const userBlock = [
       `Date: ${date || "today"}`,
       `Stakes: ${stakes ?? ""}`,
       `Position: ${position ?? ""}`,
       `Hero Cards: ${cards ?? ""}`,
-      `Board / Streets: ${board}`,
+      `Board: ${board ?? ""}`,
       `Villain Action: ${villainAction ?? ""}`,
-      `Notes: ${notes}`,
+      `Notes: ${notes ?? ""}`,
     ].join("\n");
 
-    // Ask the model for STRICT JSON only (no prose)
-    const completion = await openai.chat.completions.create({
-      model: "gpt-5",
+    const resp = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
       temperature: 0.2,
       messages: [
-        {
-          role: "system",
-          content:
-            [
-              "You are a poker strategy assistant. Return ONLY JSON (no markdown).",
-              "Keys:",
-              '- "gto_strategy": can be a single string OR an object with keys {Preflop, Flop, Turn, River}. Keep it concise but specific (bet sizes & actions).',
-              '- "exploit_deviation": string or array; concise pool exploits.',
-              '- "learning_tag": array of 1–3 short strings (e.g., ["SB vs CO 3-bet", "Small-bet low boards"]).',
-              "Do not include extra keys. No markdown. JSON object only.",
-            ].join(" "),
-        },
-        {
-          role: "user",
-          content: userBlock,
-        },
+        { role: "system", content: SYSTEM },
+        { role: "user", content: userBlock },
       ],
+      response_format: { type: "json_object" },
     });
 
-    const raw = completion?.choices?.[0]?.message?.content?.trim() || "";
+    const raw = resp?.choices?.[0]?.message?.content?.trim() || "{}";
 
-    // Default output shape
-    let out: {
-      gto_strategy: any;
-      exploit_deviation: any;
-      learning_tag: string[] | string;
-    } = { gto_strategy: "", exploit_deviation: "", learning_tag: [] };
-
-    // Try to parse JSON; if we only got text, put it in gto_strategy
+    let parsed: any = {};
     try {
-      out = JSON.parse(raw);
+      parsed = JSON.parse(raw);
     } catch {
-      out.gto_strategy = raw;
+      // If the model ever slips non-JSON, just dump the text into gto_strategy.
+      parsed = { gto_strategy: raw, exploit_deviation: "", learning_tag: [] };
     }
 
-    // ---- Normalize everything to strings/arrays ----
-    // learning_tag → string[]
-    const tags =
-      Array.isArray(out.learning_tag)
-        ? out.learning_tag
-        : typeof out.learning_tag === "string"
-          ? out.learning_tag.split(",")
-          : [];
+    const out = {
+      gto_strategy: asText(parsed?.gto_strategy || ""),
+      exploit_deviation: asText(parsed?.exploit_deviation || ""),
+      learning_tag: Array.isArray(parsed?.learning_tag)
+        ? parsed.learning_tag.filter((t: any) => typeof t === "string" && t.trim())
+        : [],
+    };
 
-    const learning_tag = tags.map(String).map(s => s.trim()).filter(Boolean).slice(0, 3);
-
-    // Coerce gto_strategy & exploit_deviation to multiline text
-    const gto_strategy = toMultilineText(out.gto_strategy);
-    const exploit_deviation = toMultilineText(out.exploit_deviation);
-
-    return NextResponse.json({
-      gto_strategy,
-      exploit_deviation,
-      learning_tag,
-    });
-  } catch (err) {
-    console.error(err);
-    return NextResponse.json(
-      { error: "Failed to analyze hand" },
-      { status: 500 }
-    );
+    return NextResponse.json(out);
+  } catch (e: any) {
+    // Send the real failure reason back to the UI so you don't just see a generic message
+    const msg = e?.message || "Failed to analyze hand";
+    console.error("analyze-hand error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
