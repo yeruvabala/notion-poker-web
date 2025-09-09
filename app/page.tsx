@@ -123,16 +123,17 @@ export default function Page() {
     setAiLoading(true);
     try {
       const payload = {
-        // analysis should primarily use the input text (server prompt already expects a narrative)
-        date: parsed.date ?? undefined,
-        stakes: parsed.stakes ?? preview.stakes || undefined,
-        position: parsed.position ?? preview.position || undefined,
-        cards: parsed.cards ?? preview.heroCards || undefined,
-        villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
-        // pass corrected board from the assist; analysis can use it as extra context
-        board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`].filter(Boolean).join('  |  '),
-        notes: parsed.notes ?? '',
-      };
+  date: parsed.date ?? undefined,
+  stakes: parsed.stakes ?? (preview.stakes || undefined),
+  position: parsed.position ?? (preview.position || undefined),
+  cards: parsed.cards ?? (preview.heroCards || undefined),
+  villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
+  // pass corrected board from the assist; analysis can use it as extra context
+  board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`]
+    .filter(Boolean)
+    .join('  |  '),
+  notes: parsed.notes ?? '',
+};
 
       const r = await fetch('/api/analyze-hand', {
         method: 'POST',
