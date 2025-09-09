@@ -20,18 +20,13 @@ type Fields = {
 
 type Triple = { raise: number; call: number; fold: number };
 
-/** ------------- Helpers (same “code behind”) ------------- */
-const asText = (v: any): string =>
-  typeof v === 'string'
-    ? v
-    : v == null
-      ? ''
-      : Array.isArray(v)
-        ? v.map(asText).join('\n')
-        : typeof v === 'object'
-          ? Object.entries(v).map(([k, val]) => `${k}: ${asText(val)}`).join('\n')
-          : String(v);
+type Scenario =
+  | { kind: 'RFI'; heroPos: Pos }
+  | { kind: 'VS_OPEN'; heroPos: Pos; openerPos: Pos };
 
+type Pos = 'UTG' | 'MP' | 'HJ' | 'CO' | 'BTN' | 'SB' | 'BB';
+
+/** ------------- Parse helpers (same “code behind” + upgrades) ------------- */
 const SUIT_MAP: Record<string, string> = { s: '♠', h: '♥', d: '♦', c: '♣' };
 const SUIT_WORD: Record<string, string> = {
   spade: '♠', spades: '♠', heart: '♥', hearts: '♥', diamond: '♦', diamonds: '♦', club: '♣', clubs: '♣',
@@ -56,19 +51,43 @@ const parseStakes = (t: string) => {
   return m ? `${m[1]}/${m[2]}` : '';
 };
 
+const POS_ALIASES: Record<string, Pos> = {
+  utg: 'UTG', 'utg+1': 'MP', 'utg+2': 'MP', mp: 'MP', 'middle position': 'MP',
+  hj: 'HJ', hijack: 'HJ',
+  co: 'CO', cutoff: 'CO',
+  btn: 'BTN', button: 'BTN',
+  sb: 'SB', 'small blind': 'SB',
+  bb: 'BB', 'big blind': 'BB',
+};
+
+function findPosWord(s: string): Pos | null {
+  const low = s.toLowerCase();
+  for (const k of Object.keys(POS_ALIASES)) {
+    if (low.includes(` ${k} `) || low.startsWith(`${k} `) || low.endsWith(` ${k}`)) return POS_ALIASES[k];
+  }
+  return null;
+}
+
 // Prefer hero mentions; avoid villain position
 const parseHeroPosition = (t: string) => {
   const up = t.toUpperCase();
+
   const m1 = up.match(/\b(I|I'M|IM|I AM|HERO)\b[^.]{0,40}?\b(ON|FROM|IN)\s+(UTG\+\d|UTG|MP|HJ|CO|BTN|SB|BB)\b/);
-  if (m1) return m1[3];
+  if (m1) return normalizePos(m1[3]);
   const m2 = up.match(/\b(AM|I'M|IM|I)\b[^.]{0,10}?\bON\s+(UTG\+\d|UTG|MP|HJ|CO|BTN|SB|BB)\b/);
-  if (m2) return m2[2];
+  if (m2) return normalizePos(m2[2]);
   const m3 = up.match(/\bON\s+(SB|BB|BTN|CO|HJ|MP|UTG(?:\+\d)?)\b/);
-  if (m3) return m3[1];
-  const PREF = ['SB','BB','BTN','CO','HJ','MP','UTG+2','UTG+1','UTG'];
-  for (const p of PREF) if (up.includes(` ${p} `)) return p;
-  return '';
+  if (m3) return normalizePos(m3[1]);
+
+  const alias = findPosWord(` ${t} `);
+  return alias ?? '';
 };
+
+function normalizePos(p: string): Pos {
+  const up = p.toUpperCase();
+  if (up.startsWith('UTG+')) return 'MP';
+  return (['UTG','MP','HJ','CO','BTN','SB','BB'] as Pos[]).includes(up as Pos) ? (up as Pos) : 'BTN';
+}
 
 // Find hero cards near "with/holding/I have", handle Ah Qs, A4s, "a4 of spades"
 const parseHeroCardsSmart = (t: string) => {
@@ -121,7 +140,18 @@ const twoCardsFrom = (line: string) =>
 const CardSpan = ({ c }: { c: string }) =>
   !c ? null : <span style={{ fontWeight: 600, color: suitColor(c.slice(-1)) }}>{c}</span>;
 
-/** ---------- Range grid helpers ---------- */
+const asText = (v: any): string =>
+  typeof v === 'string'
+    ? v
+    : v == null
+      ? ''
+      : Array.isArray(v)
+        ? v.map(asText).join('\n')
+        : typeof v === 'object'
+          ? Object.entries(v).map(([k, val]) => `${k}: ${asText(val)}`).join('\n')
+          : String(v);
+
+/** ---------- Ranks / labels ---------- */
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'] as const;
 function handLabel(i: number, j: number): string {
   const a = RANKS[i], b = RANKS[j];
@@ -134,7 +164,312 @@ const LABELS = (() => {
   return out;
 })();
 
-/** Color mix for one cell using a vertical gradient: raise (top) / call (middle) / fold (bottom) */
+/** ---------- Scenario detection ---------- */
+function detectOpener(text: string): Pos | null {
+  const t = ` ${text.toLowerCase()} `;
+  // Explicit “<pos> raises / opens”
+  for (const [key, pos] of Object.entries(POS_ALIASES)) {
+    const rex = new RegExp(`\\b${key}\\b[^.]{0,18}\\b(raises?|opens?)\\b`);
+    if (rex.test(t)) return pos;
+  }
+  // “villain in cutoff raises”
+  const m = t.match(/\bvillain\b[^.]{0,15}\b(in|from)\b[^.]{0,8}\b([a-z+ ]{2,8})\b[^.]{0,12}\b(raises?|opens?)\b/);
+  if (m) {
+    const p = POS_ALIASES[(m[2] || '').trim()];
+    if (p) return p;
+  }
+  return null;
+}
+
+function detectScenario(input: string, heroPos: Pos): Scenario {
+  const opener = detectOpener(input);
+  if (!opener || opener === heroPos) return { kind: 'RFI', heroPos };
+  return { kind: 'VS_OPEN', heroPos, openerPos: opener };
+}
+
+/** ---------- Baseline grid generator ----------
+ *  Deterministic, position aware.
+ *  - RFI: open/fold (call = 0)
+ *  - VS_OPEN: 3-bet / call / fold splits; SB vs CO uses the table we agreed on,
+ *             other pairs use analogous rules (tighter early, wider late; BB calls more).
+ */
+type Grid = Record<string, Triple>;
+const zeroTriple: Triple = { raise: 0, call: 0, fold: 100 };
+
+function emptyGrid(): Grid {
+  const g: Grid = {};
+  for (const L of LABELS) g[L] = { ...zeroTriple };
+  return g;
+}
+
+const rIndex: Record<string, number> = Object.fromEntries(RANKS.map((r, i) => [r, i]));
+const atLeast = (rank: string, min: string) => rIndex[rank] <= rIndex[min];
+
+function isPair(lbl: string) { return lbl.length === 2; }
+function isSuited(lbl: string) { return lbl.length === 3 && lbl.endsWith('s'); }
+function isOff(lbl: string) { return lbl.length === 3 && lbl.endsWith('o'); }
+function hi(lbl: string) { return lbl[0]; }
+function lo(lbl: string) { return isPair(lbl) ? lbl[1] : lbl[1]; }
+
+/** RFI (open) baselines by position — % raise, call=0, fold=100-raise */
+function gridRFI(pos: Pos): Grid {
+  const g = emptyGrid();
+  for (const L of LABELS) {
+    const pair = isPair(L);
+    const suited = isSuited(L);
+    const offsuit = isOff(L);
+    const a = hi(L), b = lo(L);
+    let open = 0;
+
+    // Pairs: tighten early, widen late
+    if (pair) {
+      const min: Record<Pos, string> = { UTG:'6', MP:'4', HJ:'3', CO:'2', BTN:'2', SB:'2', BB:'9' };
+      open = atLeast(a, min[pos]) ? 100 : 0;
+      if (pos === 'CO' && atLeast(a,'3') && !atLeast(a,'9')) open = 80;       // mix some mid pairs
+      if (pos === 'HJ' && atLeast(a,'5') && !atLeast(a,'9')) open = 80;
+      if (pos === 'SB') open = atLeast(a,'4') ? 90 : 0; // SB complete/raise strategy
+    }
+
+    // Suited Ax: always good opens; offsuit gets trimmed early
+    else if (a === 'A') {
+      if (suited) {
+        const min: Record<Pos, string> = { UTG:'5', MP:'4', HJ:'3', CO:'2', BTN:'2', SB:'2', BB:'9' };
+        open = atLeast(b, min[pos]) ? 100 : 0;
+      } else {
+        const minOff: Record<Pos, string> = { UTG:'T', MP:'T', HJ:'9', CO:'8', BTN:'5', SB:'8', BB:'T' };
+        open = atLeast(b, minOff[pos]) ? 100 : 0;
+        if (pos === 'BTN' && atLeast(b,'2')) open = 70;
+        if (pos === 'SB' && atLeast(b,'5')) open = 60;
+      }
+    }
+
+    // Broadways suited
+    else if (suited && ['K','Q','J','T'].includes(a)) {
+      const minS: Record<Pos, string> = { UTG:'9', MP:'9', HJ:'8', CO:'6', BTN:'2', SB:'7', BB:'9' };
+      open = atLeast(b, minS[pos]) ? 100 : 0;
+      if (pos === 'BTN' && atLeast(b,'7')) open = 80;
+      if (pos === 'SB' && atLeast(b,'7')) open = 70;
+    }
+
+    // Broadways off
+    else if (offsuit && ['K','Q','J','T'].includes(a)) {
+      const minO: Record<Pos, string> = { UTG:'Q', MP:'J', HJ:'T', CO:'T', BTN:'9', SB:'T', BB:'Q' };
+      open = atLeast(b, minO[pos]) ? 100 : 0;
+      if (pos === 'BTN' && (a==='K'||a==='Q') && atLeast(b,'8')) open = 70;
+    }
+
+    // Suited connectors / gappers (late widen)
+    else if (suited) {
+      const goodSC = (x:string,y:string)=> (a===x&&b===y)||(a===y&&b===x);
+      const SC = [['9','8'], ['8','7'], ['7','6'], ['6','5'], ['5','4']];
+      const isSC = SC.some(([x,y])=>goodSC(x,y));
+      if (isSC) {
+        const allow: Record<Pos, number> = { UTG:0, MP:20, HJ:60, CO:90, BTN:100, SB:80, BB:0 };
+        open = allow[pos];
+      } else {
+        // suited junk late buttons
+        if (pos === 'BTN') open = 40;
+        else if (pos === 'CO') open = 20;
+      }
+    }
+
+    const raise = Math.max(0, Math.min(100, Math.round(open)));
+    g[L] = { raise, call: 0, fold: 100 - raise };
+  }
+  return g;
+}
+
+/** VS OPEN tables — core node we discussed: SB vs CO.
+ *  For other pairs we apply analogous logic (BB calls more, BTN calls more & 3-bets polar, etc.)
+ */
+function gridVsOpen(hero: Pos, opener: Pos): Grid {
+  const g = emptyGrid();
+
+  // Helper to set a group with a mix
+  const set = (labels: string[], mix: Triple) => { for (const L of labels) g[L] = { ...mix }; };
+
+  // Produce convenience arrays by pattern
+  const pairs = (from: string, to: string) => {
+    const res: string[] = [];
+    for (const r of RANKS) {
+      if (atLeast(r, from) && !atLeast(r, to)) res.push(`${r}${r}`);
+      if (r === to) break;
+    }
+    return res;
+  };
+  const sx = (hi: string, lows: string[]) => lows.map(l => `${hi}${l}s`);
+  const ox = (hi: string, lows: string[]) => lows.map(l => `${hi}${l}o`);
+
+  /** --- SB vs CO (agreed baseline) --- */
+  if (hero === 'SB' && opener === 'CO') {
+    // Pairs
+    set(['AA','KK','QQ'], { raise:100, call:0, fold:0 });
+    set(['JJ'], { raise:70, call:30, fold:0 });
+    set(['TT'], { raise:60, call:40, fold:0 });
+    set(['99','88','77','66'], { raise:30, call:60, fold:10 });
+    set(['55','44','33','22'], { raise:10, call:50, fold:40 });
+
+    // Suited Ax
+    set(['AKs'], { raise:100, call:0, fold:0 });
+    set(['AQs'], { raise:70, call:30, fold:0 });
+    set(['AJs'], { raise:50, call:40, fold:10 });
+    set(['ATs'], { raise:30, call:50, fold:20 });
+    set(sx('A',['9','8','7','6']), { raise:25, call:45, fold:30 });
+    set(sx('A',['5','4','3','2']), { raise:45, call:25, fold:30 });
+
+    // Offsuit Ax
+    set(['AKo'], { raise:100, call:0, fold:0 });
+    set(['AQo'], { raise:60, call:20, fold:20 });
+    set(['AJo'], { raise:30, call:30, fold:40 });
+    set(['ATo'], { raise:10, call:20, fold:70 });
+    for (const b of ['9','8','7','6','5','4','3','2']) set([`A${b}o`], { raise:0, call:0, fold:100 });
+
+    // Suited broadways
+    set(['KQs'], { raise:60, call:40, fold:0 });
+    set(['KJs'], { raise:35, call:45, fold:20 });
+    set(['KTs'], { raise:20, call:45, fold:35 });
+    set(['QJs'], { raise:30, call:55, fold:15 });
+    set(['QTs'], { raise:15, call:45, fold:40 });
+    set(['JTs'], { raise:20, call:55, fold:25 });
+    set(['T9s'], { raise:15, call:50, fold:35 });
+
+    // Off broadways
+    set(['KQo'], { raise:15, call:25, fold:60 });
+    set(['KJo'], { raise:10, call:20, fold:70 });
+    set(['QJo'], { raise:0, call:20, fold:80 });
+    set(['JTo'], { raise:0, call:5, fold:95 });
+
+    // Other suited Kx/Qx
+    set(['K9s'], { raise:10, call:40, fold:50 });
+    set(['K8s'], { raise:5, call:30, fold:65 });
+    set(['K7s','K6s'], { raise:0, call:25, fold:75 });
+    set(['Q9s'], { raise:10, call:40, fold:50 });
+    set(['Q8s'], { raise:5, call:25, fold:70 });
+    set(['Q7s','Q6s'], { raise:0, call:20, fold:80 });
+
+    // SCs / gappers
+    set(['98s'], { raise:15, call:50, fold:35 });
+    set(['87s','76s','65s'], { raise:10, call:45, fold:45 });
+    set(['54s'], { raise:10, call:35, fold:55 });
+    set(['43s'], { raise:5, call:25, fold:70 });
+    set(['32s'], { raise:0, call:20, fold:80 });
+
+    // Offsuit junk: fold
+    for (const L of LABELS) if (!(L in g) || g[L].fold === 100) g[L] = { ...zeroTriple };
+    return g;
+  }
+
+  /** --- BTN vs CO open: call more, polar 3-bet --- */
+  if (hero === 'BTN' && opener === 'CO') {
+    // Pairs
+    set(['AA','KK','QQ'], { raise:65, call:35, fold:0 });
+    set(['JJ','TT'], { raise:40, call:60, fold:0 });
+    set(['99','88','77'], { raise:25, call:70, fold:5 });
+    set(['66','55','44','33','22'], { raise:10, call:65, fold:25 });
+
+    // Suited Ax (polarize with A5–A2s)
+    set(['AKs'], { raise:70, call:30, fold:0 });
+    set(['AQs','AJs'], { raise:45, call:55, fold:0 });
+    set(['ATs','A9s','A8s'], { raise:25, call:65, fold:10 });
+    set(sx('A',['7','6']), { raise:15, call:65, fold:20 });
+    set(sx('A',['5','4','3','2']), { raise:40, call:40, fold:20 });
+
+    // Offsuit Ax
+    set(['AKo'], { raise:70, call:30, fold:0 });
+    set(['AQo'], { raise:35, call:45, fold:20 });
+    set(['AJo'], { raise:15, call:40, fold:45 });
+    for (const b of ['T','9','8','7','6','5','4','3','2']) set([`A${b}o`], { raise:0, call:0, fold:100 });
+
+    // Suited broadways
+    set(['KQs','QJs','KJs'], { raise:30, call:70, fold:0 });
+    set(['KTs','QTs','JTs'], { raise:20, call:70, fold:10 });
+    set(['T9s'], { raise:15, call:70, fold:15 });
+
+    // Off broadways
+    set(['KQo'], { raise:15, call:55, fold:30 });
+    set(['QJo'], { raise:5, call:40, fold:55 });
+    set(['JTo'], { raise:0, call:25, fold:75 });
+
+    // SCs/gappers
+    set(['98s','87s','76s','65s'], { raise:15, call:70, fold:15 });
+    set(['54s','43s'], { raise:10, call:60, fold:30 });
+
+    for (const L of LABELS) if (!(L in g) || g[L].fold === 100) g[L] = { ...zeroTriple };
+    return g;
+  }
+
+  /** --- BB vs BTN open: defend a lot, 3-bet value + polar --- */
+  if (hero === 'BB' && opener === 'BTN') {
+    // Pairs
+    set(['AA','KK','QQ'], { raise:65, call:35, fold:0 });
+    set(['JJ','TT'], { raise:35, call:60, fold:5 });
+    set(['99','88','77','66','55','44','33','22'], { raise:15, call:75, fold:10 });
+
+    // Suited Ax
+    set(['AKs'], { raise:55, call:45, fold:0 });
+    set(['AQs','AJs'], { raise:30, call:65, fold:5 });
+    set(['ATs','A9s','A8s','A7s','A6s'], { raise:15, call:70, fold:15 });
+    set(['A5s','A4s','A3s','A2s'], { raise:25, call:60, fold:15 });
+
+    // Off Ax
+    set(['AKo'], { raise:50, call:45, fold:5 });
+    set(['AQo'], { raise:20, call:55, fold:25 });
+    set(['AJo'], { raise:10, call:45, fold:45 });
+    for (const b of ['T','9','8','7','6','5','4','3','2']) set([`A${b}o`], { raise:0, call:15, fold:85 });
+
+    // Suited broadways
+    set(['KQs','QJs','KJs'], { raise:20, call:75, fold:5 });
+    set(['KTs','QTs','JTs'], { raise:10, call:75, fold:15 });
+    set(['T9s'], { raise:10, call:75, fold:15 });
+
+    // Off broadways
+    set(['KQo'], { raise:10, call:55, fold:35 });
+    set(['QJo','KJo'], { raise:5, call:45, fold:50 });
+    set(['JTo'], { raise:0, call:35, fold:65 });
+
+    // SCs/gappers
+    set(['98s','87s','76s','65s','54s'], { raise:10, call:75, fold:15 });
+    set(['43s','32s'], { raise:5, call:60, fold:35 });
+
+    for (const L of LABELS) if (!(L in g) || g[L].fold === 100) g[L] = { ...zeroTriple };
+    return g;
+  }
+
+  /** --- Generic fallback (other hero/opener combos)
+   *  Start from RFI "playability" as a weight and split it by seat dynamics.
+   */
+  const rfi = gridRFI(hero);
+  for (const L of LABELS) {
+    const base = rfi[L].raise; // 0..100 playability
+    if (base === 0) { g[L] = { ...zeroTriple }; continue; }
+
+    // seat tendencies
+    let raiseW = 0, callW = 0;
+    const pair = isPair(L), suited = isSuited(L), offsuit = isOff(L);
+    if (hero === 'BB') {          // lots of flats, some 3-bet
+      callW = base * (pair ? 0.8 : suited ? 0.75 : 0.55);
+      raiseW = base - callW;
+    } else if (hero === 'BTN') {  // flat a lot; polar 3-bet
+      callW = base * (pair ? 0.75 : suited ? 0.7 : 0.5);
+      raiseW = base - callW;
+    } else if (hero === 'SB') {   // less flat than BB/BTN, more 3-bet
+      callW = base * (pair ? 0.6 : suited ? 0.55 : 0.35);
+      raiseW = base - callW;
+    } else {                      // CO/HJ/MP vs earlier seats
+      callW = base * (pair ? 0.55 : suited ? 0.45 : 0.25);
+      raiseW = base - callW;
+    }
+
+    const raise = Math.max(0, Math.min(100, Math.round(raiseW)));
+    const call = Math.max(0, Math.min(100, Math.round(callW)));
+    let fold = 100 - raise - call;
+    if (fold < 0) { const over = -fold; if (call >= over) fold = 0, call -= over; else fold = 0, raise -= (over - call), call = 0; }
+    g[L] = { raise, call, fold };
+  }
+  return g;
+}
+
+/** Gradient background for a cell: raise (top) / call (middle) / fold (bottom) */
 function cellBackground({ raise, call, fold }: Triple) {
   const r = Math.max(0, Math.min(100, raise|0));
   const c = Math.max(0, Math.min(100, call|0));
@@ -154,11 +489,6 @@ export default function Page() {
   const [villainAssist, setVillainAssist] = useState('');
   const [boardAssist, setBoardAssist] = useState('');
 
-  // AI Range
-  const [rangeGrid, setRangeGrid] = useState<Record<string, Triple> | null>(null);
-  const [rangeLoading, setRangeLoading] = useState(false);
-  const [rangeError, setRangeError] = useState<string | null>(null);
-
   // Async state
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -173,48 +503,27 @@ export default function Page() {
     board: parseBoard(input),
   }), [input]);
 
-  // Resolve values with assist
-  const heroCards = (twoCardsFrom(heroAssist) || fields?.cards || preview.heroCards || '').trim();
+  // Resolve values with assist (Hero cards are REQUIRED)
+  const heroCards = (twoCardsFrom(heroAssist) || twoCardsFrom(preview.heroCards) || '').trim();
+  const heroCardsValid = heroCards.split(' ').filter(Boolean).length === 2;
+
   const boardFromAssist = parseBoardFromText(boardAssist);
   const flop = (boardAssist ? boardFromAssist.flop : preview.board.flop) || '';
   const turn = (boardAssist ? boardFromAssist.turn : preview.board.turn) || '';
   const river = (boardAssist ? boardFromAssist.river : preview.board.river) || '';
-  const pos = (fields?.position ?? preview.position ?? '').toUpperCase() || 'BTN';
+  const heroPos: Pos = (fields?.position as Pos) || (normalizePos(preview.position || 'BTN'));
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
-  /** Fetch AI range (fixed grid for this input) */
-  async function fetchRange(payload: {
-    position?: string; cards?: string; stakes?: string; board?: string; input: string;
-  }) {
-    setRangeError(null);
-    setRangeLoading(true);
-    try {
-      const r = await fetch('/api/range', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          input: payload.input,
-          position: payload.position,
-          heroCards: payload.cards,
-          stakes: payload.stakes,
-          board: payload.board,
-        }),
-      });
-      if (!r.ok) {
-        const err = await r.json().catch(() => ({}));
-        throw new Error(err?.error || `Range fetch failed (${r.status})`);
-      }
-      const data = await r.json();
-      setRangeGrid(data?.grid || null);
-    } catch (e: any) {
-      setRangeError(e?.message || 'Failed to load range');
-      setRangeGrid(null);
-    } finally {
-      setRangeLoading(false);
-    }
-  }
+  /** Scenario + grid (deterministic, no API) */
+  const scenario: Scenario = useMemo(() => detectScenario(input, heroPos), [input, heroPos]);
+  const gridTriples: Record<string, Triple> = useMemo(() => {
+    if (scenario.kind === 'RFI') return gridRFI(scenario.heroPos);
+    return gridVsOpen(scenario.heroPos, scenario.openerPos);
+  }, [scenario]);
 
-  /** Analyze hand (same as before) */
+  const opened = Object.values(gridTriples).filter(t => t.raise + t.call > 0).length;
+
+  /** Analyze hand (unchanged: still uses /api/analyze-hand) */
   async function analyzeParsedHand(parsed: Fields) {
     setAiError(null);
     setAiLoading(true);
@@ -223,20 +532,11 @@ export default function Page() {
         date: parsed.date ?? undefined,
         stakes: parsed.stakes ?? (preview.stakes || undefined),
         position: parsed.position ?? (preview.position || undefined),
-        cards: parsed.cards ?? (heroCards || undefined),
+        cards: parsed.cards ?? (heroCards || undefined),   // REQUIRED & validated
         villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
         board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`].filter(Boolean).join('  |  '),
         notes: parsed.notes ?? '',
       };
-
-      // Kick off range request in parallel
-      fetchRange({
-        input,
-        position: payload.position,
-        cards: heroCards,
-        stakes: payload.stakes,
-        board: payload.board,
-      });
 
       const r = await fetch('/api/analyze-hand', {
         method: 'POST',
@@ -262,6 +562,7 @@ export default function Page() {
           gto_strategy: asText(data.gto_strategy),
           exploit_deviation: asText(data.exploit_deviation),
           learning_tag: tags,
+          cards: heroCards, // persist the validated hero cards
         };
       });
     } catch (e: any) {
@@ -271,11 +572,12 @@ export default function Page() {
     }
   }
 
-  /** Parse → then auto-run AI */
+  /** Parse → then AI */
   async function handleParse() {
     setStatus(null);
     setAiError(null);
     try {
+      if (!heroCardsValid) throw new Error('Please enter your two Hero cards (e.g., Ah Qs).');
       const res = await fetch('/api/parse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -322,18 +624,12 @@ export default function Page() {
     );
   }
 
-  // Build a complete grid from AI (or blanks while loading)
-  const gridTriples: Record<string, Triple> = useMemo(() => {
-    const blank: Triple = { raise: 0, call: 0, fold: 100 };
-    const out: Record<string, Triple> = {};
-    for (const lbl of LABELS) out[lbl] = rangeGrid?.[lbl] ?? blank;
-    return out;
-  }, [rangeGrid]);
-
-  const openedHands = Object.values(gridTriples).filter(t => t.raise > 0 || t.call > 0).length;
-  const anyLoaded = !!rangeGrid && !rangeLoading && !rangeError;
-
   /** Render */
+  const scenarioLabel =
+    scenario.kind === 'RFI'
+      ? `${scenario.heroPos} — RFI`
+      : `${scenario.heroPos} vs ${scenario.openerPos} open`;
+
   return (
     <main className="p-page">
       <div className="p-container">
@@ -342,7 +638,7 @@ export default function Page() {
         </header>
 
         <section className="p-grid">
-          {/* LEFT COLUMN */}
+          {/* LEFT */}
           <div className="p-col">
             <div className="p-card">
               <div className="p-cardTitle">Hand Played</div>
@@ -353,16 +649,30 @@ export default function Page() {
                 onChange={(e) => setInput(e.target.value)}
               />
               <div className="p-row p-gap">
-                <button className="p-btn p-primary" onClick={handleParse} disabled={!input.trim() || aiLoading}>
+                <button
+                  className="p-btn p-primary"
+                  onClick={handleParse}
+                  disabled={!input.trim() || !heroCardsValid || aiLoading}
+                  title={!heroCardsValid ? 'Enter Hero cards (e.g., Ah Qs) in the assist box' : undefined}
+                >
                   {aiLoading ? 'Analyzing…' : 'Send'}
                 </button>
                 <button
                   className="p-btn"
-                  onClick={() => { setInput(''); setFields(null); setStatus(null); setAiError(null); setHeroAssist(''); setVillainAssist(''); setBoardAssist(''); setRangeGrid(null); setRangeError(null); }}
+                  onClick={() => {
+                    setInput('');
+                    setFields(null);
+                    setStatus(null);
+                    setAiError(null);
+                    setHeroAssist('');
+                    setVillainAssist('');
+                    setBoardAssist('');
+                  }}
                 >
                   Clear
                 </button>
               </div>
+              {!heroCardsValid && <div className="p-err" style={{marginTop:8}}>Hero cards required — e.g., <strong>Ah Qs</strong> or <strong>Ks Kd</strong>.</div>}
               {aiError && <div className="p-err">{aiError}</div>}
               {status && <div className="p-note">{status}</div>}
             </div>
@@ -370,21 +680,16 @@ export default function Page() {
             <div className="p-card">
               <div className="p-cardTitle">Quick Card Assist (optional)</div>
               <div className="p-assist3">
-                <input className="p-input" value={heroAssist} onChange={(e)=>setHeroAssist(e.target.value)} placeholder="Hero: Ah Qs" />
+                <input className="p-input" value={heroAssist} onChange={(e)=>setHeroAssist(e.target.value)} placeholder="Hero: Ah Qs (required)" />
                 <input className="p-input" value={villainAssist} onChange={(e)=>setVillainAssist(e.target.value)} placeholder="Villain (optional): Kc Kd" />
                 <input className="p-input" value={boardAssist} onChange={(e)=>setBoardAssist(e.target.value)} placeholder="Board: Ks 7d 2c 9c 4h" />
               </div>
               <div className="p-help">If parsing guesses wrong, correct the board here — the preview updates instantly.</div>
             </div>
 
-            {/* --- AI Opening Range (fixed, non-editable) --- */}
-            <div className="p-card" style={{overflow: 'visible'}}>
-              <div className="p-subTitle">
-                Hero Decision Frequencies — {pos}
-                {rangeLoading && <span className="p-muted"> (loading…)</span>}
-                {rangeError && <span className="p-err"> ({rangeError})</span>}
-                {anyLoaded && <span className="p-muted"> — {openedHands} / 169 combos shown</span>}
-              </div>
+            {/* --- Deterministic Range Grid --- */}
+            <div className="p-card" style={{overflow:'visible'}}>
+              <div className="p-subTitle">Hero Decision Frequencies — {scenarioLabel} <span className="p-muted">({opened} / 169 combos shown)</span></div>
 
               <div className="legendRow">
                 <div className="legendItem"><span className="dot raise" /> Raise</div>
@@ -401,7 +706,7 @@ export default function Page() {
                     <div className="rangeHead">{r}</div>
                     {RANKS.map((c, j) => {
                       const lbl = handLabel(i, j);
-                      const t = gridTriples[lbl];
+                      const t = gridTriples[lbl] || zeroTriple;
                       return (
                         <div
                           key={lbl}
@@ -419,32 +724,22 @@ export default function Page() {
             </div>
           </div>
 
-          {/* RIGHT COLUMN */}
+          {/* RIGHT */}
           <div className="p-col">
             <div className="p-card">
-              <div className="p-topRow">
-                <TagChips />
-              </div>
+              <div className="p-topRow"><TagChips /></div>
 
               <div className="p-grid2">
                 <InfoBox label="Cards">
                   <div className="p-cards">
-                    {heroCards
+                    {heroCardsValid
                       ? heroCards.split(' ').map((c, i) => <span key={i} className="p-cardSpan"><CardSpan c={c} /></span>)
-                      : <span className="p-muted">(not found)</span>
-                    }
+                      : <span className="p-muted">(required)</span>}
                   </div>
                 </InfoBox>
-
                 <InfoBox label="Date"><div>{today}</div></InfoBox>
-
-                <InfoBox label="Position">
-                  <div>{(fields?.position ?? preview.position) || <span className="p-muted">(unknown)</span>}</div>
-                </InfoBox>
-
-                <InfoBox label="Stakes">
-                  <div>{(fields?.stakes ?? preview.stakes) || <span className="p-muted">(unknown)</span>}</div>
-                </InfoBox>
+                <InfoBox label="Position"><div>{heroPos}</div></InfoBox>
+                <InfoBox label="Stakes"><div>{(fields?.stakes ?? preview.stakes) || <span className="p-muted">(unknown)</span>}</div></InfoBox>
               </div>
             </div>
 
@@ -514,9 +809,9 @@ export default function Page() {
           --chipBg:#eef2ff; --chipBorder:#c7d2fe; --chipText:#1e3a8a;
           --pillBg:#ffffff; --pillBorder:#e5e7eb;
 
-          --raise:#ee8d73;      /* orange (raise) */
-          --call:#60a5fa;       /* blue (call)   */
-          --fold:#374151;       /* dark gray (fold) */
+          --raise:#ee8d73;      /* raise */
+          --call:#60a5fa;       /* call  */
+          --fold:#374151;       /* fold  */
         }
         *{box-sizing:border-box}
         html,body{margin:0;padding:0;background:linear-gradient(135deg,var(--bg2),var(--bg1),var(--bg3));color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
@@ -539,7 +834,7 @@ export default function Page() {
         .p-subTitle{font-size:14px;font-weight:800;margin-bottom:10px;color:#111827}
         .p-textarea{
           width:100%; min-height:160px; resize:vertical; padding:12px 14px;
-          border-radius:14px; border:1px solid var(--line); background:#ffffff; color:var(--text); font-size:15px; line-height:1.5;
+          border-radius:14px; border:1px solid var(--line); background:#ffffff; color:#0f172a; font-size:15px; line-height:1.5;
         }
 
         .p-row{display:flex;align-items:center}
@@ -625,16 +920,12 @@ export default function Page() {
           position:relative;
           transition: transform .08s ease, box-shadow .15s ease;
         }
-        .cell.suited{ /* background set inline by gradient */ }
-        .cell.offsuit{ }
-        .cell.pair{ }
-
         .cell.show:hover{
           transform: scale(1.8);
           z-index: 10;
           box-shadow: 0 10px 24px rgba(0,0,0,.25);
         }
-        .fixed .cell{ cursor:default } /* no clicking */
+        .fixed .cell{ cursor:default }
       `}</style>
     </main>
   );
