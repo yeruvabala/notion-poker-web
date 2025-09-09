@@ -612,14 +612,23 @@ function gridCallerVs3bet(callerPos: Pos, threeBettorPos: Pos, callerIP: boolean
 
     if (isPair(L)) {
       const a = hi(L);
-      if (a === 'A' || a === 'K') Rw = 60; // back-4-bet jam rarely at 150–200bb; still pressure
-      else if (a === 'Q') Rw = 25; Cw = 45;
-      if (atLeast(a,'6')) Cw = 45;
+      if (a === 'A' || a === 'K') {
+        Rw = 60; // back-4-bet jam rarely at 150–200bb; still pressure
+      } else if (a === 'Q') {
+        Rw = 25;
+        Cw = 45;
+      }
+      if (atLeast(a, '6')) Cw = 45;
     } else if (hi(L) === 'A' && isSuited(L)) {
       const b = lo(L);
-      if (b === 'K') Rw = 25; Cw = 45;
-      else if (['5','4','3','2'].includes(b)) Rw = 15; // rare back-4-bet bluff
-      else Cw = 35;
+      if (b === 'K') {
+        Rw = 25;
+        Cw = 45;
+      } else if (['5','4','3','2'].includes(b)) {
+        Rw = 15; // rare back-4-bet bluff
+      } else {
+        Cw = 35;
+      }
     } else if (isSuited(L) && ['K','Q','J'].includes(hi(L))) {
       Cw = 35;
     } else if (isSuited(L) && Math.abs(rIndex[hi(L)] - rIndex[lo(L)]) === 1) {
@@ -635,6 +644,7 @@ function gridCallerVs3bet(callerPos: Pos, threeBettorPos: Pos, callerIP: boolean
   }
   return g;
 }
+
 
 /* ---------- 3-bettor vs 4-bet: 5-bet jam / Call / Fold ---------- */
 function grid3bettorVs4bet(threeBettorPos: Pos, fourBettorPos: Pos, stackBB: number): Grid {
