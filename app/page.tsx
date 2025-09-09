@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
 /** ---------------- Types ---------------- */
@@ -148,16 +148,104 @@ const twoCardsFrom = (line: string) =>
 const CardSpan = ({ c }: { c: string }) =>
   !c ? null : <span style={{ fontWeight: 600, color: suitColor(c.slice(-1)) }}>{c}</span>;
 
+/** ---------- Opening Range Grid helpers ---------- */
+const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'] as const;
+const rIndex: Record<string, number> = Object.fromEntries(RANKS.map((r, i) => [r, i]));
+
+/** Build label for matrix cell */
+function handLabel(i: number, j: number): string {
+  const a = RANKS[i], b = RANKS[j];
+  if (i === j) return `${a}${a}`;
+  return i < j ? `${a}${b}s` : `${a}${b}o`; // upper triangle suited
+}
+
+/** Small comparator helpers */
+const atLeast = (rank: string, min: string) => rIndex[rank] <= rIndex[min]; // A-high ordering
+const oneOf = (x: string, arr: string[]) => arr.includes(x);
+
+/** Baseline open decision by position (approx, intentionally compact rules) */
+function defaultOpen(pos: string, label: string): boolean {
+  pos = (pos || '').toUpperCase();
+  const [a, b, t] = label.length === 3 ? [label[0], label[1], label[2]] : [label[0], label[1], 'p']; // p = pair
+  const pair = t === 'p';
+  const suited = t === 's';
+  const offsuit = t === 'o';
+
+  // Pairs
+  const pairMin: Record<string, string> = {
+    UTG: '6',   MP: '4',  HJ: '2',  CO: '2',  BTN: '2',  SB: '2',  BB: '2'
+  };
+  if (pair) return atLeast(a, pairMin[pos] || '2');
+
+  // Any Ace suited opens everywhere; offsuit tightens early
+  if (a === 'A') {
+    if (suited) return true;
+    // offsuit ATo+ UTG/MP, A9o+ HJ, A8o+ CO, A2o+ BTN, A5o+ SB (wheel blocker)
+    const minOff: Record<string, string> = { UTG: 'T', MP: 'T', HJ: '9', CO: '8', BTN: '2', SB: '5', BB: 'T' };
+    return atLeast(b, minOff[pos] || 'T');
+  }
+
+  // Broadways suited
+  if (suited && oneOf(a, ['K','Q','J','T'])) {
+    const min: Record<string, Record<string,string>> = {
+      K: { UTG:'9', MP:'9', HJ:'8', CO:'6', BTN:'2', SB:'7' },
+      Q: { UTG:'T', MP:'9', HJ:'9', CO:'8', BTN:'5', SB:'8' },
+      J: { UTG:'T', MP:'9', HJ:'9', CO:'8', BTN:'7', SB:'8' },
+      T: { UTG:'9', MP:'9', HJ:'8', CO:'8', BTN:'7', SB:'8' },
+    };
+    return atLeast(b, (min as any)[a]?.[pos] ?? '9');
+  }
+
+  // Broadways offsuit
+  if (offsuit && oneOf(a, ['K','Q','J','T'])) {
+    const min: Record<string, Record<string,string>> = {
+      K: { UTG:'Q', MP:'J', HJ:'T', CO:'T', BTN:'8', SB:'9' }, // KQo/KJo/KTo… BTN K8o+
+      Q: { UTG:'T', MP:'T', HJ:'T', CO:'T', BTN:'8', SB:'9' }, // QTo+ late
+      J: { UTG:'X', MP:'X', HJ:'X', CO:'T', BTN:'9', SB:'9' }, // JTo CO+, J9o BTN+
+      T: { UTG:'X', MP:'X', HJ:'X', CO:'X', BTN:'9', SB:'9' }, // T9o BTN/SB
+    };
+    const m = (min as any)[a]?.[pos];
+    if (!m || m === 'X') return false;
+    return atLeast(b, m);
+  }
+
+  // Suited connectors & gappers (Q9s-, J8s-, T8s-, 98s, 87s, 76s, 65s, 54s widen later)
+  if (suited) {
+    const SC = [
+      ['9','8'], ['8','7'], ['7','6'], ['6','5'], ['5','4']
+    ];
+    const isSC = SC.some(([x,y]) => (a === x && b === y) || (a === y && b === x));
+    if (isSC) {
+      const okPos = { UTG:false, MP:true, HJ:true, CO:true, BTN:true, SB:true, BB:false };
+      return (okPos as any)[pos] ?? false;
+    }
+  }
+
+  // Very late wide BTN/SB catch-all for suited junk like K2s, Q5s, J7s, T7s, 97s, 86s, 75s
+  if (suited && (pos === 'BTN' || pos === 'SB')) {
+    const LATE_MIN: Record<string,string> = { K:'2', Q:'5', J:'7', T:'7', '9':'7','8':'6','7':'5' };
+    const m = (LATE_MIN as any)[a];
+    if (m) return atLeast(b, m);
+  }
+
+  // Default: tight fold
+  return false;
+}
+
 /** ---------------- Component ---------------- */
 export default function Page() {
   // INPUT
   const [input, setInput] = useState('');
   const [fields, setFields] = useState<Fields | null>(null);
 
-  // Quick Card Assist (new: hero, villain, entire board)
+  // Quick Card Assist (hero, villain, entire board)
   const [heroAssist, setHeroAssist] = useState('');
   const [villainAssist, setVillainAssist] = useState('');
   const [boardAssist, setBoardAssist] = useState('');
+
+  // Opening range edits (user toggles)
+  const [rangeEdits, setRangeEdits] = useState<Record<string, boolean>>({});
+  const [lastPosForEdits, setLastPosForEdits] = useState<string>('');
 
   // Async state
   const [aiLoading, setAiLoading] = useState(false);
@@ -183,6 +271,15 @@ export default function Page() {
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
+  const pos = (fields?.position ?? preview.position ?? '').toUpperCase() || 'BTN';
+
+  // Rebase edits if position changes
+  useEffect(() => {
+    if (lastPosForEdits && lastPosForEdits === pos) return;
+    setRangeEdits({});
+    setLastPosForEdits(pos);
+  }, [pos, lastPosForEdits]);
+
   /** Call /api/analyze-hand; use input text; include overrides from assists */
   async function analyzeParsedHand(parsed: Fields) {
     setAiError(null);
@@ -198,7 +295,6 @@ export default function Page() {
         board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`]
           .filter(Boolean)
           .join('  |  '),
-        // we aren’t sending villain cards to the API yet; can be appended to notes later if desired
         notes: parsed.notes ?? '',
       };
 
@@ -228,7 +324,6 @@ export default function Page() {
           gto_strategy: asText(data.gto_strategy),
           exploit_deviation: asText(data.exploit_deviation),
           learning_tag: tags,
-          // keep fields.cards if returned later; UI shows heroCards variable anyway
         };
       });
     } catch (e: any) {
@@ -289,6 +384,22 @@ export default function Page() {
     );
   }
 
+  /** Range grid state helpers */
+  const toggleHand = (label: string) =>
+    setRangeEdits(prev => ({ ...prev, [label]: !(prev[label] ?? defaultOpen(pos, label)) }));
+
+  const resetRange = () => { setRangeEdits({}); setLastPosForEdits(pos); };
+
+  const openFlags: Record<string, boolean> = {};
+  RANKS.forEach((_, i) => {
+    RANKS.forEach((__, j) => {
+      const lbl = handLabel(i, j);
+      openFlags[lbl] = rangeEdits.hasOwnProperty(lbl) ? rangeEdits[lbl] : defaultOpen(pos, lbl);
+    });
+  });
+  const openCount = Object.values(openFlags).filter(Boolean).length;
+  const openPct = Math.round((openCount / 169) * 100);
+
   /** Render */
   return (
     <main className="p-page">
@@ -332,6 +443,40 @@ export default function Page() {
               </div>
               <div className="p-help">If parsing guesses wrong, correct the board here — the preview updates instantly.</div>
             </div>
+
+            {/* --- NEW: Interactive Opening Range Grid --- */}
+            <div className="p-card">
+              <div className="p-subTitle">Hero Open Range — {pos} <span className="p-muted">({openPct}% of 169)</span></div>
+              <div className="rangeGrid">
+                {/* header ranks across top */}
+                <div className="rangeCorner" />
+                {RANKS.map((r, j) => <div key={`h-${j}`} className="rangeHead">{r}</div>)}
+                {/* rows */}
+                {RANKS.map((r, i) => (
+                  <React.Fragment key={`row-${i}`}>
+                    <div className="rangeHead">{r}</div>
+                    {RANKS.map((c, j) => {
+                      const lbl = handLabel(i, j);
+                      const open = openFlags[lbl];
+                      return (
+                        <button
+                          key={lbl}
+                          className={`cell ${open ? 'open' : 'fold'} ${i === j ? 'pair' : (i < j ? 'suited' : 'offsuit')}`}
+                          title={`${lbl} — ${open ? 'Open' : 'Fold'} (click to toggle)`}
+                          onClick={() => toggleHand(lbl)}
+                        >
+                          {lbl}
+                        </button>
+                      );
+                    })}
+                  </React.Fragment>
+                ))}
+              </div>
+              <div className="p-row p-gapTop" style={{justifyContent:'space-between'}}>
+                <div className="p-muted" style={{fontSize:12}}>Click cells to toggle. Suited = upper triangle, Offsuit = lower, Pairs = diagonal.</div>
+                <button className="p-btn" onClick={resetRange}>Reset to {pos} default</button>
+              </div>
+            </div>
           </div>
 
           {/* RIGHT COLUMN */}
@@ -354,11 +499,11 @@ export default function Page() {
                 <InfoBox label="Date"><div>{today}</div></InfoBox>
 
                 <InfoBox label="Position">
-                  <div>{(fields?.position ?? parseHeroPosition(input)) || <span className="p-muted">(unknown)</span>}</div>
+                  <div>{(fields?.position ?? preview.position) || <span className="p-muted">(unknown)</span>}</div>
                 </InfoBox>
 
                 <InfoBox label="Stakes">
-                  <div>{(fields?.stakes ?? parseStakes(input)) || <span className="p-muted">(unknown)</span>}</div>
+                  <div>{(fields?.stakes ?? preview.stakes) || <span className="p-muted">(unknown)</span>}</div>
                 </InfoBox>
               </div>
             </div>
@@ -428,13 +573,19 @@ export default function Page() {
           --primary:#3b82f6; --primary2:#2563eb; --btnText:#f8fbff;
           --chipBg:#eef2ff; --chipBorder:#c7d2fe; --chipText:#1e3a8a;
           --pillBg:#ffffff; --pillBorder:#e5e7eb;
+
+          --range-open:#ee8d73;      /* orange-ish like screenshot */
+          --range-fold:#3b3f46;      /* dark gray */
+          --range-suited:#f6efe9;
+          --range-offsuit:#eef0f3;
+          --range-pair:#faf6f0;
         }
         *{box-sizing:border-box}
         html,body{margin:0;padding:0;background:linear-gradient(135deg,var(--bg2),var(--bg1),var(--bg3));color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
         .p-page{min-height:100vh;padding:24px}
         .p-container{max-width:1200px;margin:0 auto}
-        .p-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-        .p-title{margin:0;font-size:28px;font-weight:800;letter-spacing:.2px}
+        .p-header{display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+        .p-title{margin:0;font-size:28px;font-weight:800;letter-spacing:.2px;text-align:center}
         .p-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
         @media (max-width:980px){.p-grid{grid-template-columns:1fr}}
 
@@ -505,13 +656,41 @@ export default function Page() {
         .p-list{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px}
         .p-note{margin-top:10px; color:#166534}
         .p-err{margin-top:10px; color:#b91c1c}
+
+        /* ------- Range grid styles ------- */
+        .rangeGrid{
+          display:grid;
+          grid-template-columns: 28px repeat(13, 1fr);
+          grid-auto-rows: 26px;
+          gap: 4px;
+          align-items:center;
+        }
+        .rangeHead{
+          font-size:12px; color:#64748b; text-align:center; line-height:26px;
+        }
+        .rangeCorner{width:28px;height:26px}
+        .cell{
+          border:1px solid #cbd5e1;
+          border-radius:6px;
+          font-size:11.5px;
+          display:flex; align-items:center; justify-content:center;
+          cursor:pointer; user-select:none;
+          transition:transform .02s ease, filter .15s ease, box-shadow .15s ease;
+          box-shadow: inset 0 0 0 1px rgba(0,0,0,.02);
+        }
+        .cell.suited{background:var(--range-suited)}
+        .cell.offsuit{background:var(--range-offsuit)}
+        .cell.pair{background:var(--range-pair)}
+        .cell.open{background:var(--range-open); color:#222; border-color:#e2a08e}
+        .cell.fold{background:#374151; color:#e5e7eb; border-color:#4b5563}
+        .cell:hover{filter:brightness(1.07)}
       `}</style>
     </main>
   );
 }
 
 /** Small info box used on the right-side top card */
-function InfoBox({ label, children }: { label: string; children: ReactNode }) {
+function InfoBox({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="ibox">
       <div className="iboxLabel">{label}</div>
