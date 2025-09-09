@@ -26,7 +26,7 @@ type Scenario =
 
 type Pos = 'UTG' | 'MP' | 'HJ' | 'CO' | 'BTN' | 'SB' | 'BB';
 
-/** ------------- Parse helpers (same “code behind” + upgrades) ------------- */
+/** ------------- Parse helpers ------------- */
 const SUIT_MAP: Record<string, string> = { s: '♠', h: '♥', d: '♦', c: '♣' };
 const SUIT_WORD: Record<string, string> = {
   spade: '♠', spades: '♠', heart: '♥', hearts: '♥', diamond: '♦', diamonds: '♦', club: '♣', clubs: '♣',
@@ -187,12 +187,7 @@ function detectScenario(input: string, heroPos: Pos): Scenario {
   return { kind: 'VS_OPEN', heroPos, openerPos: opener };
 }
 
-/** ---------- Baseline grid generator ----------
- *  Deterministic, position aware.
- *  - RFI: open/fold (call = 0)
- *  - VS_OPEN: 3-bet / call / fold splits; SB vs CO uses the table we agreed on,
- *             other pairs use analogous rules (tighter early, wider late; BB calls more).
- */
+/** ---------- Baseline grid generator ---------- */
 type Grid = Record<string, Triple>;
 const zeroTriple: Triple = { raise: 0, call: 0, fold: 100 };
 
@@ -225,9 +220,9 @@ function gridRFI(pos: Pos): Grid {
     if (pair) {
       const min: Record<Pos, string> = { UTG:'6', MP:'4', HJ:'3', CO:'2', BTN:'2', SB:'2', BB:'9' };
       open = atLeast(a, min[pos]) ? 100 : 0;
-      if (pos === 'CO' && atLeast(a,'3') && !atLeast(a,'9')) open = 80;       // mix some mid pairs
+      if (pos === 'CO' && atLeast(a,'3') && !atLeast(a,'9')) open = 80;
       if (pos === 'HJ' && atLeast(a,'5') && !atLeast(a,'9')) open = 80;
-      if (pos === 'SB') open = atLeast(a,'4') ? 90 : 0; // SB complete/raise strategy
+      if (pos === 'SB') open = atLeast(a,'4') ? 90 : 0;
     }
 
     // Suited Ax: always good opens; offsuit gets trimmed early
@@ -267,7 +262,6 @@ function gridRFI(pos: Pos): Grid {
         const allow: Record<Pos, number> = { UTG:0, MP:20, HJ:60, CO:90, BTN:100, SB:80, BB:0 };
         open = allow[pos];
       } else {
-        // suited junk late buttons
         if (pos === 'BTN') open = 40;
         else if (pos === 'CO') open = 20;
       }
@@ -288,17 +282,7 @@ function gridVsOpen(hero: Pos, opener: Pos): Grid {
   // Helper to set a group with a mix
   const set = (labels: string[], mix: Triple) => { for (const L of labels) g[L] = { ...mix }; };
 
-  // Produce convenience arrays by pattern
-  const pairs = (from: string, to: string) => {
-    const res: string[] = [];
-    for (const r of RANKS) {
-      if (atLeast(r, from) && !atLeast(r, to)) res.push(`${r}${r}`);
-      if (r === to) break;
-    }
-    return res;
-  };
   const sx = (hi: string, lows: string[]) => lows.map(l => `${hi}${l}s`);
-  const ox = (hi: string, lows: string[]) => lows.map(l => `${hi}${l}o`);
 
   /** --- SB vs CO (agreed baseline) --- */
   if (hero === 'SB' && opener === 'CO') {
@@ -354,7 +338,7 @@ function gridVsOpen(hero: Pos, opener: Pos): Grid {
     set(['43s'], { raise:5, call:25, fold:70 });
     set(['32s'], { raise:0, call:20, fold:80 });
 
-    // Offsuit junk: fold
+    // Fill the rest with folds
     for (const L of LABELS) if (!(L in g) || g[L].fold === 100) g[L] = { ...zeroTriple };
     return g;
   }
@@ -435,12 +419,10 @@ function gridVsOpen(hero: Pos, opener: Pos): Grid {
     return g;
   }
 
-  /** --- Generic fallback (other hero/opener combos)
-   *  Start from RFI "playability" as a weight and split it by seat dynamics.
-   */
+  /** --- Generic fallback (other hero/opener combos) --- */
   const rfi = gridRFI(hero);
   for (const L of LABELS) {
-    const base = rfi[L].raise; // 0..100 playability
+    const base = rfi[L].raise; // 0..100 playability weight
     if (base === 0) { g[L] = { ...zeroTriple }; continue; }
 
     // seat tendencies
@@ -460,10 +442,25 @@ function gridVsOpen(hero: Pos, opener: Pos): Grid {
       raiseW = base - callW;
     }
 
-    const raise = Math.max(0, Math.min(100, Math.round(raiseW)));
-    const call = Math.max(0, Math.min(100, Math.round(callW)));
-    let fold = 100 - raise - call;
-    if (fold < 0) { const over = -fold; if (call >= over) fold = 0, call -= over; else fold = 0, raise -= (over - call), call = 0; }
+    // ----- FIXED: use let, then normalize totals -----
+    const clamp = (x: number) => Math.max(0, Math.min(100, Math.round(x)));
+    let raise = clamp(raiseW);
+    let call  = clamp(callW);
+    let fold  = 100 - raise - call;
+
+    if (fold < 0) {
+      const over = -fold;
+      if (call >= over) {
+        call -= over;
+        fold = 0;
+      } else {
+        const leftover = over - call;
+        call = 0;
+        raise = Math.max(0, raise - leftover);
+        fold = 0;
+      }
+    }
+
     g[L] = { raise, call, fold };
   }
   return g;
@@ -523,7 +520,7 @@ export default function Page() {
 
   const opened = Object.values(gridTriples).filter(t => t.raise + t.call > 0).length;
 
-  /** Analyze hand (unchanged: still uses /api/analyze-hand) */
+  /** Analyze hand (server AI) */
   async function analyzeParsedHand(parsed: Fields) {
     setAiError(null);
     setAiLoading(true);
@@ -624,7 +621,6 @@ export default function Page() {
     );
   }
 
-  /** Render */
   const scenarioLabel =
     scenario.kind === 'RFI'
       ? `${scenario.heroPos} — RFI`
@@ -864,7 +860,7 @@ export default function Page() {
         }
         .p-input.p-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Courier New',monospace; line-height:1.45}
 
-        .p-help{margin-top:8px; font-size:12px; color:var(--muted)}
+        .p-help{margin-top:8px; font-size:12px; color:#6b7280}
         .p-muted{color:var(--muted)}
 
         .p-topRow{display:flex; justify-content:space-between; align-items:center}
