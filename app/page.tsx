@@ -6,17 +6,19 @@ import type { ReactNode } from 'react';
 /** ---------------- Types ---------------- */
 type Fields = {
   date?: string | null;
-  stakes?: string | null;               // TEXT, not number
+  stakes?: string | null;
   position?: string | null;
   cards?: string | null;
-  villain_action?: string | null;       // tolerated in payload but not shown on the right card
-  villian_action?: string | null;       // (typo tolerated)
+  villain_action?: string | null;
+  villian_action?: string | null;
   gto_strategy?: string | null;
   exploit_deviation?: string | null;
   learning_tag?: string[];
   board?: string | null;
   notes?: string | null;
 };
+
+type Triple = { raise: number; call: number; fold: number };
 
 /** ------------- Helpers (same “code behind”) ------------- */
 const asText = (v: any): string =>
@@ -32,10 +34,7 @@ const asText = (v: any): string =>
 
 const SUIT_MAP: Record<string, string> = { s: '♠', h: '♥', d: '♦', c: '♣' };
 const SUIT_WORD: Record<string, string> = {
-  spade: '♠', spades: '♠',
-  heart: '♥', hearts: '♥',
-  diamond: '♦', diamonds: '♦',
-  club: '♣', clubs: '♣',
+  spade: '♠', spades: '♠', heart: '♥', hearts: '♥', diamond: '♦', diamonds: '♦', club: '♣', clubs: '♣',
 };
 const suitColor = (suit: string) => (suit === '♥' || suit === '♦' ? '#dc2626' : '#111827');
 
@@ -60,20 +59,12 @@ const parseStakes = (t: string) => {
 // Prefer hero mentions; avoid villain position
 const parseHeroPosition = (t: string) => {
   const up = t.toUpperCase();
-
-  // "I'm/I am/hero ... on SB/BTN/..."
   const m1 = up.match(/\b(I|I'M|IM|I AM|HERO)\b[^.]{0,40}?\b(ON|FROM|IN)\s+(UTG\+\d|UTG|MP|HJ|CO|BTN|SB|BB)\b/);
   if (m1) return m1[3];
-
-  // "am on SB", "I on SB"
   const m2 = up.match(/\b(AM|I'M|IM|I)\b[^.]{0,10}?\bON\s+(UTG\+\d|UTG|MP|HJ|CO|BTN|SB|BB)\b/);
   if (m2) return m2[2];
-
-  // generic "on SB"
   const m3 = up.match(/\bON\s+(SB|BB|BTN|CO|HJ|MP|UTG(?:\+\d)?)\b/);
   if (m3) return m3[1];
-
-  // fallback preference
   const PREF = ['SB','BB','BTN','CO','HJ','MP','UTG+2','UTG+1','UTG'];
   for (const p of PREF) if (up.includes(` ${p} `)) return p;
   return '';
@@ -82,12 +73,8 @@ const parseHeroPosition = (t: string) => {
 // Find hero cards near "with/holding/I have", handle Ah Qs, A4s, "a4 of spades"
 const parseHeroCardsSmart = (t: string) => {
   const s = t.toLowerCase();
-
-  // "with Ah Qs"
   let m = s.match(/\b(?:with|holding|have|having|i\s+have)\s+([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])\b/i);
   if (m) return [suitify(m[1]), suitify(m[2])].join(' ');
-
-  // "with A4s / A4o" or "with A4 of spades"
   m = s.match(/\b(?:with|holding|have|having|i\s+have)\s*([2-9tjqka])\s*([2-9tjqka])\s*(s|o|suited|offsuit)?(?:\s*of\s*(spades?|hearts?|diamonds?|clubs?))?/i);
   if (m) {
     const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
@@ -95,32 +82,22 @@ const parseHeroCardsSmart = (t: string) => {
     const suitChar = suitWord ? SUIT_WORD[suitWord] : '♠';
     const suited = m[3] === 's' || m[3] === 'suited' || !!suitWord;
     if (suited) return `${r1}${suitChar} ${r2}${suitChar}`;
-    // offsuit: show distinct suits for clarity
     return `${r1}♠ ${r2}♥`;
   }
-
-  // "a4 of spades"
   m = s.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*of\s*(spades?|hearts?|diamonds?|clubs?)\b/i);
   if (m) {
     const suitChar = SUIT_WORD[(m[3] || '').toLowerCase()];
     return `${m[1].toUpperCase()}${suitChar} ${m[2].toUpperCase()}${suitChar}`;
   }
-
-  // fallback: require "with" nearby to avoid reading the board
   m = s.match(/\bwith\b[^.]{0,40}?([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])\b/i);
   if (m) return [suitify(m[1]), suitify(m[2])].join(' ');
-
   return '';
 };
 
 // Parse "Ks 7d 2c 9c 4h" → {flop,turn,river}
 const parseBoardFromText = (line: string) => {
   const arr = suitifyLine(line).split(' ').filter(Boolean);
-  return {
-    flop: arr.slice(0, 3).join(' ') || '',
-    turn: arr[3] || '',
-    river: arr[4] || '',
-  };
+  return { flop: arr.slice(0, 3).join(' ') || '', turn: arr[3] || '', river: arr[4] || '' };
 };
 
 const parseBoard = (t: string) => {
@@ -133,11 +110,7 @@ const parseBoard = (t: string) => {
   let river = rm ? suitifyLine(rm[1]).split(' ')[0] || '' : '';
   if (!flop || !turn || !river) {
     const all = suitifyLine(t).split(' ');
-    if (all.length >= 5) {
-      flop = flop || all.slice(0, 3).join(' ');
-      turn = turn || all[3];
-      river = river || all[4];
-    }
+    if (all.length >= 5) { flop = flop || all.slice(0, 3).join(' '); turn = turn || all[3]; river = river || all[4]; }
   }
   return { flop, turn, river };
 };
@@ -148,88 +121,26 @@ const twoCardsFrom = (line: string) =>
 const CardSpan = ({ c }: { c: string }) =>
   !c ? null : <span style={{ fontWeight: 600, color: suitColor(c.slice(-1)) }}>{c}</span>;
 
-/** ---------- Opening Range Grid helpers ---------- */
+/** ---------- Range grid helpers ---------- */
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'] as const;
-const rIndex: Record<string, number> = Object.fromEntries(RANKS.map((r, i) => [r, i]));
-
-/** Build label for matrix cell */
 function handLabel(i: number, j: number): string {
   const a = RANKS[i], b = RANKS[j];
   if (i === j) return `${a}${a}`;
-  return i < j ? `${a}${b}s` : `${a}${b}o`; // upper triangle suited
+  return i < j ? `${a}${b}s` : `${a}${b}o`;
 }
+const LABELS = (() => {
+  const out: string[] = [];
+  for (let i = 0; i < RANKS.length; i++) for (let j = 0; j < RANKS.length; j++) out.push(handLabel(i,j));
+  return out;
+})();
 
-/** Small comparator helpers */
-const atLeast = (rank: string, min: string) => rIndex[rank] <= rIndex[min]; // A-high ordering
-const oneOf = (x: string, arr: string[]) => arr.includes(x);
-
-/** Baseline open decision by position (approx, intentionally compact rules) */
-function defaultOpen(pos: string, label: string): boolean {
-  pos = (pos || '').toUpperCase();
-  const [a, b, t] = label.length === 3 ? [label[0], label[1], label[2]] : [label[0], label[1], 'p']; // p = pair
-  const pair = t === 'p';
-  const suited = t === 's';
-  const offsuit = t === 'o';
-
-  // Pairs
-  const pairMin: Record<string, string> = {
-    UTG: '6',   MP: '4',  HJ: '2',  CO: '2',  BTN: '2',  SB: '2',  BB: '2'
-  };
-  if (pair) return atLeast(a, pairMin[pos] || '2');
-
-  // Any Ace suited opens everywhere; offsuit tightens early
-  if (a === 'A') {
-    if (suited) return true;
-    // offsuit ATo+ UTG/MP, A9o+ HJ, A8o+ CO, A2o+ BTN, A5o+ SB (wheel blocker)
-    const minOff: Record<string, string> = { UTG: 'T', MP: 'T', HJ: '9', CO: '8', BTN: '2', SB: '5', BB: 'T' };
-    return atLeast(b, minOff[pos] || 'T');
-  }
-
-  // Broadways suited
-  if (suited && oneOf(a, ['K','Q','J','T'])) {
-    const min: Record<string, Record<string,string>> = {
-      K: { UTG:'9', MP:'9', HJ:'8', CO:'6', BTN:'2', SB:'7' },
-      Q: { UTG:'T', MP:'9', HJ:'9', CO:'8', BTN:'5', SB:'8' },
-      J: { UTG:'T', MP:'9', HJ:'9', CO:'8', BTN:'7', SB:'8' },
-      T: { UTG:'9', MP:'9', HJ:'8', CO:'8', BTN:'7', SB:'8' },
-    };
-    return atLeast(b, (min as any)[a]?.[pos] ?? '9');
-  }
-
-  // Broadways offsuit
-  if (offsuit && oneOf(a, ['K','Q','J','T'])) {
-    const min: Record<string, Record<string,string>> = {
-      K: { UTG:'Q', MP:'J', HJ:'T', CO:'T', BTN:'8', SB:'9' }, // KQo/KJo/KTo… BTN K8o+
-      Q: { UTG:'T', MP:'T', HJ:'T', CO:'T', BTN:'8', SB:'9' }, // QTo+ late
-      J: { UTG:'X', MP:'X', HJ:'X', CO:'T', BTN:'9', SB:'9' }, // JTo CO+, J9o BTN+
-      T: { UTG:'X', MP:'X', HJ:'X', CO:'X', BTN:'9', SB:'9' }, // T9o BTN/SB
-    };
-    const m = (min as any)[a]?.[pos];
-    if (!m || m === 'X') return false;
-    return atLeast(b, m);
-  }
-
-  // Suited connectors & gappers (Q9s-, J8s-, T8s-, 98s, 87s, 76s, 65s, 54s widen later)
-  if (suited) {
-    const SC = [
-      ['9','8'], ['8','7'], ['7','6'], ['6','5'], ['5','4']
-    ];
-    const isSC = SC.some(([x,y]) => (a === x && b === y) || (a === y && b === x));
-    if (isSC) {
-      const okPos = { UTG:false, MP:true, HJ:true, CO:true, BTN:true, SB:true, BB:false };
-      return (okPos as any)[pos] ?? false;
-    }
-  }
-
-  // Very late wide BTN/SB catch-all for suited junk like K2s, Q5s, J7s, T7s, 97s, 86s, 75s
-  if (suited && (pos === 'BTN' || pos === 'SB')) {
-    const LATE_MIN: Record<string,string> = { K:'2', Q:'5', J:'7', T:'7', '9':'7','8':'6','7':'5' };
-    const m = (LATE_MIN as any)[a];
-    if (m) return atLeast(b, m);
-  }
-
-  // Default: tight fold
-  return false;
+/** Color mix for one cell using a vertical gradient: raise (top) / call (middle) / fold (bottom) */
+function cellBackground({ raise, call, fold }: Triple) {
+  const r = Math.max(0, Math.min(100, raise|0));
+  const c = Math.max(0, Math.min(100, call|0));
+  const f = Math.max(0, Math.min(100, fold|0));
+  const r2 = r, c2 = r + c, f2 = 100;
+  return `linear-gradient(180deg, var(--raise) 0% ${r2}%, var(--call) ${r2}% ${c2}%, var(--fold) ${c2}% ${f2}%)`;
 }
 
 /** ---------------- Component ---------------- */
@@ -238,14 +149,15 @@ export default function Page() {
   const [input, setInput] = useState('');
   const [fields, setFields] = useState<Fields | null>(null);
 
-  // Quick Card Assist (hero, villain, entire board)
+  // Card Assist
   const [heroAssist, setHeroAssist] = useState('');
   const [villainAssist, setVillainAssist] = useState('');
   const [boardAssist, setBoardAssist] = useState('');
 
-  // Opening range edits (user toggles)
-  const [rangeEdits, setRangeEdits] = useState<Record<string, boolean>>({});
-  const [lastPosForEdits, setLastPosForEdits] = useState<string>('');
+  // AI Range
+  const [rangeGrid, setRangeGrid] = useState<Record<string, Triple> | null>(null);
+  const [rangeLoading, setRangeLoading] = useState(false);
+  const [rangeError, setRangeError] = useState<string | null>(null);
 
   // Async state
   const [aiLoading, setAiLoading] = useState(false);
@@ -253,7 +165,7 @@ export default function Page() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
-  // Lightweight parse for preview (client-side only)
+  // Lightweight parse for preview
   const preview = useMemo(() => ({
     stakes: parseStakes(input),
     position: parseHeroPosition(input),
@@ -261,26 +173,48 @@ export default function Page() {
     board: parseBoard(input),
   }), [input]);
 
-  // Resolve preview values with assists
+  // Resolve values with assist
   const heroCards = (twoCardsFrom(heroAssist) || fields?.cards || preview.heroCards || '').trim();
-
   const boardFromAssist = parseBoardFromText(boardAssist);
   const flop = (boardAssist ? boardFromAssist.flop : preview.board.flop) || '';
   const turn = (boardAssist ? boardFromAssist.turn : preview.board.turn) || '';
   const river = (boardAssist ? boardFromAssist.river : preview.board.river) || '';
-
+  const pos = (fields?.position ?? preview.position ?? '').toUpperCase() || 'BTN';
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
-  const pos = (fields?.position ?? preview.position ?? '').toUpperCase() || 'BTN';
+  /** Fetch AI range (fixed grid for this input) */
+  async function fetchRange(payload: {
+    position?: string; cards?: string; stakes?: string; board?: string; input: string;
+  }) {
+    setRangeError(null);
+    setRangeLoading(true);
+    try {
+      const r = await fetch('/api/range', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          input: payload.input,
+          position: payload.position,
+          heroCards: payload.cards,
+          stakes: payload.stakes,
+          board: payload.board,
+        }),
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err?.error || `Range fetch failed (${r.status})`);
+      }
+      const data = await r.json();
+      setRangeGrid(data?.grid || null);
+    } catch (e: any) {
+      setRangeError(e?.message || 'Failed to load range');
+      setRangeGrid(null);
+    } finally {
+      setRangeLoading(false);
+    }
+  }
 
-  // Rebase edits if position changes
-  useEffect(() => {
-    if (lastPosForEdits && lastPosForEdits === pos) return;
-    setRangeEdits({});
-    setLastPosForEdits(pos);
-  }, [pos, lastPosForEdits]);
-
-  /** Call /api/analyze-hand; use input text; include overrides from assists */
+  /** Analyze hand (same as before) */
   async function analyzeParsedHand(parsed: Fields) {
     setAiError(null);
     setAiLoading(true);
@@ -289,26 +223,30 @@ export default function Page() {
         date: parsed.date ?? undefined,
         stakes: parsed.stakes ?? (preview.stakes || undefined),
         position: parsed.position ?? (preview.position || undefined),
-        cards: parsed.cards ?? (heroCards || undefined), // hero override
+        cards: parsed.cards ?? (heroCards || undefined),
         villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
-        // pass corrected board from the assist; analysis can use it as extra context
-        board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`]
-          .filter(Boolean)
-          .join('  |  '),
+        board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`].filter(Boolean).join('  |  '),
         notes: parsed.notes ?? '',
       };
+
+      // Kick off range request in parallel
+      fetchRange({
+        input,
+        position: payload.position,
+        cards: heroCards,
+        stakes: payload.stakes,
+        board: payload.board,
+      });
 
       const r = await fetch('/api/analyze-hand', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
       if (!r.ok) {
         const err = await r.json().catch(() => ({}));
         throw new Error(err?.error || `AI analyze failed (${r.status})`);
       }
-
       const data = await r.json();
 
       setFields(prev => {
@@ -333,7 +271,7 @@ export default function Page() {
     }
   }
 
-  /** Parse → then auto-run AI (same as before) */
+  /** Parse → then auto-run AI */
   async function handleParse() {
     setStatus(null);
     setAiError(null);
@@ -384,21 +322,16 @@ export default function Page() {
     );
   }
 
-  /** Range grid state helpers */
-  const toggleHand = (label: string) =>
-    setRangeEdits(prev => ({ ...prev, [label]: !(prev[label] ?? defaultOpen(pos, label)) }));
+  // Build a complete grid from AI (or blanks while loading)
+  const gridTriples: Record<string, Triple> = useMemo(() => {
+    const blank: Triple = { raise: 0, call: 0, fold: 100 };
+    const out: Record<string, Triple> = {};
+    for (const lbl of LABELS) out[lbl] = rangeGrid?.[lbl] ?? blank;
+    return out;
+  }, [rangeGrid]);
 
-  const resetRange = () => { setRangeEdits({}); setLastPosForEdits(pos); };
-
-  const openFlags: Record<string, boolean> = {};
-  RANKS.forEach((_, i) => {
-    RANKS.forEach((__, j) => {
-      const lbl = handLabel(i, j);
-      openFlags[lbl] = rangeEdits.hasOwnProperty(lbl) ? rangeEdits[lbl] : defaultOpen(pos, lbl);
-    });
-  });
-  const openCount = Object.values(openFlags).filter(Boolean).length;
-  const openPct = Math.round((openCount / 169) * 100);
+  const openedHands = Object.values(gridTriples).filter(t => t.raise > 0 || t.call > 0).length;
+  const anyLoaded = !!rangeGrid && !rangeLoading && !rangeError;
 
   /** Render */
   return (
@@ -425,7 +358,7 @@ export default function Page() {
                 </button>
                 <button
                   className="p-btn"
-                  onClick={() => { setInput(''); setFields(null); setStatus(null); setAiError(null); setHeroAssist(''); setVillainAssist(''); setBoardAssist(''); }}
+                  onClick={() => { setInput(''); setFields(null); setStatus(null); setAiError(null); setHeroAssist(''); setVillainAssist(''); setBoardAssist(''); setRangeGrid(null); setRangeError(null); }}
                 >
                   Clear
                 </button>
@@ -444,37 +377,44 @@ export default function Page() {
               <div className="p-help">If parsing guesses wrong, correct the board here — the preview updates instantly.</div>
             </div>
 
-            {/* --- NEW: Interactive Opening Range Grid --- */}
-            <div className="p-card">
-              <div className="p-subTitle">Hero Open Range — {pos} <span className="p-muted">({openPct}% of 169)</span></div>
-              <div className="rangeGrid">
-                {/* header ranks across top */}
+            {/* --- AI Opening Range (fixed, non-editable) --- */}
+            <div className="p-card" style={{overflow: 'visible'}}>
+              <div className="p-subTitle">
+                Hero Decision Frequencies — {pos}
+                {rangeLoading && <span className="p-muted"> (loading…)</span>}
+                {rangeError && <span className="p-err"> ({rangeError})</span>}
+                {anyLoaded && <span className="p-muted"> — {openedHands} / 169 combos shown</span>}
+              </div>
+
+              <div className="legendRow">
+                <div className="legendItem"><span className="dot raise" /> Raise</div>
+                <div className="legendItem"><span className="dot call" /> Call</div>
+                <div className="legendItem"><span className="dot fold" /> Fold</div>
+                <div className="legendHint">Hover a cell to zoom; tooltip shows exact %</div>
+              </div>
+
+              <div className="rangeGrid fixed">
                 <div className="rangeCorner" />
                 {RANKS.map((r, j) => <div key={`h-${j}`} className="rangeHead">{r}</div>)}
-                {/* rows */}
                 {RANKS.map((r, i) => (
                   <React.Fragment key={`row-${i}`}>
                     <div className="rangeHead">{r}</div>
                     {RANKS.map((c, j) => {
                       const lbl = handLabel(i, j);
-                      const open = openFlags[lbl];
+                      const t = gridTriples[lbl];
                       return (
-                        <button
+                        <div
                           key={lbl}
-                          className={`cell ${open ? 'open' : 'fold'} ${i === j ? 'pair' : (i < j ? 'suited' : 'offsuit')}`}
-                          title={`${lbl} — ${open ? 'Open' : 'Fold'} (click to toggle)`}
-                          onClick={() => toggleHand(lbl)}
+                          className={`cell show ${i === j ? 'pair' : (i < j ? 'suited' : 'offsuit')}`}
+                          style={{ background: cellBackground(t) }}
+                          title={`${lbl}: Raise ${t.raise}%, Call ${t.call}%, Fold ${t.fold}%`}
                         >
                           {lbl}
-                        </button>
+                        </div>
                       );
                     })}
                   </React.Fragment>
                 ))}
-              </div>
-              <div className="p-row p-gapTop" style={{justifyContent:'space-between'}}>
-                <div className="p-muted" style={{fontSize:12}}>Click cells to toggle. Suited = upper triangle, Offsuit = lower, Pairs = diagonal.</div>
-                <button className="p-btn" onClick={resetRange}>Reset to {pos} default</button>
               </div>
             </div>
           </div>
@@ -563,22 +503,20 @@ export default function Page() {
         </section>
       </div>
 
-      {/* ------------- Styles (no Tailwind required) ------------- */}
+      {/* ------------- Styles ------------- */}
       <style jsx global>{`
         :root{
-          --bg1:#e5e7eb; --bg2:#f1f5f9; --bg3:#cbd5e1;         /* page gradient */
-          --card1:#f8fafc; --card2:#e5e7eb; --card3:#f1f5f9;     /* card gradient */
+          --bg1:#e5e7eb; --bg2:#f1f5f9; --bg3:#cbd5e1;
+          --card1:#f8fafc; --card2:#e5e7eb; --card3:#f1f5f9;
           --border:#d1d5db; --line:#d8dde6;
           --text:#0f172a; --muted:#6b7280;
           --primary:#3b82f6; --primary2:#2563eb; --btnText:#f8fbff;
           --chipBg:#eef2ff; --chipBorder:#c7d2fe; --chipText:#1e3a8a;
           --pillBg:#ffffff; --pillBorder:#e5e7eb;
 
-          --range-open:#ee8d73;      /* orange-ish like screenshot */
-          --range-fold:#3b3f46;      /* dark gray */
-          --range-suited:#f6efe9;
-          --range-offsuit:#eef0f3;
-          --range-pair:#faf6f0;
+          --raise:#ee8d73;      /* orange (raise) */
+          --call:#60a5fa;       /* blue (call)   */
+          --fold:#374151;       /* dark gray (fold) */
         }
         *{box-sizing:border-box}
         html,body{margin:0;padding:0;background:linear-gradient(135deg,var(--bg2),var(--bg1),var(--bg3));color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
@@ -657,40 +595,53 @@ export default function Page() {
         .p-note{margin-top:10px; color:#166534}
         .p-err{margin-top:10px; color:#b91c1c}
 
-        /* ------- Range grid styles ------- */
+        /* ------- Range grid styles (fixed) ------- */
+        .legendRow{display:flex; align-items:center; gap:12px; margin-bottom:8px}
+        .legendItem{display:flex; align-items:center; gap:6px; font-size:12.5px; color:#334155}
+        .legendHint{margin-left:auto; font-size:12px; color:#64748b}
+        .dot{width:12px;height:12px;border-radius:4px;display:inline-block;border:1px solid #cbd5e1}
+        .dot.raise{background:var(--raise)}
+        .dot.call{background:var(--call)}
+        .dot.fold{background:var(--fold)}
+
         .rangeGrid{
           display:grid;
           grid-template-columns: 28px repeat(13, 1fr);
           grid-auto-rows: 26px;
           gap: 4px;
           align-items:center;
+          position:relative;
         }
-        .rangeHead{
-          font-size:12px; color:#64748b; text-align:center; line-height:26px;
-        }
+        .rangeHead{font-size:12px; color:#64748b; text-align:center; line-height:26px}
         .rangeCorner{width:28px;height:26px}
         .cell{
           border:1px solid #cbd5e1;
           border-radius:6px;
           font-size:11.5px;
           display:flex; align-items:center; justify-content:center;
-          cursor:pointer; user-select:none;
-          transition:transform .02s ease, filter .15s ease, box-shadow .15s ease;
+          user-select:none;
           box-shadow: inset 0 0 0 1px rgba(0,0,0,.02);
+          color:#111827;
+          position:relative;
+          transition: transform .08s ease, box-shadow .15s ease;
         }
-        .cell.suited{background:var(--range-suited)}
-        .cell.offsuit{background:var(--range-offsuit)}
-        .cell.pair{background:var(--range-pair)}
-        .cell.open{background:var(--range-open); color:#222; border-color:#e2a08e}
-        .cell.fold{background:#374151; color:#e5e7eb; border-color:#4b5563}
-        .cell:hover{filter:brightness(1.07)}
+        .cell.suited{ /* background set inline by gradient */ }
+        .cell.offsuit{ }
+        .cell.pair{ }
+
+        .cell.show:hover{
+          transform: scale(1.8);
+          z-index: 10;
+          box-shadow: 0 10px 24px rgba(0,0,0,.25);
+        }
+        .fixed .cell{ cursor:default } /* no clicking */
       `}</style>
     </main>
   );
 }
 
 /** Small info box used on the right-side top card */
-function InfoBox({ label, children }: { label: string; children: React.ReactNode }) {
+function InfoBox({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="ibox">
       <div className="iboxLabel">{label}</div>
