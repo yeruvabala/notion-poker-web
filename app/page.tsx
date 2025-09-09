@@ -30,9 +30,15 @@ const asText = (v: any): string =>
           ? Object.entries(v).map(([k, val]) => `${k}: ${asText(val)}`).join('\n')
           : String(v);
 
-/** Light parsing to prefill preview */
 const SUIT_MAP: Record<string, string> = { s: '♠', h: '♥', d: '♦', c: '♣' };
+const SUIT_WORD: Record<string, string> = {
+  spade: '♠', spades: '♠',
+  heart: '♥', hearts: '♥',
+  diamond: '♦', diamonds: '♦',
+  club: '♣', clubs: '♣',
+};
 const suitColor = (suit: string) => (suit === '♥' || suit === '♦' ? '#dc2626' : '#111827');
+
 const suitify = (card: string) => {
   const m = card.replace(/\s+/g, '').match(/^([2-9TJQKA])([shdc♥♦♣♠])$/i);
   if (!m) return '';
@@ -50,20 +56,63 @@ const parseStakes = (t: string) => {
   const m = t.match(/(\$?\d+(?:\.\d+)?)[\s]*[\/-][\s]*(\$?\d+(?:\.\d+)?)/);
   return m ? `${m[1]}/${m[2]}` : '';
 };
-const parsePosition = (t: string) => {
-  const POS = ['UTG','UTG+1','UTG+2','MP','HJ','CO','BTN','SB','BB'];
+
+// Prefer hero mentions; avoid villain position
+const parseHeroPosition = (t: string) => {
   const up = t.toUpperCase();
-  for (const p of POS) if (up.includes(p)) return p;
-  if (/\bBUTTON\b/i.test(t)) return 'BTN';
-  if (/\bCUTOFF\b/i.test(t)) return 'CO';
+
+  // "I'm/I am/hero ... on SB/BTN/..."
+  const m1 = up.match(/\b(I|I'M|IM|I AM|HERO)\b[^.]{0,40}?\b(ON|FROM|IN)\s+(UTG\+\d|UTG|MP|HJ|CO|BTN|SB|BB)\b/);
+  if (m1) return m1[3];
+
+  // "am on SB", "I on SB"
+  const m2 = up.match(/\b(AM|I'M|IM|I)\b[^.]{0,10}?\bON\s+(UTG\+\d|UTG|MP|HJ|CO|BTN|SB|BB)\b/);
+  if (m2) return m2[2];
+
+  // generic "on SB"
+  const m3 = up.match(/\bON\s+(SB|BB|BTN|CO|HJ|MP|UTG(?:\+\d)?)\b/);
+  if (m3) return m3[1];
+
+  // fallback preference
+  const PREF = ['SB','BB','BTN','CO','HJ','MP','UTG+2','UTG+1','UTG'];
+  for (const p of PREF) if (up.includes(` ${p} `)) return p;
   return '';
 };
-const parseHeroCards = (t: string) => {
-  const m = t.replace(/\s{2,}/g, ' ').match(/([2-9TJQKA][shdc♥♦♣♠])\s*([2-9TJQKA][shdc♥♦♣♠])/i);
-  if (!m) return '';
-  const a = suitify(m[1]); const b = suitify(m[2]);
-  return a && b ? `${a} ${b}` : '';
+
+// Find hero cards near "with/holding/I have", handle Ah Qs, A4s, "a4 of spades"
+const parseHeroCardsSmart = (t: string) => {
+  const s = t.toLowerCase();
+
+  // "with Ah Qs"
+  let m = s.match(/\b(?:with|holding|have|having|i\s+have)\s+([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])\b/i);
+  if (m) return [suitify(m[1]), suitify(m[2])].join(' ');
+
+  // "with A4s / A4o" or "with A4 of spades"
+  m = s.match(/\b(?:with|holding|have|having|i\s+have)\s*([2-9tjqka])\s*([2-9tjqka])\s*(s|o|suited|offsuit)?(?:\s*of\s*(spades?|hearts?|diamonds?|clubs?))?/i);
+  if (m) {
+    const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
+    const suitWord = (m[4] || '').toLowerCase();
+    const suitChar = suitWord ? SUIT_WORD[suitWord] : '♠';
+    const suited = m[3] === 's' || m[3] === 'suited' || !!suitWord;
+    if (suited) return `${r1}${suitChar} ${r2}${suitChar}`;
+    // offsuit: show distinct suits for clarity
+    return `${r1}♠ ${r2}♥`;
+  }
+
+  // "a4 of spades"
+  m = s.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*of\s*(spades?|hearts?|diamonds?|clubs?)\b/i);
+  if (m) {
+    const suitChar = SUIT_WORD[(m[3] || '').toLowerCase()];
+    return `${m[1].toUpperCase()}${suitChar} ${m[2].toUpperCase()}${suitChar}`;
+  }
+
+  // fallback: require "with" nearby to avoid reading the board
+  m = s.match(/\bwith\b[^.]{0,40}?([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])\b/i);
+  if (m) return [suitify(m[1]), suitify(m[2])].join(' ');
+
+  return '';
 };
+
 const parseBoard = (t: string) => {
   const get3 = (c: string) => suitifyLine(c).split(' ').slice(0, 3).join(' ');
   const fm = t.match(/flop[^\n:]*[:\-]*\s*([^\n]+)/i);
@@ -82,6 +131,7 @@ const parseBoard = (t: string) => {
   }
   return { flop, turn, river };
 };
+
 const CardSpan = ({ c }: { c: string }) =>
   !c ? null : <span style={{ fontWeight: 600, color: suitColor(c.slice(-1)) }}>{c}</span>;
 
@@ -102,11 +152,11 @@ export default function Page() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
-  // Lightweight parse for preview
+  // Lightweight parse for preview (client-side only)
   const preview = useMemo(() => ({
     stakes: parseStakes(input),
-    position: parsePosition(input),
-    heroCards: parseHeroCards(input),
+    position: parseHeroPosition(input),
+    heroCards: parseHeroCardsSmart(input),
     board: parseBoard(input),
   }), [input]);
 
@@ -123,17 +173,17 @@ export default function Page() {
     setAiLoading(true);
     try {
       const payload = {
-  date: parsed.date ?? undefined,
-  stakes: parsed.stakes ?? (preview.stakes || undefined),
-  position: parsed.position ?? (preview.position || undefined),
-  cards: parsed.cards ?? (preview.heroCards || undefined),
-  villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
-  // pass corrected board from the assist; analysis can use it as extra context
-  board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`]
-    .filter(Boolean)
-    .join('  |  '),
-  notes: parsed.notes ?? '',
-};
+        date: parsed.date ?? undefined,
+        stakes: parsed.stakes ?? (preview.stakes || undefined),
+        position: parsed.position ?? (preview.position || undefined),
+        cards: parsed.cards ?? (preview.heroCards || undefined),
+        villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
+        // pass corrected board from the assist; analysis can use it as extra context
+        board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`]
+          .filter(Boolean)
+          .join('  |  '),
+        notes: parsed.notes ?? '',
+      };
 
       const r = await fetch('/api/analyze-hand', {
         method: 'POST',
@@ -182,7 +232,6 @@ export default function Page() {
       });
       const parsed: Fields = await res.json();
       setFields(parsed);
-      // (Board assist remains user-controlled; we do not overwrite boxes)
       if (parsed) analyzeParsedHand(parsed);
     } catch (e: any) {
       setAiError(e.message || 'Parse failed');
@@ -277,16 +326,23 @@ export default function Page() {
               <div className="p-grid2">
                 <InfoBox label="Cards">
                   <div className="p-cards">
-                    {preview.heroCards
-                      ? preview.heroCards.split(' ').map((c, i) => <span key={i} className="p-cardSpan"><CardSpan c={c} /></span>)
+                    {(fields?.cards ?? preview.heroCards)
+                      ? (fields?.cards ?? preview.heroCards)!.split(' ')
+                          .map((c, i) => <span key={i} className="p-cardSpan"><CardSpan c={c} /></span>)
                       : <span className="p-muted">(not found)</span>
                     }
                   </div>
                 </InfoBox>
 
                 <InfoBox label="Date"><div>{today}</div></InfoBox>
-                <InfoBox label="Position"><div>{preview.position || <span className="p-muted">(unknown)</span>}</div></InfoBox>
-                <InfoBox label="Stakes"><div>{preview.stakes || <span className="p-muted">(unknown)</span>}</div></InfoBox>
+
+                <InfoBox label="Position">
+                  <div>{(fields?.position ?? preview.position) || <span className="p-muted">(unknown)</span>}</div>
+                </InfoBox>
+
+                <InfoBox label="Stakes">
+                  <div>{(fields?.stakes ?? preview.stakes) || <span className="p-muted">(unknown)</span>}</div>
+                </InfoBox>
               </div>
             </div>
 
