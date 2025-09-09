@@ -48,7 +48,7 @@ const suitify = (card: string) => {
   return suit ? `${r}${suit}` : '';
 };
 const suitifyLine = (line: string) =>
-  (line || '').replace(/[,|]/g, ' ')
+  (line || '').replace(/[\/,|]/g, ' ')
     .split(/\s+/).filter(Boolean)
     .map(suitify).filter(Boolean).join(' ');
 
@@ -113,6 +113,16 @@ const parseHeroCardsSmart = (t: string) => {
   return '';
 };
 
+// Parse "Ks 7d 2c 9c 4h" → {flop,turn,river}
+const parseBoardFromText = (line: string) => {
+  const arr = suitifyLine(line).split(' ').filter(Boolean);
+  return {
+    flop: arr.slice(0, 3).join(' ') || '',
+    turn: arr[3] || '',
+    river: arr[4] || '',
+  };
+};
+
 const parseBoard = (t: string) => {
   const get3 = (c: string) => suitifyLine(c).split(' ').slice(0, 3).join(' ');
   const fm = t.match(/flop[^\n:]*[:\-]*\s*([^\n]+)/i);
@@ -132,6 +142,9 @@ const parseBoard = (t: string) => {
   return { flop, turn, river };
 };
 
+const twoCardsFrom = (line: string) =>
+  suitifyLine(line).split(' ').slice(0, 2).join(' ');
+
 const CardSpan = ({ c }: { c: string }) =>
   !c ? null : <span style={{ fontWeight: 600, color: suitColor(c.slice(-1)) }}>{c}</span>;
 
@@ -141,10 +154,10 @@ export default function Page() {
   const [input, setInput] = useState('');
   const [fields, setFields] = useState<Fields | null>(null);
 
-  // Quick Card Assist (local preview + what we send in board)
-  const [flopBox, setFlopBox] = useState('');
-  const [turnBox, setTurnBox] = useState('');
-  const [riverBox, setRiverBox] = useState('');
+  // Quick Card Assist (new: hero, villain, entire board)
+  const [heroAssist, setHeroAssist] = useState('');
+  const [villainAssist, setVillainAssist] = useState('');
+  const [boardAssist, setBoardAssist] = useState('');
 
   // Async state
   const [aiLoading, setAiLoading] = useState(false);
@@ -160,14 +173,17 @@ export default function Page() {
     board: parseBoard(input),
   }), [input]);
 
-  // What to show in the Board pills (card assist overrides)
-  const flop = (suitifyLine(flopBox) || preview.board.flop || '').trim();
-  const turn = (suitify(turnBox) || preview.board.turn || '').trim();
-  const river = (suitify(riverBox) || preview.board.river || '').trim();
+  // Resolve preview values with assists
+  const heroCards = (twoCardsFrom(heroAssist) || fields?.cards || preview.heroCards || '').trim();
+
+  const boardFromAssist = parseBoardFromText(boardAssist);
+  const flop = (boardAssist ? boardFromAssist.flop : preview.board.flop) || '';
+  const turn = (boardAssist ? boardFromAssist.turn : preview.board.turn) || '';
+  const river = (boardAssist ? boardFromAssist.river : preview.board.river) || '';
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
-  /** Call /api/analyze-hand; use input text; include board (assist) for context */
+  /** Call /api/analyze-hand; use input text; include overrides from assists */
   async function analyzeParsedHand(parsed: Fields) {
     setAiError(null);
     setAiLoading(true);
@@ -176,12 +192,13 @@ export default function Page() {
         date: parsed.date ?? undefined,
         stakes: parsed.stakes ?? (preview.stakes || undefined),
         position: parsed.position ?? (preview.position || undefined),
-        cards: parsed.cards ?? (preview.heroCards || undefined),
+        cards: parsed.cards ?? (heroCards || undefined), // hero override
         villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
         // pass corrected board from the assist; analysis can use it as extra context
         board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`]
           .filter(Boolean)
           .join('  |  '),
+        // we aren’t sending villain cards to the API yet; can be appended to notes later if desired
         notes: parsed.notes ?? '',
       };
 
@@ -211,6 +228,7 @@ export default function Page() {
           gto_strategy: asText(data.gto_strategy),
           exploit_deviation: asText(data.exploit_deviation),
           learning_tag: tags,
+          // keep fields.cards if returned later; UI shows heroCards variable anyway
         };
       });
     } catch (e: any) {
@@ -276,14 +294,14 @@ export default function Page() {
     <main className="p-page">
       <div className="p-container">
         <header className="p-header">
-          <h1 className="p-title">Hand Played</h1>
+          <h1 className="p-title">Only Poker</h1>
         </header>
 
         <section className="p-grid">
           {/* LEFT COLUMN */}
           <div className="p-col">
             <div className="p-card">
-              <div className="p-cardTitle">Hand Entry (Natural Language)</div>
+              <div className="p-cardTitle">Hand Played</div>
               <textarea
                 className="p-textarea"
                 placeholder="Type your hand like a story — stakes, position, cards, actions..."
@@ -296,7 +314,7 @@ export default function Page() {
                 </button>
                 <button
                   className="p-btn"
-                  onClick={() => { setInput(''); setFields(null); setStatus(null); setAiError(null); }}
+                  onClick={() => { setInput(''); setFields(null); setStatus(null); setAiError(null); setHeroAssist(''); setVillainAssist(''); setBoardAssist(''); }}
                 >
                   Clear
                 </button>
@@ -307,10 +325,10 @@ export default function Page() {
 
             <div className="p-card">
               <div className="p-cardTitle">Quick Card Assist (optional)</div>
-              <div className="p-assist">
-                <input className="p-input" value={flopBox} onChange={(e)=>setFlopBox(e.target.value)} placeholder="Ks 7d 2c" />
-                <input className="p-input" value={turnBox} onChange={(e)=>setTurnBox(e.target.value)} placeholder="9c" />
-                <input className="p-input" value={riverBox} onChange={(e)=>setRiverBox(e.target.value)} placeholder="4h" />
+              <div className="p-assist3">
+                <input className="p-input" value={heroAssist} onChange={(e)=>setHeroAssist(e.target.value)} placeholder="Hero: Ah Qs" />
+                <input className="p-input" value={villainAssist} onChange={(e)=>setVillainAssist(e.target.value)} placeholder="Villain (optional): Kc Kd" />
+                <input className="p-input" value={boardAssist} onChange={(e)=>setBoardAssist(e.target.value)} placeholder="Board: Ks 7d 2c 9c 4h" />
               </div>
               <div className="p-help">If parsing guesses wrong, correct the board here — the preview updates instantly.</div>
             </div>
@@ -326,9 +344,8 @@ export default function Page() {
               <div className="p-grid2">
                 <InfoBox label="Cards">
                   <div className="p-cards">
-                    {(fields?.cards ?? preview.heroCards)
-                      ? (fields?.cards ?? preview.heroCards)!.split(' ')
-                          .map((c, i) => <span key={i} className="p-cardSpan"><CardSpan c={c} /></span>)
+                    {heroCards
+                      ? heroCards.split(' ').map((c, i) => <span key={i} className="p-cardSpan"><CardSpan c={c} /></span>)
                       : <span className="p-muted">(not found)</span>
                     }
                   </div>
@@ -337,11 +354,11 @@ export default function Page() {
                 <InfoBox label="Date"><div>{today}</div></InfoBox>
 
                 <InfoBox label="Position">
-                  <div>{(fields?.position ?? preview.position) || <span className="p-muted">(unknown)</span>}</div>
+                  <div>{(fields?.position ?? parseHeroPosition(input)) || <span className="p-muted">(unknown)</span>}</div>
                 </InfoBox>
 
                 <InfoBox label="Stakes">
-                  <div>{(fields?.stakes ?? preview.stakes) || <span className="p-muted">(unknown)</span>}</div>
+                  <div>{(fields?.stakes ?? parseStakes(input)) || <span className="p-muted">(unknown)</span>}</div>
                 </InfoBox>
               </div>
             </div>
@@ -442,7 +459,7 @@ export default function Page() {
         .p-end{justify-content:flex-end}
 
         .p-btn{
-          appearance:none; border:1px solid var(--line); background:#ffffff; color:var(--text);
+          appearance:none; border:1px solid var(--line); background:#ffffff; color:#0f172a;
           padding:10px 14px; border-radius:12px; cursor:pointer; transition:transform .02s ease, background .15s ease, border-color .15s ease;
         }
         .p-btn:hover{background:#f3f4f6}
@@ -455,11 +472,11 @@ export default function Page() {
         }
         .p-btn.p-primary:hover{filter:brightness(1.05)}
 
-        .p-assist{display:grid;grid-template-columns:1fr 120px 120px;gap:10px}
-        @media (max-width:560px){.p-assist{grid-template-columns:1fr}}
+        .p-assist3{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px}
+        @media (max-width:800px){.p-assist3{grid-template-columns:1fr}}
         .p-input{
           width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--line);
-          background:#ffffff; color:var(--text); font-size:14.5px;
+          background:#ffffff; color:#0f172a; font-size:14.5px;
         }
         .p-input.p-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Courier New',monospace; line-height:1.45}
 
