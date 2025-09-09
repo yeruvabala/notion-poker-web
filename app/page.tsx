@@ -17,7 +17,6 @@ function prettyCard(raw: string) {
 }
 
 function parseCardList(input: string): string[] {
-  // Accept: "ks 7d 2c" or "K♠ 7♦ 2♣" etc.
   const cleaned = input
     .replace(/[♠♣♥♦]/g, (ch) => ({ '♠': 's', '♣': 'c', '♥': 'h', '♦': 'd' }[ch] as string))
     .replace(/\u00A0/g, ' ')
@@ -31,12 +30,10 @@ function parseCardList(input: string): string[] {
   }
   return out;
 }
-
 function parseSingleCard(input: string): string | undefined {
   const [c] = parseCardList(input);
   return c;
 }
-
 function chip(text: React.ReactNode) {
   return (
     <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
@@ -47,35 +44,28 @@ function chip(text: React.ReactNode) {
 
 // --------- Page ---------
 export default function PokerStudyHandEntry() {
-  // Natural language text (left)
+  // Natural language text
   const [handText, setHandText] = useState(
     '2/5 Live — BTN with Ah Qs. Opened $15, BB 3-bet $50, I called. Flop Ks 7d 2c, villain c-bet $30 into $100, I folded. Turn 9c. River 4h.'
   );
 
-  // Quick Assist manual board (user controlled)
+  // Quick Assist board inputs
   const [flopInput, setFlopInput] = useState('Ks 7d 2c');
   const [turnInput, setTurnInput] = useState('9c');
   const [riverInput, setRiverInput] = useState('4h');
 
-  // Parsed/preview fields (right)
-  const [cards, setCards] = useState<string>('T♥ A♥'); // header cards; purely cosmetic header example
+  // Right-column fields
+  const [cards, setCards] = useState<string>('T♥ A♥');
   const [position, setPosition] = useState<string>('BTN');
   const [stakes, setStakes] = useState<string>('2/5');
   const [villainAction, setVillainAction] = useState<string>('villain c-bet $30 into $100, I folded. Turn 9c. River 4h.');
-  const [gtoBaseline, setGtoBaseline] = useState<string>(
-    'Based on common solver heuristics for similar nodes. Connect a solver later to replace with exact frequencies.'
-  );
-  const [exploits, setExploits] = useState<string[]>([
-    'Adjust c-bet sizing upward vs calling stations; reduce bluffs.',
-    'Float wider vs range-wide 1/3 c-bets with backdoors/blockers.',
-    'Fold more vs large turn barrels in pools that underbluff turns.',
-  ]);
+  const [gtoBaseline, setGtoBaseline] = useState<string>('');
+  const [gtoExpanded, setGtoExpanded] = useState<string>('');
+  const [exploits, setExploits] = useState<string[]>([]);
 
-  // Derived board (manual input has priority)
   const flop3 = useMemo(() => parseCardList(flopInput), [flopInput]);
   const turn1 = useMemo(() => parseSingleCard(turnInput), [turnInput]);
   const river1 = useMemo(() => parseSingleCard(riverInput), [riverInput]);
-
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   // ---- Actions ----
@@ -84,48 +74,57 @@ export default function PokerStudyHandEntry() {
       const res = await fetch('/api/analyze-hand', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: handText }),
+        body: JSON.stringify({
+          text: handText,
+          overrideBoard: {
+            flop: flop3,                // e.g. ["ks","7d","2c"]
+            turn: turn1 ?? null,       // e.g. "9c"
+            river: river1 ?? null,     // e.g. "4h"
+          },
+        }),
       });
       const data = await res.json();
 
-      // If your API returns ui fields like earlier, wire them here:
+      // Fill the UI with server response
       if (data?.ui) {
-        setStakes(data.ui.stakes && data.ui.stakes !== '—' ? data.ui.stakes : stakes);
-        setPosition(data.ui.position && data.ui.position !== '—' ? data.ui.position : position);
-        // Show cards in header if present; otherwise keep current example
-        if (data.ui.cards && data.ui.cards !== '—') setCards(data.ui.cards);
+        if (data.ui.stakes) setStakes(data.ui.stakes);
+        if (data.ui.position) setPosition(data.ui.position);
+        if (data.ui.cards) setCards(data.ui.cards);
         if (data.ui.villain_action) setVillainAction(data.ui.villain_action);
+        if (data.ui.gto_strategy) setGtoBaseline(data.ui.gto_strategy);
+        if (data.ui.gto_expanded) setGtoExpanded(data.ui.gto_expanded);
+        if (data.ui.exploit_deviation) {
+          const list = String(data.ui.exploit_deviation).split(/\s*•\s*|\n/).filter(Boolean);
+          setExploits(list);
+        }
+      }
 
-        // If board came back, prefill the quick-assist fields (user can edit after)
-        const b = data.parsed?.board;
-        if (b?.flop?.length === 3) setFlopInput(b.flop.join(' '));
-        if (b?.turn) setTurnInput(b.turn);
-        if (b?.river) setRiverInput(b.river);
+      // If API parsed a board, prefill the Quick Assist fields (user still overrides)
+      if (data?.parsed?.board) {
+        const b = data.parsed.board;
+        if (Array.isArray(b.flop) && b.flop.length === 3) setFlopInput(b.flop.join(' '));
+        if (b.turn) setTurnInput(b.turn);
+        if (b.river) setRiverInput(b.river);
       }
     } catch (e) {
-      // no-op on error; UI still works with manual board entry
       console.error('analyze failed', e);
+      alert('Analyze failed — check /api/analyze-hand on your server.');
     }
   }
 
   async function saveToNotion() {
-    // Build the authoritative board from the Quick Assist inputs:
     const payload = {
       date: today,
       stakes,
       position,
       cards,
       villain_action: villainAction,
-      gto_strategy: gtoBaseline, // replace with your real GTO content
+      gto_strategy: gtoBaseline,
+      gto_expanded: gtoExpanded,
       exploit_deviation: exploits.join(' • '),
-      board: {
-        flop: flop3,
-        turn: turn1,
-        river: river1,
-      },
+      board: { flop: flop3, turn: turn1, river: river1 },
       hand_text: handText,
     };
-
     try {
       await fetch('/api/save-to-notion', {
         method: 'POST',
@@ -135,23 +134,20 @@ export default function PokerStudyHandEntry() {
       alert('Saved to Notion (if your API is wired).');
     } catch (e) {
       console.error(e);
-      alert('Tried to save. Check API wiring in /api/save-to-notion.');
+      alert('Tried to save. Check /api/save-to-notion.');
     }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-6 text-slate-800">
       <div className="mx-auto max-w-6xl space-y-6">
-        {/* Header */}
         <header className="flex items-center justify-between">
           <h1 className="text-3xl font-semibold tracking-tight">Poker Study — Hand Entry</h1>
         </header>
 
-        {/* Layout */}
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Left column */}
+          {/* LEFT: Hand Entry & Quick Assist */}
           <div className="space-y-6">
-            {/* Natural Language Entry */}
             <section className="rounded-2xl border border-slate-200 bg-white/70 shadow-sm backdrop-blur">
               <div className="border-b border-slate-200 p-4">
                 <h2 className="text-sm font-semibold text-slate-600">Hand Entry (Natural Language)</h2>
@@ -185,7 +181,6 @@ export default function PokerStudyHandEntry() {
               </div>
             </section>
 
-            {/* Quick Card Assist */}
             <section className="rounded-2xl border border-slate-200 bg-white/70 shadow-sm backdrop-blur">
               <div className="border-b border-slate-200 p-4">
                 <h2 className="text-sm font-semibold text-slate-600">Quick Card Assist (optional)</h2>
@@ -227,9 +222,8 @@ export default function PokerStudyHandEntry() {
             </section>
           </div>
 
-          {/* Right column */}
+          {/* RIGHT: Summary, Board, GTO, Exploits */}
           <div className="space-y-6">
-            {/* Summary (stakes • position • cards + fields) */}
             <section className="rounded-2xl border border-slate-200 bg-white/70 shadow-sm backdrop-blur">
               <div className="flex items-center justify-between gap-3 border-b border-slate-200 p-4">
                 <div className="flex flex-wrap items-center gap-2">
@@ -339,8 +333,15 @@ export default function PokerStudyHandEntry() {
                 <textarea
                   value={gtoBaseline}
                   onChange={(e) => setGtoBaseline(e.target.value)}
-                  className="h-24 w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-slate-300"
+                  className="h-28 w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-slate-300"
+                  placeholder="Preflop/Flop/Turn/River plan…"
                 />
+                {gtoExpanded && (
+                  <details className="mt-3 rounded-lg border border-slate-200 bg-slate-50/70 p-3">
+                    <summary className="cursor-pointer text-sm font-semibold text-slate-700">GTO Expanded</summary>
+                    <pre className="mt-2 whitespace-pre-wrap text-sm text-slate-800">{gtoExpanded}</pre>
+                  </details>
+                )}
               </div>
             </section>
 
