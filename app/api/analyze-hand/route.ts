@@ -1,6 +1,9 @@
-// app/api/analyze-hand/route.ts
 import { NextResponse } from "next/server";
 import { openai } from "@/lib/openai";
+
+/** Types */
+type VerdictLabel = "Correct" | "Mistake" | "Marginal";
+type VerdictOut = { label: VerdictLabel; summary: string; reasons: string[] };
 
 /**
  * Coach prompt: judge the line, give prescriptive GTO plan,
@@ -52,7 +55,6 @@ export async function POST(req: Request) {
       rawText = ""
     } = body ?? {};
 
-    // Pack everything the model might need in one user message.
     const userBlock = [
       `Date: ${date || "today"}`,
       `Stakes: ${stakes ?? ""}`,
@@ -90,33 +92,31 @@ export async function POST(req: Request) {
       };
     }
 
-    // Normalize + enrich
-    const verdict = {
-      label: parsed?.verdict?.label || "Marginal",
+    // Normalize verdict
+    const verdict: VerdictOut = {
+      label: (parsed?.verdict?.label as VerdictLabel) || "Marginal",
       summary: asText(parsed?.verdict?.summary || ""),
       reasons: Array.isArray(parsed?.verdict?.reasons)
-        ? parsed.verdict.reasons.filter((t: any) => typeof t === "string" && t.trim())
+        ? parsed.verdict.reasons.filter((t: unknown): t is string => typeof t === "string" && !!t.trim())
         : []
     };
 
-    // Ensure the GTO box ALWAYS has a decision line and a WHY section with bullets.
+    // Enforce decision + WHY in GTO
     let gto = asText(parsed?.gto_strategy || "").trim();
     const rec = asText(parsed?.recommended_line || "").trim();
 
-    // 1) Inject a "Decision:" line at the very top if missing.
+    // Add a Decision line if missing
     const hasDecisionLine = /^Decision:/i.test(gto);
     const decisionLine =
-      rec
-        ? `Decision: ${rec}.`
-        : (verdict.summary ? `Decision: ${verdict.summary}` : "");
+      rec ? `Decision: ${rec}.` : (verdict.summary ? `Decision: ${verdict.summary}` : "");
     if (decisionLine && !hasDecisionLine) {
       gto = (gto ? `${decisionLine}\n${gto}` : decisionLine).trim();
     }
 
-    // 2) Append a "Why" section with numeric bullets if missing.
+    // Append Why bullets if missing
     const hasWhy = /\n\s*Why\b/i.test(gto);
     if (verdict.reasons.length && !hasWhy) {
-      const bullets = verdict.reasons.map((r) => `• ${r}`).join("\n");
+      const bullets = verdict.reasons.map((r: string) => `• ${r}`).join("\n"); // <-- typed param
       gto = `${gto}\n\nWhy:\n${bullets}`.trim();
     }
 
@@ -126,7 +126,7 @@ export async function POST(req: Request) {
       gto_strategy: gto,
       exploit_deviation: asText(parsed?.exploit_deviation || ""),
       learning_tag: Array.isArray(parsed?.learning_tag)
-        ? parsed.learning_tag.filter((t: any) => typeof t === "string" && t.trim())
+        ? parsed.learning_tag.filter((t: unknown): t is string => typeof t === "string" && !!t.trim())
         : []
     };
 
