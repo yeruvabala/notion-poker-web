@@ -588,16 +588,16 @@ setRecommended(typeof data?.recommended_line === 'string' ? data.recommended_lin
 
             {/* Verdict banner */}
             {verdict?.label === 'Mistake' && (
-  <div className="judge judge-mistake">
-    <strong>Mistake:</strong> {verdict.summary}
-    {recommended && <div className="judge-rec">Recommended: {recommended}</div>}
-    {verdict.reasons && verdict.reasons.length > 0 && (
-      <ul className="judge-ul">
-        {verdict.reasons.slice(0,4).map((r, i) => <li key={i}>{r}</li>)}
-      </ul>
-    )}
-  </div>
-)}
+              <div className="judge judge-mistake">
+                <strong>Mistake:</strong> {verdict.summary}
+                {recommended && <div className="judge-rec">Recommended: {recommended}</div>}
+                {verdict.reasons && verdict.reasons.length > 0 && (
+                  <ul className="judge-ul">
+                   {verdict.reasons.slice(0,4).map((r, i) => <li key={i}>{r}</li>)}
+                  </ul>
+                )}
+              </div>
+            )}
 
 
             <div className="p-card">
