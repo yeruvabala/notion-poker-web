@@ -23,6 +23,12 @@ type Fields = {
 type Verdict = { label: 'Correct' | 'Mistake' | 'Marginal'; summary: string; reasons?: string[] };
 
 /** ------------- Helpers (same “code behind”) ------------- */
+// Verdict UI state
+const [verdict, setVerdict] = useState<Verdict | null>(null);
+const [recommended, setRecommended] = useState<string>('');
+const [heroActionFound, setHeroActionFound] = useState<boolean>(false); // NEW
+
+
 const asText = (v: any): string =>
   typeof v === 'string'
     ? v
@@ -280,8 +286,10 @@ export default function Page() {
   const [fields, setFields] = useState<Fields | null>(null);
 
   // Verdict UI state
-  const [verdict, setVerdict] = useState<Verdict | null>(null);
-  const [recommended, setRecommended] = useState<string>('');
+  // Verdict UI state
+const [verdict, setVerdict] = useState<Verdict | null>(null);
+const [recommended, setRecommended] = useState<string>('');
+const [heroActionFound, setHeroActionFound] = useState<boolean>(false); // NEW
 
   // Quick Card Assist (hero, villain, entire board)
   const [heroAssist, setHeroAssist] = useState('');
@@ -360,10 +368,9 @@ export default function Page() {
       }
 
       const data = await r.json();
-
-      // New: capture verdict + recommended line
-      setVerdict(data?.verdict ?? null);
-      setRecommended(typeof data?.recommended_line === 'string' ? data.recommended_line : '');
+setHeroActionFound(!!data?.hero_action_found);                 // NEW
+setVerdict(data?.verdict ?? null);                              // already there
+setRecommended(typeof data?.recommended_line === 'string' ? data.recommended_line : '');
 
       // Existing fields
       setFields(prev => {
@@ -580,17 +587,18 @@ export default function Page() {
             </div>
 
             {/* Verdict banner */}
-            {verdict && (
-              <div className={`judge judge-${(verdict.label || 'Marginal').toLowerCase()}`}>
-                <strong>{verdict.label}:</strong> {verdict.summary}
-                {recommended && <div className="judge-rec">Recommended: {recommended}</div>}
-                {verdict.reasons && verdict.reasons.length > 0 && (
-                  <ul className="judge-ul">
-                    {verdict.reasons.slice(0,4).map((r, i) => <li key={i}>{r}</li>)}
-                  </ul>
-                )}
-              </div>
-            )}
+            {verdict?.label === 'Mistake' && (
+  <div className="judge judge-mistake">
+    <strong>Mistake:</strong> {verdict.summary}
+    {recommended && <div className="judge-rec">Recommended: {recommended}</div>}
+    {verdict.reasons && verdict.reasons.length > 0 && (
+      <ul className="judge-ul">
+        {verdict.reasons.slice(0,4).map((r, i) => <li key={i}>{r}</li>)}
+      </ul>
+    )}
+  </div>
+)}
+
 
             <div className="p-card">
               <div className="p-subTitle">Board</div>
