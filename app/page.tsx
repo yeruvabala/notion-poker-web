@@ -1,9 +1,6 @@
- 
- 
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
 
 /** ---------------- Types ---------------- */
 type Fields = {
@@ -20,13 +17,7 @@ type Fields = {
   notes?: string | null;
 };
 
-type Verdict = { label: 'Correct' | 'Mistake' | 'Marginal'; summary: string; reasons?: string[] };
-
-/** ------------- Helpers (same “code behind”) ------------- */
-// Verdict UI state
- 
-
-
+/** ------------- Helpers ------------- */
 const asText = (v: any): string =>
   typeof v === 'string'
     ? v
@@ -169,7 +160,7 @@ function handLabel(i: number, j: number): string {
 const atLeast = (rank: string, min: string) => rIndex[rank] <= rIndex[min];
 const oneOf = (x: string, arr: string[]) => arr.includes(x);
 
-/** Baseline open decision by position (compact, approx) */
+/** Baseline open decision by position (approx rules) */
 function defaultOpen(pos: string, label: string): boolean {
   pos = (pos || '').toUpperCase();
   const [a, b, t] = label.length === 3 ? [label[0], label[1], label[2]] : [label[0], label[1], 'p'];
@@ -214,7 +205,7 @@ function defaultOpen(pos: string, label: string): boolean {
     return atLeast(b, m);
   }
 
-  // Suited connectors primary set
+  // Suited connectors & gappers (main set)
   if (suited) {
     const SC = [
       ['9','8'], ['8','7'], ['7','6'], ['6','5'], ['5','4']
@@ -226,7 +217,7 @@ function defaultOpen(pos: string, label: string): boolean {
     }
   }
 
-  // Late-position suited junk widening
+  // Very late wide BTN/SB catch-all for suited junk
   if (suited && (pos === 'BTN' || pos === 'SB')) {
     const LATE_MIN: Record<string,string> = { K:'2', Q:'5', J:'7', T:'7', '9':'7','8':'6','7':'5' };
     const m = (LATE_MIN as any)[a];
@@ -243,7 +234,7 @@ function detectRFI(raw: string): { isRFI: boolean; reasonIfLocked: string } {
   // quick 3-bet / shove markers (preflop escalation)
   const has3bet = /\b3[-\s]?bet|\b3bet|\bre[-\s]?raise|\b4[-\s]?bet|\bjam|\bshove\b/i.test(s);
 
-  // find earliest hero raise
+  // earliest hero raise
   const heroRaiseIdx = (() => {
     const patterns = [
       /\b(i|i'm|im|i am|hero)\b[^.]{0,40}?\b(raise|raises|open|opens)\b/i,
@@ -257,23 +248,18 @@ function detectRFI(raw: string): { isRFI: boolean; reasonIfLocked: string } {
     return idx;
   })();
 
-  // find earliest non-hero raise (villain/other seat)
+  // earliest non-hero raise
   const villainRaiseIdx = (() => {
     const r = /\b(villain|utg\+?\d?|utg|mp|hj|co|button|btn|sb|bb)\b[^.]{0,30}?\b(raise|raises|open|opens)\b/i;
     const m = r.exec(s);
     if (!m) return Infinity;
-    // if it's "i/hero", ignore (we only want non-hero)
     if (/\b(i|i'm|im|i am|hero)\b/.test(m[0])) return Infinity;
     return m.index;
   })();
 
   const unopened = heroRaiseIdx < villainRaiseIdx;
-  if (!unopened) {
-    return { isRFI: false, reasonIfLocked: 'Not an RFI spot — someone else opened before Hero.' };
-  }
-  if (has3bet) {
-    return { isRFI: false, reasonIfLocked: 'Not a pure RFI — preflop 3-bet/jam detected.' };
-  }
+  if (!unopened) return { isRFI: false, reasonIfLocked: 'Not an RFI spot — someone else opened before Hero.' };
+  if (has3bet) return { isRFI: false, reasonIfLocked: 'Not a pure RFI — preflop 3-bet/jam detected.' };
   return { isRFI: true, reasonIfLocked: '' };
 }
 
@@ -282,12 +268,6 @@ export default function Page() {
   // INPUT
   const [input, setInput] = useState('');
   const [fields, setFields] = useState<Fields | null>(null);
-
-  // Verdict UI state
-  // Verdict UI state
-const [verdict, setVerdict] = useState<Verdict | null>(null);
-const [recommended, setRecommended] = useState<string>('');
-const [heroActionFound, setHeroActionFound] = useState<boolean>(false); // NEW
 
   // Quick Card Assist (hero, villain, entire board)
   const [heroAssist, setHeroAssist] = useState('');
@@ -321,7 +301,6 @@ const [heroActionFound, setHeroActionFound] = useState<boolean>(false); // NEW
   const river = (boardAssist ? boardFromAssist.river : preview.board.river) || '';
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
-
   const pos = (fields?.position ?? preview.position ?? '').toUpperCase() || 'BTN';
 
   // RFI lock logic
@@ -344,14 +323,14 @@ const [heroActionFound, setHeroActionFound] = useState<boolean>(false); // NEW
         date: parsed.date ?? undefined,
         stakes: parsed.stakes ?? (preview.stakes || undefined),
         position: parsed.position ?? (preview.position || undefined),
-        cards: parsed.cards ?? (heroCards || undefined),
+        cards: parsed.cards ?? (heroCards || undefined), // hero override
         villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
         board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`]
           .filter(Boolean)
           .join('  |  '),
-        // Send full raw text so the analyzer judges the line (ICM, stacks, etc.)
+        // Send full raw text so analyzer judges the whole line
         notes: parsed.notes ?? input,
-        rawText: input
+        rawText: input,
       };
 
       const r = await fetch('/api/analyze-hand', {
@@ -366,11 +345,7 @@ const [heroActionFound, setHeroActionFound] = useState<boolean>(false); // NEW
       }
 
       const data = await r.json();
-setHeroActionFound(!!data?.hero_action_found);                 // NEW
-setVerdict(data?.verdict ?? null);                              // already there
-setRecommended(typeof data?.recommended_line === 'string' ? data.recommended_line : '');
 
-      // Existing fields
       setFields(prev => {
         const base = prev ?? parsed ?? {};
         const tags: string[] =
@@ -393,12 +368,10 @@ setRecommended(typeof data?.recommended_line === 'string' ? data.recommended_lin
     }
   }
 
-  /** Parse → then auto-run AI (same as before) */
+  /** Parse → then auto-run AI */
   async function handleParse() {
     setStatus(null);
     setAiError(null);
-    setVerdict(null);
-    setRecommended('');
     try {
       const res = await fetch('/api/parse', {
         method: 'POST',
@@ -489,7 +462,7 @@ setRecommended(typeof data?.recommended_line === 'string' ? data.recommended_lin
                 </button>
                 <button
                   className="p-btn"
-                  onClick={() => { setInput(''); setFields(null); setStatus(null); setAiError(null); setHeroAssist(''); setVillainAssist(''); setBoardAssist(''); setVerdict(null); setRecommended(''); }}
+                  onClick={() => { setInput(''); setFields(null); setStatus(null); setAiError(null); setHeroAssist(''); setVillainAssist(''); setBoardAssist(''); }}
                 >
                   Clear
                 </button>
@@ -584,20 +557,6 @@ setRecommended(typeof data?.recommended_line === 'string' ? data.recommended_lin
               </div>
             </div>
 
-            {/* Verdict banner */}
-            {verdict?.label === 'Mistake' && (
-              <div className="judge judge-mistake">
-                <strong>Mistake:</strong> {verdict.summary}
-                {recommended && <div className="judge-rec">Recommended: {recommended}</div>}
-                {verdict.reasons && verdict.reasons.length > 0 && (
-                  <ul className="judge-ul">
-                   {verdict.reasons.slice(0,4).map((r, i) => <li key={i}>{r}</li>)}
-                  </ul>
-                )}
-              </div>
-            )}
-
-
             <div className="p-card">
               <div className="p-subTitle">Board</div>
               <div className="p-boardRow">
@@ -615,7 +574,7 @@ setRecommended(typeof data?.recommended_line === 'string' ? data.recommended_lin
               <div className="p-subTitle">GTO Strategy (detailed)</div>
               <textarea
                 className="p-input p-mono"
-                rows={8}
+                rows={10}
                 placeholder="Preflop/Flop/Turn/River plan with sizes…"
                 value={fields?.gto_strategy ?? ''}
                 onChange={e => fields && setFields({ ...fields, gto_strategy: e.target.value })}
@@ -776,21 +735,6 @@ setRecommended(typeof data?.recommended_line === 'string' ? data.recommended_lin
         .cell:hover{filter:brightness(1.07)}
         .cell-locked{opacity:.6; cursor:not-allowed}
         .grid-locked .cell:hover{filter:none}
-
-        /* Verdict banner */
-        .judge{
-          border:1px solid var(--pillBorder);
-          background:#fff;
-          border-radius:12px;
-          padding:10px 12px;
-          margin-bottom:12px;
-          font-size:14px;
-        }
-        .judge-rec{ margin-top:6px; font-size:13px; color:#0f172a; }
-        .judge-ul{ margin:8px 0 0 18px; padding:0; display:flex; flex-direction:column; gap:4px; }
-        .judge-correct{ border-color:#86efac; box-shadow:0 0 0 2px rgba(34,197,94,.12) inset; }
-        .judge-mistake{ border-color:#fecaca; box-shadow:0 0 0 2px rgba(239,68,68,.12) inset; }
-        .judge-marginal{ border-color:#fde68a; box-shadow:0 0 0 2px rgba(245,158,11,.12) inset; }
       `}</style>
     </main>
   );
