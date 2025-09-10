@@ -325,18 +325,21 @@ export default function Page() {
     setAiError(null);
     setAiLoading(true);
     try {
-      const payload = {
-        date: parsed.date ?? undefined,
-        stakes: parsed.stakes ?? (preview.stakes || undefined),
-        position: parsed.position ?? (preview.position || undefined),
-        cards: parsed.cards ?? (heroCards || undefined), // hero override
-        villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
-        // pass corrected board from the assist; analysis can use it as extra context
-        board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`]
-          .filter(Boolean)
-          .join('  |  '),
-        notes: parsed.notes ?? '',
-      };
+      // inside analyzeParsedHand(parsed)
+const payload = {
+  date: parsed.date ?? undefined,
+  stakes: parsed.stakes ?? (preview.stakes || undefined),
+  position: parsed.position ?? (preview.position || undefined),
+  cards: parsed.cards ?? (heroCards || undefined),
+  villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
+  board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`]
+    .filter(Boolean)
+    .join('  |  '),
+  // CHANGED: include the full user story so the model can reason about shoves/ICM/etc.
+  notes: parsed.notes ?? input ?? '',
+  raw_input: input ?? ''      // NEW
+};
+
 
       const r = await fetch('/api/analyze-hand', {
         method: 'POST',
