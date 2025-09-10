@@ -18,6 +18,8 @@ type Fields = {
   notes?: string | null;
 };
 
+type Verdict = { label: 'Correct' | 'Mistake' | 'Marginal'; summary: string; reasons?: string[] };
+
 /** ------------- Helpers (same “code behind”) ------------- */
 const asText = (v: any): string =>
   typeof v === 'string'
@@ -148,25 +150,23 @@ const twoCardsFrom = (line: string) =>
 const CardSpan = ({ c }: { c: string }) =>
   !c ? null : <span style={{ fontWeight: 600, color: suitColor(c.slice(-1)) }}>{c}</span>;
 
-/** ---------- Opening Range Grid helpers ---------- */
+/** ---------- Range Grid helpers ---------- */
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'] as const;
 const rIndex: Record<string, number> = Object.fromEntries(RANKS.map((r, i) => [r, i]));
 
-/** Build label for matrix cell */
 function handLabel(i: number, j: number): string {
   const a = RANKS[i], b = RANKS[j];
   if (i === j) return `${a}${a}`;
   return i < j ? `${a}${b}s` : `${a}${b}o`; // upper triangle suited
 }
 
-/** Small comparator helpers */
-const atLeast = (rank: string, min: string) => rIndex[rank] <= rIndex[min]; // A-high ordering
+const atLeast = (rank: string, min: string) => rIndex[rank] <= rIndex[min];
 const oneOf = (x: string, arr: string[]) => arr.includes(x);
 
-/** Baseline open decision by position (approx, intentionally compact rules) */
+/** Baseline open decision by position (compact, approx) */
 function defaultOpen(pos: string, label: string): boolean {
   pos = (pos || '').toUpperCase();
-  const [a, b, t] = label.length === 3 ? [label[0], label[1], label[2]] : [label[0], label[1], 'p']; // p = pair
+  const [a, b, t] = label.length === 3 ? [label[0], label[1], label[2]] : [label[0], label[1], 'p'];
   const pair = t === 'p';
   const suited = t === 's';
   const offsuit = t === 'o';
@@ -180,7 +180,6 @@ function defaultOpen(pos: string, label: string): boolean {
   // Any Ace suited opens everywhere; offsuit tightens early
   if (a === 'A') {
     if (suited) return true;
-    // offsuit ATo+ UTG/MP, A9o+ HJ, A8o+ CO, A2o+ BTN, A5o+ SB (wheel blocker)
     const minOff: Record<string, string> = { UTG: 'T', MP: 'T', HJ: '9', CO: '8', BTN: '2', SB: '5', BB: 'T' };
     return atLeast(b, minOff[pos] || 'T');
   }
@@ -199,17 +198,17 @@ function defaultOpen(pos: string, label: string): boolean {
   // Broadways offsuit
   if (offsuit && oneOf(a, ['K','Q','J','T'])) {
     const min: Record<string, Record<string,string>> = {
-      K: { UTG:'Q', MP:'J', HJ:'T', CO:'T', BTN:'8', SB:'9' }, // KQo/KJo/KTo… BTN K8o+
-      Q: { UTG:'T', MP:'T', HJ:'T', CO:'T', BTN:'8', SB:'9' }, // QTo+ late
-      J: { UTG:'X', MP:'X', HJ:'X', CO:'T', BTN:'9', SB:'9' }, // JTo CO+, J9o BTN+
-      T: { UTG:'X', MP:'X', HJ:'X', CO:'X', BTN:'9', SB:'9' }, // T9o BTN/SB
+      K: { UTG:'Q', MP:'J', HJ:'T', CO:'T', BTN:'8', SB:'9' },
+      Q: { UTG:'T', MP:'T', HJ:'T', CO:'T', BTN:'8', SB:'9' },
+      J: { UTG:'X', MP:'X', HJ:'X', CO:'T', BTN:'9', SB:'9' },
+      T: { UTG:'X', MP:'X', HJ:'X', CO:'X', BTN:'9', SB:'9' },
     };
     const m = (min as any)[a]?.[pos];
     if (!m || m === 'X') return false;
     return atLeast(b, m);
   }
 
-  // Suited connectors & gappers (Q9s-, J8s-, T8s-, 98s, 87s, 76s, 65s, 54s widen later)
+  // Suited connectors primary set
   if (suited) {
     const SC = [
       ['9','8'], ['8','7'], ['7','6'], ['6','5'], ['5','4']
@@ -221,51 +220,66 @@ function defaultOpen(pos: string, label: string): boolean {
     }
   }
 
-  // Very late wide BTN/SB catch-all for suited junk like K2s, Q5s, J7s, T7s, 97s, 86s, 75s
+  // Late-position suited junk widening
   if (suited && (pos === 'BTN' || pos === 'SB')) {
     const LATE_MIN: Record<string,string> = { K:'2', Q:'5', J:'7', T:'7', '9':'7','8':'6','7':'5' };
     const m = (LATE_MIN as any)[a];
     if (m) return atLeast(b, m);
   }
 
-  // Default: tight fold
   return false;
 }
 
-/** --- Detect RFI only (locks grid when false) --- */
-function detectIsRFI(text: string, heroPos: string): boolean {
-  const H = (heroPos || '').toUpperCase();
-  if (!H) return false;
+/** ----- Simple RFI detector (unopened pot & hero first raise; no 3-bet/jam pre) ----- */
+function detectRFI(raw: string): { isRFI: boolean; reasonIfLocked: string } {
+  const s = (raw || '').toLowerCase();
 
-  // Lowercase once; strip stack units like "35 bb" / "20 sb"
-  const raw = (text || '').toLowerCase();
-  const t = raw.replace(/\d+\s*(bb|sb)\b/g, ' ');
+  // quick 3-bet / shove markers (preflop escalation)
+  const has3bet = /\b3[-\s]?bet|\b3bet|\bre[-\s]?raise|\b4[-\s]?bet|\bjam|\bshove\b/i.test(s);
 
-  // Anything that clearly makes it a non-RFI node
-  if (/\b(3[-\s]?bet|re[-\s]?raise|reraise)\b/.test(t)) return false;
-  if (/\b(limp|complete|overlimp)\b/.test(t)) return false;
+  // find earliest hero raise
+  const heroRaiseIdx = (() => {
+    const patterns = [
+      /\b(i|i'm|im|i am|hero)\b[^.]{0,40}?\b(raise|raises|open|opens)\b/i,
+      /\bam on\b[^.]{0,30}?\b(utg\+?\d?|utg|mp|hj|co|button|btn|sb|bb)\b[^.]{0,30}?\b(raise|raises|open|opens)\b/i
+    ];
+    let idx = Infinity;
+    for (const r of patterns) {
+      const m = r.exec(s);
+      if (m && m.index < idx) idx = m.index;
+    }
+    return idx;
+  })();
 
-  // If a position is stated as the raiser AND hero responds by calling/3-betting → not RFI
-  const villainRaiserAndHeroResponds =
-    /\b(utg\+?2?|utg|mp|hj|co|button|btn|sb|bb)\b[^\.\n]{0,40}\b(raise|opens?)\b/.test(t) &&
-    /\b(i|hero)\b[^\.\n]{0,50}\b(call|flat|3[-\s]?bet|reraise)\b/.test(t);
-  if (villainRaiserAndHeroResponds) return false;
+  // find earliest non-hero raise (villain/other seat)
+  const villainRaiseIdx = (() => {
+    const r = /\b(villain|utg\+?\d?|utg|mp|hj|co|button|btn|sb|bb)\b[^.]{0,30}?\b(raise|raises|open|opens)\b/i;
+    const m = r.exec(s);
+    if (!m) return Infinity;
+    // if it's "i/hero", ignore (we only want non-hero)
+    if (/\b(i|i'm|im|i am|hero)\b/.test(m[0])) return Infinity;
+    return m.index;
+  })();
 
-  // Hero opens: allow a wider window and common phrasing variants
-  const heroOpens =
-    /\b(i|hero)\b[^\.\n]{0,120}\b(open(?:s|ed)?|raise[sd]?)\b/.test(t) ||                // "hero ... raises"
-    /\b(folds?\s+to\s+(me|btn|button|sb|bb|co|hj|mp|utg))\b[^\.\n]{0,80}\b(raise|open)\b/.test(t) ||
-    /\b(on|from)\s+(utg\+?2?|utg|mp|hj|co|btn|button|sb|bb)\b[^\.\n]{0,80}\b(i|hero)\b[^\.\n]{0,60}\b(raise|open)\b/.test(t);
-
-  return !!heroOpens;
+  const unopened = heroRaiseIdx < villainRaiseIdx;
+  if (!unopened) {
+    return { isRFI: false, reasonIfLocked: 'Not an RFI spot — someone else opened before Hero.' };
+  }
+  if (has3bet) {
+    return { isRFI: false, reasonIfLocked: 'Not a pure RFI — preflop 3-bet/jam detected.' };
+  }
+  return { isRFI: true, reasonIfLocked: '' };
 }
-
 
 /** ---------------- Component ---------------- */
 export default function Page() {
   // INPUT
   const [input, setInput] = useState('');
   const [fields, setFields] = useState<Fields | null>(null);
+
+  // Verdict UI state
+  const [verdict, setVerdict] = useState<Verdict | null>(null);
+  const [recommended, setRecommended] = useState<string>('');
 
   // Quick Card Assist (hero, villain, entire board)
   const [heroAssist, setHeroAssist] = useState('');
@@ -275,10 +289,6 @@ export default function Page() {
   // Opening range edits (user toggles)
   const [rangeEdits, setRangeEdits] = useState<Record<string, boolean>>({});
   const [lastPosForEdits, setLastPosForEdits] = useState<string>('');
-
-  // Grid lock state
-  const [isRFI, setIsRFI] = useState<boolean>(false);
-  const [gridLockMsg, setGridLockMsg] = useState<string | null>(null);
 
   // Async state
   const [aiLoading, setAiLoading] = useState(false);
@@ -306,6 +316,10 @@ export default function Page() {
 
   const pos = (fields?.position ?? preview.position ?? '').toUpperCase() || 'BTN';
 
+  // RFI lock logic
+  const rfiInfo = useMemo(() => detectRFI(input), [input]);
+  const gridLocked = !rfiInfo.isRFI;
+
   // Rebase edits if position changes
   useEffect(() => {
     if (lastPosForEdits && lastPosForEdits === pos) return;
@@ -313,33 +327,24 @@ export default function Page() {
     setLastPosForEdits(pos);
   }, [pos, lastPosForEdits]);
 
-  // Lock/unlock grid based on whether this is an RFI spot
-  useEffect(() => {
-    const rfi = detectIsRFI(input, pos);
-    setIsRFI(rfi);
-    setGridLockMsg(rfi ? null : 'Ranges locked — this hand is not an RFI (open-raise) spot.');
-  }, [input, pos]);
-
   /** Call /api/analyze-hand; use input text; include overrides from assists */
   async function analyzeParsedHand(parsed: Fields) {
     setAiError(null);
     setAiLoading(true);
     try {
-      // inside analyzeParsedHand(parsed)
-const payload = {
-  date: parsed.date ?? undefined,
-  stakes: parsed.stakes ?? (preview.stakes || undefined),
-  position: parsed.position ?? (preview.position || undefined),
-  cards: parsed.cards ?? (heroCards || undefined),
-  villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
-  board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`]
-    .filter(Boolean)
-    .join('  |  '),
-  // CHANGED: include the full user story so the model can reason about shoves/ICM/etc.
-  notes: parsed.notes ?? input ?? '',
-  raw_input: input ?? ''      // NEW
-};
-
+      const payload = {
+        date: parsed.date ?? undefined,
+        stakes: parsed.stakes ?? (preview.stakes || undefined),
+        position: parsed.position ?? (preview.position || undefined),
+        cards: parsed.cards ?? (heroCards || undefined),
+        villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
+        board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`]
+          .filter(Boolean)
+          .join('  |  '),
+        // Send full raw text so the analyzer judges the line (ICM, stacks, etc.)
+        notes: parsed.notes ?? input,
+        rawText: input
+      };
 
       const r = await fetch('/api/analyze-hand', {
         method: 'POST',
@@ -354,6 +359,11 @@ const payload = {
 
       const data = await r.json();
 
+      // New: capture verdict + recommended line
+      setVerdict(data?.verdict ?? null);
+      setRecommended(typeof data?.recommended_line === 'string' ? data.recommended_line : '');
+
+      // Existing fields
       setFields(prev => {
         const base = prev ?? parsed ?? {};
         const tags: string[] =
@@ -380,6 +390,8 @@ const payload = {
   async function handleParse() {
     setStatus(null);
     setAiError(null);
+    setVerdict(null);
+    setRecommended('');
     try {
       const res = await fetch('/api/parse', {
         method: 'POST',
@@ -428,23 +440,18 @@ const payload = {
   }
 
   /** Range grid state helpers */
-  const toggleHand = (label: string) =>
+  const toggleHand = (label: string) => {
+    if (gridLocked) return; // read-only when not RFI
     setRangeEdits(prev => ({ ...prev, [label]: !(prev[label] ?? defaultOpen(pos, label)) }));
+  };
 
-  const resetRange = () => { setRangeEdits({}); setLastPosForEdits(pos); };
+  const resetRange = () => { if (!gridLocked) { setRangeEdits({}); setLastPosForEdits(pos); } };
 
   const openFlags: Record<string, boolean> = {};
   RANKS.forEach((_, i) => {
     RANKS.forEach((__, j) => {
       const lbl = handLabel(i, j);
-      if (!isRFI) {
-        // Non-RFI node → show “fold look” and lock
-        openFlags[lbl] = false;
-      } else {
-        openFlags[lbl] = Object.prototype.hasOwnProperty.call(rangeEdits, lbl)
-          ? !!rangeEdits[lbl]
-          : defaultOpen(pos, lbl);
-      }
+      openFlags[lbl] = rangeEdits.hasOwnProperty(lbl) ? rangeEdits[lbl] : defaultOpen(pos, lbl);
     });
   });
   const openCount = Object.values(openFlags).filter(Boolean).length;
@@ -475,7 +482,7 @@ const payload = {
                 </button>
                 <button
                   className="p-btn"
-                  onClick={() => { setInput(''); setFields(null); setStatus(null); setAiError(null); setHeroAssist(''); setVillainAssist(''); setBoardAssist(''); }}
+                  onClick={() => { setInput(''); setFields(null); setStatus(null); setAiError(null); setHeroAssist(''); setVillainAssist(''); setBoardAssist(''); setVerdict(null); setRecommended(''); }}
                 >
                   Clear
                 </button>
@@ -494,61 +501,49 @@ const payload = {
               <div className="p-help">If parsing guesses wrong, correct the board here — the preview updates instantly.</div>
             </div>
 
-            {/* --- RFI grid (locks when not RFI) --- */}
+            {/* --- Interactive Opening Range Grid (RFI-only editable) --- */}
             <div className="p-card">
               <div className="p-subTitle">
                 Hero Open Range — {pos} <span className="p-muted">({openPct}% of 169)</span>
-                {!isRFI && (
-                  <span className="p-muted" style={{ marginLeft: 8, fontSize: 12 }}>
-                    · {gridLockMsg}
-                  </span>
-                )}
+                {gridLocked && <span className="p-muted"> · Ranges locked — this hand is not an RFI (open-raise) spot.</span>}
               </div>
-
-              <div className={`lockWrap ${!isRFI ? 'locked' : ''}`}>
-                <div className="rangeGrid">
-                  <div className="rangeCorner" />
-                  {RANKS.map((r, j) => <div key={`h-${j}`} className="rangeHead">{r}</div>)}
-                  {RANKS.map((r, i) => (
-                    <React.Fragment key={`row-${i}`}>
-                      <div className="rangeHead">{r}</div>
-                      {RANKS.map((c, j) => {
-                        const lbl = handLabel(i, j);
-                        const open = openFlags[lbl];
-                        return (
-                          <button
-                            key={lbl}
-                            className={`cell ${open ? 'open' : 'fold'} ${i === j ? 'pair' : (i < j ? 'suited' : 'offsuit')}`}
-                            title={
-                              isRFI
-                                ? `${lbl} — ${open ? 'Open' : 'Fold'} (click to toggle)`
-                                : `${lbl} — grid locked (non-RFI node)`
-                            }
-                            onClick={() => isRFI && toggleHand(lbl)}
-                            disabled={!isRFI}
-                          >
-                            {lbl}
-                          </button>
-                        );
-                      })}
-                    </React.Fragment>
-                  ))}
+              <div className={`rangeGrid ${gridLocked ? 'grid-locked' : ''}`}>
+                {/* header ranks across top */}
+                <div className="rangeCorner" />
+                {RANKS.map((r, j) => <div key={`h-${j}`} className="rangeHead">{r}</div>)}
+                {/* rows */}
+                {RANKS.map((r, i) => (
+                  <React.Fragment key={`row-${i}`}>
+                    <div className="rangeHead">{r}</div>
+                    {RANKS.map((c, j) => {
+                      const lbl = handLabel(i, j);
+                      const open = openFlags[lbl];
+                      const title = gridLocked
+                        ? `${lbl} — grid is read-only (not an RFI spot)`
+                        : `${lbl} — ${open ? 'Open' : 'Fold'} (click to toggle)`;
+                      return (
+                        <button
+                          key={lbl}
+                          className={`cell ${open ? 'open' : 'fold'} ${i === j ? 'pair' : (i < j ? 'suited' : 'offsuit')} ${gridLocked ? 'cell-locked' : ''}`}
+                          title={title}
+                          onClick={() => toggleHand(lbl)}
+                          disabled={gridLocked}
+                        >
+                          {lbl}
+                        </button>
+                      );
+                    })}
+                  </React.Fragment>
+                ))}
+              </div>
+              {gridLocked && rfiInfo.reasonIfLocked && (
+                <div className="p-muted" style={{fontSize:12, marginTop:8}}>
+                  {rfiInfo.reasonIfLocked}
                 </div>
-
-                {!isRFI && (
-                  <div className="lockOverlay">
-                    <span>Not an RFI spot — grid is read-only</span>
-                  </div>
-                )}
-              </div>
-
+              )}
               <div className="p-row p-gapTop" style={{justifyContent:'space-between'}}>
-                <div className="p-muted" style={{fontSize:12}}>
-                  Click cells to toggle. Suited = upper triangle, Offsuit = lower, Pairs = diagonal.
-                </div>
-                <button className="p-btn" onClick={resetRange} disabled={!isRFI}>
-                  Reset to {pos} default
-                </button>
+                <div className="p-muted" style={{fontSize:12}}>Suited = upper triangle, Offsuit = lower, Pairs = diagonal.</div>
+                <button className="p-btn" onClick={resetRange} disabled={gridLocked}>Reset to {pos} default</button>
               </div>
             </div>
           </div>
@@ -581,6 +576,19 @@ const payload = {
                 </InfoBox>
               </div>
             </div>
+
+            {/* Verdict banner */}
+            {verdict && (
+              <div className={`judge judge-${(verdict.label || 'Marginal').toLowerCase()}`}>
+                <strong>{verdict.label}:</strong> {verdict.summary}
+                {recommended && <div className="judge-rec">Recommended: {recommended}</div>}
+                {verdict.reasons && verdict.reasons.length > 0 && (
+                  <ul className="judge-ul">
+                    {verdict.reasons.slice(0,4).map((r, i) => <li key={i}>{r}</li>)}
+                  </ul>
+                )}
+              </div>
+            )}
 
             <div className="p-card">
               <div className="p-subTitle">Board</div>
@@ -640,16 +648,16 @@ const payload = {
       {/* ------------- Styles (no Tailwind required) ------------- */}
       <style jsx global>{`
         :root{
-          --bg1:#e5e7eb; --bg2:#f1f5f9; --bg3:#cbd5e1;         /* page gradient */
-          --card1:#f8fafc; --card2:#e5e7eb; --card3:#f1f5f9;     /* card gradient */
+          --bg1:#e5e7eb; --bg2:#f1f5f9; --bg3:#cbd5e1;
+          --card1:#f8fafc; --card2:#e5e7eb; --card3:#f1f5f9;
           --border:#d1d5db; --line:#d8dde6;
           --text:#0f172a; --muted:#6b7280;
           --primary:#3b82f6; --primary2:#2563eb; --btnText:#f8fbff;
           --chipBg:#eef2ff; --chipBorder:#c7d2fe; --chipText:#1e3a8a;
           --pillBg:#ffffff; --pillBorder:#e5e7eb;
 
-          --range-open:#ee8d73;      /* orange-ish like screenshot */
-          --range-fold:#3b3f46;      /* dark gray */
+          --range-open:#ee8d73;
+          --range-fold:#3b3f46;
           --range-suited:#f6efe9;
           --range-offsuit:#eef0f3;
           --range-pair:#faf6f0;
@@ -675,7 +683,7 @@ const payload = {
         .p-subTitle{font-size:14px;font-weight:800;margin-bottom:10px;color:#111827}
         .p-textarea{
           width:100%; min-height:160px; resize:vertical; padding:12px 14px;
-          border-radius:14px; border:1px solid var(--line); background:#ffffff; color:var(--text); font-size:15px; line-height:1.5;
+          border-radius:14px; border:1px solid var(--line); background:#ffffff; color:#0f172a; font-size:15px; line-height:1.5;
         }
 
         .p-row{display:flex;align-items:center}
@@ -758,25 +766,30 @@ const payload = {
         .cell.open{background:var(--range-open); color:#222; border-color:#e2a08e}
         .cell.fold{background:#374151; color:#e5e7eb; border-color:#4b5563}
         .cell:hover{filter:brightness(1.07)}
+        .cell-locked{opacity:.6; cursor:not-allowed}
+        .grid-locked .cell:hover{filter:none}
 
-        /* ---- Lock styles when not RFI ---- */
-        .lockWrap{ position:relative }
-        .lockWrap.locked{ pointer-events:none; }
-        .lockWrap.locked .cell{ filter: grayscale(.15) brightness(.95); }
-        .lockOverlay{
-          position:absolute; inset:0;
-          display:flex; align-items:center; justify-content:center;
-          background: rgba(255,255,255,.35);
-          border-radius: 14px;
-          font-size: 12px; color:#334155; font-weight:600;
+        /* Verdict banner */
+        .judge{
+          border:1px solid var(--pillBorder);
+          background:#fff;
+          border-radius:12px;
+          padding:10px 12px;
+          margin-bottom:12px;
+          font-size:14px;
         }
+        .judge-rec{ margin-top:6px; font-size:13px; color:#0f172a; }
+        .judge-ul{ margin:8px 0 0 18px; padding:0; display:flex; flex-direction:column; gap:4px; }
+        .judge-correct{ border-color:#86efac; box-shadow:0 0 0 2px rgba(34,197,94,.12) inset; }
+        .judge-mistake{ border-color:#fecaca; box-shadow:0 0 0 2px rgba(239,68,68,.12) inset; }
+        .judge-marginal{ border-color:#fde68a; box-shadow:0 0 0 2px rgba(245,158,11,.12) inset; }
       `}</style>
     </main>
   );
 }
 
 /** Small info box used on the right-side top card */
-function InfoBox({ label, children }: { label: string; children: ReactNode }) {
+function InfoBox({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="ibox">
       <div className="iboxLabel">{label}</div>
