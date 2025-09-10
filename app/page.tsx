@@ -30,6 +30,105 @@ type JudgeMistake = {
   better_line: string;
 };
 
+// ---- Shorthand ("log") parser helpers ----
+const POS_RE = '(UTG\\+?\\d?|UTG|MP|HJ|CO|BTN|SB|BB)';
+
+// Accepts things like: "T: $165 MTT, L12 (1k/2k/2k), Eff 12bb"
+// Or: "T: $1k, L20, Eff 25bb" (with or without MTT tag)
+function parseShorthandHints(t: string) {
+  const out: {
+    isTournament?: boolean;
+    stakes?: string;
+    level?: string;
+    effBB?: string;
+    position?: string;
+    cards?: string;
+    playersLeft?: number;
+    paid?: number;
+    notes?: string;
+  } = {};
+
+  const up = t.toUpperCase();
+
+  // Tournament flag (“T:” or “MTT” anywhere)
+  if (/\bT:/.test(up) || /\bMTT\b/.test(up)) out.isTournament = true;
+
+  // Level: "L12"
+  const L = t.match(/\bL(\d+)\b/i);
+  if (L) out.level = `L${L[1]}`;
+
+  // Blinds inside parentheses: "(1k/2k/2k)" or "1k/2k + 2k BBA"
+  const blinds =
+    t.match(/\((\d+(?:\.\d+)?k?)\s*\/\s*(\d+(?:\.\d+)?k?)(?:\s*\/\s*(\d+(?:\.\d+)?k?))?\)/i) ||
+    t.match(/\b(\d+(?:\.\d+)?k?)\s*\/\s*(\d+(?:\.\d+)?k?)(?:\s*\+\s*(\d+(?:\.\d+)?k?)\s*BBA?)?\b/i);
+  if (blinds) {
+    const [, sb, bb, ante] = blinds;
+    out.stakes = ante ? `${sb}/${bb}/${ante}` : `${sb}/${bb}`;
+  }
+
+  // Effective stack in bb: "Eff 12bb" or "Effective 12bb"
+  const eff = t.match(/\bE?FF(?:ECTIVE)?\s*(\d+(?:\.\d+)?)\s*BB\b/i);
+  if (eff) out.effBB = eff[1];
+
+  // Position markers: "BB (me)", "CO (me)", or "Hero HJ" / "HJ Hero"
+  const me1 = t.match(new RegExp(`\\b${POS_RE}\\s*\\(\\s*ME\\s*\\)`, 'i'));
+  const me2 = t.match(new RegExp(`\\bHERO\\s+${POS_RE}\\b|\\b${POS_RE}\\s+HERO\\b`, 'i'));
+  if (me1) {
+    const m = me1[0].match(new RegExp(POS_RE, 'i'));
+    if (m) out.position = m[0].toUpperCase();
+  } else if (me2) {
+    const m = me2[0].match(new RegExp(POS_RE, 'i'));
+    if (m) out.position = m[0].toUpperCase();
+  }
+
+  // Hero cards in compact tokens: "KQs", "55", "AhQs", "A♠4♠", etc.
+  // 1) exact two-card tokens with suits/letters
+  let cm =
+    t.match(/\b([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])\b/i) ||
+    // 2) ranks + (s|o) like "KQs", "AJo", "55"
+    t.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*(s|o)?\b(?!\s*[AKQJT2-9])/i);
+  if (cm) {
+    if (cm.length >= 3 && /[shdc♥♦♣♠]/i.test(cm[1])) {
+      // "Ah Qs" / "A♠ 4♠" etc
+      const c1 = suitify(cm[1]);
+      const c2 = suitify(cm[2]);
+      if (c1 && c2) out.cards = `${c1} ${c2}`;
+    } else {
+      // "KQs" / "55" / "AJo"
+      const r1 = cm[1].toUpperCase();
+      const r2 = cm[2].toUpperCase();
+      const so = (cm[3] || '').toLowerCase();
+      if (r1 === r2) {
+        out.cards = `${r1}♠ ${r2}♥`; // pair → just show with two suits
+      } else if (so === 's') {
+        out.cards = `${r1}♠ ${r2}♠`;
+      } else if (so === 'o') {
+        out.cards = `${r1}♠ ${r2}♥`;
+      } else {
+        // unknown suitedness → display mixed for clarity
+        out.cards = `${r1}♠ ${r2}♥`;
+      }
+    }
+  }
+
+  // Tournament context hints
+  const left = t.match(/\b(\d+)\s+left\b/i);
+  if (left) out.playersLeft = Number(left[1]);
+  const paid = t.match(/\b(\d+)\s+paid\b/i) || t.match(/\bITM[:\s]*\s*(\d+)\b/i);
+  if (paid) out.paid = Number(paid[1]);
+
+  const parts: string[] = [];
+  if (out.isTournament) parts.push('Tournament');
+  if (out.level) parts.push(`Level ${out.level}`);
+  if (out.effBB) parts.push(`Effective ${out.effBB}bb`);
+  if (out.playersLeft) parts.push(`${out.playersLeft} left`);
+  if (out.paid) parts.push(`${out.paid} paid`);
+  out.notes = parts.join(' • ');
+
+  return out;
+}
+
+
 /** ---------------- Small helpers ---------------- */
 const asText = (v: any): string =>
   typeof v === 'string'
@@ -253,17 +352,18 @@ export default function Page() {
   const [judgeSummary, setJudgeSummary] = useState<string>('');
 
   // Lightweight parse for preview (client-side)
-  const preview = useMemo(() => ({
-    stakes: parseStakes(input),
-    position: parseHeroPosition(input),
-    heroCards: parseHeroCardsSmart(input),
-    board: parseBoard(input),
-    mode: parseGameMode(input),
-    eff_bb: parseEffBB(input),
-    blinds: parseBlinds(input),
-    icm_context: parseICMHints(input),
-    isRFI: detectIsRFI(input),
-  }), [input]);
+  // Lightweight parse for preview (client-side only)
+  
+const hints = useMemo(() => parseShorthandHints(input), [input]);
+
+const preview = useMemo(() => ({
+  stakes: hints.stakes || parseStakes(input),
+  position: hints.position || parseHeroPosition(input),
+  heroCards: hints.cards || parseHeroCardsSmart(input),
+  board: parseBoard(input),
+  notes: hints.notes || '',
+}), [input, hints]);
+
 
   // Resolve preview values with assists
   const heroCards = (twoCardsFrom(heroAssist) || fields?.cards || preview.heroCards || '').trim();
@@ -368,13 +468,18 @@ export default function Page() {
   async function judgeHand(parsed: Fields) {
     try {
       const payload = {
-        text: input,
-        mode: parsed.mode ?? preview.mode ?? '',
-        eff_bb: parsed.eff_bb ?? preview.eff_bb ?? null,
-        blinds: parsed.blinds ?? preview.blinds ?? '',
-        icm_context: parsed.icm_context ?? preview.icm_context ?? false,
-        board: [flop, turn, river].filter(Boolean).join(' '),
-      };
+  date: parsed.date ?? undefined,
+  stakes: parsed.stakes ?? (preview.stakes || undefined),
+  position: parsed.position ?? (preview.position || undefined),
+  cards: parsed.cards ?? (heroCards || undefined),
+  villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
+  board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`]
+    .filter(Boolean)
+    .join('  |  '),
+  // include both parsed notes and shorthand hints
+  notes: [parsed.notes, preview.notes].filter(Boolean).join(' | ') || ''
+};
+
       const r = await fetch('/api/judge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
