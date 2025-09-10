@@ -232,6 +232,33 @@ function defaultOpen(pos: string, label: string): boolean {
   return false;
 }
 
+/** --- Detect RFI only (locks grid when false) --- */
+function detectIsRFI(text: string, heroPos: string): boolean {
+  const t = (text || '').toLowerCase();
+  const H = (heroPos || '').toUpperCase();
+
+  if (!H) return false;
+
+  // If we explicitly say 3-bet / re-raise → not RFI
+  if (/\b(3[-\s]?bet|re[-\s]?raise|reraise)\b/.test(t)) return false;
+
+  // Limp / complete / overlimp → not RFI
+  if (/\b(limp|complete|overlimp)\b/.test(t)) return false;
+
+  // If villain is the raiser and hero responds → not RFI
+  if (/\b(utg\+?2?|utg|mp|hj|co|button|btn|sb|bb)\b[^.]{0,30}\b(raise|opens?)\b/.test(t) &&
+      /\b(i|hero)\b[^.]{0,40}\b(call|flat|3[-\s]?bet|reraise)\b/.test(t)) {
+    return false;
+  }
+
+  // Typical RFI: "I open/raise ..." or "folds to me ... I raise"
+  const heroOpens =
+    /\b(i|hero)\b[^.]{0,20}\b(open|raise|min-raise|minraise)\b/.test(t) ||
+    /\b(folds? to (me|sb|btn|bb|co|hj|mp|utg))\b[^.]{0,30}\b(i|hero)\b[^.]{0,20}\b(raise|open)\b/.test(t);
+
+  return heroOpens;
+}
+
 /** ---------------- Component ---------------- */
 export default function Page() {
   // INPUT
@@ -246,6 +273,10 @@ export default function Page() {
   // Opening range edits (user toggles)
   const [rangeEdits, setRangeEdits] = useState<Record<string, boolean>>({});
   const [lastPosForEdits, setLastPosForEdits] = useState<string>('');
+
+  // Grid lock state
+  const [isRFI, setIsRFI] = useState<boolean>(false);
+  const [gridLockMsg, setGridLockMsg] = useState<string | null>(null);
 
   // Async state
   const [aiLoading, setAiLoading] = useState(false);
@@ -279,6 +310,13 @@ export default function Page() {
     setRangeEdits({});
     setLastPosForEdits(pos);
   }, [pos, lastPosForEdits]);
+
+  // Lock/unlock grid based on whether this is an RFI spot
+  useEffect(() => {
+    const rfi = detectIsRFI(input, pos);
+    setIsRFI(rfi);
+    setGridLockMsg(rfi ? null : 'Ranges locked — this hand is not an RFI (open-raise) spot.');
+  }, [input, pos]);
 
   /** Call /api/analyze-hand; use input text; include overrides from assists */
   async function analyzeParsedHand(parsed: Fields) {
@@ -394,7 +432,14 @@ export default function Page() {
   RANKS.forEach((_, i) => {
     RANKS.forEach((__, j) => {
       const lbl = handLabel(i, j);
-      openFlags[lbl] = rangeEdits.hasOwnProperty(lbl) ? rangeEdits[lbl] : defaultOpen(pos, lbl);
+      if (!isRFI) {
+        // Non-RFI node → show “fold look” and lock
+        openFlags[lbl] = false;
+      } else {
+        openFlags[lbl] = Object.prototype.hasOwnProperty.call(rangeEdits, lbl)
+          ? !!rangeEdits[lbl]
+          : defaultOpen(pos, lbl);
+      }
     });
   });
   const openCount = Object.values(openFlags).filter(Boolean).length;
@@ -444,37 +489,61 @@ export default function Page() {
               <div className="p-help">If parsing guesses wrong, correct the board here — the preview updates instantly.</div>
             </div>
 
-            {/* --- NEW: Interactive Opening Range Grid --- */}
+            {/* --- RFI grid (locks when not RFI) --- */}
             <div className="p-card">
-              <div className="p-subTitle">Hero Open Range — {pos} <span className="p-muted">({openPct}% of 169)</span></div>
-              <div className="rangeGrid">
-                {/* header ranks across top */}
-                <div className="rangeCorner" />
-                {RANKS.map((r, j) => <div key={`h-${j}`} className="rangeHead">{r}</div>)}
-                {/* rows */}
-                {RANKS.map((r, i) => (
-                  <React.Fragment key={`row-${i}`}>
-                    <div className="rangeHead">{r}</div>
-                    {RANKS.map((c, j) => {
-                      const lbl = handLabel(i, j);
-                      const open = openFlags[lbl];
-                      return (
-                        <button
-                          key={lbl}
-                          className={`cell ${open ? 'open' : 'fold'} ${i === j ? 'pair' : (i < j ? 'suited' : 'offsuit')}`}
-                          title={`${lbl} — ${open ? 'Open' : 'Fold'} (click to toggle)`}
-                          onClick={() => toggleHand(lbl)}
-                        >
-                          {lbl}
-                        </button>
-                      );
-                    })}
-                  </React.Fragment>
-                ))}
+              <div className="p-subTitle">
+                Hero Open Range — {pos} <span className="p-muted">({openPct}% of 169)</span>
+                {!isRFI && (
+                  <span className="p-muted" style={{ marginLeft: 8, fontSize: 12 }}>
+                    · {gridLockMsg}
+                  </span>
+                )}
               </div>
+
+              <div className={`lockWrap ${!isRFI ? 'locked' : ''}`}>
+                <div className="rangeGrid">
+                  <div className="rangeCorner" />
+                  {RANKS.map((r, j) => <div key={`h-${j}`} className="rangeHead">{r}</div>)}
+                  {RANKS.map((r, i) => (
+                    <React.Fragment key={`row-${i}`}>
+                      <div className="rangeHead">{r}</div>
+                      {RANKS.map((c, j) => {
+                        const lbl = handLabel(i, j);
+                        const open = openFlags[lbl];
+                        return (
+                          <button
+                            key={lbl}
+                            className={`cell ${open ? 'open' : 'fold'} ${i === j ? 'pair' : (i < j ? 'suited' : 'offsuit')}`}
+                            title={
+                              isRFI
+                                ? `${lbl} — ${open ? 'Open' : 'Fold'} (click to toggle)`
+                                : `${lbl} — grid locked (non-RFI node)`
+                            }
+                            onClick={() => isRFI && toggleHand(lbl)}
+                            disabled={!isRFI}
+                          >
+                            {lbl}
+                          </button>
+                        );
+                      })}
+                    </React.Fragment>
+                  ))}
+                </div>
+
+                {!isRFI && (
+                  <div className="lockOverlay">
+                    <span>Not an RFI spot — grid is read-only</span>
+                  </div>
+                )}
+              </div>
+
               <div className="p-row p-gapTop" style={{justifyContent:'space-between'}}>
-                <div className="p-muted" style={{fontSize:12}}>Click cells to toggle. Suited = upper triangle, Offsuit = lower, Pairs = diagonal.</div>
-                <button className="p-btn" onClick={resetRange}>Reset to {pos} default</button>
+                <div className="p-muted" style={{fontSize:12}}>
+                  Click cells to toggle. Suited = upper triangle, Offsuit = lower, Pairs = diagonal.
+                </div>
+                <button className="p-btn" onClick={resetRange} disabled={!isRFI}>
+                  Reset to {pos} default
+                </button>
               </div>
             </div>
           </div>
@@ -684,17 +753,29 @@ export default function Page() {
         .cell.open{background:var(--range-open); color:#222; border-color:#e2a08e}
         .cell.fold{background:#374151; color:#e5e7eb; border-color:#4b5563}
         .cell:hover{filter:brightness(1.07)}
+
+        /* ---- Lock styles when not RFI ---- */
+        .lockWrap{ position:relative }
+        .lockWrap.locked{ pointer-events:none; }
+        .lockWrap.locked .cell{ filter: grayscale(.15) brightness(.95); }
+        .lockOverlay{
+          position:absolute; inset:0;
+          display:flex; align-items:center; justify-content:center;
+          background: rgba(255,255,255,.35);
+          border-radius: 14px;
+          font-size: 12px; color:#334155; font-weight:600;
+        }
       `}</style>
     </main>
   );
 }
 
 /** Small info box used on the right-side top card */
-function InfoBox({ label, children }: { label: string; children: React.ReactNode }) {
+function InfoBox({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="ibox">
       <div className="iboxLabel">{label}</div>
       <div className="iboxVal">{children}</div>
     </div>
   );
-}  
+}
