@@ -16,12 +16,9 @@ type Fields = {
   learning_tag?: string[];
   board?: string | null;
   notes?: string | null;
-
-  // optional; not coming from /api/parse today, but we use it locally
-  mode?: 'cash' | 'mtt' | null;
 };
 
-/** ------------- Helpers (same “code behind”) ------------- */
+/** ------------- Helpers ------------- */
 const asText = (v: any): string =>
   typeof v === 'string'
     ? v
@@ -56,8 +53,32 @@ const suitifyLine = (line: string) =>
     .map(suitify).filter(Boolean).join(' ');
 
 const parseStakes = (t: string) => {
-  const m = t.replace(/,/g, ' ').match(/(\$?\d+(?:\.\d+)?)[\s]*[\/-][\s]*(\$?\d+(?:\.\d+)?)/);
+  // $1/$3 or 1/3
+  const m = t.match(/(\$?\d+(?:\.\d+)?)[\s]*[\/-][\s]*(\$?\d+(?:\.\d+)?)/);
   return m ? `${m[1]}/${m[2]}` : '';
+};
+
+// Detect cash vs tournament quickly from text
+const detectMode = (t: string): 'cash' | 'mtt' | '' => {
+  const s = t.toLowerCase();
+  if (/\b(mtt|tournament|icm|bubble|level|day\s*\d+)\b/.test(s)) return 'mtt';
+  if (/\$\s*\d+\s*\/\s*\$\s*\d+|\b(\d+\/\d+)\b/.test(s)) return 'cash';
+  return '';
+};
+
+// Try to find an effective stack in bb (MTT or shorthand lines)
+const parseEffBB = (t: string): number | null => {
+  // "eff 18bb", "effective stack is 12bb", "Hero HJ 18" inside "Stacks (bb): ..."
+  const s = t.toLowerCase();
+  let m = s.match(/\b(?:eff|effective(?:\s*stack)?)\s*(?:is\s*)?(\d+)\s*bb\b/);
+  if (m) return parseInt(m[1], 10);
+  // Stacks (bb): ... Hero HJ 18 ...
+  m = s.match(/stacks?\s*\(bb\)[^.\n]*?hero[^.\n]*?\b(\d+)\s*bb\b/);
+  if (m) return parseInt(m[1], 10);
+  // "(\d+)bb" near "hero" on same line
+  m = s.match(/hero[^.\n]*?\b(\d+)\s*bb\b/);
+  if (m) return parseInt(m[1], 10);
+  return null;
 };
 
 // Prefer hero mentions; avoid villain position
@@ -82,16 +103,16 @@ const parseHeroPosition = (t: string) => {
   return '';
 };
 
-// Find hero cards near "with/holding/I have", handle Ah Qs, A4s, "a4 of spades"
+// Find hero cards near "with/holding/have/has", handle Ah Qs, A4s, "a4 of spades"
 const parseHeroCardsSmart = (t: string) => {
   const s = t.toLowerCase();
 
-  // "with Ah Qs"
-  let m = s.match(/\b(?:with|holding|have|having|i\s+have)\s+([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])\b/i);
+  // *** FIX: include "has" ***
+  let m = s.match(/\b(?:with|holding|have|has|having|i\s+have)\s+([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])\b/i);
   if (m) return [suitify(m[1]), suitify(m[2])].join(' ');
 
-  // "with A4s / A4o" or "with A4 of spades"
-  m = s.match(/\b(?:with|holding|have|having|i\s+have)\s*([2-9tjqka])\s*([2-9tjqka])\s*(s|o|suited|offsuit)?(?:\s*of\s*(spades?|hearts?|diamonds?|clubs?))?/i);
+  // "with A4s / A4o" or "with A4 of spades" / "hero has AJo"
+  m = s.match(/\b(?:with|holding|have|has|having|i\s+have)\s*([2-9tjqka])\s*([2-9tjqka])\s*(s|o|suited|offsuit)?(?:\s*of\s*(spades?|hearts?|diamonds?|clubs?))?/i);
   if (m) {
     const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
     const suitWord = (m[4] || '').toLowerCase();
@@ -115,6 +136,33 @@ const parseHeroCardsSmart = (t: string) => {
 
   return '';
 };
+
+// Shorthand helper: supports lines like "AJo", "KQs", etc., and lightweight extra context
+function parseShorthandHints(t: string): {
+  cards: string;
+  mode: 'cash'|'mtt'|'';
+  effBB: number | null;
+  stakes: string;
+  notes: string;
+  position: string;
+} {
+  const out = { cards: '', mode: detectMode(t), effBB: parseEffBB(t), stakes: parseStakes(t), notes: '', position: '' };
+
+  // AJo / KQs / 55 … same line shorthand
+  const m = t.match(/\b([2-9TJQKA])([2-9TJQKA])(s|o)\b/i);
+  if (m) {
+    const r1 = m[1].toUpperCase();
+    const r2 = m[2].toUpperCase();
+    const suf = m[3].toLowerCase();
+    out.cards = suf === 's' ? `${r1}♠ ${r2}♠` : `${r1}♠ ${r2}♥`; // offsuit → two different suits
+  } else {
+    const c = parseHeroCardsSmart(t);
+    if (c) out.cards = c;
+  }
+
+  out.position = parseHeroPosition(t) || '';
+  return out;
+}
 
 // Parse "Ks 7d 2c 9c 4h" → {flop,turn,river}
 const parseBoardFromText = (line: string) => {
@@ -151,71 +199,6 @@ const twoCardsFrom = (line: string) =>
 const CardSpan = ({ c }: { c: string }) =>
   !c ? null : <span style={{ fontWeight: 600, color: suitColor(c.slice(-1)) }}>{c}</span>;
 
-/** ---------- Shorthand + node detection ---------- */
-function parseShorthandHints(t: string) {
-  const out: {
-    isTournament?: boolean;
-    mode?: 'cash' | 'mtt' | '';
-    stakes?: string;
-    position?: string;
-    cards?: string;
-    notes?: string;
-  } = {};
-
-  const up = t.toUpperCase();
-  // Tournament markers (any of these → treat as MTT context)
-  out.isTournament = /\bT:|\bMTT\b|\bLEVEL\b|L\d+\b|\bBB\b.+\bLEFT\b|\bITM\b/i.test(up);
-  out.mode = out.isTournament ? 'mtt' : /\$\d+\s*\/\s*\$\d+/.test(t) ? 'cash' : '';
-
-  // reuse helpers
-  out.stakes = parseStakes(t) || undefined;
-  out.position = parseHeroPosition(t) || undefined;
-
-  // Compact ranks like KQs, AJo
-  const m = t.match(/\b([2-9TJQKA])([2-9TJQKA])(s|o)\b/i);
-  if (m) {
-    const r1 = m[1].toUpperCase();
-    const r2 = m[2].toUpperCase();
-    const s = m[3].toLowerCase() === 's' ? '♠' : '♥';
-    out.cards = `${r1}${s} ${r2}${s}`;
-  } else {
-    const c = parseHeroCardsSmart(t);
-    if (c) out.cards = c;
-  }
-
-  // Light notes (effective stack / players left)
-  const eff = t.match(/\bE?FF(?:ECTIVE)?\s*(\d+(?:\.\d+)?)\s*BB\b/i);
-  const left = t.match(/\b(\d+)\s+left\b/i);
-  const parts: string[] = [];
-  if (out.mode === 'mtt') parts.push('Tournament');
-  if (eff) parts.push(`Effective ${eff[1]}bb`);
-  if (left) parts.push(`${left[1]} left`);
-  out.notes = parts.join(' • ') || '';
-
-  return out;
-}
-
-// Detect if the preflop is an RFI (unopened pot for hero)
-function detectRFI(text: string): boolean {
-  const t = text.toLowerCase();
-  // Consider only preflop part (stop at "flop")
-  const pre = t.split(/(?:^|\n)\s*flop\b/)[0];
-
-  // If another seat opens/raises before hero → NOT RFI
-  const villainOpen = /\b(utg\+?\d?|mp|hj|co|btn|sb|bb)\b[^.]{0,30}\b(raises?|opens?|3-?bets?)\b/.test(pre);
-  if (villainOpen) return false;
-
-  // Limped pot before hero → NOT RFI
-  if (/\blimp(ed|s)?\b/.test(pre)) return false;
-
-  // Strong RFI cues: "folds to me/hero", or "I/Hero open/raise" with no prior opener
-  if (/\b(folds?\s+to\s+(me|hero))\b/.test(pre)) return true;
-  if (/\b(i|hero)\b[^.]{0,20}\b(raise|open)s?\b/.test(pre)) return true;
-
-  // Unknown → treat as not RFI (lock grid)
-  return false;
-}
-
 /** ---------- Opening Range Grid helpers ---------- */
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'] as const;
 const rIndex: Record<string, number> = Object.fromEntries(RANKS.map((r, i) => [r, i]));
@@ -226,34 +209,26 @@ function handLabel(i: number, j: number): string {
   if (i === j) return `${a}${a}`;
   return i < j ? `${a}${b}s` : `${a}${b}o`; // upper triangle suited
 }
-
-/** Small comparator helpers */
-const atLeast = (rank: string, min: string) => rIndex[rank] <= rIndex[min]; // A-high ordering
+const atLeast = (rank: string, min: string) => rIndex[rank] <= rIndex[min];
 const oneOf = (x: string, arr: string[]) => arr.includes(x);
 
-/** Baseline open decision by position (approx, intentionally compact rules) */
+/** Baseline open decision by position (approx) */
 function defaultOpen(pos: string, label: string): boolean {
   pos = (pos || '').toUpperCase();
-  const [a, b, t] = label.length === 3 ? [label[0], label[1], label[2]] : [label[0], label[1], 'p']; // p = pair
-  const pair = t === 'p';
-  const suited = t === 's';
-  const offsuit = t === 'o';
+  const [a, b, t] = label.length === 3 ? [label[0], label[1], label[2]] : [label[0], label[1], 'p'];
+  const pair = t === 'p'; const suited = t === 's'; const offsuit = t === 'o';
 
-  // Pairs
   const pairMin: Record<string, string> = {
-    UTG: '6',   MP: '4',  HJ: '2',  CO: '2',  BTN: '2',  SB: '2',  BB: '2'
+    UTG: '6', MP: '4', HJ: '2', CO: '2', BTN: '2', SB: '2', BB: '2'
   };
   if (pair) return atLeast(a, pairMin[pos] || '2');
 
-  // Any Ace suited opens everywhere; offsuit tightens early
   if (a === 'A') {
     if (suited) return true;
-    // offsuit ATo+ UTG/MP, A9o+ HJ, A8o+ CO, A2o+ BTN, A5o+ SB (wheel blocker)
     const minOff: Record<string, string> = { UTG: 'T', MP: 'T', HJ: '9', CO: '8', BTN: '2', SB: '5', BB: 'T' };
     return atLeast(b, minOff[pos] || 'T');
   }
 
-  // Broadways suited
   if (suited && oneOf(a, ['K','Q','J','T'])) {
     const min: Record<string, Record<string,string>> = {
       K: { UTG:'9', MP:'9', HJ:'8', CO:'6', BTN:'2', SB:'7' },
@@ -264,24 +239,20 @@ function defaultOpen(pos: string, label: string): boolean {
     return atLeast(b, (min as any)[a]?.[pos] ?? '9');
   }
 
-  // Broadways offsuit
   if (offsuit && oneOf(a, ['K','Q','J','T'])) {
     const min: Record<string, Record<string,string>> = {
-      K: { UTG:'Q', MP:'J', HJ:'T', CO:'T', BTN:'8', SB:'9' }, // KQo/KJo/KTo… BTN K8o+
-      Q: { UTG:'T', MP:'T', HJ:'T', CO:'T', BTN:'8', SB:'9' }, // QTo+ late
-      J: { UTG:'X', MP:'X', HJ:'X', CO:'T', BTN:'9', SB:'9' }, // JTo CO+, J9o BTN+
-      T: { UTG:'X', MP:'X', HJ:'X', CO:'X', BTN:'9', SB:'9' }, // T9o BTN/SB
+      K: { UTG:'Q', MP:'J', HJ:'T', CO:'T', BTN:'8', SB:'9' },
+      Q: { UTG:'T', MP:'T', HJ:'T', CO:'T', BTN:'8', SB:'9' },
+      J: { UTG:'X', MP:'X', HJ:'X', CO:'T', BTN:'9', SB:'9' },
+      T: { UTG:'X', MP:'X', HJ:'X', CO:'X', BTN:'9', SB:'9' },
     };
     const m = (min as any)[a]?.[pos];
     if (!m || m === 'X') return false;
     return atLeast(b, m);
   }
 
-  // Suited connectors (98s–54s widen later)
   if (suited) {
-    const SC = [
-      ['9','8'], ['8','7'], ['7','6'], ['6','5'], ['5','4']
-    ];
+    const SC = [['9','8'], ['8','7'], ['7','6'], ['6','5'], ['5','4']];
     const isSC = SC.some(([x,y]) => (a === x && b === y) || (a === y && b === x));
     if (isSC) {
       const okPos = { UTG:false, MP:true, HJ:true, CO:true, BTN:true, SB:true, BB:false };
@@ -289,14 +260,11 @@ function defaultOpen(pos: string, label: string): boolean {
     }
   }
 
-  // Late BTN/SB catch-all for suited junk like K2s, Q5s, J7s...
   if (suited && (pos === 'BTN' || pos === 'SB')) {
     const LATE_MIN: Record<string,string> = { K:'2', Q:'5', J:'7', T:'7', '9':'7','8':'6','7':'5' };
     const m = (LATE_MIN as any)[a];
     if (m) return atLeast(b, m);
   }
-
-  // Default: tight fold
   return false;
 }
 
@@ -321,7 +289,7 @@ export default function Page() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
-  // 🔎 Shorthand + preview
+  // -------- NEW: shorthand hints + stronger parsing ----------
   const hints = useMemo(() => parseShorthandHints(input), [input]);
 
   // Lightweight parse for preview (client-side only)
@@ -330,16 +298,14 @@ export default function Page() {
     stakes: hints.stakes || parseStakes(input),
     position: hints.position || parseHeroPosition(input),
     heroCards: hints.cards || parseHeroCardsSmart(input),
-    board: parseBoard(input), // you can extend this later for Q72r → flop
-    notes: hints.notes || '',
-
-    // NEW
-    mode: (hints.mode || '') as 'cash' | 'mtt' | '',
-    isRFI: detectRFI(input),
+    board: parseBoard(input),
+    mode: hints.mode,
+    effBB: hints.effBB,
+    notes: '',
   }), [input, hints]);
 
-  // Resolve preview values with assists
-  const heroCards = (twoCardsFrom(heroAssist) || fields?.cards || preview.heroCards || '').trim();
+  // Resolve preview values with assists (*** prefer local info over server ***)
+  const heroCards = (twoCardsFrom(heroAssist) || preview.heroCards || fields?.cards || '').trim();
 
   const boardFromAssist = parseBoardFromText(boardAssist);
   const flop = (boardAssist ? boardFromAssist.flop : preview.board.flop) || '';
@@ -347,11 +313,7 @@ export default function Page() {
   const river = (boardAssist ? boardFromAssist.river : preview.board.river) || '';
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
-
   const pos = (fields?.position ?? preview.position ?? '').toUpperCase() || 'BTN';
-  const mode: 'cash' | 'mtt' | '' = preview.mode;
-  const isRFI: boolean = preview.isRFI;
-  const gridLocked = !isRFI;
 
   // Rebase edits if position changes
   useEffect(() => {
@@ -369,14 +331,19 @@ export default function Page() {
         date: parsed.date ?? undefined,
         stakes: parsed.stakes ?? (preview.stakes || undefined),
         position: parsed.position ?? (preview.position || undefined),
-        cards: parsed.cards ?? (heroCards || undefined), // hero override
+        // *** prefer local heroCards over parsed to prevent bad overrides
+        cards: (heroCards || parsed.cards || undefined),
         villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
         // pass corrected board from the assist; analysis can use it as extra context
         board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`]
           .filter(Boolean)
           .join('  |  '),
-        // carry shorthand context through
-        notes: [parsed.notes, preview.notes].filter(Boolean).join(' | ') || ''
+        // carry helpful shorthand context through to the analyzer
+        notes: [
+          parsed.notes,
+          preview.mode && `Mode: ${preview.mode.toUpperCase()}`,
+          (preview.mode === 'mtt' && preview.effBB != null) ? `Eff: ${preview.effBB}bb` : '',
+        ].filter(Boolean).join(' | ')
       };
 
       const r = await fetch('/api/analyze-hand', {
@@ -481,6 +448,22 @@ export default function Page() {
   const openCount = Object.values(openFlags).filter(Boolean).length;
   const openPct = Math.round((openCount / 169) * 100);
 
+  // ---------- NEW: missing-info banner ----------
+  const needed: string[] = [];
+  if (!preview.position) needed.push('position (e.g., HJ/CO/BTN/SB/BB)');
+  const modeHint = preview.mode;
+  if (!modeHint) needed.push('cash or tournament');
+  if (modeHint === 'mtt' && preview.effBB == null) needed.push('effective stack in BB (e.g., "Eff 18bb")');
+  if (modeHint === 'cash' && !preview.stakes) needed.push('stakes/blinds (e.g., "$1/$3")');
+
+  function MissingInfoNotice() {
+    if (!needed.length) return null;
+    const msg = needed.length === 1
+      ? `Need 1 more detail: ${needed[0]}. Add it to “Hand Played” and press Send.`
+      : `Need a few details: ${needed.join(', ')}. Add them to “Hand Played” and press Send.`;
+    return <div className="needBanner">{msg}</div>;
+  }
+
   /** Render */
   return (
     <main className="p-page">
@@ -497,15 +480,9 @@ export default function Page() {
               <textarea
                 className="p-textarea"
                 placeholder={
-`Tell the story clearly. Include:
-• CASH: $1/$3 or $2/$5 • positions • effective stacks
-• MTT: buy-in (e.g. $165), level (e.g. 1k/2k/2k), players left, ITM/bubble
-• Hero cards (use letters for suits if you want: As Kh), actions & bet sizes
-Example:
-"CASH $1/$3. BTN (me) 2.5x A♠5♠, BB calls. Flop Q♦7♣2♥ b33, call; Turn A♣ x/x; River 3♠ vbet 33, call."
-or
-"T: $165 MTT L12 (1k/2k/2k), Eff 12bb. SB 2.5x, BB (me) jams 55. ICM: 13 left, 2 shorter."
-`
+`Type your hand like a story — stakes, position, cards, actions…
+• Cash example: 1/3 cash. Hero on SB with A♠4♠. CO opens 2.5bb, I 3-bet 11.5bb, he calls…
+• MTT example: $165 MTT L12 (1k/2k/2k). Eff 18bb. HJ (me) opens 2.2x K♠Q♠, BB calls. Flop Q72r…`
                 }
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -528,30 +505,17 @@ or
             <div className="p-card">
               <div className="p-cardTitle">Quick Card Assist (optional)</div>
               <div className="p-assist3">
-                <input className="p-input" value={heroAssist} onChange={(e)=>setHeroAssist(e.target.value)} placeholder="Hero: Ah Qs" />
+                <input className="p-input" value={heroAssist} onChange={(e)=>setHeroAssist(e.target.value)} placeholder="Hero: Ah Qs  (letters ok: As Ks / AJo / A4 of spades)" />
                 <input className="p-input" value={villainAssist} onChange={(e)=>setVillainAssist(e.target.value)} placeholder="Villain (optional): Kc Kd" />
                 <input className="p-input" value={boardAssist} onChange={(e)=>setBoardAssist(e.target.value)} placeholder="Board: Ks 7d 2c 9c 4h" />
               </div>
               <div className="p-help">If parsing guesses wrong, correct the board here — the preview updates instantly.</div>
             </div>
 
-            {/* --- Interactive Opening Range Grid --- */}
+            {/* --- Opening Range Grid --- */}
             <div className="p-card">
-              <div className="p-subTitle">
-                Hero Open Range — {pos} <span className="p-muted">({openPct}% of 169)</span>
-              </div>
-
-              <div className="p-row p-gapTop" style={{justifyContent:'space-between', marginBottom:8}}>
-                <div className={`p-lock ${gridLocked ? 'locked' : 'ok'}`}>
-                  {gridLocked
-                    ? 'Grid locked: not an RFI preflop spot based on your text.'
-                    : 'RFI detected: grid active.'}
-                </div>
-                {!gridLocked && (
-                  <button className="p-btn" onClick={resetRange}>Reset to {pos} default</button>
-                )}
-              </div>
-
+              <div className="p-subTitle">Hero Open Range — {pos} <span className="p-muted">({openPct}% of 169)</span></div>
+              <MissingInfoNotice />
               <div className="rangeGrid">
                 {/* header ranks across top */}
                 <div className="rangeCorner" />
@@ -566,10 +530,9 @@ or
                       return (
                         <button
                           key={lbl}
-                          className={`cell ${open ? 'open' : 'fold'} ${i === j ? 'pair' : (i < j ? 'suited' : 'offsuit')} ${gridLocked ? 'disabled' : ''}`}
-                          title={`${lbl} — ${open ? 'Open' : 'Fold'}${gridLocked ? ' (locked: not an RFI spot)' : ' (click to toggle)'}`}
-                          onClick={() => { if (!gridLocked) toggleHand(lbl); }}
-                          disabled={gridLocked}
+                          className={`cell ${open ? 'open' : 'fold'} ${i === j ? 'pair' : (i < j ? 'suited' : 'offsuit')}`}
+                          title={`${lbl} — ${open ? 'Open' : 'Fold'} (click to toggle)`}
+                          onClick={() => toggleHand(lbl)}
                         >
                           {lbl}
                         </button>
@@ -579,9 +542,8 @@ or
                 ))}
               </div>
               <div className="p-row p-gapTop" style={{justifyContent:'space-between'}}>
-                <div className="p-muted" style={{fontSize:12}}>
-                  Suited = upper triangle, Offsuit = lower, Pairs = diagonal.
-                </div>
+                <div className="p-muted" style={{fontSize:12}}>Click cells to toggle. Suited = upper triangle, Offsuit = lower, Pairs = diagonal.</div>
+                <button className="p-btn" onClick={resetRange}>Reset to {pos} default</button>
               </div>
             </div>
           </div>
@@ -673,19 +635,16 @@ or
       {/* ------------- Styles (no Tailwind required) ------------- */}
       <style jsx global>{`
         :root{
-          --bg1:#e5e7eb; --bg2:#f1f5f9; --bg3:#cbd5e1;         /* page gradient */
-          --card1:#f8fafc; --card2:#e5e7eb; --card3:#f1f5f9;     /* card gradient */
+          --bg1:#e5e7eb; --bg2:#f1f5f9; --bg3:#cbd5e1;
+          --card1:#f8fafc; --card2:#e5e7eb; --card3:#f1f5f9;
           --border:#d1d5db; --line:#d8dde6;
           --text:#0f172a; --muted:#6b7280;
           --primary:#3b82f6; --primary2:#2563eb; --btnText:#f8fbff;
           --chipBg:#eef2ff; --chipBorder:#c7d2fe; --chipText:#1e3a8a;
           --pillBg:#ffffff; --pillBorder:#e5e7eb;
-
-          --range-open:#ee8d73;      /* orange-ish like screenshot */
-          --range-fold:#3b3f46;      /* dark gray */
-          --range-suited:#f6efe9;
-          --range-offsuit:#eef0f3;
-          --range-pair:#faf6f0;
+          --range-open:#ee8d73; --range-fold:#3b3f46;
+          --range-suited:#f6efe9; --range-offsuit:#eef0f3; --range-pair:#faf6f0;
+          --needBg:#fff7ed; --needBorder:#fed7aa; --needText:#9a3412;
         }
         *{box-sizing:border-box}
         html,body{margin:0;padding:0;background:linear-gradient(135deg,var(--bg2),var(--bg1),var(--bg3));color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
@@ -695,9 +654,7 @@ or
         .p-title{margin:0;font-size:28px;font-weight:800;letter-spacing:.2px;text-align:center}
         .p-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
         @media (max-width:980px){.p-grid{grid-template-columns:1fr}}
-
         .p-col{display:flex;flex-direction:column;gap:24px}
-
         .p-card{
           background:linear-gradient(180deg,var(--card1),var(--card2) 60%,var(--card3));
           border:1px solid var(--border);
@@ -707,16 +664,13 @@ or
         .p-cardTitle{font-size:13px;font-weight:700;letter-spacing:.15px;color:#334155;margin-bottom:10px}
         .p-subTitle{font-size:14px;font-weight:800;margin-bottom:10px;color:#111827}
         .p-textarea{
-          width:100%; min-height:200px; resize:vertical; padding:12px 14px;
-          border-radius:14px; border:1px solid var(--line); background:#ffffff; color:var(--text); font-size:14.5px; line-height:1.5;
-          white-space:pre-wrap;
+          width:100%; min-height:160px; resize:vertical; padding:12px 14px;
+          border-radius:14px; border:1px solid var(--line); background:#ffffff; color:#0f172a; font-size:15px; line-height:1.5;
         }
-
         .p-row{display:flex;align-items:center}
         .p-gap{gap:12px}
         .p-gapTop{margin-top:10px}
         .p-end{justify-content:flex-end}
-
         .p-btn{
           appearance:none; border:1px solid var(--line); background:#ffffff; color:#0f172a;
           padding:10px 14px; border-radius:12px; cursor:pointer; transition:transform .02s ease, background .15s ease, border-color .15s ease;
@@ -729,78 +683,39 @@ or
           color:var(--btnText); border-color:#9db7ff;
           box-shadow:0 6px 18px rgba(59,130,246,.25);
         }
-        .p-btn.p-primary:hover{filter:brightness(1.05)}
-
         .p-assist3{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px}
         @media (max-width:800px){.p-assist3{grid-template-columns:1fr}}
-        .p-input{
-          width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--line);
-          background:#ffffff; color:#0f172a; font-size:14.5px;
-        }
+        .p-input{width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:#ffffff; color:#0f172a; font-size:14.5px;}
         .p-input.p-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Courier New',monospace; line-height:1.45}
-
-        .p-help{margin-top:8px; font-size:12px; color:#6b7280}
-        .p-muted{color:#6b7280}
-
+        .p-help{margin-top:8px; font-size:12px; color:var(--muted)}
+        .p-muted{color:var(--muted)}
         .p-topRow{display:flex; justify-content:space-between; align-items:center}
         .chips{display:flex; flex-wrap:wrap; gap:8px}
-        .chip{
-          background:var(--chipBg); border:1px solid var(--chipBorder); color:var(--chipText);
-          padding:6px 10px; border-radius:999px; font-size:12.5px; letter-spacing:.2px;
-        }
-
+        .chip{background:var(--chipBg); border:1px solid var(--chipBorder); color:var(--chipText); padding:6px 10px; border-radius:999px; font-size:12.5px; letter-spacing:.2px;}
         .p-grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px}
         .ibox{background:#ffffff; border:1px solid var(--pillBorder); border-radius:12px; padding:10px 12px}
         .iboxLabel{font-size:11px; color:#6b7280; margin-bottom:3px}
         .iboxVal{font-size:14px}
-
         .p-boardRow{display:flex; flex-wrap:wrap; gap:10px; font-size:16px}
-        .p-pill{
-          background:var(--pillBg); border:1px solid var(--pillBorder);
-          padding:8px 12px; border-radius:12px;
-        }
+        .p-pill{background:var(--pillBg); border:1px solid var(--pillBorder); padding:8px 12px; border-radius:12px;}
         .p-cardSpan{margin-right:4px}
-
         .p-list{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px}
         .p-note{margin-top:10px; color:#166534}
         .p-err{margin-top:10px; color:#b91c1c}
-
-        /* Lock badge */
-        .p-lock{
-          font-size:12px; padding:6px 10px; border-radius:999px; border:1px solid #e5e7eb;
-          background:#ffffff; color:#334155;
-        }
-        .p-lock.locked{background:#fff7ed; border-color:#fed7aa; color:#9a3412}
-        .p-lock.ok{background:#ecfdf5; border-color:#a7f3d0; color:#065f46}
-
-        /* ------- Range grid styles ------- */
-        .rangeGrid{
-          display:grid;
-          grid-template-columns: 28px repeat(13, 1fr);
-          grid-auto-rows: 26px;
-          gap: 4px;
-          align-items:center;
-        }
-        .rangeHead{
-          font-size:12px; color:#64748b; text-align:center; line-height:26px;
-        }
+        .rangeGrid{display:grid; grid-template-columns:28px repeat(13, 1fr); grid-auto-rows:26px; gap:4px; align-items:center}
+        .rangeHead{font-size:12px; color:#64748b; text-align:center; line-height:26px}
         .rangeCorner{width:28px;height:26px}
-        .cell{
-          border:1px solid #cbd5e1;
-          border-radius:6px;
-          font-size:11.5px;
-          display:flex; align-items:center; justify-content:center;
-          cursor:pointer; user-select:none;
-          transition:transform .02s ease, filter .15s ease, box-shadow .15s ease, opacity .15s ease;
-          box-shadow: inset 0 0 0 1px rgba(0,0,0,.02);
-        }
+        .cell{border:1px solid #cbd5e1; border-radius:6px; font-size:11.5px; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; transition:transform .02s ease, filter .15s ease, box-shadow .15s ease; box-shadow: inset 0 0 0 1px rgba(0,0,0,.02)}
         .cell.suited{background:var(--range-suited)}
         .cell.offsuit{background:var(--range-offsuit)}
         .cell.pair{background:var(--range-pair)}
         .cell.open{background:var(--range-open); color:#222; border-color:#e2a08e}
         .cell.fold{background:#374151; color:#e5e7eb; border-color:#4b5563}
         .cell:hover{filter:brightness(1.07)}
-        .cell.disabled{cursor:not-allowed; filter:grayscale(.25) opacity(.75)}
+        .needBanner{
+          margin:6px 0 10px; font-size:12.5px; background:var(--needBg); border:1px solid var(--needBorder);
+          color:var(--needText); padding:8px 10px; border-radius:10px;
+        }
       `}</style>
     </main>
   );
