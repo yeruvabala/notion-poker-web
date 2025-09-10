@@ -1,4 +1,38 @@
 // app/api/parse/route.ts
+
+// app/api/parse/route.ts (top of file or above POST)
+type ParsedFields = {
+  date: string | null;
+  stakes: string | null;
+  position: string | null;
+  cards: string | null;
+  board: string | null;
+  notes: string | null;
+  villain_action: string | null;
+};
+
+export async function POST(req: Request) {
+  // ...
+  const out: ParsedFields = {
+    date: null,
+    stakes: null,
+    position: null,
+    cards: null,
+    board: null,
+    notes: null,
+    villain_action: null,
+  };
+
+  const b = parseBoard(input); // your existing function
+  out.board =
+    ([b.flop && `Flop: ${b.flop}`, b.turn && `Turn: ${b.turn}`, b.river && `River: ${b.river}`]
+      .filter((x): x is string => Boolean(x))
+      .join('  |  ')) || null;
+
+  return NextResponse.json(out);
+}
+
+
 import { NextResponse } from 'next/server';
 
 function suitify(card: string) {
