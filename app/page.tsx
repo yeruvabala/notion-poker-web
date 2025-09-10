@@ -234,30 +234,32 @@ function defaultOpen(pos: string, label: string): boolean {
 
 /** --- Detect RFI only (locks grid when false) --- */
 function detectIsRFI(text: string, heroPos: string): boolean {
-  const t = (text || '').toLowerCase();
   const H = (heroPos || '').toUpperCase();
-
   if (!H) return false;
 
-  // If we explicitly say 3-bet / re-raise → not RFI
-  if (/\b(3[-\s]?bet|re[-\s]?raise|reraise)\b/.test(t)) return false;
+  // Lowercase once; strip stack units like "35 bb" / "20 sb"
+  const raw = (text || '').toLowerCase();
+  const t = raw.replace(/\d+\s*(bb|sb)\b/g, ' ');
 
-  // Limp / complete / overlimp → not RFI
+  // Anything that clearly makes it a non-RFI node
+  if (/\b(3[-\s]?bet|re[-\s]?raise|reraise)\b/.test(t)) return false;
   if (/\b(limp|complete|overlimp)\b/.test(t)) return false;
 
-  // If villain is the raiser and hero responds → not RFI
-  if (/\b(utg\+?2?|utg|mp|hj|co|button|btn|sb|bb)\b[^.]{0,30}\b(raise|opens?)\b/.test(t) &&
-      /\b(i|hero)\b[^.]{0,40}\b(call|flat|3[-\s]?bet|reraise)\b/.test(t)) {
-    return false;
-  }
+  // If a position is stated as the raiser AND hero responds by calling/3-betting → not RFI
+  const villainRaiserAndHeroResponds =
+    /\b(utg\+?2?|utg|mp|hj|co|button|btn|sb|bb)\b[^\.\n]{0,40}\b(raise|opens?)\b/.test(t) &&
+    /\b(i|hero)\b[^\.\n]{0,50}\b(call|flat|3[-\s]?bet|reraise)\b/.test(t);
+  if (villainRaiserAndHeroResponds) return false;
 
-  // Typical RFI: "I open/raise ..." or "folds to me ... I raise"
+  // Hero opens: allow a wider window and common phrasing variants
   const heroOpens =
-    /\b(i|hero)\b[^.]{0,20}\b(open|raise|min-raise|minraise)\b/.test(t) ||
-    /\b(folds? to (me|sb|btn|bb|co|hj|mp|utg))\b[^.]{0,30}\b(i|hero)\b[^.]{0,20}\b(raise|open)\b/.test(t);
+    /\b(i|hero)\b[^\.\n]{0,120}\b(open(?:s|ed)?|raise[sd]?)\b/.test(t) ||                // "hero ... raises"
+    /\b(folds?\s+to\s+(me|btn|button|sb|bb|co|hj|mp|utg))\b[^\.\n]{0,80}\b(raise|open)\b/.test(t) ||
+    /\b(on|from)\s+(utg\+?2?|utg|mp|hj|co|btn|button|sb|bb)\b[^\.\n]{0,80}\b(i|hero)\b[^\.\n]{0,60}\b(raise|open)\b/.test(t);
 
-  return heroOpens;
+  return !!heroOpens;
 }
+
 
 /** ---------------- Component ---------------- */
 export default function Page() {
