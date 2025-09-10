@@ -1,4 +1,4 @@
-/ app/api/parse/route.ts
+ 
 import { NextResponse } from "next/server";
 import { openai } from "../../../lib/openai";
 
