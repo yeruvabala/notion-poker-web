@@ -24,9 +24,7 @@ type Verdict = { label: 'Correct' | 'Mistake' | 'Marginal'; summary: string; rea
 
 /** ------------- Helpers (same “code behind”) ------------- */
 // Verdict UI state
-const [verdict, setVerdict] = useState<Verdict | null>(null);
-const [recommended, setRecommended] = useState<string>('');
-const [heroActionFound, setHeroActionFound] = useState<boolean>(false); // NEW
+ 
 
 
 const asText = (v: any): string =>
