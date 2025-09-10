@@ -6,11 +6,11 @@ import type { ReactNode } from 'react';
 /** ---------------- Types ---------------- */
 type Fields = {
   date?: string | null;
-  stakes?: string | null;               // TEXT, not number
+  stakes?: string | null;
   position?: string | null;
   cards?: string | null;
-  villain_action?: string | null;       // tolerated in payload but not shown on the right card
-  villian_action?: string | null;       // (typo tolerated)
+  villain_action?: string | null;
+  villian_action?: string | null;
   gto_strategy?: string | null;
   exploit_deviation?: string | null;
   learning_tag?: string[];
@@ -53,127 +53,126 @@ const suitifyLine = (line: string) =>
     .map(suitify).filter(Boolean).join(' ');
 
 const parseStakes = (t: string) => {
-  // $1/$3 or 1/3
   const m = t.match(/(\$?\d+(?:\.\d+)?)[\s]*[\/-][\s]*(\$?\d+(?:\.\d+)?)/);
   return m ? `${m[1]}/${m[2]}` : '';
 };
 
-// Detect cash vs tournament quickly from text
 const detectMode = (t: string): 'cash' | 'mtt' | '' => {
   const s = t.toLowerCase();
-  if (/\b(mtt|tournament|icm|bubble|level|day\s*\d+)\b/.test(s)) return 'mtt';
-  if (/\$\s*\d+\s*\/\s*\$\s*\d+|\b(\d+\/\d+)\b/.test(s)) return 'cash';
+  if (/\b(mtt|tournament|icm|bubble|level|final table|itm)\b/.test(s)) return 'mtt';
+  if (/\$\s*\d+\s*\/\s*\$\s*\d+|\b\d+\s*\/\s*\d+\b/.test(s)) return 'cash';
   return '';
 };
 
-// Try to find an effective stack in bb (MTT or shorthand lines)
-const parseEffBB = (t: string): number | null => {
-  // "eff 18bb", "effective stack is 12bb", "Hero HJ 18" inside "Stacks (bb): ..."
-  const s = t.toLowerCase();
-  let m = s.match(/\b(?:eff|effective(?:\s*stack)?)\s*(?:is\s*)?(\d+)\s*bb\b/);
-  if (m) return parseInt(m[1], 10);
-  // Stacks (bb): ... Hero HJ 18 ...
-  m = s.match(/stacks?\s*\(bb\)[^.\n]*?hero[^.\n]*?\b(\d+)\s*bb\b/);
-  if (m) return parseInt(m[1], 10);
-  // "(\d+)bb" near "hero" on same line
-  m = s.match(/hero[^.\n]*?\b(\d+)\s*bb\b/);
-  if (m) return parseInt(m[1], 10);
-  return null;
-};
-
-// Prefer hero mentions; avoid villain position
+/** -------- FIX 1: position tied to "Hero" first, then fallbacks -------- */
 const parseHeroPosition = (t: string) => {
   const up = t.toUpperCase();
 
-  // "I'm/I am/hero ... on SB/BTN/..."
+  // (A) Hero followed by a position anywhere (e.g., "Stacks (bb): ... Hero HJ 18")
+  const m0 = up.match(/\bHERO\b[^.\n]{0,12}\b(UTG\+\d|UTG|MP|HJ|CO|BTN|SB|BB)\b/);
+  if (m0) return m0[1];
+
+  // (B) "I'm/I am/hero ... on/from/in POS"
   const m1 = up.match(/\b(I|I'M|IM|I AM|HERO)\b[^.]{0,40}?\b(ON|FROM|IN)\s+(UTG\+\d|UTG|MP|HJ|CO|BTN|SB|BB)\b/);
   if (m1) return m1[3];
 
-  // "am on SB", "I on SB"
+  // (C) "am on SB", "I on SB"
   const m2 = up.match(/\b(AM|I'M|IM|I)\b[^.]{0,10}?\bON\s+(UTG\+\d|UTG|MP|HJ|CO|BTN|SB|BB)\b/);
   if (m2) return m2[2];
 
-  // generic "on SB"
+  // (D) generic "on SB"
   const m3 = up.match(/\bON\s+(SB|BB|BTN|CO|HJ|MP|UTG(?:\+\d)?)\b/);
   if (m3) return m3[1];
 
-  // fallback preference
-  const PREF = ['SB','BB','BTN','CO','HJ','MP','UTG+2','UTG+1','UTG'];
+  // (E) last-ditch: prefer a position token NEAR "HERO" on the same line of a Stacks block
+  const stacksLine = up.split('\n').find(l => l.includes('STACKS') && l.includes('(BB)'));
+  if (stacksLine && stacksLine.includes('HERO')) {
+    const near = stacksLine.slice(Math.max(0, stacksLine.indexOf('HERO') - 16), stacksLine.indexOf('HERO') + 16);
+    const mN = near.match(/\b(UTG\+\d|UTG|MP|HJ|CO|BTN|SB|BB)\b/);
+    if (mN) return mN[1];
+  }
+
+  // (F) final fallback, but try late positions last
+  const PREF = ['UTG+2','UTG+1','UTG','MP','HJ','CO','BTN','SB','BB'];
   for (const p of PREF) if (up.includes(` ${p} `)) return p;
   return '';
 };
 
-// Find hero cards near "with/holding/have/has", handle Ah Qs, A4s, "a4 of spades"
+/** -------- FIX 2: effective stack – only capture Hero’s, not the short stack -------- */
+const parseEffBB = (t: string): number | null => {
+  const s = t.toLowerCase();
+
+  // explicit mentions
+  let m = s.match(/\b(?:eff|effective(?:\s*stack)?)\s*(?:is\s*)?(\d+)\s*bb\b/);
+  if (m) return parseInt(m[1], 10);
+
+  // Stacks (bb): ... Hero HJ 18, ...  (no "bb" after 18)
+  m = s.match(/stacks?\s*\(bb\)[^.\n]*?hero[^.\n]*?\b(\d+)\b/);
+  if (m) return parseInt(m[1], 10);
+
+  // "hero ... 18bb" elsewhere
+  m = s.match(/hero[^.\n]*?\b(\d+)\s*bb\b/);
+  if (m) return parseInt(m[1], 10);
+
+  return null;
+};
+
+// Find hero cards near with/holding/have/has…
 const parseHeroCardsSmart = (t: string) => {
   const s = t.toLowerCase();
 
-  // *** FIX: include "has" ***
+  // include "has"
   let m = s.match(/\b(?:with|holding|have|has|having|i\s+have)\s+([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])\b/i);
   if (m) return [suitify(m[1]), suitify(m[2])].join(' ');
 
-  // "with A4s / A4o" or "with A4 of spades" / "hero has AJo"
+  // AJo / KQs style
   m = s.match(/\b(?:with|holding|have|has|having|i\s+have)\s*([2-9tjqka])\s*([2-9tjqka])\s*(s|o|suited|offsuit)?(?:\s*of\s*(spades?|hearts?|diamonds?|clubs?))?/i);
   if (m) {
     const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
     const suitWord = (m[4] || '').toLowerCase();
     const suitChar = suitWord ? SUIT_WORD[suitWord] : '♠';
     const suited = m[3] === 's' || m[3] === 'suited' || !!suitWord;
-    if (suited) return `${r1}${suitChar} ${r2}${suitChar}`;
-    // offsuit: show distinct suits for clarity
-    return `${r1}♠ ${r2}♥`;
+    return suited ? `${r1}${suitChar} ${r2}${suitChar}` : `${r1}♠ ${r2}♥`;
   }
 
-  // "a4 of spades"
+  // "A4 of spades"
   m = s.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*of\s*(spades?|hearts?|diamonds?|clubs?)\b/i);
   if (m) {
     const suitChar = SUIT_WORD[(m[3] || '').toLowerCase()];
     return `${m[1].toUpperCase()}${suitChar} ${m[2].toUpperCase()}${suitChar}`;
   }
 
-  // fallback: require "with" nearby to avoid reading the board
+  // fallback guarded by "with" somewhere
   m = s.match(/\bwith\b[^.]{0,40}?([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])\b/i);
   if (m) return [suitify(m[1]), suitify(m[2])].join(' ');
 
-  return '';
-};
-
-// Shorthand helper: supports lines like "AJo", "KQs", etc., and lightweight extra context
-function parseShorthandHints(t: string): {
-  cards: string;
-  mode: 'cash'|'mtt'|'';
-  effBB: number | null;
-  stakes: string;
-  notes: string;
-  position: string;
-} {
-  const out = { cards: '', mode: detectMode(t), effBB: parseEffBB(t), stakes: parseStakes(t), notes: '', position: '' };
-
-  // AJo / KQs / 55 … same line shorthand
-  const m = t.match(/\b([2-9TJQKA])([2-9TJQKA])(s|o)\b/i);
+  // very short shorthand anywhere (AJo/KQs/55)
+  m = s.match(/\b([2-9tjqka])([2-9tjqka])(s|o)\b/);
   if (m) {
     const r1 = m[1].toUpperCase();
     const r2 = m[2].toUpperCase();
     const suf = m[3].toLowerCase();
-    out.cards = suf === 's' ? `${r1}♠ ${r2}♠` : `${r1}♠ ${r2}♥`; // offsuit → two different suits
-  } else {
-    const c = parseHeroCardsSmart(t);
-    if (c) out.cards = c;
+    return suf === 's' ? `${r1}♠ ${r2}♠` : `${r1}♠ ${r2}♥`;
   }
 
-  out.position = parseHeroPosition(t) || '';
-  return out;
-}
-
-// Parse "Ks 7d 2c 9c 4h" → {flop,turn,river}
-const parseBoardFromText = (line: string) => {
-  const arr = suitifyLine(line).split(' ').filter(Boolean);
-  return {
-    flop: arr.slice(0, 3).join(' ') || '',
-    turn: arr[3] || '',
-    river: arr[4] || '',
-  };
+  return '';
 };
 
+function parseShorthandHints(t: string) {
+  return {
+    cards: parseHeroCardsSmart(t),
+    mode: detectMode(t),
+    effBB: parseEffBB(t),
+    stakes: parseStakes(t),
+    position: parseHeroPosition(t),
+  };
+}
+
+// Board helpers
+const parseBoardFromText = (line: string) => {
+  const arr = suitifyLine(line).split(' ').filter(Boolean);
+  return { flop: arr.slice(0, 3).join(' ') || '', turn: arr[3] || '', river: arr[4] || '' };
+};
 const parseBoard = (t: string) => {
   const get3 = (c: string) => suitifyLine(c).split(' ').slice(0, 3).join(' ');
   const fm = t.match(/flop[^\n:]*[:\-]*\s*([^\n]+)/i);
@@ -184,51 +183,28 @@ const parseBoard = (t: string) => {
   let river = rm ? suitifyLine(rm[1]).split(' ')[0] || '' : '';
   if (!flop || !turn || !river) {
     const all = suitifyLine(t).split(' ');
-    if (all.length >= 5) {
-      flop = flop || all.slice(0, 3).join(' ');
-      turn = turn || all[3];
-      river = river || all[4];
-    }
+    if (all.length >= 5) { flop = flop || all.slice(0, 3).join(' '); turn = turn || all[3]; river = river || all[4]; }
   }
   return { flop, turn, river };
 };
 
-const twoCardsFrom = (line: string) =>
-  suitifyLine(line).split(' ').slice(0, 2).join(' ');
-
-const CardSpan = ({ c }: { c: string }) =>
-  !c ? null : <span style={{ fontWeight: 600, color: suitColor(c.slice(-1)) }}>{c}</span>;
+const twoCardsFrom = (line: string) => suitifyLine(line).split(' ').slice(0, 2).join(' ');
+const CardSpan = ({ c }: { c: string }) => !c ? null : <span style={{ fontWeight: 600, color: suitColor(c.slice(-1)) }}>{c}</span>;
 
 /** ---------- Opening Range Grid helpers ---------- */
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'] as const;
 const rIndex: Record<string, number> = Object.fromEntries(RANKS.map((r, i) => [r, i]));
-
-/** Build label for matrix cell */
-function handLabel(i: number, j: number): string {
-  const a = RANKS[i], b = RANKS[j];
-  if (i === j) return `${a}${a}`;
-  return i < j ? `${a}${b}s` : `${a}${b}o`; // upper triangle suited
-}
+function handLabel(i: number, j: number): string { const a = RANKS[i], b = RANKS[j]; return i === j ? `${a}${a}` : i < j ? `${a}${b}s` : `${a}${b}o`; }
 const atLeast = (rank: string, min: string) => rIndex[rank] <= rIndex[min];
 const oneOf = (x: string, arr: string[]) => arr.includes(x);
 
-/** Baseline open decision by position (approx) */
 function defaultOpen(pos: string, label: string): boolean {
   pos = (pos || '').toUpperCase();
   const [a, b, t] = label.length === 3 ? [label[0], label[1], label[2]] : [label[0], label[1], 'p'];
   const pair = t === 'p'; const suited = t === 's'; const offsuit = t === 'o';
-
-  const pairMin: Record<string, string> = {
-    UTG: '6', MP: '4', HJ: '2', CO: '2', BTN: '2', SB: '2', BB: '2'
-  };
+  const pairMin: Record<string, string> = { UTG:'6', MP:'4', HJ:'2', CO:'2', BTN:'2', SB:'2', BB:'2' };
   if (pair) return atLeast(a, pairMin[pos] || '2');
-
-  if (a === 'A') {
-    if (suited) return true;
-    const minOff: Record<string, string> = { UTG: 'T', MP: 'T', HJ: '9', CO: '8', BTN: '2', SB: '5', BB: 'T' };
-    return atLeast(b, minOff[pos] || 'T');
-  }
-
+  if (a === 'A') { if (suited) return true; const minOff: Record<string, string> = { UTG:'T', MP:'T', HJ:'9', CO:'8', BTN:'2', SB:'5', BB:'T' }; return atLeast(b, minOff[pos] || 'T'); }
   if (suited && oneOf(a, ['K','Q','J','T'])) {
     const min: Record<string, Record<string,string>> = {
       K: { UTG:'9', MP:'9', HJ:'8', CO:'6', BTN:'2', SB:'7' },
@@ -238,7 +214,6 @@ function defaultOpen(pos: string, label: string): boolean {
     };
     return atLeast(b, (min as any)[a]?.[pos] ?? '9');
   }
-
   if (offsuit && oneOf(a, ['K','Q','J','T'])) {
     const min: Record<string, Record<string,string>> = {
       K: { UTG:'Q', MP:'J', HJ:'T', CO:'T', BTN:'8', SB:'9' },
@@ -246,65 +221,40 @@ function defaultOpen(pos: string, label: string): boolean {
       J: { UTG:'X', MP:'X', HJ:'X', CO:'T', BTN:'9', SB:'9' },
       T: { UTG:'X', MP:'X', HJ:'X', CO:'X', BTN:'9', SB:'9' },
     };
-    const m = (min as any)[a]?.[pos];
-    if (!m || m === 'X') return false;
-    return atLeast(b, m);
+    const m = (min as any)[a]?.[pos]; if (!m || m === 'X') return false; return atLeast(b, m);
   }
-
   if (suited) {
     const SC = [['9','8'], ['8','7'], ['7','6'], ['6','5'], ['5','4']];
     const isSC = SC.some(([x,y]) => (a === x && b === y) || (a === y && b === x));
-    if (isSC) {
-      const okPos = { UTG:false, MP:true, HJ:true, CO:true, BTN:true, SB:true, BB:false };
-      return (okPos as any)[pos] ?? false;
-    }
+    if (isSC) { const okPos = { UTG:false, MP:true, HJ:true, CO:true, BTN:true, SB:true, BB:false }; return (okPos as any)[pos] ?? false; }
   }
-
   if (suited && (pos === 'BTN' || pos === 'SB')) {
     const LATE_MIN: Record<string,string> = { K:'2', Q:'5', J:'7', T:'7', '9':'7','8':'6','7':'5' };
-    const m = (LATE_MIN as any)[a];
-    if (m) return atLeast(b, m);
+    const m = (LATE_MIN as any)[a]; if (m) return atLeast(b, m);
   }
   return false;
 }
 
 /** ---------------- Component ---------------- */
 export default function Page() {
-  // INPUT
   const [input, setInput] = useState('');
   const [fields, setFields] = useState<Fields | null>(null);
+  const [heroAssist, setHeroAssist] = useState(''); const [villainAssist, setVillainAssist] = useState(''); const [boardAssist, setBoardAssist] = useState('');
+  const [rangeEdits, setRangeEdits] = useState<Record<string, boolean>>({}); const [lastPosForEdits, setLastPosForEdits] = useState<string>('');
+  const [aiLoading, setAiLoading] = useState(false); const [aiError, setAiError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false); const [status, setStatus] = useState<string | null>(null);
 
-  // Quick Card Assist (hero, villain, entire board)
-  const [heroAssist, setHeroAssist] = useState('');
-  const [villainAssist, setVillainAssist] = useState('');
-  const [boardAssist, setBoardAssist] = useState('');
-
-  // Opening range edits (user toggles)
-  const [rangeEdits, setRangeEdits] = useState<Record<string, boolean>>({});
-  const [lastPosForEdits, setLastPosForEdits] = useState<string>('');
-
-  // Async state
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
-
-  // -------- NEW: shorthand hints + stronger parsing ----------
   const hints = useMemo(() => parseShorthandHints(input), [input]);
 
-  // Lightweight parse for preview (client-side only)
   const preview = useMemo(() => ({
-    // prefer shorthand if present, then fall back to the original parsers
     stakes: hints.stakes || parseStakes(input),
     position: hints.position || parseHeroPosition(input),
     heroCards: hints.cards || parseHeroCardsSmart(input),
     board: parseBoard(input),
     mode: hints.mode,
     effBB: hints.effBB,
-    notes: '',
   }), [input, hints]);
 
-  // Resolve preview values with assists (*** prefer local info over server ***)
   const heroCards = (twoCardsFrom(heroAssist) || preview.heroCards || fields?.cards || '').trim();
 
   const boardFromAssist = parseBoardFromText(boardAssist);
@@ -315,35 +265,25 @@ export default function Page() {
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const pos = (fields?.position ?? preview.position ?? '').toUpperCase() || 'BTN';
 
-  // Rebase edits if position changes
   useEffect(() => {
     if (lastPosForEdits && lastPosForEdits === pos) return;
-    setRangeEdits({});
-    setLastPosForEdits(pos);
+    setRangeEdits({}); setLastPosForEdits(pos);
   }, [pos, lastPosForEdits]);
 
-  /** Call /api/analyze-hand; use input text; include overrides from assists */
   async function analyzeParsedHand(parsed: Fields) {
-    setAiError(null);
-    setAiLoading(true);
+    setAiError(null); setAiLoading(true);
     try {
-      const payload = {
+      const payload: any = {
         date: parsed.date ?? undefined,
         stakes: parsed.stakes ?? (preview.stakes || undefined),
         position: parsed.position ?? (preview.position || undefined),
-        // *** prefer local heroCards over parsed to prevent bad overrides
         cards: (heroCards || parsed.cards || undefined),
         villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
-        // pass corrected board from the assist; analysis can use it as extra context
-        board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`]
-          .filter(Boolean)
-          .join('  |  '),
-        // carry helpful shorthand context through to the analyzer
-        notes: [
-          parsed.notes,
-          preview.mode && `Mode: ${preview.mode.toUpperCase()}`,
-          (preview.mode === 'mtt' && preview.effBB != null) ? `Eff: ${preview.effBB}bb` : '',
-        ].filter(Boolean).join(' | ')
+        board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`].filter(Boolean).join('  |  '),
+        notes: parsed.notes ?? '',
+        // >>> pass explicit context to the analyzer
+        effectiveBB: preview.effBB ?? null,
+        mode: preview.mode || '',
       };
 
       const r = await fetch('/api/analyze-hand', {
@@ -367,12 +307,7 @@ export default function Page() {
             : typeof data.learning_tag === 'string'
               ? data.learning_tag.split(',').map((s: string) => s.trim()).filter(Boolean)
               : [];
-        return {
-          ...base,
-          gto_strategy: asText(data.gto_strategy),
-          exploit_deviation: asText(data.exploit_deviation),
-          learning_tag: tags,
-        };
+        return { ...base, gto_strategy: asText(data.gto_strategy), exploit_deviation: asText(data.exploit_deviation), learning_tag: tags };
       });
     } catch (e: any) {
       setAiError(e.message || 'AI analysis error');
@@ -381,74 +316,39 @@ export default function Page() {
     }
   }
 
-  /** Parse → then auto-run AI (same as before) */
   async function handleParse() {
-    setStatus(null);
-    setAiError(null);
+    setStatus(null); setAiError(null);
     try {
-      const res = await fetch('/api/parse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input }),
-      });
+      const res = await fetch('/api/parse', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ input }) });
       const parsed: Fields = await res.json();
       setFields(parsed);
       if (parsed) analyzeParsedHand(parsed);
-    } catch (e: any) {
-      setAiError(e.message || 'Parse failed');
-    }
+    } catch (e: any) { setAiError(e.message || 'Parse failed'); }
   }
 
   async function handleSave() {
     if (!fields) return;
-    setSaving(true);
-    setStatus(null);
+    setSaving(true); setStatus(null);
     try {
-      const res = await fetch('/api/notion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields }),
-      });
+      const res = await fetch('/api/notion', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields }) });
       const data = await res.json();
-      if (data.ok) setStatus(`Saved! Open in Notion: ${data.url}`);
-      else setStatus(data.error || 'Failed to save');
-    } catch (e: any) {
-      setStatus(e.message);
-    } finally {
-      setSaving(false);
-    }
+      if (data.ok) setStatus(`Saved! Open in Notion: ${data.url}`); else setStatus(data.error || 'Failed to save');
+    } catch (e: any) { setStatus(e.message); } finally { setSaving(false); }
   }
 
-  /** Learning-tag chips */
   function TagChips() {
     const chips = fields?.learning_tag?.filter(Boolean) ?? [];
     if (!chips.length) return null;
-    return (
-      <div className="chips" aria-label="tags">
-        {chips.map((t, i) => (
-          <span className="chip" key={i}>{t}</span>
-        ))}
-      </div>
-    );
+    return (<div className="chips" aria-label="tags">{chips.map((t, i) => (<span className="chip" key={i}>{t}</span>))}</div>);
   }
 
-  /** Range grid state helpers */
-  const toggleHand = (label: string) =>
-    setRangeEdits(prev => ({ ...prev, [label]: !(prev[label] ?? defaultOpen(pos, label)) }));
-
+  const toggleHand = (label: string) => setRangeEdits(prev => ({ ...prev, [label]: !(prev[label] ?? defaultOpen(pos, label)) }));
   const resetRange = () => { setRangeEdits({}); setLastPosForEdits(pos); };
 
   const openFlags: Record<string, boolean> = {};
-  RANKS.forEach((_, i) => {
-    RANKS.forEach((__, j) => {
-      const lbl = handLabel(i, j);
-      openFlags[lbl] = rangeEdits.hasOwnProperty(lbl) ? rangeEdits[lbl] : defaultOpen(pos, lbl);
-    });
-  });
-  const openCount = Object.values(openFlags).filter(Boolean).length;
-  const openPct = Math.round((openCount / 169) * 100);
+  RANKS.forEach((_, i) => { RANKS.forEach((__, j) => { const lbl = handLabel(i, j); openFlags[lbl] = rangeEdits.hasOwnProperty(lbl) ? rangeEdits[lbl] : defaultOpen(pos, lbl); }); });
+  const openPct = Math.round((Object.values(openFlags).filter(Boolean).length / 169) * 100);
 
-  // ---------- NEW: missing-info banner ----------
   const needed: string[] = [];
   if (!preview.position) needed.push('position (e.g., HJ/CO/BTN/SB/BB)');
   const modeHint = preview.mode;
@@ -468,21 +368,17 @@ export default function Page() {
   return (
     <main className="p-page">
       <div className="p-container">
-        <header className="p-header">
-          <h1 className="p-title">Only Poker</h1>
-        </header>
-
+        <header className="p-header"><h1 className="p-title">Only Poker</h1></header>
         <section className="p-grid">
-          {/* LEFT COLUMN */}
           <div className="p-col">
             <div className="p-card">
               <div className="p-cardTitle">Hand Played</div>
               <textarea
                 className="p-textarea"
                 placeholder={
-`Type your hand like a story — stakes, position, cards, actions…
-• Cash example: 1/3 cash. Hero on SB with A♠4♠. CO opens 2.5bb, I 3-bet 11.5bb, he calls…
-• MTT example: $165 MTT L12 (1k/2k/2k). Eff 18bb. HJ (me) opens 2.2x K♠Q♠, BB calls. Flop Q72r…`
+`Type your hand like a story — include stakes, position, cards, actions.
+• Cash: $1/$3. Hero SB with A♠4♠. CO opens 2.5bb, I 3-bet 11.5bb, he calls…
+• MTT: $165 MTT L12 (1k/2k/2k). Eff 18bb. HJ (me) opens 2.2x K♠Q♠, BB calls. Flop Q72r…`
                 }
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -491,10 +387,7 @@ export default function Page() {
                 <button className="p-btn p-primary" onClick={handleParse} disabled={!input.trim() || aiLoading}>
                   {aiLoading ? 'Analyzing…' : 'Send'}
                 </button>
-                <button
-                  className="p-btn"
-                  onClick={() => { setInput(''); setFields(null); setStatus(null); setAiError(null); setHeroAssist(''); setVillainAssist(''); setBoardAssist(''); }}
-                >
+                <button className="p-btn" onClick={() => { setInput(''); setFields(null); setStatus(null); setAiError(null); setHeroAssist(''); setVillainAssist(''); setBoardAssist(''); }}>
                   Clear
                 </button>
               </div>
@@ -505,22 +398,19 @@ export default function Page() {
             <div className="p-card">
               <div className="p-cardTitle">Quick Card Assist (optional)</div>
               <div className="p-assist3">
-                <input className="p-input" value={heroAssist} onChange={(e)=>setHeroAssist(e.target.value)} placeholder="Hero: Ah Qs  (letters ok: As Ks / AJo / A4 of spades)" />
+                <input className="p-input" value={heroAssist} onChange={(e)=>setHeroAssist(e.target.value)} placeholder="Hero: Ah Qs  (letters ok: AJo / KQs / A4 of spades)" />
                 <input className="p-input" value={villainAssist} onChange={(e)=>setVillainAssist(e.target.value)} placeholder="Villain (optional): Kc Kd" />
                 <input className="p-input" value={boardAssist} onChange={(e)=>setBoardAssist(e.target.value)} placeholder="Board: Ks 7d 2c 9c 4h" />
               </div>
               <div className="p-help">If parsing guesses wrong, correct the board here — the preview updates instantly.</div>
             </div>
 
-            {/* --- Opening Range Grid --- */}
             <div className="p-card">
               <div className="p-subTitle">Hero Open Range — {pos} <span className="p-muted">({openPct}% of 169)</span></div>
               <MissingInfoNotice />
               <div className="rangeGrid">
-                {/* header ranks across top */}
                 <div className="rangeCorner" />
                 {RANKS.map((r, j) => <div key={`h-${j}`} className="rangeHead">{r}</div>)}
-                {/* rows */}
                 {RANKS.map((r, i) => (
                   <React.Fragment key={`row-${i}`}>
                     <div className="rangeHead">{r}</div>
@@ -548,43 +438,27 @@ export default function Page() {
             </div>
           </div>
 
-          {/* RIGHT COLUMN */}
           <div className="p-col">
             <div className="p-card">
-              <div className="p-topRow">
-                <TagChips />
-              </div>
-
+              <div className="p-topRow"><TagChips /></div>
               <div className="p-grid2">
                 <InfoBox label="Cards">
                   <div className="p-cards">
                     {heroCards
                       ? heroCards.split(' ').map((c, i) => <span key={i} className="p-cardSpan"><CardSpan c={c} /></span>)
-                      : <span className="p-muted">(not found)</span>
-                    }
+                      : <span className="p-muted">(not found)</span>}
                   </div>
                 </InfoBox>
-
                 <InfoBox label="Date"><div>{today}</div></InfoBox>
-
-                <InfoBox label="Position">
-                  <div>{(fields?.position ?? preview.position) || <span className="p-muted">(unknown)</span>}</div>
-                </InfoBox>
-
-                <InfoBox label="Stakes">
-                  <div>{(fields?.stakes ?? preview.stakes) || <span className="p-muted">(unknown)</span>}</div>
-                </InfoBox>
+                <InfoBox label="Position"><div>{(fields?.position ?? preview.position) || <span className="p-muted">(unknown)</span>}</div></InfoBox>
+                <InfoBox label="Stakes"><div>{(fields?.stakes ?? preview.stakes) || <span className="p-muted">(unknown)</span>}</div></InfoBox>
               </div>
             </div>
 
             <div className="p-card">
               <div className="p-subTitle">Board</div>
               <div className="p-boardRow">
-                <div className="p-pill">Flop:&nbsp;{
-                  flop
-                    ? flop.split(' ').map((c,i)=>(<span key={i} className="p-cardSpan"><CardSpan c={c} />{i<2?' ':''}</span>))
-                    : <span className="p-muted">unknown</span>
-                }</div>
+                <div className="p-pill">Flop:&nbsp;{flop ? flop.split(' ').map((c,i)=>(<span key={i} className="p-cardSpan"><CardSpan c={c} />{i<2?' ':''}</span>)) : <span className="p-muted">unknown</span>}</div>
                 <div className="p-pill">Turn:&nbsp;{turn ? <CardSpan c={turn} /> : <span className="p-muted">unknown</span>}</div>
                 <div className="p-pill">River:&nbsp;{river ? <CardSpan c={river} /> : <span className="p-muted">unknown</span>}</div>
               </div>
@@ -607,23 +481,13 @@ export default function Page() {
                 {(fields?.exploit_deviation || '')
                   .split(/(?<=\.)\s+/)
                   .filter(Boolean)
-                  .map((line, i) => <li key={i}>{line}</li>)
-                }
+                  .map((line, i) => <li key={i}>{line}</li>)}
               </ul>
-
               <div className="p-row p-end p-gapTop">
-                <button
-                  className="p-btn"
-                  disabled={!fields || aiLoading}
-                  onClick={() => fields && analyzeParsedHand(fields)}
-                >
+                <button className="p-btn" disabled={!fields || aiLoading} onClick={() => fields && analyzeParsedHand(fields)}>
                   {aiLoading ? 'Analyzing…' : 'Analyze Again'}
                 </button>
-                <button
-                  className="p-btn p-primary"
-                  disabled={!fields || saving}
-                  onClick={handleSave}
-                >
+                <button className="p-btn p-primary" disabled={!fields || saving} onClick={handleSave}>
                   {saving ? 'Saving…' : 'Confirm & Save to Notion'}
                 </button>
               </div>
@@ -632,101 +496,37 @@ export default function Page() {
         </section>
       </div>
 
-      {/* ------------- Styles (no Tailwind required) ------------- */}
       <style jsx global>{`
-        :root{
-          --bg1:#e5e7eb; --bg2:#f1f5f9; --bg3:#cbd5e1;
-          --card1:#f8fafc; --card2:#e5e7eb; --card3:#f1f5f9;
-          --border:#d1d5db; --line:#d8dde6;
-          --text:#0f172a; --muted:#6b7280;
-          --primary:#3b82f6; --primary2:#2563eb; --btnText:#f8fbff;
-          --chipBg:#eef2ff; --chipBorder:#c7d2fe; --chipText:#1e3a8a;
-          --pillBg:#ffffff; --pillBorder:#e5e7eb;
-          --range-open:#ee8d73; --range-fold:#3b3f46;
-          --range-suited:#f6efe9; --range-offsuit:#eef0f3; --range-pair:#faf6f0;
-          --needBg:#fff7ed; --needBorder:#fed7aa; --needText:#9a3412;
-        }
-        *{box-sizing:border-box}
-        html,body{margin:0;padding:0;background:linear-gradient(135deg,var(--bg2),var(--bg1),var(--bg3));color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-        .p-page{min-height:100vh;padding:24px}
-        .p-container{max-width:1200px;margin:0 auto}
-        .p-header{display:flex;align-items:center;justify-content:center;margin-bottom:16px}
-        .p-title{margin:0;font-size:28px;font-weight:800;letter-spacing:.2px;text-align:center}
-        .p-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
-        @media (max-width:980px){.p-grid{grid-template-columns:1fr}}
+        :root{--bg1:#e5e7eb;--bg2:#f1f5f9;--bg3:#cbd5e1;--card1:#f8fafc;--card2:#e5e7eb;--card3:#f1f5f9;--border:#d1d5db;--line:#d8dde6;--text:#0f172a;--muted:#6b7280;--primary:#3b82f6;--primary2:#2563eb;--btnText:#f8fbff;--chipBg:#eef2ff;--chipBorder:#c7d2fe;--chipText:#1e3a8a;--pillBg:#ffffff;--pillBorder:#e5e7eb;--range-open:#ee8d73;--range-fold:#3b3f46;--range-suited:#f6efe9;--range-offsuit:#eef0f3;--range-pair:#faf6f0;--needBg:#fff7ed;--needBorder:#fed7aa;--needText:#9a3412}
+        *{box-sizing:border-box}html,body{margin:0;padding:0;background:linear-gradient(135deg,var(--bg2),var(--bg1),var(--bg3));color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+        .p-page{min-height:100vh;padding:24px}.p-container{max-width:1200px;margin:0 auto}.p-header{display:flex;align-items:center;justify-content:center;margin-bottom:16px}.p-title{margin:0;font-size:28px;font-weight:800;letter-spacing:.2px;text-align:center}
+        .p-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}@media (max-width:980px){.p-grid{grid-template-columns:1fr}}
         .p-col{display:flex;flex-direction:column;gap:24px}
-        .p-card{
-          background:linear-gradient(180deg,var(--card1),var(--card2) 60%,var(--card3));
-          border:1px solid var(--border);
-          border-radius:18px; padding:16px;
-          box-shadow:0 10px 28px rgba(0,0,0,.08);
-        }
-        .p-cardTitle{font-size:13px;font-weight:700;letter-spacing:.15px;color:#334155;margin-bottom:10px}
-        .p-subTitle{font-size:14px;font-weight:800;margin-bottom:10px;color:#111827}
-        .p-textarea{
-          width:100%; min-height:160px; resize:vertical; padding:12px 14px;
-          border-radius:14px; border:1px solid var(--line); background:#ffffff; color:#0f172a; font-size:15px; line-height:1.5;
-        }
-        .p-row{display:flex;align-items:center}
-        .p-gap{gap:12px}
-        .p-gapTop{margin-top:10px}
-        .p-end{justify-content:flex-end}
-        .p-btn{
-          appearance:none; border:1px solid var(--line); background:#ffffff; color:#0f172a;
-          padding:10px 14px; border-radius:12px; cursor:pointer; transition:transform .02s ease, background .15s ease, border-color .15s ease;
-        }
-        .p-btn:hover{background:#f3f4f6}
-        .p-btn:active{transform:translateY(1px)}
-        .p-btn[disabled]{opacity:.55;cursor:not-allowed}
-        .p-btn.p-primary{
-          background:linear-gradient(180deg,var(--primary),var(--primary2));
-          color:var(--btnText); border-color:#9db7ff;
-          box-shadow:0 6px 18px rgba(59,130,246,.25);
-        }
-        .p-assist3{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px}
-        @media (max-width:800px){.p-assist3{grid-template-columns:1fr}}
-        .p-input{width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:#ffffff; color:#0f172a; font-size:14.5px;}
-        .p-input.p-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Courier New',monospace; line-height:1.45}
-        .p-help{margin-top:8px; font-size:12px; color:var(--muted)}
-        .p-muted{color:var(--muted)}
-        .p-topRow{display:flex; justify-content:space-between; align-items:center}
-        .chips{display:flex; flex-wrap:wrap; gap:8px}
-        .chip{background:var(--chipBg); border:1px solid var(--chipBorder); color:var(--chipText); padding:6px 10px; border-radius:999px; font-size:12.5px; letter-spacing:.2px;}
-        .p-grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px}
-        .ibox{background:#ffffff; border:1px solid var(--pillBorder); border-radius:12px; padding:10px 12px}
-        .iboxLabel{font-size:11px; color:#6b7280; margin-bottom:3px}
-        .iboxVal{font-size:14px}
-        .p-boardRow{display:flex; flex-wrap:wrap; gap:10px; font-size:16px}
-        .p-pill{background:var(--pillBg); border:1px solid var(--pillBorder); padding:8px 12px; border-radius:12px;}
-        .p-cardSpan{margin-right:4px}
-        .p-list{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px}
-        .p-note{margin-top:10px; color:#166534}
-        .p-err{margin-top:10px; color:#b91c1c}
-        .rangeGrid{display:grid; grid-template-columns:28px repeat(13, 1fr); grid-auto-rows:26px; gap:4px; align-items:center}
-        .rangeHead{font-size:12px; color:#64748b; text-align:center; line-height:26px}
-        .rangeCorner{width:28px;height:26px}
-        .cell{border:1px solid #cbd5e1; border-radius:6px; font-size:11.5px; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; transition:transform .02s ease, filter .15s ease, box-shadow .15s ease; box-shadow: inset 0 0 0 1px rgba(0,0,0,.02)}
-        .cell.suited{background:var(--range-suited)}
-        .cell.offsuit{background:var(--range-offsuit)}
-        .cell.pair{background:var(--range-pair)}
-        .cell.open{background:var(--range-open); color:#222; border-color:#e2a08e}
-        .cell.fold{background:#374151; color:#e5e7eb; border-color:#4b5563}
-        .cell:hover{filter:brightness(1.07)}
-        .needBanner{
-          margin:6px 0 10px; font-size:12.5px; background:var(--needBg); border:1px solid var(--needBorder);
-          color:var(--needText); padding:8px 10px; border-radius:10px;
-        }
+        .p-card{background:linear-gradient(180deg,var(--card1),var(--card2) 60%,var(--card3));border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 10px 28px rgba(0,0,0,.08)}
+        .p-cardTitle{font-size:13px;font-weight:700;letter-spacing:.15px;color:#334155;margin-bottom:10px}.p-subTitle{font-size:14px;font-weight:800;margin-bottom:10px;color:#111827}
+        .p-textarea{width:100%;min-height:160px;resize:vertical;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:#ffffff;color:#0f172a;font-size:15px;line-height:1.5}
+        .p-row{display:flex;align-items:center}.p-gap{gap:12px}.p-gapTop{margin-top:10px}.p-end{justify-content:flex-end}
+        .p-btn{appearance:none;border:1px solid var(--line);background:#ffffff;color:#0f172a;padding:10px 14px;border-radius:12px;cursor:pointer;transition:transform .02s ease,background .15s ease,border-color .15s ease}
+        .p-btn:hover{background:#f3f4f6}.p-btn:active{transform:translateY(1px)}.p-btn[disabled]{opacity:.55;cursor:not-allowed}
+        .p-btn.p-primary{background:linear-gradient(180deg,var(--primary),var(--primary2));color:var(--btnText);border-color:#9db7ff;box-shadow:0 6px 18px rgba(59,130,246,.25)}
+        .p-assist3{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px}@media (max-width:800px){.p-assist3{grid-template-columns:1fr}}
+        .p-input{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#ffffff;color:#0f172a;font-size:14.5px}
+        .p-input.p-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Courier New',monospace;line-height:1.45}
+        .p-help{margin-top:8px;font-size:12px;color:var(--muted)}.p-muted{color:var(--muted)}.p-topRow{display:flex;justify-content:space-between;align-items:center}
+        .chips{display:flex;flex-wrap:wrap;gap:8px}.chip{background:var(--chipBg);border:1px solid var(--chipBorder);color:var(--chipText);padding:6px 10px;border-radius:999px;font-size:12.5px;letter-spacing:.2px}
+        .p-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}.ibox{background:#ffffff;border:1px solid var(--pillBorder);border-radius:12px;padding:10px 12px}.iboxLabel{font-size:11px;color:#6b7280;margin-bottom:3px}.iboxVal{font-size:14px}
+        .p-boardRow{display:flex;flex-wrap:wrap;gap:10px;font-size:16px}.p-pill{background:var(--pillBg);border:1px solid var(--pillBorder);padding:8px 12px;border-radius:12px}.p-cardSpan{margin-right:4px}
+        .p-list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}.p-note{margin-top:10px;color:#166534}.p-err{margin-top:10px;color:#b91c1c}
+        .rangeGrid{display:grid;grid-template-columns:28px repeat(13, 1fr);grid-auto-rows:26px;gap:4px;align-items:center}
+        .rangeHead{font-size:12px;color:#64748b;text-align:center;line-height:26px}.rangeCorner{width:28px;height:26px}
+        .cell{border:1px solid #cbd5e1;border-radius:6px;font-size:11.5px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;transition:transform .02s ease,filter .15s ease,box-shadow .15s ease;box-shadow:inset 0 0 0 1px rgba(0,0,0,.02)}
+        .cell.suited{background:#f6efe9}.cell.offsuit{background:#eef0f3}.cell.pair{background:#faf6f0}.cell.open{background:#ee8d73;color:#222;border-color:#e2a08e}.cell.fold{background:#374151;color:#e5e7eb;border-color:#4b5563}.cell:hover{filter:brightness(1.07)}
+        .needBanner{margin:6px 0 10px;font-size:12.5px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:8px 10px;border-radius:10px}
       `}</style>
     </main>
   );
 }
 
-/** Small info box used on the right-side top card */
 function InfoBox({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="ibox">
-      <div className="iboxLabel">{label}</div>
-      <div className="iboxVal">{children}</div>
-    </div>
-  );
+  return (<div className="ibox"><div className="iboxLabel">{label}</div><div className="iboxVal">{children}</div></div>);
 }
