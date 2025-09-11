@@ -1,33 +1,39 @@
+// app/api/analyze-hand/route.ts
 import { NextResponse } from "next/server";
 import { openai } from "@/lib/openai";
 
-/** Types */
-type VerdictLabel = "Correct" | "Mistake" | "Marginal";
-type VerdictOut = { label: VerdictLabel; summary: string; reasons: string[] };
-
 /**
- * Coach prompt: judge the line, give prescriptive GTO plan,
- * and ALWAYS include numeric reasoning.
+ * Coach prompt:
+ * - Strict JSON
+ * - SUITS RULE: Preflop-only → suits aren't required (A4s/A4 suited vs A4o).
+ * - Postflop → suits can matter; if ambiguous, note briefly and proceed.
  */
-const SYSTEM = `You are a tough poker coach. Return STRICT JSON with EXACT keys:
+const SYSTEM = `You are a tough, no-nonsense poker coach.
+Return ONLY strict JSON with EXACT keys:
 
 {
   "verdict": {
     "label": "Correct" | "Mistake" | "Marginal",
-    "summary": "one plain sentence judging Hero's FINAL key decision",
-    "reasons": ["2–5 short bullets with quick math and logic"]
+    "summary": "one plain sentence explaining the judgement",
+    "reasons": ["bullet", "bullet"]
   },
-  "recommended_line": "one-line command for the best action (e.g., 'Fold pre', 'Call 20bb shove', 'Jam 18bb over raise')",
-  "gto_strategy": "120–220 words. Start with a single line: 'Decision: <Fold|Call|Jam> <hand> <spot>'. Then give a STREET-BY-STREET plan (sizes in bb or % pot). Finish with a 'Why' section containing numeric reasoning: risk, reward, fold-equity threshold ~= risk/(risk+reward), an equity estimate vs a plausible range, key blockers/coverage, and ICM note when it's a tournament.",
-  "exploit_deviation": "2–4 concise sentences about common pool leaks here and how to deviate.",
+  "recommended_line": "one-line recommendation (e.g., 'Fold pre', '4-bet jam 18bb', 'Flat and play postflop')",
+  "gto_strategy": "compact Preflop/Flop/Turn/River plan with sizes in bb or % pot. Put Preflop first, use exact numbers where possible.",
+  "exploit_deviation": "2–4 concise sentences about pool tendencies & how to deviate.",
   "learning_tag": ["short tag", "optional second tag"]
 }
 
-Rules:
-- DO NOT endorse a play just because the user did it; judge it as if coaching beforehand.
-- Parse context (cash vs tournament, ICM/bubble clues, effective stacks, antes, positions, sizes) from the text.
-- Numbers don't need to be exact, but include a sensible ballpark for fold-equity threshold and equity.
-- No markdown; plain text only; JSON object only.`;
+Judging rules:
+- Do NOT endorse a play just because the user took it; judge as if advising beforehand.
+- Use context (cash vs tournament, ICM/bubble mentions, effective stacks, positions, raise sizes).
+- Include quick math in reasons: risk, reward, FE threshold ~= risk/(risk+reward), and a short equity/range note.
+- If bubble/ICM is present, tighten stack-off thresholds and say so explicitly.
+
+SUITS RULE (IMPORTANT):
+- If the user's input is PRE-FLOP ONLY (no flop/turn/river/board given), treat 'A4 suited' or 'A4s' as suited, and 'A4o'/'offsuit' as offsuit. Do NOT ask for exact suits; they are irrelevant preflop.
+- If any POSTFLOP info exists, suits may matter. If suits are ambiguous there, briefly note the ambiguity and proceed with a reasonable assumption.
+
+Keep everything concise, factual, and prescriptive. No markdown. Strict JSON only.`;
 
 function asText(v: any): string {
   if (v == null) return "";
@@ -43,7 +49,6 @@ function asText(v: any): string {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
     const {
       date,
       stakes,
@@ -72,9 +77,9 @@ export async function POST(req: Request) {
       temperature: 0.1,
       messages: [
         { role: "system", content: SYSTEM },
-        { role: "user", content: userBlock }
+        { role: "user", content: userBlock },
       ],
-      response_format: { type: "json_object" }
+      response_format: { type: "json_object" },
     });
 
     const raw = resp?.choices?.[0]?.message?.content?.trim() || "{}";
@@ -92,42 +97,20 @@ export async function POST(req: Request) {
       };
     }
 
-    // Normalize verdict
-    const verdict: VerdictOut = {
-      label: (parsed?.verdict?.label as VerdictLabel) || "Marginal",
-      summary: asText(parsed?.verdict?.summary || ""),
-      reasons: Array.isArray(parsed?.verdict?.reasons)
-        ? parsed.verdict.reasons.filter((t: unknown): t is string => typeof t === "string" && !!t.trim())
-        : []
-    };
-
-    // Enforce decision + WHY in GTO
-    let gto = asText(parsed?.gto_strategy || "").trim();
-    const rec = asText(parsed?.recommended_line || "").trim();
-
-    // Add a Decision line if missing
-    const hasDecisionLine = /^Decision:/i.test(gto);
-    const decisionLine =
-      rec ? `Decision: ${rec}.` : (verdict.summary ? `Decision: ${verdict.summary}` : "");
-    if (decisionLine && !hasDecisionLine) {
-      gto = (gto ? `${decisionLine}\n${gto}` : decisionLine).trim();
-    }
-
-    // Append Why bullets if missing
-    const hasWhy = /\n\s*Why\b/i.test(gto);
-    if (verdict.reasons.length && !hasWhy) {
-      const bullets = verdict.reasons.map((r: string) => `• ${r}`).join("\n"); // <-- typed param
-      gto = `${gto}\n\nWhy:\n${bullets}`.trim();
-    }
-
     const out = {
-      verdict,
-      recommended_line: rec,
-      gto_strategy: gto,
+      verdict: {
+        label: parsed?.verdict?.label || "Marginal",
+        summary: asText(parsed?.verdict?.summary || ""),
+        reasons: Array.isArray(parsed?.verdict?.reasons)
+          ? parsed.verdict.reasons.filter((t: unknown) => typeof t === "string" && (t as string).trim())
+          : [],
+      },
+      recommended_line: asText(parsed?.recommended_line || ""),
+      gto_strategy: asText(parsed?.gto_strategy || ""),
       exploit_deviation: asText(parsed?.exploit_deviation || ""),
       learning_tag: Array.isArray(parsed?.learning_tag)
-        ? parsed.learning_tag.filter((t: unknown): t is string => typeof t === "string" && !!t.trim())
-        : []
+        ? parsed.learning_tag.filter((t: unknown) => typeof t === "string" && (t as string).trim())
+        : [],
     };
 
     return NextResponse.json(out);
