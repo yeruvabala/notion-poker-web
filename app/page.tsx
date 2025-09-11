@@ -17,7 +17,17 @@ type Fields = {
   notes?: string | null;
 };
 
-type HeroParse = { cards: string; needsSuit: boolean };
+type Street = 'preflop' | 'flop' | 'turn' | 'river';
+
+type HeroHand = {
+  r1: string;               // e.g., 'A'
+  r2: string;               // e.g., '4'
+  suited: boolean | null;   // true/false when known, null if 'A4' ambiguous (preflop allowed)
+  s1: string | null;        // 's','h','d','c' when exactly known, else null
+  s2: string | null;
+  exact: boolean;           // true when explicit suits (or explicit offsuit), else false
+  label: string;            // pretty version to show in UI (e.g., 'A♠ 4♠' or 'A4s')
+};
 
 /** ------------- Helpers ------------- */
 const asText = (v: any): string =>
@@ -48,7 +58,6 @@ const suitify = (card: string) => {
   const suit = SUIT_MAP[s] || ('♥♦♣♠'.includes(s) ? s : '');
   return suit ? `${r}${suit}` : '';
 };
-
 const suitifyLine = (line: string) =>
   (line || '').replace(/[\/,|]/g, ' ')
     .split(/\s+/).filter(Boolean)
@@ -59,25 +68,142 @@ const parseStakes = (t: string) => {
   return m ? `${m[1]}/${m[2]}` : '';
 };
 
-// Prefer hero mentions; avoid villain position
 const parseHeroPosition = (t: string) => {
-  const up = (t || '').toUpperCase();
-
+  const up = t.toUpperCase();
   const m1 = up.match(/\b(I|I'M|IM|I AM|HERO)\b[^.]{0,40}?\b(ON|FROM|IN)\s+(UTG\+\d|UTG|MP|HJ|CO|BTN|SB|BB)\b/);
   if (m1) return m1[3];
-
   const m2 = up.match(/\b(AM|I'M|IM|I)\b[^.]{0,10}?\bON\s+(UTG\+\d|UTG|MP|HJ|CO|BTN|SB|BB)\b/);
   if (m2) return m2[2];
-
   const m3 = up.match(/\bON\s+(SB|BB|BTN|CO|HJ|MP|UTG(?:\+\d)?)\b/);
   if (m3) return m3[1];
-
   const PREF = ['SB','BB','BTN','CO','HJ','MP','UTG+2','UTG+1','UTG'];
   for (const p of PREF) if (up.includes(` ${p} `)) return p;
   return '';
 };
 
-// -------- Board parsing --------
+/* ---------- Street detector ---------- */
+function detectStreet(raw: string): Street {
+  const s = (raw || '').toLowerCase();
+  // Board tokens from plain text
+  const cardTokens = (s.match(/\b[2-9tjqka][shdc♥♦♣♠]\b/g) || []).length;
+  if (/river\b|river:/.test(s) || cardTokens >= 5) return 'river';
+  if (/turn\b|turn:/.test(s) || cardTokens >= 4) return 'turn';
+  if (/flop\b|flop:|c-?bet|cbets?/.test(s) || cardTokens >= 3) return 'flop';
+  return 'preflop';
+}
+
+/* ---------- Hero input parser (strict: only from Hero input) ---------- */
+function parseHeroAssist(input: string, street: Street): { hand: HeroHand | null; error: string | null } {
+  const txt = (input || '').trim();
+  if (!txt) return { hand: null, error: 'Add Hero cards (e.g., A4s / A4o or exact: As 4s).' };
+
+  // 1) Exact suits like "As 4s" or "A♥ Q♠"
+  let m = txt.match(/^\s*([2-9TJQKA])\s*([♥♦♣♠shdc])\s+([2-9TJQKA])\s*([♥♦♣♠shdc])\s*$/i);
+  if (m) {
+    const r1 = m[1].toUpperCase();
+    const s1 = (m[2] || '').toLowerCase();
+    const r2 = m[3].toUpperCase();
+    const s2 = (m[4] || '').toLowerCase();
+    const suit1 = SUIT_MAP[s1] ? s1 : ({ '♥':'h','♦':'d','♣':'c','♠':'s' } as any)[m[2]];
+    const suit2 = SUIT_MAP[s2] ? s2 : ({ '♥':'h','♦':'d','♣':'c','♠':'s' } as any)[m[4]];
+    const hand: HeroHand = {
+      r1, r2,
+      suited: suit1 === suit2,
+      s1: suit1, s2: suit2,
+      exact: true,
+      label: `${r1}${SUIT_MAP[suit1]} ${r2}${SUIT_MAP[suit2]}`
+    };
+    return { hand, error: null };
+  }
+
+  // 2) Compact ranks + s/o: "A4s" / "A4o"
+  m = txt.match(/^\s*([2-9TJQKA])\s*([2-9TJQKA])\s*([so])\s*$/i);
+  if (m) {
+    const r1 = m[1].toUpperCase();
+    const r2 = m[2].toUpperCase();
+    const isSuited = m[3].toLowerCase() === 's';
+    const hand: HeroHand = {
+      r1, r2,
+      suited: isSuited,
+      s1: null, s2: null,
+      exact: true,                       // exact for preflop decisions
+      label: `${r1}${r2}${isSuited ? 's' : 'o'}`
+    };
+    // If postflop and only 's'/'o' provided, gently warn to add exact suits (but allow send)
+    if (street !== 'preflop' && isSuited) {
+      return { hand, error: 'Post-flop: add exact suits (e.g., As 4s) for best accuracy.' };
+    }
+    return { hand, error: null };
+  }
+
+  // 3) Rank + suit word pattern: "A 4 of spades"
+  m = txt.match(/^\s*([2-9TJQKA])\s*([2-9TJQKA])\s*(?:of\s+)?(spades?|hearts?|diamonds?|clubs?)\s*$/i);
+  if (m) {
+    const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
+    const s = (m[3] || '').toLowerCase();
+    const suitChar = ({ spade:'s',spades:'s',heart:'h',hearts:'h',diamond:'d',diamonds:'d',club:'c',clubs:'c' } as any)[s];
+    const hand: HeroHand = {
+      r1, r2,
+      suited: true,
+      s1: suitChar, s2: suitChar,
+      exact: true,
+      label: `${r1}${SUIT_MAP[suitChar]} ${r2}${SUIT_MAP[suitChar]}`
+    };
+    return { hand, error: null };
+  }
+
+  // 4) Bare ranks like "A4"
+  m = txt.match(/^\s*([2-9TJQKA])\s*([2-9TJQKA])\s*$/i);
+  if (m) {
+    const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
+    const hand: HeroHand = {
+      r1, r2,
+      suited: null,
+      s1: null, s2: null,
+      exact: false,
+      label: `${r1}${r2}`
+    };
+    const error = (street === 'preflop')
+      ? 'Add s/o if you can (A4s or A4o).'
+      : 'Post-flop: add exact suits (e.g., As 4s) for accuracy.';
+    return { hand, error };
+  }
+
+  return { hand: null, error: 'Unrecognized format. Use A4s/A4o or exact suits like As 4s.' };
+}
+
+/* ---------- Board parsing from Assist ---------- */
+function hasSuitToken(c: string): boolean {
+  return /[shdc♥♦♣♠]$/i.test(c || '');
+}
+function parseBoardAssist(input: string) {
+  const raw = (input || '').trim();
+  if (!raw) return { flop: '', turn: '', river: '', tokens: [] as string[] };
+  const parts = raw.replace(/\s*\|\s*/g, ' | ').trim().split(/\s+/);
+  const tokens: string[] = [];
+
+  for (const p of parts) {
+    if (p === '|') { tokens.push('|'); continue; }
+    const norm = suitify(p);
+    if (norm) tokens.push(norm);
+  }
+
+  const barIdx1 = tokens.indexOf('|');
+  const barIdx2 = barIdx1 >= 0 ? tokens.indexOf('|', barIdx1 + 1) : -1;
+
+  const flopArr = (barIdx1 >= 0 ? tokens.slice(0, barIdx1) : tokens.slice(0, 3)).filter(t => t !== '|');
+  const turnArr = (barIdx1 >= 0 && barIdx2 >= 0 ? tokens.slice(barIdx1 + 1, barIdx2) : (barIdx1 >= 0 ? tokens.slice(barIdx1 + 1) : tokens.slice(3, 4))).filter(t => t !== '|');
+  const riverArr = (barIdx2 >= 0 ? tokens.slice(barIdx2 + 1) : tokens.slice(4, 5)).filter(t => t !== '|');
+
+  return {
+    flop: flopArr.slice(0,3).join(' '),
+    turn: turnArr.slice(0,1).join(' '),
+    river: riverArr.slice(0,1).join(' '),
+    tokens
+  };
+}
+
+/* ---------- Text parsers used only for preview ---------- */
 const parseBoardFromText = (line: string) => {
   const arr = suitifyLine(line).split(' ').filter(Boolean);
   return {
@@ -86,8 +212,7 @@ const parseBoardFromText = (line: string) => {
     river: arr[4] || '',
   };
 };
-
-const parseBoard = (t: string) => {
+const parseBoardStory = (t: string) => {
   const get3 = (c: string) => suitifyLine(c).split(' ').slice(0, 3).join(' ');
   const fm = t.match(/flop[^\n:]*[:\-]*\s*([^\n]+)/i);
   const tm = t.match(/turn[^\n:]*[:\-]*\s*([^\n]+)/i);
@@ -95,14 +220,6 @@ const parseBoard = (t: string) => {
   let flop = fm ? get3(fm[1]) : '';
   let turn = tm ? suitifyLine(tm[1]).split(' ')[0] || '' : '';
   let river = rm ? suitifyLine(rm[1]).split(' ')[0] || '' : '';
-  if (!flop || !turn || !river) {
-    const all = suitifyLine(t).split(' ');
-    if (all.length >= 5) {
-      flop = flop || all.slice(0, 3).join(' ');
-      turn = turn || all[3];
-      river = river || all[4];
-    }
-  }
   return { flop, turn, river };
 };
 
@@ -112,143 +229,33 @@ const twoCardsFrom = (line: string) =>
 const CardSpan = ({ c }: { c: string }) =>
   !c ? null : <span style={{ fontWeight: 600, color: suitColor(c.slice(-1)) }}>{c}</span>;
 
-/** ---- New: identify preflop-only text ---- */
-const isPreflopOnly = (t: string) => !/\b(flop|turn|river|board)\b/i.test(t || '');
-
-/** ---- Robust hero-card parsing (preflop-aware) ---- */
-function firstNonBoardTwoCardTokens(t: string): string {
-  const re = /([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(t)) !== null) {
-    const idx = m.index;
-    const ctx = t.slice(Math.max(0, idx - 14), idx).toLowerCase();
-    if (/(flop|turn|river|board)\s*:?[\s]*$/i.test(ctx)) continue;
-    return [suitify(m[1]), suitify(m[2])].join(' ');
-  }
-  return '';
-}
-
-function normalizeTwoCardChunkWithAmbiguity(chunk: string, preOnly: boolean): HeroParse {
-  const raw = (chunk || '').trim();
-  const s = raw.toLowerCase();
-
-  // explicit "as 4s" / "a♠ 4♠"
-  let m = s.match(/([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])/i);
-  if (m) return { cards: [suitify(m[1]), suitify(m[2])].join(' '), needsSuit: false };
-
-  // "a4s" / "a4h/d/c" / "a4o"
-  m = s.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*([shdco])\b/i);
-  if (m) {
-    const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
-    const t = m[3].toLowerCase();
-    if (t === 'o') {
-      return preOnly
-        ? { cards: `${r1}♠ ${r2}♥`, needsSuit: false }
-        : { cards: `${r1}? ${r2}?`, needsSuit: true };
-    }
-    const suitChar = SUIT_MAP[t];
-    return { cards: `${r1}${suitChar} ${r2}${suitChar}`, needsSuit: false };
-  }
-
-  // "A4♠" -> suited that symbol
-  m = raw.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*([♥♦♣♠])\b/i);
-  if (m) {
-    const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
-    const sym = m[3];
-    return { cards: `${r1}${sym} ${r2}${sym}`, needsSuit: false };
-  }
-
-  // "A4 suited" / "A4 offsuit"
-  m = s.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*(suited|offsuit)\b/i);
-  if (m) {
-    const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
-    const word = m[3].toLowerCase();
-    if (word === 'suited') return { cards: `${r1}♠ ${r2}♠`, needsSuit: false };
-    return preOnly
-      ? { cards: `${r1}♠ ${r2}♥`, needsSuit: false }
-      : { cards: `${r1}? ${r2}?`, needsSuit: true };
-  }
-
-  // "... with/holding/has/have <cards>"
-  m = s.match(/\b(?:with|holding|has|have|having)\b([^.\n]+)/i);
-  if (m) {
-    const cand = normalizeTwoCardChunkWithAmbiguity(m[1], preOnly);
-    if (cand.cards) return cand;
-  }
-
-  return { cards: '', needsSuit: false };
-}
-
-const parseHeroCardsSmartWithFlag = (t: string, preOnly: boolean): HeroParse => {
-  const s = (t || '').toLowerCase();
-
-  // "hero/I/me ... with/holding/has ..."
-  let m = s.match(/\b(hero|i|i'm|im|i am|me)\b[^.\n]{0,60}?\b(with|holding|has|have)\b([^.\n]+)/i);
-  if (m) {
-    const cand = normalizeTwoCardChunkWithAmbiguity(m[3], preOnly);
-    if (cand.cards) return cand;
-  }
-
-  // "... defends/opens/calls/shoves/jams <cards>"
-  m = s.match(/\b(hero|i|i'm|im|i am|me)\b[^.\n]{0,40}?\b(defends|opens|calls|shoves|jams)\b([^.\n]+)/i);
-  if (m) {
-    const cand = normalizeTwoCardChunkWithAmbiguity(m[3], preOnly);
-    if (cand.cards) return cand;
-  }
-
-  // seat + action
-  m = s.match(/\b(bb|sb|btn|co|hj|mp|utg(?:\+\d)?)\b[^.\n]{0,18}?\b(defends|opens|calls|shoves|jams|with|has|holding)\b([^.\n]+)/i);
-  if (m) {
-    const cand = normalizeTwoCardChunkWithAmbiguity(m[3], preOnly);
-    if (cand.cards) return cand;
-  }
-
-  // chunk anywhere (but not a board)
-  const nonBoard = firstNonBoardTwoCardTokens(t);
-  if (nonBoard) return { cards: nonBoard, needsSuit: false };
-
-  // last resort: compact or symbol chunk
-  m = s.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*([shdco]|[♥♦♣♠])\b/i);
-  if (m) {
-    const cand = normalizeTwoCardChunkWithAmbiguity(m[0], preOnly);
-    if (cand.cards) return cand;
-  }
-
-  return { cards: '', needsSuit: false };
-};
-
-/** ---------- Opening Range Grid helpers ---------- */
+/** ---------- Range Grid helpers ---------- */
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'] as const;
 const rIndex: Record<string, number> = Object.fromEntries(RANKS.map((r, i) => [r, i]));
-
 function handLabel(i: number, j: number): string {
   const a = RANKS[i], b = RANKS[j];
   if (i === j) return `${a}${a}`;
   return i < j ? `${a}${b}s` : `${a}${b}o`;
 }
-
 const atLeast = (rank: string, min: string) => rIndex[rank] <= rIndex[min];
 const oneOf = (x: string, arr: string[]) => arr.includes(x);
 
-/** Baseline open decision by position (approx rules) */
+/** Baseline open decision by position (approx) */
 function defaultOpen(pos: string, label: string): boolean {
   pos = (pos || '').toUpperCase();
   const [a, b, t] = label.length === 3 ? [label[0], label[1], label[2]] : [label[0], label[1], 'p'];
   const pair = t === 'p';
   const suited = t === 's';
   const offsuit = t === 'o';
-
   const pairMin: Record<string, string> = {
     UTG: '6', MP: '4', HJ: '2', CO: '2', BTN: '2', SB: '2', BB: '2'
   };
   if (pair) return atLeast(a, pairMin[pos] || '2');
-
   if (a === 'A') {
     if (suited) return true;
     const minOff: Record<string, string> = { UTG: 'T', MP: 'T', HJ: '9', CO: '8', BTN: '2', SB: '5', BB: 'T' };
     return atLeast(b, minOff[pos] || 'T');
   }
-
   if (suited && oneOf(a, ['K','Q','J','T'])) {
     const min: Record<string, Record<string,string>> = {
       K: { UTG:'9', MP:'9', HJ:'8', CO:'6', BTN:'2', SB:'7' },
@@ -258,7 +265,6 @@ function defaultOpen(pos: string, label: string): boolean {
     };
     return atLeast(b, (min as any)[a]?.[pos] ?? '9');
   }
-
   if (offsuit && oneOf(a, ['K','Q','J','T'])) {
     const min: Record<string, Record<string,string>> = {
       K: { UTG:'Q', MP:'J', HJ:'T', CO:'T', BTN:'8', SB:'9' },
@@ -270,7 +276,6 @@ function defaultOpen(pos: string, label: string): boolean {
     if (!m || m === 'X') return false;
     return atLeast(b, m);
   }
-
   if (suited) {
     const SC = [['9','8'], ['8','7'], ['7','6'], ['6','5'], ['5','4']];
     const isSC = SC.some(([x,y]) => (a === x && b === y) || (a === y && b === x));
@@ -279,25 +284,21 @@ function defaultOpen(pos: string, label: string): boolean {
       return (okPos as any)[pos] ?? false;
     }
   }
-
   if (suited && (pos === 'BTN' || pos === 'SB')) {
     const LATE_MIN: Record<string,string> = { K:'2', Q:'5', J:'7', T:'7', '9':'7','8':'6','7':'5' };
     const m = (LATE_MIN as any)[a];
     if (m) return atLeast(b, m);
   }
-
   return false;
 }
 
-/** Simple RFI detector */
+/** ----- Simple RFI detector ----- */
 function detectRFI(raw: string): { isRFI: boolean; reasonIfLocked: string } {
   const s = (raw || '').toLowerCase();
   const has3bet = /\b3[-\s]?bet|\b3bet|\bre[-\s]?raise|\b4[-\s]?bet|\bjam|\bshove\b/i.test(s);
-
   const heroRaiseIdx = (() => {
     const patterns = [
       /\b(i|i'm|im|i am|hero)\b[^.]{0,40}?\b(raise|raises|open|opens)\b/i,
-      /\bam on\b[^.]{0,30}?\b(utg\+?\d?|utg|mp|hj|co|button|btn|sb|bb)\b[^.]{0,30}?\b(raise|raises|open|opens)\b/i
     ];
     let idx = Infinity;
     for (const r of patterns) {
@@ -306,7 +307,6 @@ function detectRFI(raw: string): { isRFI: boolean; reasonIfLocked: string } {
     }
     return idx;
   })();
-
   const villainRaiseIdx = (() => {
     const r = /\b(villain|utg\+?\d?|utg|mp|hj|co|button|btn|sb|bb)\b[^.]{0,30}?\b(raise|raises|open|opens)\b/i;
     const m = r.exec(s);
@@ -314,7 +314,6 @@ function detectRFI(raw: string): { isRFI: boolean; reasonIfLocked: string } {
     if (/\b(i|i'm|im|i am|hero)\b/.test(m[0])) return Infinity;
     return m.index;
   })();
-
   const unopened = heroRaiseIdx < villainRaiseIdx;
   if (!unopened) return { isRFI: false, reasonIfLocked: 'Not an RFI spot — someone else opened before Hero.' };
   if (has3bet) return { isRFI: false, reasonIfLocked: 'Not a pure RFI — preflop 3-bet/jam detected.' };
@@ -326,41 +325,53 @@ export default function Page() {
   const [input, setInput] = useState('');
   const [fields, setFields] = useState<Fields | null>(null);
 
+  // Quick Card Assist inputs (source of truth)
   const [heroAssist, setHeroAssist] = useState('');
   const [villainAssist, setVillainAssist] = useState('');
   const [boardAssist, setBoardAssist] = useState('');
 
+  // Async/UI state
   const [rangeEdits, setRangeEdits] = useState<Record<string, boolean>>({});
   const [lastPosForEdits, setLastPosForEdits] = useState<string>('');
-
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
-  const preflopOnly = useMemo(() => isPreflopOnly(input), [input]);
-
-  const heroParse = useMemo(() => parseHeroCardsSmartWithFlag(input, preflopOnly), [input, preflopOnly]);
-
+  // Preview
   const preview = useMemo(() => ({
     stakes: parseStakes(input),
     position: parseHeroPosition(input),
-    heroCards: heroParse.cards,
-    needsSuit: heroParse.needsSuit,
-    board: parseBoard(input),
-  }), [input, heroParse]);
+    storyBoard: parseBoardStory(input),  // only for preview, never used as truth
+  }), [input]);
 
-  const heroCards =
-    (twoCardsFrom(heroAssist) || fields?.cards || preview.heroCards || '').trim();
+  const street: Street = useMemo(() => detectStreet(input), [input]);
 
-  const boardFromAssist = parseBoardFromText(boardAssist);
-  const flop = (boardAssist ? boardFromAssist.flop : preview.board.flop) || '';
-  const turn = (boardAssist ? boardFromAssist.turn : preview.board.turn) || '';
-  const river = (boardAssist ? boardFromAssist.river : preview.board.river) || '';
+  // Hero hand: MUST come from heroAssist
+  const heroParsed = useMemo(() => parseHeroAssist(heroAssist, street), [heroAssist, street]);
+  const heroHand = heroParsed.hand;
+
+  // Board: primary source is Board Assist
+  const boardFromAssist = useMemo(() => parseBoardAssist(boardAssist), [boardAssist]);
+  const flop = boardFromAssist.flop;
+  const turn = boardFromAssist.turn;
+  const river = boardFromAssist.river;
+
+  // Validation gates
+  const heroOk = !!heroHand;
+  const needsBoard = street !== 'preflop';
+  const boardOk =
+    !needsBoard ||
+    (flop.split(' ').length === 3 && flop.split(' ').every(hasSuitToken) &&
+     (!turn || hasSuitToken(turn)) &&
+     (!river || hasSuitToken(river)));
+
+  const canSend = heroOk && boardOk && !aiLoading && !!input.trim();
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const pos = (fields?.position ?? preview.position ?? '').toUpperCase() || 'BTN';
 
+  // RFI lock logic for grid
   const rfiInfo = useMemo(() => detectRFI(input), [input]);
   const gridLocked = !rfiInfo.isRFI;
 
@@ -378,13 +389,25 @@ export default function Page() {
         date: parsed.date ?? undefined,
         stakes: parsed.stakes ?? (preview.stakes || undefined),
         position: parsed.position ?? (preview.position || undefined),
-        cards: parsed.cards ?? (heroCards || undefined),
-        villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
+
+        // NEW: structured context
+        street,
+        hero_hand: heroHand
+          ? { r1: heroHand.r1, r2: heroHand.r2, suited: heroHand.suited, s1: heroHand.s1, s2: heroHand.s2, exact: heroHand.exact }
+          : null,
+        requires_board_suits: needsBoard,
+
+        // Board to the model
+        board_struct: { flop, turn, river },
         board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`]
           .filter(Boolean)
           .join('  |  '),
+
+        // keep for backward compat + extra context
+        cards: heroHand ? heroHand.label : undefined,
+        villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
         notes: parsed.notes ?? input,
-        rawText: input,
+        rawText: input
       };
 
       const r = await fetch('/api/analyze-hand', {
@@ -459,23 +482,11 @@ export default function Page() {
     }
   }
 
-  function TagChips() {
-    const chips = fields?.learning_tag?.filter(Boolean) ?? [];
-    if (!chips.length) return null;
-    return (
-      <div className="chips" aria-label="tags">
-        {chips.map((t, i) => (
-          <span className="chip" key={i}>{t}</span>
-        ))}
-      </div>
-    );
-  }
-
+  /** Range grid state helpers */
   const toggleHand = (label: string) => {
     if (gridLocked) return;
     setRangeEdits(prev => ({ ...prev, [label]: !(prev[label] ?? defaultOpen(pos, label)) }));
   };
-
   const resetRange = () => { if (!gridLocked) { setRangeEdits({}); setLastPosForEdits(pos); } };
 
   const openFlags: Record<string, boolean> = {};
@@ -488,26 +499,25 @@ export default function Page() {
   const openCount = Object.values(openFlags).filter(Boolean).length;
   const openPct = Math.round((openCount / 169) * 100);
 
+  /** Render */
   return (
     <main className="p-page">
       <div className="p-container">
-        <header className="p-header">
-          <h1 className="p-title">Only Poker</h1>
-        </header>
+        <header className="p-header"><h1 className="p-title">Only Poker</h1></header>
 
         <section className="p-grid">
-          {/* LEFT COLUMN */}
+          {/* LEFT */}
           <div className="p-col">
             <div className="p-card">
               <div className="p-cardTitle">Hand Played</div>
               <textarea
                 className="p-textarea"
-                placeholder="Type your hand like a story — stakes, position, cards, actions...  (Preflop-only? You can write A4s / A4 suited or A4o — no suits needed.)"
+                placeholder="Tell the story — stakes, positions, effective stacks, hero cards, actions…"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
               />
               <div className="p-row p-gap">
-                <button className="p-btn p-primary" onClick={handleParse} disabled={!input.trim() || aiLoading}>
+                <button className="p-btn p-primary" onClick={handleParse} disabled={!canSend}>
                   {aiLoading ? 'Analyzing…' : 'Send'}
                 </button>
                 <button
@@ -517,28 +527,32 @@ export default function Page() {
                   Clear
                 </button>
               </div>
-              {preview.needsSuit && !preflopOnly && (
-                <div style={{marginTop:8, padding:'8px 10px', borderRadius:8, background:'#fff7ed', border:'1px solid #fed7aa', color:'#7c2d12', fontSize:13}}>
-                  Postflop suits matter here. Please specify exact suits (e.g., <b>As 4h</b>) and press <b>Send</b>.
+
+              {/* Inline validation hints */}
+              {!heroOk && <div className="p-err" style={{marginTop:8}}>Add Hero cards in the Hero box (e.g., <b>A4s</b> / <b>A4o</b> or exact: <b>As 4s</b>).</div>}
+              {heroParsed.error && heroOk && <div className="p-note" style={{marginTop:8}}>{heroParsed.error}</div>}
+              {needsBoard && !boardOk && (
+                <div className="p-err" style={{marginTop:8}}>
+                  Post-flop detected. Enter the board with suits in the Board box (e.g., <b>Kc 7s 2s | 5h | 9h</b>).
                 </div>
               )}
-              {aiError && <div className="p-err">{aiError}</div>}
-              {status && <div className="p-note">{status}</div>}
+              {aiError && <div className="p-err" style={{marginTop:8}}>{aiError}</div>}
+              {status && <div className="p-note" style={{marginTop:8}}>{status}</div>}
             </div>
 
             <div className="p-card">
-              <div className="p-cardTitle">Quick Card Assist (optional)</div>
+              <div className="p-cardTitle">Quick Card Assist (source of truth)</div>
               <div className="p-assist3">
-                <input className="p-input" value={heroAssist} onChange={(e)=>setHeroAssist(e.target.value)} placeholder="Hero: A4s / A4o / As 4h" />
+                <input className="p-input" value={heroAssist} onChange={(e)=>setHeroAssist(e.target.value)} placeholder="Hero: A4s / A4o (or exact: As 4s)" />
                 <input className="p-input" value={villainAssist} onChange={(e)=>setVillainAssist(e.target.value)} placeholder="Villain (optional): Kc Kd" />
-                <input className="p-input" value={boardAssist} onChange={(e)=>setBoardAssist(e.target.value)} placeholder="Board: Ks 7d 2c 9c 4h" />
+                <input className="p-input" value={boardAssist} onChange={(e)=>setBoardAssist(e.target.value)} placeholder="Board: Kc 7s 2s | 5h | 9h" />
               </div>
               <div className="p-help">
-                Preflop-only: suits aren’t required. If there’s a board, give exact suits for postflop accuracy.
+                Preflop-only: suits aren’t required. If there’s a board, enter exact suits for postflop accuracy.
               </div>
             </div>
 
-            {/* --- Interactive Opening Range Grid (RFI-only editable) --- */}
+            {/* Range grid (RFI only editable) */}
             <div className="p-card">
               <div className="p-subTitle">
                 Hero Open Range — {pos} <span className="p-muted">({openPct}% of 169)</span>
@@ -583,32 +597,21 @@ export default function Page() {
             </div>
           </div>
 
-          {/* RIGHT COLUMN */}
+          {/* RIGHT */}
           <div className="p-col">
             <div className="p-card">
-              <div className="p-topRow">
-                <TagChips />
-              </div>
-
               <div className="p-grid2">
                 <InfoBox label="Cards">
                   <div className="p-cards">
-                    {heroCards
-                      ? heroCards.split(' ').map((c, i) => <span key={i} className="p-cardSpan"><CardSpan c={c} /></span>)
-                      : <span className="p-muted">(not found)</span>
+                    {heroHand
+                      ? heroHand.label.split(' ').map((c, i) => <span key={i} className="p-cardSpan"><CardSpan c={c} /></span>)
+                      : <span className="p-muted">(not set)</span>
                     }
                   </div>
                 </InfoBox>
-
                 <InfoBox label="Date"><div>{today}</div></InfoBox>
-
-                <InfoBox label="Position">
-                  <div>{(fields?.position ?? preview.position) || <span className="p-muted">(unknown)</span>}</div>
-                </InfoBox>
-
-                <InfoBox label="Stakes">
-                  <div>{(fields?.stakes ?? preview.stakes) || <span className="p-muted">(unknown)</span>}</div>
-                </InfoBox>
+                <InfoBox label="Position"><div>{(fields?.position ?? preview.position) || <span className="p-muted">(unknown)</span>}</div></InfoBox>
+                <InfoBox label="Stakes"><div>{(fields?.stakes ?? preview.stakes) || <span className="p-muted">(unknown)</span>}</div></InfoBox>
               </div>
             </div>
 
@@ -647,18 +650,10 @@ export default function Page() {
               </ul>
 
               <div className="p-row p-end p-gapTop">
-                <button
-                  className="p-btn"
-                  disabled={!fields || aiLoading}
-                  onClick={() => fields && analyzeParsedHand(fields)}
-                >
+                <button className="p-btn" disabled={!fields || aiLoading} onClick={() => fields && analyzeParsedHand(fields)}>
                   {aiLoading ? 'Analyzing…' : 'Analyze Again'}
                 </button>
-                <button
-                  className="p-btn p-primary"
-                  disabled={!fields || saving}
-                  onClick={handleSave}
-                >
+                <button className="p-btn p-primary" disabled={!fields || saving} onClick={handleSave}>
                   {saving ? 'Saving…' : 'Confirm & Save to Notion'}
                 </button>
               </div>
@@ -667,6 +662,7 @@ export default function Page() {
         </section>
       </div>
 
+      {/* Styles */}
       <style jsx global>{`
         :root{
           --bg1:#e5e7eb; --bg2:#f1f5f9; --bg3:#cbd5e1;
@@ -674,14 +670,8 @@ export default function Page() {
           --border:#d1d5db; --line:#d8dde6;
           --text:#0f172a; --muted:#6b7280;
           --primary:#3b82f6; --primary2:#2563eb; --btnText:#f8fbff;
-          --chipBg:#eef2ff; --chipBorder:#c7d2fe; --chipText:#1e3a8a;
           --pillBg:#ffffff; --pillBorder:#e5e7eb;
-
-          --range-open:#ee8d73;
-          --range-fold:#3b3f46;
-          --range-suited:#f6efe9;
-          --range-offsuit:#eef0f3;
-          --range-pair:#faf6f0;
+          --range-open:#ee8d73; --range-fold:#3b3f46; --range-suited:#f6efe9; --range-offsuit:#eef0f3; --range-pair:#faf6f0;
         }
         *{box-sizing:border-box}
         html,body{margin:0;padding:0;background:linear-gradient(135deg,var(--bg2),var(--bg1),var(--bg3));color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
@@ -691,102 +681,45 @@ export default function Page() {
         .p-title{margin:0;font-size:28px;font-weight:800;letter-spacing:.2px;text-align:center}
         .p-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
         @media (max-width:980px){.p-grid{grid-template-columns:1fr}}
-
         .p-col{display:flex;flex-direction:column;gap:24px}
-
-        .p-card{
-          background:linear-gradient(180deg,var(--card1),var(--card2) 60%,var(--card3));
-          border:1px solid var(--border);
-          border-radius:18px; padding:16px;
-          box-shadow:0 10px 28px rgba(0,0,0,.08);
-        }
-        .p-cardTitle{font-size:13px;font-weight:700;letter-spacing:.15px;color:#334155;margin-bottom:10px}
+        .p-card{background:linear-gradient(180deg,var(--card1),var(--card2) 60%,var(--card3));border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 10px 28px rgba(0,0,0,.08)}
+        .p-cardTitle{font-size:13px;font-weight:700;color:#334155;margin-bottom:10px}
         .p-subTitle{font-size:14px;font-weight:800;margin-bottom:10px;color:#111827}
-        .p-textarea{
-          width:100%; min-height:160px; resize:vertical; padding:12px 14px;
-          border-radius:14px; border:1px solid var(--line); background:#ffffff; color:#0f172a; font-size:15px; line-height:1.5;
-        }
-
+        .p-textarea{width:100%;min-height:160px;resize:vertical;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:#fff;color:#0f172a;font-size:15px;line-height:1.5}
         .p-row{display:flex;align-items:center}
         .p-gap{gap:12px}
         .p-gapTop{margin-top:10px}
         .p-end{justify-content:flex-end}
-
-        .p-btn{
-          appearance:none; border:1px solid var(--line); background:#ffffff; color:#0f172a;
-          padding:10px 14px; border-radius:12px; cursor:pointer; transition:transform .02s ease, background .15s ease, border-color .15s ease;
-        }
+        .p-btn{appearance:none;border:1px solid var(--line);background:#fff;color:#0f172a;padding:10px 14px;border-radius:12px;cursor:pointer;transition:transform .02s ease, background .15s ease, border-color .15s ease;}
         .p-btn:hover{background:#f3f4f6}
         .p-btn:active{transform:translateY(1px)}
         .p-btn[disabled]{opacity:.55;cursor:not-allowed}
-        .p-btn.p-primary{
-          background:linear-gradient(180deg,var(--primary),var(--primary2));
-          color:var(--btnText); border-color:#9db7ff;
-          box-shadow:0 6px 18px rgba(59,130,246,.25);
-        }
-        .p-btn.p-primary:hover{filter:brightness(1.05)}
-
+        .p-btn.p-primary{background:linear-gradient(180deg,var(--primary),var(--primary2));color:var(--btnText);border-color:#9db7ff;box-shadow:0 6px 18px rgba(59,130,246,.25)}
         .p-assist3{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px}
         @media (max-width:800px){.p-assist3{grid-template-columns:1fr}}
-        .p-input{
-          width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--line);
-          background:#ffffff; color:#0f172a; font-size:14.5px;
-        }
-        .p-input.p-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Courier New',monospace; line-height:1.45}
-
-        .p-help{margin-top:8px; font-size:12px; color:#6b7280}
-        .p-muted{color:#6b7280}
-
-        .p-topRow{display:flex; justify-content:space-between; align-items:center}
-        .chips{display:flex; flex-wrap:wrap; gap:8px}
-        .chip{
-          background:var(--chipBg); border:1px solid var(--chipBorder); color:var(--chipText);
-          padding:6px 10px; border-radius:999px; font-size:12.5px; letter-spacing:.2px;
-        }
-
-        .p-grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px}
-        .ibox{background:#ffffff; border:1px solid var(--pillBorder); border-radius:12px; padding:10px 12px}
-        .iboxLabel{font-size:11px; color:#6b7280; margin-bottom:3px}
+        .p-input{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#fff;color:#0f172a;font-size:14.5px}
+        .p-help{margin-top:8px;font-size:12px;color:#6b7280}
+        .p-note{margin-top:8px;color:#166534}
+        .p-err{margin-top:8px;color:#b91c1c}
+        .p-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+        .ibox{background:#fff;border:1px solid var(--pillBorder);border-radius:12px;padding:10px 12px}
+        .iboxLabel{font-size:11px;color:#6b7280;margin-bottom:3px}
         .iboxVal{font-size:14px}
-
-        .p-boardRow{display:flex; flex-wrap:wrap; gap:10px; font-size:16px}
-        .p-pill{
-          background:var(--pillBg); border:1px solid var(--pillBorder);
-          padding:8px 12px; border-radius:12px;
-        }
+        .p-boardRow{display:flex;flex-wrap:wrap;gap:10px;font-size:16px}
+        .p-pill{background:var(--pillBg);border:1px solid var(--pillBorder);padding:8px 12px;border-radius:12px}
         .p-cardSpan{margin-right:4px}
-
-        .p-list{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px}
-        .p-note{margin-top:10px; color:#166534}
-        .p-err{margin-top:10px; color:#b91c1c}
-
-        .rangeGrid{
-          display:grid;
-          grid-template-columns: 28px repeat(13, 1fr);
-          grid-auto-rows: 26px;
-          gap: 4px;
-          align-items:center;
-        }
-        .rangeHead{
-          font-size:12px; color:#64748b; text-align:center; line-height:26px;
-        }
+        .p-list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+        .rangeGrid{display:grid;grid-template-columns:28px repeat(13, 1fr);grid-auto-rows:26px;gap:4px;align-items:center}
+        .rangeHead{font-size:12px;color:#64748b;text-align:center;line-height:26px}
         .rangeCorner{width:28px;height:26px}
-        .cell{
-          border:1px solid #cbd5e1;
-          border-radius:6px;
-          font-size:11.5px;
-          display:flex; align-items:center; justify-content:center;
-          cursor:pointer; user-select:none;
-          transition:transform .02s ease, filter .15s ease, box-shadow .15s ease;
-          box-shadow: inset 0 0 0 1px rgba(0,0,0,.02);
-        }
-        .cell.suited{background:var(--range-suited)}
-        .cell.offsuit{background:var(--range-offsuit)}
-        .cell.pair{background:var(--range-pair)}
-        .cell.open{background:var(--range-open); color:#222; border-color:#e2a08e}
-        .cell.fold{background:#374151; color:#e5e7eb; border-color:#4b5563}
+        .cell{border:1px solid #cbd5e1;border-radius:6px;font-size:11.5px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;transition:transform .02s ease, filter .15s ease, box-shadow .15s ease;box-shadow: inset 0 0 0 1px rgba(0,0,0,.02)}
+        .cell.suited{background:#f6efe9}
+        .cell.offsuit{background:#eef0f3}
+        .cell.pair{background:#faf6f0}
+        .cell.open{background:#ee8d73;color:#222;border-color:#e2a08e}
+        .cell.fold{background:#374151;color:#e5e7eb;border-color:#4b5563}
         .cell:hover{filter:brightness(1.07)}
-        .cell-locked{opacity:.6; cursor:not-allowed}
+        .cell-locked{opacity:.6;cursor:not-allowed}
         .grid-locked .cell:hover{filter:none}
       `}</style>
     </main>
