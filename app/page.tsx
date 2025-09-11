@@ -1,4 +1,3 @@
-// app/page.tsx
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -6,17 +5,19 @@ import React, { useMemo, useState, useEffect } from 'react';
 /** ---------------- Types ---------------- */
 type Fields = {
   date?: string | null;
-  stakes?: string | null;               // TEXT, not number
+  stakes?: string | null;
   position?: string | null;
   cards?: string | null;
-  villain_action?: string | null;       // tolerated in payload but not shown on the right card
-  villian_action?: string | null;       // (typo tolerated)
+  villain_action?: string | null;
+  villian_action?: string | null;
   gto_strategy?: string | null;
   exploit_deviation?: string | null;
   learning_tag?: string[];
   board?: string | null;
   notes?: string | null;
 };
+
+type HeroParse = { cards: string; needsSuit: boolean };
 
 /** ------------- Helpers ------------- */
 const asText = (v: any): string =>
@@ -47,123 +48,45 @@ const suitify = (card: string) => {
   const suit = SUIT_MAP[s] || ('♥♦♣♠'.includes(s) ? s : '');
   return suit ? `${r}${suit}` : '';
 };
+
 const suitifyLine = (line: string) =>
   (line || '').replace(/[\/,|]/g, ' ')
     .split(/\s+/).filter(Boolean)
     .map(suitify).filter(Boolean).join(' ');
 
-/** Stakes like "2/5" or tournament levels "4k/8k/8k" */
 const parseStakes = (t: string) => {
-  const m = t.replace(/,/g, '').match(/(\$?\d+(?:\.\d+)?[kKmM]?)\s*\/\s*(\$?\d+(?:\.\d+)?[kKmM]?)(?:\s*\/\s*(\$?\d+(?:\.\d+)?[kKmM]?))?/);
-  return m ? m[0] : '';
+  const m = t.match(/(\$?\d+(?:\.\d+)?)[\s]*[\/-][\s]*(\$?\d+(?:\.\d+)?)/);
+  return m ? `${m[1]}/${m[2]}` : '';
 };
 
-/** Position: prefer explicit hero references */
+// Prefer hero mentions; avoid villain position
 const parseHeroPosition = (t: string) => {
-  const up = t.toUpperCase();
+  const up = (t || '').toUpperCase();
+
   const m1 = up.match(/\b(I|I'M|IM|I AM|HERO)\b[^.]{0,40}?\b(ON|FROM|IN)\s+(UTG\+\d|UTG|MP|HJ|CO|BTN|SB|BB)\b/);
   if (m1) return m1[3];
+
   const m2 = up.match(/\b(AM|I'M|IM|I)\b[^.]{0,10}?\bON\s+(UTG\+\d|UTG|MP|HJ|CO|BTN|SB|BB)\b/);
   if (m2) return m2[2];
+
   const m3 = up.match(/\bON\s+(SB|BB|BTN|CO|HJ|MP|UTG(?:\+\d)?)\b/);
   if (m3) return m3[1];
+
   const PREF = ['SB','BB','BTN','CO','HJ','MP','UTG+2','UTG+1','UTG'];
   for (const p of PREF) if (up.includes(` ${p} `)) return p;
   return '';
 };
 
-/** ---------- HERO HAND PARSER (fixed) ---------- */
-/** Normalize a small chunk like "As 4s" / "A4s" / "A4♠" / "A4 of spades" */
-function normalizeTwoCardChunk(chunk: string): string {
-  const s = (chunk || '').trim().toLowerCase();
-
-  // explicit tokens: "as 4s" or "ah qs"
-  let m = s.match(/([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])/i);
-  if (m) return [suitify(m[1]), suitify(m[2])].join(' ');
-
-  // compact: "a4s" / "a4o"
-  m = s.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*([so])\b/i);
-  if (m) {
-    const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
-    return m[3].toLowerCase() === 's' ? `${r1}♠ ${r2}♠` : `${r1}♠ ${r2}♥`;
-  }
-
-  // suited with a single suit symbol: "a4♠"
-  m = s.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*([♥♦♣♠])\b/i);
-  if (m) {
-    const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
-    const sym = m[3];
-    return `${r1}${sym} ${r2}${sym}`;
-  }
-
-  // "A4 of spades"
-  m = s.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*of\s*(spades?|hearts?|diamonds?|clubs?)\b/i);
-  if (m) {
-    const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
-    const sym = SUIT_WORD[(m[3] || '').toLowerCase()];
-    return sym ? `${r1}${sym} ${r2}${sym}` : '';
-  }
-
-  return '';
-}
-
-/** First two card tokens that are NOT immediately after a board label */
-function firstNonBoardTwoCardTokens(t: string): string {
-  const re = /([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(t)) !== null) {
-    const idx = m.index;
-    const ctx = t.slice(Math.max(0, idx - 14), idx).toLowerCase();
-    if (/(flop|turn|river|board)\s*:?[\s]*$/i.test(ctx)) continue; // skip board lines
-    return [suitify(m[1]), suitify(m[2])].join(' ');
-  }
-  return '';
-}
-
-/** Prefer HERO context; only then fallback to generic (board-safe) parse */
-const parseHeroCardsSmart = (t: string) => {
-  const s = (t || '').toLowerCase();
-
-  // "hero/i/me ... with/holding/has/have <cards>"
-  let m = s.match(/\b(hero|i|i'm|im|i am|me)\b[^.\n]{0,60}?\b(with|holding|has|have)\b([^.\n]+)/i);
-  if (m) {
-    const cand = normalizeTwoCardChunk(m[3]);
-    if (cand) return cand;
-  }
-
-  // "hero/i/me ... (defends|opens|calls|shoves|jams) <cards>"
-  m = s.match(/\b(hero|i|i'm|im|i am|me)\b[^.\n]{0,40}?\b(defends|opens|calls|shoves|jams)\b([^.\n]+)/i);
-  if (m) {
-    const cand = normalizeTwoCardChunk(m[3]);
-    if (cand) return cand;
-  }
-
-  // seat + action context: "BB defends A4s", "Hero BB A4♠ calls"
-  m = s.match(/\b(bb|sb|btn|co|hj|mp|utg(?:\+\d)?)\b[^.\n]{0,18}?\b(defends|opens|calls|shoves|jams|with|has|holding)\b([^.\n]+)/i);
-  if (m) {
-    const cand = normalizeTwoCardChunk(m[3]);
-    if (cand) return cand;
-  }
-
-  // any compact/symbol chunk
-  m = s.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*([so]|[♥♦♣♠])\b/i);
-  if (m) {
-    const cand = normalizeTwoCardChunk(m[0]);
-    if (cand) return cand;
-  }
-
-  // final fallback: first two tokens not after Flop/Turn/River/Board
-  const nonBoard = firstNonBoardTwoCardTokens(t);
-  if (nonBoard) return nonBoard;
-
-  return '';
-};
-
-/** Board parsing */
+// -------- Board parsing --------
 const parseBoardFromText = (line: string) => {
   const arr = suitifyLine(line).split(' ').filter(Boolean);
-  return { flop: arr.slice(0, 3).join(' ') || '', turn: arr[3] || '', river: arr[4] || '' };
+  return {
+    flop: arr.slice(0, 3).join(' ') || '',
+    turn: arr[3] || '',
+    river: arr[4] || '',
+  };
 };
+
 const parseBoard = (t: string) => {
   const get3 = (c: string) => suitifyLine(c).split(' ').slice(0, 3).join(' ');
   const fm = t.match(/flop[^\n:]*[:\-]*\s*([^\n]+)/i);
@@ -182,18 +105,128 @@ const parseBoard = (t: string) => {
   }
   return { flop, turn, river };
 };
-const twoCardsFrom = (line: string) => suitifyLine(line).split(' ').slice(0, 2).join(' ');
+
+const twoCardsFrom = (line: string) =>
+  suitifyLine(line).split(' ').slice(0, 2).join(' ');
+
 const CardSpan = ({ c }: { c: string }) =>
   !c ? null : <span style={{ fontWeight: 600, color: suitColor(c.slice(-1)) }}>{c}</span>;
 
-/** ---------- Range Grid helpers ---------- */
+/** ---- New: identify preflop-only text ---- */
+const isPreflopOnly = (t: string) => !/\b(flop|turn|river|board)\b/i.test(t || '');
+
+/** ---- Robust hero-card parsing (preflop-aware) ---- */
+function firstNonBoardTwoCardTokens(t: string): string {
+  const re = /([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(t)) !== null) {
+    const idx = m.index;
+    const ctx = t.slice(Math.max(0, idx - 14), idx).toLowerCase();
+    if (/(flop|turn|river|board)\s*:?[\s]*$/i.test(ctx)) continue;
+    return [suitify(m[1]), suitify(m[2])].join(' ');
+  }
+  return '';
+}
+
+function normalizeTwoCardChunkWithAmbiguity(chunk: string, preOnly: boolean): HeroParse {
+  const raw = (chunk || '').trim();
+  const s = raw.toLowerCase();
+
+  // explicit "as 4s" / "a♠ 4♠"
+  let m = s.match(/([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])/i);
+  if (m) return { cards: [suitify(m[1]), suitify(m[2])].join(' '), needsSuit: false };
+
+  // "a4s" / "a4h/d/c" / "a4o"
+  m = s.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*([shdco])\b/i);
+  if (m) {
+    const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
+    const t = m[3].toLowerCase();
+    if (t === 'o') {
+      return preOnly
+        ? { cards: `${r1}♠ ${r2}♥`, needsSuit: false }
+        : { cards: `${r1}? ${r2}?`, needsSuit: true };
+    }
+    const suitChar = SUIT_MAP[t];
+    return { cards: `${r1}${suitChar} ${r2}${suitChar}`, needsSuit: false };
+  }
+
+  // "A4♠" -> suited that symbol
+  m = raw.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*([♥♦♣♠])\b/i);
+  if (m) {
+    const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
+    const sym = m[3];
+    return { cards: `${r1}${sym} ${r2}${sym}`, needsSuit: false };
+  }
+
+  // "A4 suited" / "A4 offsuit"
+  m = s.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*(suited|offsuit)\b/i);
+  if (m) {
+    const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
+    const word = m[3].toLowerCase();
+    if (word === 'suited') return { cards: `${r1}♠ ${r2}♠`, needsSuit: false };
+    return preOnly
+      ? { cards: `${r1}♠ ${r2}♥`, needsSuit: false }
+      : { cards: `${r1}? ${r2}?`, needsSuit: true };
+  }
+
+  // "... with/holding/has/have <cards>"
+  m = s.match(/\b(?:with|holding|has|have|having)\b([^.\n]+)/i);
+  if (m) {
+    const cand = normalizeTwoCardChunkWithAmbiguity(m[1], preOnly);
+    if (cand.cards) return cand;
+  }
+
+  return { cards: '', needsSuit: false };
+}
+
+const parseHeroCardsSmartWithFlag = (t: string, preOnly: boolean): HeroParse => {
+  const s = (t || '').toLowerCase();
+
+  // "hero/I/me ... with/holding/has ..."
+  let m = s.match(/\b(hero|i|i'm|im|i am|me)\b[^.\n]{0,60}?\b(with|holding|has|have)\b([^.\n]+)/i);
+  if (m) {
+    const cand = normalizeTwoCardChunkWithAmbiguity(m[3], preOnly);
+    if (cand.cards) return cand;
+  }
+
+  // "... defends/opens/calls/shoves/jams <cards>"
+  m = s.match(/\b(hero|i|i'm|im|i am|me)\b[^.\n]{0,40}?\b(defends|opens|calls|shoves|jams)\b([^.\n]+)/i);
+  if (m) {
+    const cand = normalizeTwoCardChunkWithAmbiguity(m[3], preOnly);
+    if (cand.cards) return cand;
+  }
+
+  // seat + action
+  m = s.match(/\b(bb|sb|btn|co|hj|mp|utg(?:\+\d)?)\b[^.\n]{0,18}?\b(defends|opens|calls|shoves|jams|with|has|holding)\b([^.\n]+)/i);
+  if (m) {
+    const cand = normalizeTwoCardChunkWithAmbiguity(m[3], preOnly);
+    if (cand.cards) return cand;
+  }
+
+  // chunk anywhere (but not a board)
+  const nonBoard = firstNonBoardTwoCardTokens(t);
+  if (nonBoard) return { cards: nonBoard, needsSuit: false };
+
+  // last resort: compact or symbol chunk
+  m = s.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*([shdco]|[♥♦♣♠])\b/i);
+  if (m) {
+    const cand = normalizeTwoCardChunkWithAmbiguity(m[0], preOnly);
+    if (cand.cards) return cand;
+  }
+
+  return { cards: '', needsSuit: false };
+};
+
+/** ---------- Opening Range Grid helpers ---------- */
 const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'] as const;
 const rIndex: Record<string, number> = Object.fromEntries(RANKS.map((r, i) => [r, i]));
+
 function handLabel(i: number, j: number): string {
   const a = RANKS[i], b = RANKS[j];
   if (i === j) return `${a}${a}`;
   return i < j ? `${a}${b}s` : `${a}${b}o`;
 }
+
 const atLeast = (rank: string, min: string) => rIndex[rank] <= rIndex[min];
 const oneOf = (x: string, arr: string[]) => arr.includes(x);
 
@@ -205,31 +238,33 @@ function defaultOpen(pos: string, label: string): boolean {
   const suited = t === 's';
   const offsuit = t === 'o';
 
-  const pairMin: Record<string, string> = { UTG:'6', MP:'4', HJ:'2', CO:'2', BTN:'2', SB:'2', BB:'2' };
+  const pairMin: Record<string, string> = {
+    UTG: '6', MP: '4', HJ: '2', CO: '2', BTN: '2', SB: '2', BB: '2'
+  };
   if (pair) return atLeast(a, pairMin[pos] || '2');
 
   if (a === 'A') {
     if (suited) return true;
-    const minOff: Record<string, string> = { UTG:'T', MP:'T', HJ:'9', CO:'8', BTN:'2', SB:'5', BB:'T' };
+    const minOff: Record<string, string> = { UTG: 'T', MP: 'T', HJ: '9', CO: '8', BTN: '2', SB: '5', BB: 'T' };
     return atLeast(b, minOff[pos] || 'T');
   }
 
   if (suited && oneOf(a, ['K','Q','J','T'])) {
     const min: Record<string, Record<string,string>> = {
-      K:{UTG:'9',MP:'9',HJ:'8',CO:'6',BTN:'2',SB:'7'},
-      Q:{UTG:'T',MP:'9',HJ:'9',CO:'8',BTN:'5',SB:'8'},
-      J:{UTG:'T',MP:'9',HJ:'9',CO:'8',BTN:'7',SB:'8'},
-      T:{UTG:'9',MP:'9',HJ:'8',CO:'8',BTN:'7',SB:'8'},
+      K: { UTG:'9', MP:'9', HJ:'8', CO:'6', BTN:'2', SB:'7' },
+      Q: { UTG:'T', MP:'9', HJ:'9', CO:'8', BTN:'5', SB:'8' },
+      J: { UTG:'T', MP:'9', HJ:'9', CO:'8', BTN:'7', SB:'8' },
+      T: { UTG:'9', MP:'9', HJ:'8', CO:'8', BTN:'7', SB:'8' },
     };
     return atLeast(b, (min as any)[a]?.[pos] ?? '9');
   }
 
   if (offsuit && oneOf(a, ['K','Q','J','T'])) {
     const min: Record<string, Record<string,string>> = {
-      K:{UTG:'Q',MP:'J',HJ:'T',CO:'T',BTN:'8',SB:'9'},
-      Q:{UTG:'T',MP:'T',HJ:'T',CO:'T',BTN:'8',SB:'9'},
-      J:{UTG:'X',MP:'X',HJ:'X',CO:'T',BTN:'9',SB:'9'},
-      T:{UTG:'X',MP:'X',HJ:'X',CO:'X',BTN:'9',SB:'9'},
+      K: { UTG:'Q', MP:'J', HJ:'T', CO:'T', BTN:'8', SB:'9' },
+      Q: { UTG:'T', MP:'T', HJ:'T', CO:'T', BTN:'8', SB:'9' },
+      J: { UTG:'X', MP:'X', HJ:'X', CO:'T', BTN:'9', SB:'9' },
+      T: { UTG:'X', MP:'X', HJ:'X', CO:'X', BTN:'9', SB:'9' },
     };
     const m = (min as any)[a]?.[pos];
     if (!m || m === 'X') return false;
@@ -237,16 +272,16 @@ function defaultOpen(pos: string, label: string): boolean {
   }
 
   if (suited) {
-    const SC = [['9','8'],['8','7'],['7','6'],['6','5'],['5','4']];
+    const SC = [['9','8'], ['8','7'], ['7','6'], ['6','5'], ['5','4']];
     const isSC = SC.some(([x,y]) => (a === x && b === y) || (a === y && b === x));
     if (isSC) {
-      const okPos = { UTG:false, MP:true, HJ:true, CO:true, BTN:true, SB:true, BB:false } as Record<string, boolean>;
-      return okPos[pos] ?? false;
+      const okPos = { UTG:false, MP:true, HJ:true, CO:true, BTN:true, SB:true, BB:false };
+      return (okPos as any)[pos] ?? false;
     }
   }
 
   if (suited && (pos === 'BTN' || pos === 'SB')) {
-    const LATE_MIN: Record<string,string> = { K:'2',Q:'5',J:'7',T:'7','9':'7','8':'6','7':'5' };
+    const LATE_MIN: Record<string,string> = { K:'2', Q:'5', J:'7', T:'7', '9':'7','8':'6','7':'5' };
     const m = (LATE_MIN as any)[a];
     if (m) return atLeast(b, m);
   }
@@ -254,7 +289,7 @@ function defaultOpen(pos: string, label: string): boolean {
   return false;
 }
 
-/** ----- Simple RFI detector ----- */
+/** Simple RFI detector */
 function detectRFI(raw: string): { isRFI: boolean; reasonIfLocked: string } {
   const s = (raw || '').toLowerCase();
   const has3bet = /\b3[-\s]?bet|\b3bet|\bre[-\s]?raise|\b4[-\s]?bet|\bjam|\bshove\b/i.test(s);
@@ -265,7 +300,10 @@ function detectRFI(raw: string): { isRFI: boolean; reasonIfLocked: string } {
       /\bam on\b[^.]{0,30}?\b(utg\+?\d?|utg|mp|hj|co|button|btn|sb|bb)\b[^.]{0,30}?\b(raise|raises|open|opens)\b/i
     ];
     let idx = Infinity;
-    for (const r of patterns) { const m = r.exec(s); if (m && m.index < idx) idx = m.index; }
+    for (const r of patterns) {
+      const m = r.exec(s);
+      if (m && m.index < idx) idx = m.index;
+    }
     return idx;
   })();
 
@@ -278,42 +316,42 @@ function detectRFI(raw: string): { isRFI: boolean; reasonIfLocked: string } {
   })();
 
   const unopened = heroRaiseIdx < villainRaiseIdx;
-  if (!unopened) return { isRFI:false, reasonIfLocked:'Not an RFI spot — someone else opened before Hero.' };
-  if (has3bet) return { isRFI:false, reasonIfLocked:'Not a pure RFI — preflop 3-bet/jam detected.' };
-  return { isRFI:true, reasonIfLocked:'' };
+  if (!unopened) return { isRFI: false, reasonIfLocked: 'Not an RFI spot — someone else opened before Hero.' };
+  if (has3bet) return { isRFI: false, reasonIfLocked: 'Not a pure RFI — preflop 3-bet/jam detected.' };
+  return { isRFI: true, reasonIfLocked: '' };
 }
 
 /** ---------------- Component ---------------- */
 export default function Page() {
-  // INPUT
   const [input, setInput] = useState('');
   const [fields, setFields] = useState<Fields | null>(null);
 
-  // Quick Card Assist (hero, villain, entire board)
   const [heroAssist, setHeroAssist] = useState('');
   const [villainAssist, setVillainAssist] = useState('');
   const [boardAssist, setBoardAssist] = useState('');
 
-  // Opening range edits (user toggles)
   const [rangeEdits, setRangeEdits] = useState<Record<string, boolean>>({});
   const [lastPosForEdits, setLastPosForEdits] = useState<string>('');
 
-  // Async state
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
-  // Lightweight parse for preview (client-side only)
+  const preflopOnly = useMemo(() => isPreflopOnly(input), [input]);
+
+  const heroParse = useMemo(() => parseHeroCardsSmartWithFlag(input, preflopOnly), [input, preflopOnly]);
+
   const preview = useMemo(() => ({
     stakes: parseStakes(input),
     position: parseHeroPosition(input),
-    heroCards: parseHeroCardsSmart(input), // ← fixed
+    heroCards: heroParse.cards,
+    needsSuit: heroParse.needsSuit,
     board: parseBoard(input),
-  }), [input]);
+  }), [input, heroParse]);
 
-  // Resolve preview values with assists
-  const heroCards = (twoCardsFrom(heroAssist) || fields?.cards || preview.heroCards || '').trim();
+  const heroCards =
+    (twoCardsFrom(heroAssist) || fields?.cards || preview.heroCards || '').trim();
 
   const boardFromAssist = parseBoardFromText(boardAssist);
   const flop = (boardAssist ? boardFromAssist.flop : preview.board.flop) || '';
@@ -323,18 +361,15 @@ export default function Page() {
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const pos = (fields?.position ?? preview.position ?? '').toUpperCase() || 'BTN';
 
-  // RFI lock logic
   const rfiInfo = useMemo(() => detectRFI(input), [input]);
   const gridLocked = !rfiInfo.isRFI;
 
-  // Rebase edits if position changes
   useEffect(() => {
     if (lastPosForEdits && lastPosForEdits === pos) return;
     setRangeEdits({});
     setLastPosForEdits(pos);
   }, [pos, lastPosForEdits]);
 
-  /** Call /api/analyze-hand; use input text; include overrides from assists */
   async function analyzeParsedHand(parsed: Fields) {
     setAiError(null);
     setAiLoading(true);
@@ -345,7 +380,9 @@ export default function Page() {
         position: parsed.position ?? (preview.position || undefined),
         cards: parsed.cards ?? (heroCards || undefined),
         villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
-        board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`].filter(Boolean).join('  |  '),
+        board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`]
+          .filter(Boolean)
+          .join('  |  '),
         notes: parsed.notes ?? input,
         rawText: input,
       };
@@ -385,7 +422,6 @@ export default function Page() {
     }
   }
 
-  /** Parse → then auto-run AI */
   async function handleParse() {
     setStatus(null);
     setAiError(null);
@@ -423,7 +459,6 @@ export default function Page() {
     }
   }
 
-  /** Learning-tag chips */
   function TagChips() {
     const chips = fields?.learning_tag?.filter(Boolean) ?? [];
     if (!chips.length) return null;
@@ -436,9 +471,8 @@ export default function Page() {
     );
   }
 
-  /** Range grid state helpers */
   const toggleHand = (label: string) => {
-    if (gridLocked) return; // read-only when not RFI
+    if (gridLocked) return;
     setRangeEdits(prev => ({ ...prev, [label]: !(prev[label] ?? defaultOpen(pos, label)) }));
   };
 
@@ -454,7 +488,6 @@ export default function Page() {
   const openCount = Object.values(openFlags).filter(Boolean).length;
   const openPct = Math.round((openCount / 169) * 100);
 
-  /** Render */
   return (
     <main className="p-page">
       <div className="p-container">
@@ -469,7 +502,7 @@ export default function Page() {
               <div className="p-cardTitle">Hand Played</div>
               <textarea
                 className="p-textarea"
-                placeholder="Type your hand like a story — stakes, position, cards, actions... (e.g., “BTN opens 2.2x, BB (me) calls with As 4s; Flop: Kc 7s 2s; …”)"
+                placeholder="Type your hand like a story — stakes, position, cards, actions...  (Preflop-only? You can write A4s / A4 suited or A4o — no suits needed.)"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
               />
@@ -484,6 +517,11 @@ export default function Page() {
                   Clear
                 </button>
               </div>
+              {preview.needsSuit && !preflopOnly && (
+                <div style={{marginTop:8, padding:'8px 10px', borderRadius:8, background:'#fff7ed', border:'1px solid #fed7aa', color:'#7c2d12', fontSize:13}}>
+                  Postflop suits matter here. Please specify exact suits (e.g., <b>As 4h</b>) and press <b>Send</b>.
+                </div>
+              )}
               {aiError && <div className="p-err">{aiError}</div>}
               {status && <div className="p-note">{status}</div>}
             </div>
@@ -491,11 +529,13 @@ export default function Page() {
             <div className="p-card">
               <div className="p-cardTitle">Quick Card Assist (optional)</div>
               <div className="p-assist3">
-                <input className="p-input" value={heroAssist} onChange={(e)=>setHeroAssist(e.target.value)} placeholder="Hero: As 4s (letters ok) or A♠ 4♠" />
+                <input className="p-input" value={heroAssist} onChange={(e)=>setHeroAssist(e.target.value)} placeholder="Hero: A4s / A4o / As 4h" />
                 <input className="p-input" value={villainAssist} onChange={(e)=>setVillainAssist(e.target.value)} placeholder="Villain (optional): Kc Kd" />
-                <input className="p-input" value={boardAssist} onChange={(e)=>setBoardAssist(e.target.value)} placeholder="Board: Kc 7s 2s 9c 4h" />
+                <input className="p-input" value={boardAssist} onChange={(e)=>setBoardAssist(e.target.value)} placeholder="Board: Ks 7d 2c 9c 4h" />
               </div>
-              <div className="p-help">If parsing guesses wrong, correct the board here — the preview updates instantly.</div>
+              <div className="p-help">
+                Preflop-only: suits aren’t required. If there’s a board, give exact suits for postflop accuracy.
+              </div>
             </div>
 
             {/* --- Interactive Opening Range Grid (RFI-only editable) --- */}
@@ -627,7 +667,6 @@ export default function Page() {
         </section>
       </div>
 
-      {/* ------------- Styles (no Tailwind required) ------------- */}
       <style jsx global>{`
         :root{
           --bg1:#e5e7eb; --bg2:#f1f5f9; --bg3:#cbd5e1;
@@ -645,7 +684,7 @@ export default function Page() {
           --range-pair:#faf6f0;
         }
         *{box-sizing:border-box}
-        html,body{margin:0;padding:0;background:linear-gradient(135deg,var(--bg2),var(--bg1),var(--bg3));color:#0f172a;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+        html,body{margin:0;padding:0;background:linear-gradient(135deg,var(--bg2),var(--bg1),var(--bg3));color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
         .p-page{min-height:100vh;padding:24px}
         .p-container{max-width:1200px;margin:0 auto}
         .p-header{display:flex;align-items:center;justify-content:center;margin-bottom:16px}
@@ -711,14 +750,16 @@ export default function Page() {
         .iboxVal{font-size:14px}
 
         .p-boardRow{display:flex; flex-wrap:wrap; gap:10px; font-size:16px}
-        .p-pill{background:#ffffff; border:1px solid var(--pillBorder); padding:8px 12px; border-radius:12px}
+        .p-pill{
+          background:var(--pillBg); border:1px solid var(--pillBorder);
+          padding:8px 12px; border-radius:12px;
+        }
         .p-cardSpan{margin-right:4px}
 
         .p-list{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px}
         .p-note{margin-top:10px; color:#166534}
         .p-err{margin-top:10px; color:#b91c1c}
 
-        /* ------- Range grid styles ------- */
         .rangeGrid{
           display:grid;
           grid-template-columns: 28px repeat(13, 1fr);
@@ -726,7 +767,9 @@ export default function Page() {
           gap: 4px;
           align-items:center;
         }
-        .rangeHead{font-size:12px; color:#64748b; text-align:center; line-height:26px}
+        .rangeHead{
+          font-size:12px; color:#64748b; text-align:center; line-height:26px;
+        }
         .rangeCorner{width:28px;height:26px}
         .cell{
           border:1px solid #cbd5e1;
@@ -750,7 +793,6 @@ export default function Page() {
   );
 }
 
-/** Small info box used on the right-side top card */
 function InfoBox({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="ibox">
