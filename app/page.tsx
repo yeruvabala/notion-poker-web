@@ -78,15 +78,37 @@ const parseHeroPosition = (t: string) => {
   return '';
 };
 
-// Find hero cards near "with/holding/I have", handle Ah Qs, A4s, "a4 of spades"
+/** ---------- Cards parsing (improved) ---------- */
+// Handles: "As 4s", "A4s/A4o", "A4♠", "with Ah Qs", "A4 of spades", etc.
 const parseHeroCardsSmart = (t: string) => {
-  const s = t.toLowerCase();
+  const s = (t || '').toLowerCase();
 
-  // "with Ah Qs"
-  let m = s.match(/\b(?:with|holding|have|having|i\s+have)\s+([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])\b/i);
+  // 1) Two explicit tokens like "as 4s" or "a♥ q♠"
+  let m = s.match(/([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])/i);
   if (m) return [suitify(m[1]), suitify(m[2])].join(' ');
 
-  // "with A4s / A4o" or "with A4 of spades"
+  // 2) Compact "A4s" / "A4o" anywhere
+  m = s.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*(s|o)\b/i);
+  if (m) {
+    const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
+    const suited = m[3].toLowerCase() === 's';
+    if (suited) return `${r1}♠ ${r2}♠`;      // default suit for display
+    return `${r1}♠ ${r2}♥`;                  // offsuit → distinct suits
+  }
+
+  // 3) Odd "A4♠" → assume both of that suit (suited shorthand)
+  m = s.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*([♥♦♣♠])\b/i);
+  if (m) {
+    const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
+    const suitChar = m[3];
+    return `${r1}${suitChar} ${r2}${suitChar}`;
+  }
+
+  // 4) "with Ah Qs"
+  m = s.match(/\b(?:with|holding|have|having|i\s+have)\s+([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])\b/i);
+  if (m) return [suitify(m[1]), suitify(m[2])].join(' ');
+
+  // 5) "with A4s / A4o" or "with A4 of spades"
   m = s.match(/\b(?:with|holding|have|having|i\s+have)\s*([2-9tjqka])\s*([2-9tjqka])\s*(s|o|suited|offsuit)?(?:\s*of\s*(spades?|hearts?|diamonds?|clubs?))?/i);
   if (m) {
     const r1 = m[1].toUpperCase(), r2 = m[2].toUpperCase();
@@ -94,23 +116,22 @@ const parseHeroCardsSmart = (t: string) => {
     const suitChar = suitWord ? SUIT_WORD[suitWord] : '♠';
     const suited = m[3] === 's' || m[3] === 'suited' || !!suitWord;
     if (suited) return `${r1}${suitChar} ${r2}${suitChar}`;
-    // offsuit: show distinct suits for clarity
     return `${r1}♠ ${r2}♥`;
   }
 
-  // "a4 of spades"
+  // 6) "a4 of spades"
   m = s.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*of\s*(spades?|hearts?|diamonds?|clubs?)\b/i);
   if (m) {
     const suitChar = SUIT_WORD[(m[3] || '').toLowerCase()];
     return `${m[1].toUpperCase()}${suitChar} ${m[2].toUpperCase()}${suitChar}`;
   }
 
-  // fallback: require "with" nearby to avoid reading the board
-  m = s.match(/\bwith\b[^.]{0,40}?([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])\b/i);
-  if (m) return [suitify(m[1]), suitify(m[2])].join(' ');
-
   return '';
 };
+
+// prefer the most informative card string (suits > two-token > "A4s")
+const specificityScore = (x: string) =>
+  !x ? 0 : /[♠♥♦♣]/.test(x) ? 3 : (x.includes(' ') ? 2 : /\b[2-9TJQKA][so]\b/i.test(x) ? 1 : 1);
 
 // Parse "Ks 7d 2c 9c 4h" → {flop,turn,river}
 const parseBoardFromText = (line: string) => {
@@ -292,9 +313,19 @@ export default function Page() {
     board: parseBoard(input),
   }), [input]);
 
-  // Resolve preview values with assists
-  const heroCards = (twoCardsFrom(heroAssist) || fields?.cards || preview.heroCards || '').trim();
+  // --------- Choose the most informative hero cards ----------
+  const heroAssistParsed = parseHeroCardsSmart(heroAssist);
+  const parsedCards = fields?.cards || '';
+  const previewCards = preview.heroCards;
 
+  let bestCards = parsedCards;
+  if (specificityScore(previewCards) > specificityScore(bestCards)) bestCards = previewCards;
+  if (specificityScore(heroAssistParsed) > specificityScore(bestCards)) bestCards = heroAssistParsed;
+
+  // Final cards used in UI + API
+  const heroCards = (bestCards || '').trim();
+
+  // --------- Board from assist (overrides preview if provided) ----------
   const boardFromAssist = parseBoardFromText(boardAssist);
   const flop = (boardAssist ? boardFromAssist.flop : preview.board.flop) || '';
   const turn = (boardAssist ? boardFromAssist.turn : preview.board.turn) || '';
@@ -323,12 +354,12 @@ export default function Page() {
         date: parsed.date ?? undefined,
         stakes: parsed.stakes ?? (preview.stakes || undefined),
         position: parsed.position ?? (preview.position || undefined),
-        cards: parsed.cards ?? (heroCards || undefined), // hero override
+        cards: heroCards || parsed.cards || undefined, // <-- always send best suited version
         villainAction: parsed.villain_action ?? parsed.villian_action ?? undefined,
         board: [flop && `Flop: ${flop}`, turn && `Turn: ${turn}`, river && `River: ${river}`]
           .filter(Boolean)
           .join('  |  '),
-        // Send full raw text so analyzer judges the whole line
+        // Send full raw text so analyzer judges the whole line (ICM, stacks, sizes…)
         notes: parsed.notes ?? input,
         rawText: input,
       };
@@ -359,6 +390,7 @@ export default function Page() {
           gto_strategy: asText(data.gto_strategy),
           exploit_deviation: asText(data.exploit_deviation),
           learning_tag: tags,
+          cards: heroCards || base.cards || null, // persist best cards locally too
         };
       });
     } catch (e: any) {
@@ -452,7 +484,7 @@ export default function Page() {
               <div className="p-cardTitle">Hand Played</div>
               <textarea
                 className="p-textarea"
-                placeholder="Type your hand like a story — stakes, position, cards, actions..."
+                placeholder="Type your hand like a story — stakes, positions, effective stacks (bb), hero cards (letters OK: As Kd), actions/street by street, and key questions."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
               />
@@ -474,7 +506,7 @@ export default function Page() {
             <div className="p-card">
               <div className="p-cardTitle">Quick Card Assist (optional)</div>
               <div className="p-assist3">
-                <input className="p-input" value={heroAssist} onChange={(e)=>setHeroAssist(e.target.value)} placeholder="Hero: Ah Qs" />
+                <input className="p-input" value={heroAssist} onChange={(e)=>setHeroAssist(e.target.value)} placeholder="Hero: As 4s (letters OK)" />
                 <input className="p-input" value={villainAssist} onChange={(e)=>setVillainAssist(e.target.value)} placeholder="Villain (optional): Kc Kd" />
                 <input className="p-input" value={boardAssist} onChange={(e)=>setBoardAssist(e.target.value)} placeholder="Board: Ks 7d 2c 9c 4h" />
               </div>
@@ -630,7 +662,7 @@ export default function Page() {
           --range-pair:#faf6f0;
         }
         *{box-sizing:border-box}
-        html,body{margin:0;padding:0;background:linear-gradient(135deg,var(--bg2),var(--bg1),var(--bg3));color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+        html,body{margin:0;padding:0;background:linear-gradient(135deg,var(--bg2),var(--bg1),var(--bg3));color:#0f172a;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
         .p-page{min-height:100vh;padding:24px}
         .p-container{max-width:1200px;margin:0 auto}
         .p-header{display:flex;align-items:center;justify-content:center;margin-bottom:16px}
