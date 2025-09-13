@@ -2,126 +2,126 @@
 import { NextResponse } from "next/server";
 import { openai } from "@/lib/openai";
 
-/** Detects tournament terms so we can keep this endpoint cash-only. */
+/** Simple tournament detector (cash-only beta) */
 function looksLikeTournament(s: string): { isMTT: boolean; hits: string[] } {
   const text = (s || "").toLowerCase();
   const terms = [
-    "tournament","mtt","icm","players left","left","itm","in the money",
-    "final table","bubble","level ","day 1","day 2","pay jump","payout",
-    "bba","bb ante","ante"
+    "tournament","mtt","icm","players left","left","itm","in the money","final table","bubble",
+    "level ","l1","l2","l10","bba","bb ante","ante","day 1","day 2","min-cash","pay jump","payout"
   ];
   const hits = terms.filter(t => text.includes(t));
+  // also catch “$xxx MTT” or level formats with ante hints
   const levelLike = /\b\d+(?:[kKmM]?)[/]\d+(?:[kKmM]?)(?:[/]\d+(?:[kKmM]?))?\b/.test(text) && /ante|bba/.test(text);
   if (levelLike && !hits.includes("level-like")) hits.push("level-like");
   return { isMTT: hits.length > 0, hits };
 }
 
-const STRUCTURE_SPEC = `
-Return ONLY strict JSON with EXACT keys:
+const SYSTEM = `You are a CASH-GAME poker coach. CASH ONLY.
 
+Return ONLY JSON with EXACT keys:
 {
-  "gto_strategy": "string with the following headings in THIS order: 
-SITUATION
-PREFLOP
-FLOP
-TURN
-RIVER
-WHY",
-  "exploit_deviation": "2–4 concise sentences about pool tendencies & how to deviate.",
-  "learning_tag": ["1–3 short tags"]
+  "gto_strategy": "string",
+  "exploit_deviation": "string",
+  "learning_tag": ["string", "string?"]
 }
 
-Write the gto_strategy as plain text (no markdown) and include ALL headings.
-Under each heading, use short paragraphs and bullet-like lines. Keep sizes in bb or % pot.
+Global rules:
+- Analyze CASH games only. Ignore any tournament/ICM/bubble/players-left concepts.
+- If stacks unknown, assume ~100bb effective.
+- Do NOT endorse what the user did; recommend the EV-max line as if advising beforehand.
+- Be concrete: actions + sizes (bb or % pot). Keep it crisp, prescriptive, and free of markdown.
 
-Mandatory content per heading:
+Strict output shape for gto_strategy (plain text, these headers MUST appear and in this order):
+SITUATION:
+PREFLOP:
+FLOP:
+TURN:
+RIVER:
+WHY:
 
-SITUATION
-- Positions and node, effective stack (bb), pot per street if known, SPR at the current street.
-- One line on range/nuts advantage.
+Each section should be 1–6 short lines, not paragraphs. Include exact sizes in bb or % pot.
 
-PREFLOP
-- Open/defend recommendation and size (or 'given' if already postflop).
+SITUATION:
+- Identify pot type (SRP / 3-bet), positions (IP/OOP), effective stack, approximate pot size if apparent, and SPR if possible.
+- If numbers are unclear, state approximations (e.g., "SPR ~7").
 
-FLOP
-- Range/Nuts Advantage (1–2 lines).
-- Value Bets (hand buckets).
-- Bluffs / Semi-Bluffs (hand buckets).
-- Size & Frequency (1–2 sizes + rough mixes).
-- Check-Backs (which hands and why).
+PREFLOP:
+- State open/defend/3-bet/4-bet recommendations with sizes and a quick range skeleton (pairs/broadways/suited Ax/suited connectors).
+- If the user is facing an action, choose the GTO-leaning response (e.g., "vs 2.5x CO open, BTN 3-bets ~10bb at some freq; flat with ...").
 
-TURN
-- Card Effect (how the card changes things).
-- Bet Plan (size(s) + value/bluff buckets that continue).
-- Slowdowns (check more).
-- vs Raise (what continues, what folds).
+FLOP:
+- Start with Range & Nuts Advantage (who, and why).
+- Give a sizing family (e.g., b33/b50/b75/xb high freq) and list examples of value + bluffs for that size.
+- Provide a simple vs-raise policy (continue/fold mixes or thresholds).
+- Name 2–3 best and worst turn classes to plan ahead.
 
-RIVER
-- Good barrels vs shut-down rivers.
-- Thin value notes; when to jam vs block (if applicable).
+TURN (Global guardrails; ALWAYS include this section even if the hand ended):
+- Card effect bucket: classify the new card as one or more of:
+  ["Ace/K/Q high turn","Wheel Ace on low board","Broadway connector (T/J/Q/K)","Straightening card (3-to- or 4-to-a-straight)",
+   "Flush adds (3-to-a-suit)","Flush completes (4-to-a-suit)","Paired turn","Low brick"].
+  State who the range improvement favors (IP/OOP) and why (nut-density + high-card distribution).
+- Sizing family: choose ONE primary family based on range edge + texture:
+    Block 20–33%  → thin/protection and modest range edge
+    Mid 50–66%    → dynamic turn where pressure is valuable
+    Big 75–100%   → polarize with nut-density/EV edge
+    Overbet 120–150% → strong nut advantage + capped opponent range
+    Check high frequency → when opponent's range improves or we are capped
+  Include one sentence justifying the size on this turn.
+- Barrel / Slowdown matrix (IP plan first; add OOP note):
+    Value barrels: list value classes to bet (e.g., overpairs, top pair good kicker, 2p+, strong combo draws).
+    Semi-bluffs: best candidates (BDFD that picked up front-door, GS+FD, overcards with equity).
+    Slowdowns: SDV bluff-catchers that dislike a raise, air that didn’t improve.
+- Vs raise: Continue with strong value and nutty draws; fold weak pairs/no-equity. Mention x/3bet jam combos at low SPR (≤ ~2.5) if applicable.
+- River setup: name 2–4 best and 2–4 worst river classes (flush completes, 4-straight, paired, bricks) and which hands bluff/value/give up.
 
-WHY
-- 3–5 bullets that justify the plan:
-  • equity / nuts edge,
-  • protection / realization,
-  • blocker logic,
-  • a fold-equity calculation for your recommended turn/river bluff size:
-    FE ≈ risk / (risk + reward) with the actual numbers (use the pot you inferred).
-- Do NOT endorse the user's actual play. Recommend the EV-max line as if advising beforehand.
+TURN high-card nudges (position-agnostic):
+- If the preflop raiser retains high-card advantage (A/K/Q turns on middling/low flops), maintain pressure with mid-to-big barrels from top pairs+, strong draws, and unblockers. Avoid over-checking.
+- If the caller’s range improves materially (wheel A on low paired, straightening low turn that favors caller), reduce bet frequency or size.
 
-General rules:
-- CASH GAME ONLY. Ignore ICM/bubble/players-left.
-- If suits are unknown postflop, reason generically (e.g., "spade completes") and state assumptions.
-- Always give actionable sizes and hand buckets rather than vague advice.
-`;
+RIVER (Global nudges; ALWAYS include this section):
+- Classify river card into: ["Flush completes","Flush bricks","4-straight completes","4-straight bricks","Paired river","Unpaired brick","High overcard","Low brick"].
+- Value plan and sizing:
+    • Polar/nut advantage → big 75–100% or overbet 120–150%.
+    • Thin/value-protection on marginal edge → block 20–33%.
+    • Give explicit examples of hands that value bet and that check.
+- Bluff plan with blockers:
+    • Prefer bluffs that block opponent calls (block top pair / missed front-door) and UNBLOCK folds (no spade on missed spade runouts unless it blocks their calls).
+    • Name 2–4 specific bluff candidates and 2–4 give-ups.
+- Vs raise: be clear—call only with top tier bluff-catchers and fold most thin value. Mention snap folds on over-polar lines where we are capped.
+- Close with 1 line: "Best rivers to barrel were …; worst were …" to reinforce planning.
 
-const SYSTEM = `
-You are a strong CASH-GAME NLHE coach. You speak concisely & prescriptively.
-You must follow the JSON shape and the structure spec exactly.
+WHY:
+- One compact paragraph with: range/nut edge, fold-equity rough math (FE ≈ risk / (risk + reward)), and how blockers/unblockers inform bluffs.
+- Keep it instructional and prescriptive.
 
-Rules:
-- CASH ONLY. Ignore tournament/ICM concepts entirely.
-- If stacks are not provided, assume ~100bb effective.
-- Never rubber-stamp what the user did; judge the node and give the EV-max line.
-- Prefer b33/b50/b66/b75/b100/jam sizes unless the text implies exact sizes.
-- Compute fold-equity with FE ≈ risk / (risk + reward) using the size you recommend.
-- Use short, scannable lines. No markdown.
-`;
+Formatting notes:
+- Plain text only (no markdown). Use the exact headers: SITUATION:, PREFLOP:, FLOP:, TURN:, RIVER:, WHY:
+- Use sizes as bb or % pot.`;
 
 function asText(v: any): string {
   if (v == null) return "";
   if (typeof v === "string") return v;
   if (Array.isArray(v)) return v.map(asText).join("\n");
-  if (typeof v === "object") {
-    return Object.entries(v)
-      .map(([k, val]) => `${k}: ${asText(val)}`)
-      .join("\n");
-  }
+  if (typeof v === "object")
+    return Object.entries(v).map(([k, val]) => `${k}: ${asText(val)}`).join("\n");
   return String(v);
-}
-
-/** Ensures the 6 required headings are present in order. */
-function normalizeSections(s: string): string {
-  const REQUIRED = ["SITUATION","PREFLOP","FLOP","TURN","RIVER","WHY"];
-  let out = s || "";
-  const present = REQUIRED.every(h => new RegExp(`\\b${h}\\b`).test(out));
-  if (present) return out;
-
-  // If model returned content but missed some headers, append empties to keep UI stable.
-  const missing = REQUIRED.filter(h => !new RegExp(`\\b${h}\\b`).test(out));
-  if (!out.trim()) {
-    return REQUIRED.map(h => `${h}\n(n/a)`).join("\n\n");
-  }
-  return `${out}\n\n${missing.map(h => `${h}\n(n/a)`).join("\n\n")}`.trim();
 }
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const {
-      date, stakes, position, cards, villainAction = "", board = "", notes = "", rawText = ""
+      date,
+      stakes,
+      position,
+      cards,
+      villainAction = "",
+      board = "",
+      notes = "",
+      rawText = "",
     } = body ?? {};
 
+    // Build a compact user block the model can reason over
     const userBlock = [
       `Date: ${date || "today"}`,
       `Stakes: ${stakes ?? ""}`,
@@ -131,7 +131,7 @@ export async function POST(req: Request) {
       `Villain Action: ${villainAction ?? ""}`,
       "",
       "Raw hand text:",
-      (rawText || notes || "").trim() || "(none provided)"
+      (rawText || notes || "").trim() || "(none provided)",
     ].join("\n");
 
     // Cash-only guard
@@ -140,9 +140,9 @@ export async function POST(req: Request) {
       const out = {
         gto_strategy:
           `Cash-only beta: your text looks like a TOURNAMENT hand (${hits.join(", ")}). ` +
-          `This endpoint analyzes CASH games only. Please re-enter as a cash hand.`,
+          `This build analyzes CASH games only. Please re-enter as a cash hand (omit ICM/players-left).`,
         exploit_deviation: "",
-        learning_tag: ["cash-only","mtt-blocked"]
+        learning_tag: ["cash-only", "mtt-blocked"],
       };
       return NextResponse.json(out);
     }
@@ -152,10 +152,9 @@ export async function POST(req: Request) {
       temperature: 0.15,
       messages: [
         { role: "system", content: SYSTEM },
-        { role: "user", content: STRUCTURE_SPEC },
-        { role: "user", content: userBlock }
+        { role: "user", content: userBlock },
       ],
-      response_format: { type: "json_object" }
+      response_format: { type: "json_object" },
     });
 
     const raw = resp?.choices?.[0]?.message?.content?.trim() || "{}";
@@ -164,25 +163,27 @@ export async function POST(req: Request) {
     try {
       parsed = JSON.parse(raw);
     } catch {
-      // Salvage if the model slips formatting.
-      parsed = {
-        gto_strategy: raw,
-        exploit_deviation: "",
-        learning_tag: []
-      };
+      parsed = { gto_strategy: raw, exploit_deviation: "", learning_tag: [] };
     }
 
-    const gto = normalizeSections(asText(parsed?.gto_strategy || ""));
-    const exploit = asText(parsed?.exploit_deviation || "");
-    const tags = Array.isArray(parsed?.learning_tag)
-      ? parsed.learning_tag.filter((t: unknown) => typeof t === "string" && !!(t as string).trim())
-      : [];
+    // Normalize output
+    let gto = asText(parsed?.gto_strategy || "");
+    // Light sanity: ensure mandatory headers exist (don’t invent content; just make headers visible if model slipped)
+    const need = ["SITUATION:", "PREFLOP:", "FLOP:", "TURN:", "RIVER:", "WHY:"];
+    const missingHeaders = need.filter((h) => !new RegExp(`\\b${h}`).test(gto));
+    if (missingHeaders.length) {
+      gto = `${gto}\n\n${missingHeaders.map((h) => `${h}\n`).join("")}`.trim();
+    }
 
-    return NextResponse.json({
+    const out = {
       gto_strategy: gto,
-      exploit_deviation: exploit,
-      learning_tag: tags
-    });
+      exploit_deviation: asText(parsed?.exploit_deviation || ""),
+      learning_tag: Array.isArray(parsed?.learning_tag)
+        ? parsed.learning_tag.filter((t: any) => typeof t === "string" && t.trim())
+        : [],
+    };
+
+    return NextResponse.json(out);
   } catch (e: any) {
     const msg = e?.message || "Failed to analyze hand";
     console.error("analyze-hand error:", msg);
