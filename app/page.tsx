@@ -2,7 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-/* ====================== Types & Helpers ====================== */
+/* ====================== Types & helpers ====================== */
+
 type Fields = {
   date?: string | null;
   stakes?: string | null;
@@ -14,38 +15,31 @@ type Fields = {
   learning_tag?: string[];
 };
 
-type Decision = {
-  action: string;
-  confidence: 'High' | 'Medium' | 'Low' | string;
-  summary: string;
-  why: string[];
-  math: { pot_odds?: string; equity_needed?: string; fe_needed?: string };
-};
-
 const SUIT_MAP: Record<string, string> = { s: '♠', h: '♥', d: '♦', c: '♣' };
 const SUIT_WORD: Record<string, string> = {
   spade: '♠', spades: '♠', heart: '♥', hearts: '♥',
   diamond: '♦', diamonds: '♦', club: '♣', clubs: '♣'
 };
 const isRed = (s: string) => s === '♥' || s === '♦';
+const suitColor = (suit: string) => (isRed(suit) ? '#dc2626' : '#111827');
 
 function suitifyToken(tok: string): string {
   const t = (tok || '').trim();
   if (!t) return '';
 
-  // "K♠"
+  // e.g. "K♠"
   const m0 = t.match(/^([2-9tjqka])([♥♦♣♠])$/i);
   if (m0) return `${m0[1].toUpperCase()}${m0[2]}`;
 
-  // "Ks", "k s", "K/S"
+  // e.g. "Ks" / "k s" / "K/S"
   const m1 = t.replace(/[\s/]+/g, '').match(/^([2-9tjqka])([shdc])$/i);
   if (m1) return `${m1[1].toUpperCase()}${SUIT_MAP[m1[2].toLowerCase()]}`;
 
-  // "K of spades"
+  // e.g. "K of spades"
   const m2 = t.match(/^([2-9tjqka])\s*(?:of)?\s*(spades?|hearts?|diamonds?|clubs?)$/i);
   if (m2) return `${m2[1].toUpperCase()}${SUIT_WORD[m2[2].toLowerCase()]}`;
 
-  // rank only (for preflop-only where suits irrelevant)
+  // single rank (preflop-only)
   const m3 = t.match(/^([2-9tjqka])$/i);
   if (m3) return m3[1].toUpperCase();
 
@@ -60,15 +54,14 @@ function prettyCards(line: string): string {
     .join(' ');
 }
 
-const suitColor = (suit: string) => (isRed(suit) ? '#dc2626' : '#111827');
-
 function CardText({ c }: { c: string }) {
   if (!c) return null;
   const suit = c.slice(-1);
   return <span style={{ fontWeight: 700, color: suitColor(suit) }}>{c}</span>;
 }
 
-/* --- lightweight parsing from the story --- */
+/* --- lightweight parsing from the story box (best effort; summary can override) --- */
+
 function parseStakes(t: string): string {
   const m =
     t.match(/\$?\d+(?:\.\d+)?\s*\/\s*\$?\d+(?:\.\d+)?(?:\s*\+\s*\$?\d+(?:\.\d+)?\s*(?:bb|bba|ante))?/i) ||
@@ -86,21 +79,14 @@ function parsePosition(t: string): string {
 function parseHeroCardsSmart(t: string): string {
   const s = (t || '').toLowerCase();
 
-  // strong pattern: "hero/i/with/holding ... Ks Kd"
+  // "with Ks Kd", "hero has Kc Kh"
   let m = s.match(/\b(?:hero|i|holding|with|have|has)\b[^.\n]{0,20}?([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])/i);
   if (m) return prettyCards(`${m[1]} ${m[2]}`);
 
-  // fallback: first two tokens that look like cards (avoid picking 5 board cards)
+  // fallback: first two card-like tokens
   const tokens = Array.from(s.matchAll(/([2-9tjqka][shdc♥♦♣♠])/ig)).map(x => x[0]).slice(0,2);
   if (tokens.length === 2) return prettyCards(tokens.join(' '));
 
-  // compact rank-suit shorthand like "A4s" or "A4o"
-  const c = s.match(/\b([2-9tjqka])\s*([2-9tjqka])\s*([so])\b/i);
-  if (c) {
-    const r1 = c[1].toUpperCase(), r2 = c[2].toUpperCase();
-    const suited = c[3].toLowerCase() === 's';
-    return suited ? `${r1}♠ ${r2}♠` : `${r1}♠ ${r2}♥`;
-  }
   return '';
 }
 
@@ -115,25 +101,42 @@ function parseBoardFromStory(t: string) {
   return { flop, turn, river };
 }
 
-/* GTO formatting (bold labels) */
-const HEADS = ["SITUATION","RANGE SNAPSHOT","PREFLOP","FLOP","TURN","RIVER","WHY","COMMON MISTAKES","LEARNING TAGS"];
+/* ====================== GTO Preview renderer ====================== */
+
+const SECTION_HEADS = new Set([
+  'SITUATION', 'RANGE SNAPSHOT',
+  'PREFLOP', 'FLOP', 'TURN', 'RIVER',
+  'NEXT CARDS', 'WHY', 'COMMON MISTAKES', 'LEARNING TAGS',
+  'DECISION', 'PRICE', 'BOARD CLASS'
+]);
+
 function renderGTO(text: string) {
-  if (!text) return <div className="muted">(no strategy yet)</div>;
-  const lines = text.split(/\n/);
+  const lines = (text || '').split(/\r?\n/).filter(l => l.trim().length);
+  if (!lines.length) return <div className="muted">No strategy yet. Click Analyze or Edit.</div>;
+
   return (
-    <div>
-      {lines.map((ln, i) => {
-        const idx = ln.indexOf(":");
-        const label = idx > 0 ? ln.slice(0, idx).trim().toUpperCase() : "";
-        if (idx > 0 && HEADS.includes(label)) {
+    <div className="gtoBody">
+      {lines.map((raw, i) => {
+        const line = raw.trim();
+
+        // "HEAD: content" → bold the head
+        const m = line.match(/^([A-Z ]+):\s*(.*)$/);
+        if (m && SECTION_HEADS.has(m[1].trim())) {
           return (
             <div key={i} className="gtoLine">
-              <strong>{ln.slice(0, idx)}:</strong>
-              <span> {ln.slice(idx + 1).trim()}</span>
+              <strong className="gtoHead">{m[1].trim()}:</strong>
+              {m[2] ? <span className="gtoText"> {m[2]}</span> : null}
             </div>
           );
         }
-        return <div key={i} className="gtoLine">{ln}</div>;
+
+        // bullets – keep them aligned
+        if (/^[-•]/.test(line)) {
+          return <div key={i} className="gtoBullet">{line.replace(/^\s*/, '')}</div>;
+        }
+
+        // default plain line
+        return <div key={i} className="gtoLine">{line}</div>;
       })}
     </div>
   );
@@ -147,16 +150,12 @@ export default function Page() {
 
   /* ----- model results ----- */
   const [fields, setFields] = useState<Fields | null>(null);
-  const [decision, setDecision] = useState<Decision | null>(null);
-  const [assumptions, setAssumptions] = useState<string>('');
-  const [multiway, setMultiway] = useState<boolean>(false);
-
   const [aiLoading, setAiLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  /* ----- FE & SPR mini cards ----- */
+  /* ----- FE & SPR small calculators ----- */
   const [risk, setRisk] = useState<string>('');     // bb
   const [reward, setReward] = useState<string>(''); // bb
   const feNeeded = useMemo(() => {
@@ -197,7 +196,10 @@ export default function Page() {
   const [tr, setTr] = useState<string>('');   // turn
   const [rv, setRv] = useState<string>('');   // river
 
-  // prefill once from story preview
+  // single GTO box: toggle edit/preview
+  const [gtoEdit, setGtoEdit] = useState(false);
+
+  // on story change, prefill empty summary fields once
   useEffect(() => {
     if (!stakes && preview.stakes) setStakes(preview.stakes);
     if (!position && preview.position) setPosition(preview.position);
@@ -230,6 +232,7 @@ export default function Page() {
   const riverStr = suitifyToken(rv);
 
   /* ----- network calls ----- */
+
   async function analyze() {
     setError(null);
     setStatus(null);
@@ -263,11 +266,6 @@ export default function Page() {
         throw new Error(e?.error || `Analyze failed (${r.status})`);
       }
       const data = await r.json();
-
-      setDecision(data?.decision ?? null);
-      setAssumptions(data?.assumptions ?? '');
-      setMultiway(!!data?.multiway);
-
       setFields(prev => ({
         ...(prev ?? {}),
         gto_strategy: (data?.gto_strategy ?? '') || '',
@@ -328,7 +326,7 @@ export default function Page() {
 Example:
 Cash 6-max 100bb. BTN (Hero) 2.3x, BB calls.
 Flop 8♠ 6♠ 2♦ — bet 50%, call.
-Turn K♦ — ... (ask the question you want answered, e.g., 'barrel or check?')`}
+Turn K♦ — ...`}
               />
               <div className="row gap">
                 <button className="btn primary" onClick={analyze} disabled={aiLoading || !input.trim()}>
@@ -341,7 +339,6 @@ Turn K♦ — ... (ask the question you want answered, e.g., 'barrel or check?')
                     setMode(''); setStakes(''); setEff(''); setPosition('');
                     setH1(''); setH2(''); setF1(''); setF2(''); setF3(''); setTr(''); setRv('');
                     setRisk(''); setReward(''); setFlopPot(''); setBehind('');
-                    setDecision(null); setAssumptions(''); setMultiway(false);
                   }}
                 >Clear</button>
               </div>
@@ -448,62 +445,46 @@ Turn K♦ — ... (ask the question you want answered, e.g., 'barrel or check?')
                 <Info label="Position"><div>{position || <span className="muted">(unknown)</span>}</div></Info>
                 <Info label="Stakes"><div>{stakes || <span className="muted">(unknown)</span>}</div></Info>
                 <Info label="Cards">
-                  {(heroCardsStr ? heroCardsStr.split(' ') : []).map((c,i)=>(
-                    <span key={i} style={{marginRight:6}}><CardText c={c} /></span>
-                  ))}
-                  {!heroCardsStr && <span className="muted">(unknown)</span>}
+                  {heroCardsStr
+                    ? heroCardsStr.split(' ').map((c,i)=>(
+                        <span key={i} style={{marginRight:6}}><CardText c={c} /></span>
+                      ))
+                    : <span className="muted">(unknown)</span>
+                  }
                 </Info>
               </div>
             </section>
 
-            {/* DECISION card */}
+            {/* GTO Strategy — single box with Preview/Edit toggle */}
             <section className="card">
-              <div className="cardTitle">Decision (Coach Verdict)</div>
-              {decision ? (
-                <div className={`decBanner dec-${(decision.action || 'Call').split(' ')[0].toLowerCase()}`}>
-                  <div className="decRow">
-                    <div className="decAction">{decision.action || '—'}</div>
-                    <div className="decChips">
-                      <span className={`chip ${decision.confidence === 'High' ? 'green' : decision.confidence === 'Medium' ? 'amber' : 'gray'}`}>
-                        {decision.confidence || '—'} confidence
-                      </span>
-                      {multiway && <span className="chip gray">multiway-approx</span>}
-                    </div>
-                  </div>
-                  <div className="decSummary">{decision.summary}</div>
-                  {(decision?.math?.pot_odds || decision?.math?.equity_needed || decision?.math?.fe_needed) && (
-                    <div className="decMath">
-                      {decision.math.pot_odds && <span>Pot odds: <b>{decision.math.pot_odds}</b></span>}
-                      {decision.math.equity_needed && <span> · Equity needed: <b>{decision.math.equity_needed}</b></span>}
-                      {decision.math.fe_needed && <span> · FE needed: <b>{decision.math.fe_needed}</b></span>}
-                    </div>
-                  )}
-                  {decision.why?.length > 0 && (
-                    <ul className="decList">
-                      {decision.why.slice(0,5).map((w, i) => <li key={i}>{w}</li>)}
-                    </ul>
-                  )}
-                  {assumptions && <div className="muted small">Assumptions: {assumptions}</div>}
-                </div>
-              ) : (
-                <div className="muted">(no decision yet)</div>
-              )}
-            </section>
-
-            {/* GTO Strategy */}
-            <section className="card">
-              <div className="cardTitle">GTO Strategy (structured)</div>
-              <div className="gtoBox">
-                {renderGTO(fields?.gto_strategy || '')}
+              <div className="cardTitleRow">
+                <div className="cardTitle">GTO Strategy</div>
+                <button
+                  className="btn tiny"
+                  onClick={() => setGtoEdit(v => !v)}
+                  title={gtoEdit ? 'Finish editing' : 'Edit raw text'}
+                >
+                  {gtoEdit ? 'Done' : 'Edit'}
+                </button>
               </div>
-              <div className="muted small">Section labels are bolded for readability. You can still edit below if needed.</div>
-              <textarea
-                className="textarea mono gapTop"
-                rows={10}
-                placeholder="Edit or add notes…"
-                value={fields?.gto_strategy ?? ''}
-                onChange={e => fields && setFields({ ...fields, gto_strategy: e.target.value })}
-              />
+
+              {gtoEdit ? (
+                <>
+                  <textarea
+                    className="textarea mono"
+                    rows={12}
+                    placeholder="Edit or add notes…"
+                    value={fields?.gto_strategy ?? ''}
+                    onChange={e => fields && setFields({ ...fields, gto_strategy: e.target.value })}
+                  />
+                  <div className="muted small">Editing raw text. Click “Done” to return to the formatted preview.</div>
+                </>
+              ) : (
+                <>
+                  <div className="gtoBox">{renderGTO(fields?.gto_strategy || '')}</div>
+                  <div className="muted small">Preview only. Click “Edit” to change the text.</div>
+                </>
+              )}
             </section>
 
             {/* Exploitative Deviations */}
@@ -535,8 +516,6 @@ Turn K♦ — ... (ask the question you want answered, e.g., 'barrel or check?')
         :root{
           --bg:#f3f4f6; --card:#ffffff; --line:#e5e7eb; --text:#0f172a; --muted:#6b7280;
           --primary:#2563eb; --primary2:#1d4ed8; --btnText:#f8fbff;
-
-          --dec-call:#dbeafe; --dec-raise:#fee2e2; --dec-bet:#fef3c7; --dec-jam:#fde68a; --dec-fold:#e5e7eb;
         }
         *{box-sizing:border-box}
         html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
@@ -549,6 +528,7 @@ Turn K♦ — ... (ask the question you want answered, e.g., 'barrel or check?')
         .col{display:flex;flex-direction:column;gap:18px}
         .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
         .cardTitle{font-size:13px;font-weight:800;color:#111827;margin-bottom:8px}
+        .cardTitleRow{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
         .textarea{width:100%;min-height:140px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}
         .textarea.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,Monaco,monospace}
         .row{display:flex;align-items:center}
@@ -556,6 +536,7 @@ Turn K♦ — ... (ask the question you want answered, e.g., 'barrel or check?')
         .gap{gap:10px}
         .gapTop{margin-top:10px}
         .btn{border:1px solid var(--line);background:#fff;padding:10px 14px;border-radius:12px;cursor:pointer}
+        .btn.tiny{padding:6px 10px;border-radius:10px;font-size:12px}
         .btn.primary{background:linear-gradient(180deg,var(--primary),var(--primary2));color:var(--btnText);border-color:#9db7ff}
         .btn[disabled]{opacity:.6;cursor:not-allowed}
         .err{margin-top:10px;color:#b91c1c}
@@ -589,29 +570,14 @@ Turn K♦ — ... (ask the question you want answered, e.g., 'barrel or check?')
         .calcLine{margin-top:8px}
         .sprChips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
         .chip{border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;background:#f8fafc}
-        .chip.green{background:#dcfce7;border-color:#bbf7d0}
-        .chip.amber{background:#fef3c7;border-color:#fde68a}
-        .chip.gray{background:#e5e7eb;border-color:#d1d5db}
-
-        /* Decision banner */
-        .decBanner{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
-        .decRow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-        .decAction{font-size:18px;font-weight:800}
-        .decChips{display:flex;gap:6px;flex-wrap:wrap}
-        .decSummary{font-size:14px;margin-bottom:6px}
-        .decMath{font-size:12.5px;color:#374151;margin-bottom:6px}
-        .decList{margin:6px 0 0 18px;padding:0;display:flex;flex-direction:column;gap:4px}
-
-        .dec-call{background:var(--dec-call)}
-        .dec-raise,.dec-bet,.dec-overbet{background:var(--dec-bet)}
-        .dec-jam{background:var(--dec-jam)}
-        .dec-fold{background:var(--dec-fold)}
-
-        /* GTO box formatted view */
-        .gtoBox{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;max-height:320px;overflow:auto}
-        .gtoLine{margin:2px 0}
-        
         .list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+
+        /* GTO preview styles */
+        .gtoBox{border:1px dashed #cbd5e1;border-radius:12px;background:#f8fafc;padding:12px}
+        .gtoBody{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,Monaco,monospace;font-size:13.5px;line-height:1.45}
+        .gtoLine{margin:2px 0}
+        .gtoHead{font-weight:800}
+        .gtoBullet{margin:2px 0 2px 12px}
       `}</style>
     </main>
   );
