@@ -1,4 +1,3 @@
-// app/api/analyze-hand/route.ts
 import { NextResponse } from "next/server";
 import { openai } from "@/lib/openai";
 
@@ -32,46 +31,47 @@ function asText(v: any): string {
 const SYSTEM = `You are a CASH-GAME poker coach. CASH ONLY. 
 Return ONLY JSON with EXACT keys:
 {
-  "gto_strategy": "string",
-  "exploit_deviation": "string",
-  "learning_tag": ["string", "string?"]
+  "decision": {
+    "action": "Fold|Call|Check|Bet 25%|Bet 33%|Bet 50%|Bet 66%|Bet 75%|Overbet|Raise small|Raise big|Jam|Check-call|Check-raise|Check-fold",
+    "confidence": "High|Medium|Low",
+    "summary": "one sentence with the street and what to do now",
+    "why": ["3–6 short bullets with range/texture/position logic"],
+    "math": {
+      "pot_odds": "e.g., 28%",
+      "equity_needed": "e.g., 28%",
+      "fe_needed": "e.g., 36%" 
+    }
+  },
+  "assumptions": "short sentence of assumptions ONLY when multi-way or some inputs missing; else empty string",
+  "multiway": true,
+  "gto_strategy": "compact 180–260 words with SITUATION / RANGE SNAPSHOT / PREFLOP / FLOP / TURN / RIVER / WHY / COMMON MISTAKES / LEARNING TAGS (labels in ALL CAPS, keep concise bullets; no markdown)",
+  "exploit_deviation": "2–4 bullets of pool exploits",
+  "learning_tag": ["2–4 short tags"]
 }
 
-Write "gto_strategy" as a compact, structured, coaching plan with the following sections and style:
+/* Decision focus */
+- Identify the user's TARGET NODE automatically: if the text contains an explicit question (e.g., 'call or fold?', 'jam or call?'), answer THAT street; else prefer river > turn > flop > preflop based on last action described.
+- Output a single clear "action" label from the allowed set above (choose the closest wording if sizes differ slightly).
+- Include quick math whenever facing a bet or considering a shove/raise: 
+  - pot_odds = call / (pot + call)
+  - equity_needed ≈ pot_odds
+  - fe_needed ≈ risk / (risk + reward) when jamming/bluff-raising.
+- Use positions, hero hand, board, sizes, and SPR hints if given.
 
-SITUATION
-- One-liners: pot type (SRP/3BP), positions, effective stacks, pot and/or SPR if provided, hero cards (if provided).
-- BOARD CLASS: name the texture (e.g., low two-tone, paired, monotone, high disconnected). State "Range advantage: X" and "Nuts advantage: X".
+/* Multi-way guardrails */
+- If pot is multiway (3+ players any time this street), set "multiway": true, add a one-line "assumptions", and degrade confidence by one step (High→Medium, Medium→Low) unless the spot is trivial.
+- Multiway adjustments: reduce bluffing frequency, value bet a bit thinner in position only when appropriate, and be stricter on thin bluff-catches OOP.
 
-RANGE SNAPSHOT
-- 1 short line each for Hero and Villain describing typical range after the line taken.
+/* Turn/River nudges (global) */
+- On A/K/Q overcard turns where the aggressor retains range advantage, prefer pressure with mid sizes when uncapped; slow with mid-low strength. 
+- Rivers: give guidance for flush-completes, 4-straights, paired boards, and bricks; mention blockers/unblockers briefly.
 
-PREFLOP / FLOP / TURN / RIVER
-- Sizing family: suggested pot % or bb (give numbers). 
-- Value: 3–6 representative hands/classes.
-- Bluffs / Semi-bluffs: 3–6 classes.
-- Slowdowns / Check-backs: brief line.
-- Vs raise: 1 short rule for continue/fold.
-- NEXT CARDS (for FLOP and TURN): “Best:” and “Worst:” with 2–4 examples each.
-
-WHY
-- 3–6 bullets. Include range- vs nuts-edge, blockers/unblockers, and (if fe_hint provided) fold-equity math “FE ≈ risk/(risk+reward) = <number>%”.
-
-COMMON MISTAKES
-- 2–4 bullets that warn about over/under-bluffing, bad sizings, or calling too wide/narrow.
-
-LEARNING TAGS
-- 2–4 short tags like ["range-advantage","two-tone-low","spr-5","turn-overcard-pressure"].
-
-Rules:
+/* Style */
 - CASH only; ignore ICM/players-left entirely.
-- Be prescriptive, not narrative. Use concise bullets; no markdown headings, no code blocks.
-- When info is missing, make the best reasonable cash-game assumptions (100bb, standard sizes) and proceed.
-- Keep the whole "gto_strategy" ~180–260 words (concise but informative).
-- "exploit_deviation" should be 2–4 bullets of pool exploits relevant to the spot.
+- Be prescriptive, not narrative. No markdown, no code blocks.
+- Keep "gto_strategy" compact but information-dense with the section labels in ALL CAPS as requested.
 `;
 
-/* ----------------------- route handler ----------------------- */
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
       board = "",
       notes = "",
       rawText = "",
-      fe_hint,          // optional FE % hint string (from FE card)
+      fe_hint,          // optional FE % hint (from FE card)
       spr_hint          // optional SPR hint (from SPR card)
     }: {
       date?: string;
@@ -117,6 +117,15 @@ export async function POST(req: Request) {
     const { isMTT, hits } = looksLikeTournament(userBlock);
     if (isMTT) {
       return NextResponse.json({
+        decision: {
+          action: "Fold",
+          confidence: "Low",
+          summary: "Cash-only mode: this looks like a tournament hand; re-enter as a cash hand.",
+          why: ["ICM/MTT is out of scope for this build."],
+          math: { pot_odds: "", equity_needed: "", fe_needed: "" }
+        },
+        assumptions: "",
+        multiway: false,
         gto_strategy:
           `Cash-only mode: your text looks like a TOURNAMENT hand (${hits.join(", ")}). ` +
           `Please re-enter as a cash hand (omit ICM/players-left).`,
@@ -142,10 +151,40 @@ export async function POST(req: Request) {
     try {
       parsed = JSON.parse(raw);
     } catch {
-      parsed = { gto_strategy: raw, exploit_deviation: "", learning_tag: [] };
+      // salvage shape if model slipped
+      parsed = {
+        decision: {
+          action: "Call",
+          confidence: "Low",
+          summary: raw.slice(0, 140),
+          why: [],
+          math: { pot_odds: "", equity_needed: "", fe_needed: "" }
+        },
+        assumptions: "",
+        multiway: false,
+        gto_strategy: raw,
+        exploit_deviation: "",
+        learning_tag: []
+      };
     }
 
+    // Normalize + sanitize
     const out = {
+      decision: {
+        action: asText(parsed?.decision?.action || ""),
+        confidence: asText(parsed?.decision?.confidence || ""),
+        summary: asText(parsed?.decision?.summary || ""),
+        why: Array.isArray(parsed?.decision?.why)
+          ? parsed.decision.why.filter((t: any) => typeof t === "string" && t.trim())
+          : [],
+        math: {
+          pot_odds: asText(parsed?.decision?.math?.pot_odds || ""),
+          equity_needed: asText(parsed?.decision?.math?.equity_needed || ""),
+          fe_needed: asText(parsed?.decision?.math?.fe_needed || ""),
+        }
+      },
+      assumptions: asText(parsed?.assumptions || ""),
+      multiway: !!parsed?.multiway,
       gto_strategy: asText(parsed?.gto_strategy || ""),
       exploit_deviation: asText(parsed?.exploit_deviation || ""),
       learning_tag: Array.isArray(parsed?.learning_tag)
