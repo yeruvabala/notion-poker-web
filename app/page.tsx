@@ -2,9 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-/* =========================================================
-   Shared helpers from your current page
-========================================================= */
+/* ====================== Helpers ====================== */
 
 type Fields = {
   date?: string | null;
@@ -22,266 +20,123 @@ const SUIT_WORD: Record<string, string> = {
   spade: '♠', spades: '♠', heart: '♥', hearts: '♥',
   diamond: '♦', diamonds: '♦', club: '♣', clubs: '♣'
 };
-const suitColor = (s: string) => (s === '♥' || s === '♦' ? '#dc2626' : '#111827');
+const isRed = (s: string) => s === '♥' || s === '♦';
 
 function suitifyToken(tok: string): string {
   const t = tok.trim();
   if (!t) return '';
+  // e.g. "K♠"
   const m0 = t.match(/^([2-9tjqka])([♥♦♣♠])$/i);
   if (m0) return `${m0[1].toUpperCase()}${m0[2]}`;
+
+  // e.g. "Ks", "k s", "K/S"
   const m1 = t.replace(/[\s/]+/g, '').match(/^([2-9tjqka])([shdc])$/i);
   if (m1) return `${m1[1].toUpperCase()}${SUIT_MAP[m1[2].toLowerCase()]}`;
+
+  // e.g. "K of spades"
   const m2 = t.match(/^([2-9tjqka])\s*(?:of)?\s*(spades?|hearts?|diamonds?|clubs?)$/i);
   if (m2) return `${m2[1].toUpperCase()}${SUIT_WORD[m2[2].toLowerCase()]}`;
+
+  // ranks only (used for preflop-only when suits irrelevant) — normalize as rank only
   const m3 = t.match(/^([2-9tjqka])$/i);
   if (m3) return m3[1].toUpperCase();
+
   return '';
 }
+
 function prettyCards(line: string): string {
-  return line.split(/\s+/).map(suitifyToken).filter(Boolean).join(' ');
-}
-function CardText({ c }: { c: string }) {
-  if (!c) return null;
-  return <span style={{ fontWeight: 700, color: suitColor(c.slice(-1)) }}>{c}</span>;
+  return line
+    .split(/\s+/)
+    .map(suitifyToken)
+    .filter(Boolean)
+    .join(' ');
 }
 
+const suitColor = (suit: string) => (isRed(suit) ? '#dc2626' : '#111827');
+
+function CardText({ c }: { c: string }) {
+  if (!c) return null;
+  const suit = c.slice(-1);
+  return <span style={{ fontWeight: 700, color: suitColor(suit) }}>{c}</span>;
+}
+
+/* --- lightweight parsing from the story box (best effort; editable summary overrides) --- */
+
 function parseStakes(t: string): string {
+  // "$1/$3", "1/3", "2.5/5", "1bb/0.5bb + 1bb BBA"
   const m =
     t.match(/\$?\d+(?:\.\d+)?\s*\/\s*\$?\d+(?:\.\d+)?(?:\s*\+\s*\$?\d+(?:\.\d+)?\s*(?:bb|bba|ante))?/i) ||
     t.match(/\d+bb\/\d+bb(?:\s*\+\s*\d+bb\s*bba)?/i);
   return m ? m[0] : '';
 }
+
 function parsePosition(t: string): string {
   const up = ` ${t.toUpperCase()} `;
   const POS = ['SB','BB','BTN','CO','HJ','MP','UTG+2','UTG+1','UTG'];
-  for (const p of POS) if (up.includes(` ${p} `)) return p;
+  for (const p of POS) if (up.includes(` ${p} `)) return p.replace('+', '+');
   return '';
 }
+
 function parseHeroCardsSmart(t: string): string {
+  // prefer patterns with "hero/i/with/holding"
   const s = t.toLowerCase();
+
+  // "with Ks Kd", "hero has Kc Kh"
   let m = s.match(/\b(?:hero|i|holding|with|have|has)\b[^.\n]{0,20}?([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])/i);
   if (m) return prettyCards(`${m[1]} ${m[2]}`);
+
+  // "Kc Kh" anywhere as a last resort (but not 5 cards)
   const tokens = Array.from(s.matchAll(/([2-9tjqka][shdc♥♦♣♠])/ig)).map(x => x[0]).slice(0,2);
   if (tokens.length === 2) return prettyCards(tokens.join(' '));
+
   return '';
 }
+
 function parseBoardFromStory(t: string) {
   const grab = (label: 'flop'|'turn'|'river') => {
     const m = t.match(new RegExp(`${label}[^:]*:\\s*([^\\n]+)`, 'i'));
     return m ? prettyCards(m[1]) : '';
   };
-  return { flop: grab('flop'), turn: grab('turn'), river: grab('river') };
+  const flop = grab('flop');
+  const turn = grab('turn');
+  const river = grab('river');
+  return { flop, turn, river };
 }
 
-/* =========================================================
-   NEW: CoachCard (pretty renderer with bold section titles)
-========================================================= */
-
-type CoachPlan = { preflop: string[]; flop: string[]; turn: string[]; river: string[] };
-type CoachData = {
-  decision?: string;
-  price?: string;
-  situation?: string;
-  range?: string;
-  why?: string[];
-  mistakes?: string[];
-  plan: CoachPlan;
-};
-
-function parseCoachCard(text: string): CoachData {
-  const clean = (text || '').replace(/\r/g, '');
-
-  // helper: grab blocks by label
-  const grabBlock = (label: string) => {
-    const re = new RegExp(`^\\s*${label}\\s*:[\\s\\S]*?(?=^[A-Z][A-Z ]*?:|\\Z)`, 'gmi');
-    const m = clean.match(re);
-    if (!m) return '';
-    return m[0].replace(new RegExp(`^\\s*${label}\\s*:\\s*`, 'i'), '').trim();
-  };
-
-  const blockOrLine = (label: string) => {
-    const b = grabBlock(label);
-    if (b) return b;
-    // try single-line fallback
-    const re = new RegExp(`\\b${label}\\s*:\\s*([^\\n]+)`, 'i');
-    const m = clean.match(re);
-    return m ? m[1].trim() : '';
-  };
-
-  const bullets = (src: string) =>
-    (src || '')
-      .split(/\n+/)
-      .flatMap(line => line.split(/[•\-–] /).map(s => s.trim()))
-      .map(s => s.replace(/^[•\-–]\s*/,''))
-      .filter(Boolean)
-      .slice(0, 8);
-
-  // try to infer decision if author put it at top without label
-  let decision = blockOrLine('DECISION');
-  if (!decision) {
-    const head = clean.split('\n').slice(0, 3).join(' ');
-    const m = head.match(/\b(Fold|Call|Jam|All[- ]?in|Bet|Check)[^.\n]*/i);
-    decision = m ? m[0] : '';
-  }
-
-  // situation/range blocks
-  const situation = blockOrLine('SITUATION');
-  const range = blockOrLine('RANGE SNAPSHOT') || blockOrLine('RANGE');
-
-  // Why / Mistakes → bullets
-  const why = bullets(blockOrLine('WHY'));
-  const mistakes = bullets(blockOrLine('COMMON MISTAKES') || blockOrLine('MISTAKES'));
-
-  // Streets: look inside entire text (tolerant)
-  const pickStreet = (name: string) => {
-    const re = new RegExp(`^\\s*${name}\\s*:\\s*([\\s\\S]*?)(?=^[A-Z][A-Z ]*?:|\\Z)`, 'gmi');
-    const m = clean.match(re);
-    const raw = m ? m[1] : '';
-    return bullets(raw);
-  };
-
-  return {
-    decision,
-    price: blockOrLine('PRICE'),
-    situation,
-    range,
-    why,
-    mistakes,
-    plan: {
-      preflop: pickStreet('PREFLOP'),
-      flop: pickStreet('FLOP'),
-      turn: pickStreet('TURN'),
-      river: pickStreet('RIVER'),
-    },
-  };
-}
-
-function CoachCard({
-  text,
-  onChange,
-}: {
-  text: string;
-  onChange: (v: string) => void;
-}) {
-  const [raw, setRaw] = useState(false);
-  const data = parseCoachCard(text);
-
-  if (raw) {
-    return (
-      <div className="coachCard">
-        <textarea
-          className="textarea mono"
-          rows={12}
-          value={text}
-          onChange={(e)=>onChange(e.target.value)}
-        />
-        <div className="cc-actions">
-          <button className="btn" onClick={()=>setRaw(false)}>Done</button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="coachCard">
-      <div className="cc-header">
-        {data.decision ? <div className="cc-decision"><b>{data.decision}</b></div> : null}
-        {data.price ? <div className="cc-pill"><b>Price:</b>&nbsp;{data.price}</div> : null}
-        <div style={{flex:1}} />
-        <button className="btn" onClick={()=>setRaw(true)}>Edit</button>
-      </div>
-
-      {data.situation ? (
-        <section className="cc-sec">
-          <div className="cc-title">SITUATION</div>
-          <div className="cc-text">{data.situation}</div>
-        </section>
-      ) : null}
-
-      {data.range ? (
-        <section className="cc-sec">
-          <div className="cc-title">RANGE SNAPSHOT</div>
-          <div className="cc-text">{data.range}</div>
-        </section>
-      ) : null}
-
-      {(data.plan.preflop.length + data.plan.flop.length + data.plan.turn.length + data.plan.river.length) > 0 && (
-        <section className="cc-sec">
-          <div className="cc-title">PLAN</div>
-          <div className="cc-plan">
-            {data.plan.preflop.length ? (
-              <div className="cc-col">
-                <div className="cc-sub">Preflop</div>
-                <ul>{data.plan.preflop.map((x,i)=><li key={i}>{x}</li>)}</ul>
-              </div>
-            ) : null}
-            {data.plan.flop.length ? (
-              <div className="cc-col">
-                <div className="cc-sub">Flop</div>
-                <ul>{data.plan.flop.map((x,i)=><li key={i}>{x}</li>)}</ul>
-              </div>
-            ) : null}
-            {data.plan.turn.length ? (
-              <div className="cc-col">
-                <div className="cc-sub">Turn</div>
-                <ul>{data.plan.turn.map((x,i)=><li key={i}>{x}</li>)}</ul>
-              </div>
-            ) : null}
-            {data.plan.river.length ? (
-              <div className="cc-col">
-                <div className="cc-sub">River</div>
-                <ul>{data.plan.river.map((x,i)=><li key={i}>{x}</li>)}</ul>
-              </div>
-            ) : null}
-          </div>
-        </section>
-      )}
-
-      {data.why?.length ? (
-        <section className="cc-sec">
-          <div className="cc-title">WHY</div>
-          <ul>{data.why.map((x,i)=><li key={i}>{x}</li>)}</ul>
-        </section>
-      ) : null}
-
-      {data.mistakes?.length ? (
-        <section className="cc-sec">
-          <div className="cc-title">COMMON MISTAKES</div>
-          <ul>{data.mistakes.map((x,i)=><li key={i}>{x}</li>)}</ul>
-        </section>
-      ) : null}
-    </div>
-  );
-}
-
-/* =========================================================
-   Page (your current layout; GTO box now uses CoachCard)
-========================================================= */
+/* ====================== Page ====================== */
 
 export default function Page() {
+  /* ----- story text ----- */
   const [input, setInput] = useState('');
+
+  /* ----- model results ----- */
   const [fields, setFields] = useState<Fields | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const [risk, setRisk] = useState('');     // bb
-  const [reward, setReward] = useState(''); // bb
+  /* ----- FE & SPR small calculators ----- */
+  const [risk, setRisk] = useState<string>('');     // bb
+  const [reward, setReward] = useState<string>(''); // bb
   const feNeeded = useMemo(() => {
-    const r = +risk, w = +reward;
+    const r = parseFloat(risk);
+    const w = parseFloat(reward);
     if (!isFinite(r) || !isFinite(w) || r < 0 || w <= 0) return '';
-    return `${((r/(r+w))*100).toFixed(1)}%`;
+    const x = (r / (r + w)) * 100;
+    return `${x.toFixed(1)}%`;
   }, [risk, reward]);
 
-  const [flopPot, setFlopPot] = useState('');
-  const [behind, setBehind] = useState('');
+  const [flopPot, setFlopPot] = useState<string>(''); // bb
+  const [behind, setBehind] = useState<string>('');   // bb behind after c-bet
   const spr = useMemo(() => {
-    const p = +flopPot, b = +behind;
+    const p = parseFloat(flopPot);
+    const b = parseFloat(behind);
     if (!isFinite(p) || !isFinite(b) || p <= 0) return '';
-    return (b/p).toFixed(1);
+    return (b / p).toFixed(1);
   }, [flopPot, behind]);
 
+  /* ----- preview (from story) ----- */
   const preview = useMemo(() => ({
     stakes: parseStakes(input),
     position: parsePosition(input),
@@ -289,18 +144,20 @@ export default function Page() {
     board: parseBoardFromStory(input),
   }), [input]);
 
-  const [mode, setMode] = useState<'CASH'|'MTT'|''>('');
-  const [stakes, setStakes] = useState('');
-  const [eff, setEff] = useState('');
-  const [position, setPosition] = useState('');
-  const [h1, setH1] = useState('');
-  const [h2, setH2] = useState('');
-  const [f1, setF1] = useState('');
-  const [f2, setF2] = useState('');
-  const [f3, setF3] = useState('');
-  const [tr, setTr] = useState('');
-  const [rv, setRv] = useState('');
+  /* ----- Situation Summary (editable) ----- */
+  const [mode, setMode] = useState<'CASH' | 'MTT' | ''>('');
+  const [stakes, setStakes] = useState<string>('');
+  const [eff, setEff] = useState<string>('');
+  const [position, setPosition] = useState<string>('');
+  const [h1, setH1] = useState<string>('');   // hero card 1
+  const [h2, setH2] = useState<string>('');   // hero card 2
+  const [f1, setF1] = useState<string>('');   // flop 1
+  const [f2, setF2] = useState<string>('');   // flop 2
+  const [f3, setF3] = useState<string>('');   // flop 3
+  const [tr, setTr] = useState<string>('');   // turn
+  const [rv, setRv] = useState<string>('');   // river
 
+  // on story change, prefill empty summary fields once
   useEffect(() => {
     if (!stakes && preview.stakes) setStakes(preview.stakes);
     if (!position && preview.position) setPosition(preview.position);
@@ -317,10 +174,22 @@ export default function Page() {
   }, [preview]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
-  const heroCardsStr = useMemo(()=>[suitifyToken(h1), suitifyToken(h2)].filter(Boolean).join(' '),[h1,h2]);
-  const flopStr = useMemo(()=>[suitifyToken(f1),suitifyToken(f2),suitifyToken(f3)].filter(Boolean).join(' '),[f1,f2,f3]);
+
+  const heroCardsStr = useMemo(() => {
+    const a = suitifyToken(h1);
+    const b = suitifyToken(h2);
+    return [a, b].filter(Boolean).join(' ');
+  }, [h1, h2]);
+
+  const flopStr = useMemo(() => {
+    const a = suitifyToken(f1), b = suitifyToken(f2), c = suitifyToken(f3);
+    return [a, b, c].filter(Boolean).join(' ');
+  }, [f1, f2, f3]);
+
   const turnStr = suitifyToken(tr);
   const riverStr = suitifyToken(rv);
+
+  /* ----- network calls ----- */
 
   async function analyze() {
     setError(null);
@@ -341,8 +210,9 @@ export default function Page() {
         board: board || undefined,
         notes: input || undefined,
         rawText: input || undefined,
+        // include tiny numeric context for FE/SPR if user filled it
         fe_hint: feNeeded,
-        spr_hint: spr,
+        spr_hint: spr
       };
 
       const r = await fetch('/api/analyze-hand', {
@@ -393,21 +263,29 @@ export default function Page() {
     }
   }
 
+  /* ====================== UI ====================== */
+
   return (
     <main className="p">
       <div className="wrap">
         <h1 className="title">Only Poker</h1>
 
         <div className="grid">
-          {/* LEFT */}
+          {/* LEFT column */}
           <div className="col">
+            {/* Story box */}
             <section className="card">
               <div className="cardTitle">Hand Played</div>
               <textarea
                 className="textarea"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Type the hand like a story — positions, sizes, actions…"
+                placeholder={`Type your hand like a story — stakes, position, cards, actions…
+
+Example:
+Cash 6-max 100bb. BTN (Hero) 2.3x, BB calls.
+Flop 8♠ 6♠ 2♦ — bet 50%, call.
+Turn K♦ — ...`}
               />
               <div className="row gap">
                 <button className="btn primary" onClick={analyze} disabled={aiLoading || !input.trim()}>
@@ -426,8 +304,10 @@ export default function Page() {
               {error && <div className="err">{error}</div>}
             </section>
 
+            {/* Situation Summary (editable) */}
             <section className="card">
               <div className="cardTitle">Situation Summary</div>
+
               <div className="summaryGrid">
                 <Info label="Mode">
                   <select className="input" value={mode} onChange={e=>setMode(e.target.value as any)}>
@@ -436,21 +316,26 @@ export default function Page() {
                     <option value="MTT">MTT</option>
                   </select>
                 </Info>
+
                 <Info label="Blinds / Stakes">
                   <input className="input" value={stakes} onChange={e=>setStakes(e.target.value)} placeholder={preview.stakes || '(unknown)'} />
                 </Info>
+
                 <Info label="Effective Stack (bb)">
                   <input className="input" value={eff} onChange={e=>setEff(e.target.value)} placeholder="(unknown)" />
                 </Info>
+
                 <Info label="Positions">
                   <input className="input" value={position} onChange={e=>setPosition(e.target.value.toUpperCase())} placeholder={preview.position || '(unknown)'} />
                 </Info>
+
                 <Info label="Hero Hand">
                   <div className="cardsRow">
                     <CardEditor value={h1} onChange={setH1} placeholder={(preview.heroCards || '').split(' ')[0] || 'K♠'} />
                     <CardEditor value={h2} onChange={setH2} placeholder={(preview.heroCards || '').split(' ')[1] || 'K♦'} />
                   </div>
                 </Info>
+
                 <Info label="Board">
                   <div className="boardRow">
                     <span className="pillLbl">Flop</span>
@@ -468,11 +353,14 @@ export default function Page() {
                   </div>
                 </Info>
               </div>
+
               <div className="hint">Postflop: add exact suits (e.g., <b>As 4s</b>) for best accuracy. Edits here override the story.</div>
             </section>
 
+            {/* FE & SPR */}
             <section className="card">
               <div className="cardTitle">Fold-Equity Threshold & SPR</div>
+
               <div className="feSprGrid">
                 <div className="box">
                   <div className="boxTitle">FE calculator (bb units)</div>
@@ -483,9 +371,11 @@ export default function Page() {
                     <input className="input" value={reward} onChange={e=>setReward(e.target.value)} placeholder="pre-pot + bet size" />
                   </div>
                   <div className="calcLine">
-                    FE needed ≈ <b>{feNeeded || '0%'}</b> <span className="muted">(Risk / (Risk + Reward))</span>
+                    FE needed ≈ <b>{feNeeded || '0%'}</b> &nbsp;
+                    <span className="muted">(Risk / (Risk + Reward))</span>
                   </div>
                 </div>
+
                 <div className="box">
                   <div className="boxTitle">SPR (flop)</div>
                   <div className="grid2">
@@ -505,8 +395,9 @@ export default function Page() {
             </section>
           </div>
 
-          {/* RIGHT */}
+          {/* RIGHT column */}
           <div className="col">
+            {/* top info card */}
             <section className="card">
               <div className="infoGrid">
                 <Info label="Date"><div>{today}</div></Info>
@@ -523,15 +414,20 @@ export default function Page() {
               </div>
             </section>
 
-            {/* >>> GTO Strategy now rendered with bold section titles <<< */}
+            {/* GTO Strategy */}
             <section className="card">
-              <div className="cardTitle">GTO Strategy</div>
-              <CoachCard
-                text={fields?.gto_strategy ?? ''}
-                onChange={(v)=> fields && setFields({ ...fields, gto_strategy: v })}
+              <div className="cardTitle">GTO Strategy (detailed)</div>
+              <textarea
+                className="textarea mono"
+                rows={12}
+                placeholder="Preflop/Flop/Turn/River plan with sizes…"
+                value={fields?.gto_strategy ?? ''}
+                onChange={e => fields && setFields({ ...fields, gto_strategy: e.target.value })}
               />
+              <div className="muted small">We'll auto-fill this after “Send”. You can also edit.</div>
             </section>
 
+            {/* Exploitative Deviations */}
             <section className="card">
               <div className="cardTitle">Exploitative Deviations</div>
               <ul className="list">
@@ -540,6 +436,7 @@ export default function Page() {
                   .filter(Boolean)
                   .map((s,i)=><li key={i}>{s}</li>)}
               </ul>
+
               <div className="row end gapTop">
                 <button className="btn" onClick={analyze} disabled={aiLoading}>
                   {aiLoading ? 'Analyzing…' : 'Analyze Again'}
@@ -554,7 +451,7 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Styles */}
+      {/* ===================== Styles ===================== */}
       <style jsx global>{`
         :root{
           --bg:#f3f4f6; --card:#ffffff; --line:#e5e7eb; --text:#0f172a; --muted:#6b7280;
@@ -583,19 +480,25 @@ export default function Page() {
         .err{margin-top:10px;color:#b91c1c}
         .note{margin-top:10px;color:#166534}
         .muted{color:var(--muted)}
+        .small{font-size:12px}
+
         .infoGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
         .summaryGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
         @media (max-width:900px){.summaryGrid{grid-template-columns:1fr}}
+
         .ibox{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;min-height:52px}
         .lblSmall{font-size:11px;color:#6b7280;margin-bottom:4px}
         .input{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
         .cardsRow{display:flex;gap:8px;align-items:center}
         .boardRow{display:flex;gap:8px;align-items:center;margin-top:6px}
         .pillLbl{font-size:12px;color:#6b7280;min-width:40px;text-align:right}
+
         .cardInput{width:64px;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 8px}
         .cardInput:focus{outline:2px solid #bfdbfe}
         .cardEcho{margin-left:6px;font-size:14px}
+
         .hint{margin-top:8px;font-size:12px;color:#6b7280}
+
         .feSprGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
         @media (max-width:900px){.feSprGrid{grid-template-columns:1fr}}
         .box{border:1px solid var(--line);border-radius:12px;padding:10px}
@@ -606,27 +509,13 @@ export default function Page() {
         .sprChips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
         .chip{border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;background:#f8fafc}
         .list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
-
-        /* ===== CoachCard styles (bold section titles) ===== */
-        .coachCard{border:1px solid #e5e7eb;background:#fff;border-radius:14px;padding:12px}
-        .cc-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-        .cc-decision{border:1px solid #cbd5e1;background:#f8fafc;border-radius:999px;padding:6px 12px}
-        .cc-pill{border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;background:#fff}
-        .cc-sec{margin-top:8px}
-        .cc-title{font-weight:800;letter-spacing:.3px;color:#0f172a;margin-bottom:6px}
-        .cc-text{white-space:pre-wrap}
-        .cc-plan{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-        @media (max-width:900px){.cc-plan{grid-template-columns:1fr 1fr}}
-        .cc-col{border:1px solid #eef2f7;background:#fafbff;border-radius:10px;padding:8px}
-        .cc-sub{font-weight:700;font-size:12.5px;margin-bottom:4px;color:#1f2937}
-        .cc-actions{display:flex;justify-content:flex-end;margin-top:8px}
-        .coachCard ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
       `}</style>
     </main>
   );
 }
 
-/* Small atoms from your page */
+/* ================ Small UI atoms ================ */
+
 function Info({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="ibox">
@@ -635,13 +524,17 @@ function Info({ label, children }: { label: string; children: React.ReactNode })
     </div>
   );
 }
+
 function CardEditor({
   value, onChange, placeholder
 }: { value: string; onChange: (v: string)=>void; placeholder?: string }) {
   const [local, setLocal] = useState<string>(value || '');
+
   useEffect(()=>{ setLocal(value || ''); }, [value]);
+
   const norm = suitifyToken(local);
   const echo = norm ? <CardText c={norm} /> : <span style={{color:'#9ca3af'}}>{placeholder || ''}</span>;
+
   return (
     <div style={{display:'flex',alignItems:'center'}}>
       <input
@@ -651,7 +544,7 @@ function CardEditor({
         onBlur={()=>onChange(suitifyToken(local))}
         placeholder={placeholder || 'A♠'}
       />
-      <div className="cardEcho">{echo}</div>
+      <div className="cardEcho" title="Normalized">{echo}</div>
     </div>
   );
 }
