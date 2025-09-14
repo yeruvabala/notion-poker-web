@@ -2,217 +2,339 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-/* ====================== Helpers ====================== */
-
+/** =================== Types =================== */
 type Fields = {
   date?: string | null;
   stakes?: string | null;
   position?: string | null;
   cards?: string | null;
-  board?: string | null;
   gto_strategy?: string | null;
   exploit_deviation?: string | null;
   learning_tag?: string[];
+  board?: string | null;
+  notes?: string | null;
 };
+
+/** =================== Small helpers =================== */
+const asText = (v: any): string =>
+  typeof v === 'string'
+    ? v
+    : v == null
+      ? ''
+      : Array.isArray(v)
+        ? v.map(asText).join('\n')
+        : typeof v === 'object'
+          ? Object.entries(v).map(([k, val]) => `${k}: ${asText(val)}`).join('\n')
+          : String(v);
 
 const SUIT_MAP: Record<string, string> = { s: '♠', h: '♥', d: '♦', c: '♣' };
 const SUIT_WORD: Record<string, string> = {
-  spade: '♠', spades: '♠', heart: '♥', hearts: '♥',
-  diamond: '♦', diamonds: '♦', club: '♣', clubs: '♣'
+  spade: '♠', spades: '♠',
+  heart: '♥', hearts: '♥',
+  diamond: '♦', diamonds: '♦',
+  club: '♣', clubs: '♣',
 };
-const isRed = (s: string) => s === '♥' || s === '♦';
+const suitColor = (suit: string) => (suit === '♥' || suit === '♦' ? '#dc2626' : '#111827');
 
-function suitifyToken(tok: string): string {
-  const t = tok.trim();
-  if (!t) return '';
-  // e.g. "K♠"
-  const m0 = t.match(/^([2-9tjqka])([♥♦♣♠])$/i);
-  if (m0) return `${m0[1].toUpperCase()}${m0[2]}`;
-
-  // e.g. "Ks", "k s", "K/S"
-  const m1 = t.replace(/[\s/]+/g, '').match(/^([2-9tjqka])([shdc])$/i);
-  if (m1) return `${m1[1].toUpperCase()}${SUIT_MAP[m1[2].toLowerCase()]}`;
-
-  // e.g. "K of spades"
-  const m2 = t.match(/^([2-9tjqka])\s*(?:of)?\s*(spades?|hearts?|diamonds?|clubs?)$/i);
-  if (m2) return `${m2[1].toUpperCase()}${SUIT_WORD[m2[2].toLowerCase()]}`;
-
-  // ranks only (used for preflop-only when suits irrelevant) — normalize as rank only
-  const m3 = t.match(/^([2-9tjqka])$/i);
-  if (m3) return m3[1].toUpperCase();
-
+function suitifyOne(token: string): string {
+  const t = (token || '').replace(/\s+/g, '');
+  // Accept "Js", "J♠", "jS"
+  let m = t.match(/^([2-9TJQKA])([shdc♠♥♦♣])$/i);
+  if (m) {
+    const r = m[1].toUpperCase();
+    const s = m[2].toLowerCase();
+    const suit = SUIT_MAP[s] || (/[♠♥♦♣]/.test(s) ? s : '');
+    return suit ? `${r}${suit}` : '';
+  }
+  // Accept "J of spades"
+  m = t.match(/^([2-9TJQKA])(?:of)?(spades?|hearts?|diamonds?|clubs?)$/i);
+  if (m) {
+    const r = m[1].toUpperCase();
+    const suit = SUIT_WORD[(m[2] || '').toLowerCase()] || '♠';
+    return `${r}${suit}`;
+  }
   return '';
 }
 
-function prettyCards(line: string): string {
-  return line
-    .split(/\s+/)
-    .map(suitifyToken)
-    .filter(Boolean)
-    .join(' ');
+const CardSpan = ({ c }: { c: string }) =>
+  !c ? null : <span style={{ fontWeight: 700, color: suitColor(c.slice(-1)) }}>{c}</span>;
+
+const joinDefined = (parts: Array<string | undefined>) =>
+  parts.filter(Boolean).join(' ');
+
+/** =================== CardInput (rank + suit chips) =================== */
+function CardInput({
+  label,
+  value,
+  onChange,
+}: {
+  label?: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const rank = (value || '').slice(0, 1) || '';
+  const suit = (value || '').slice(1) || '';
+
+  const setRank = (r: string) => onChange(r && suit ? `${r}${suit}` : r);
+  const setSuit = (s: string) => onChange(rank ? `${rank}${s}` : s);
+
+  const ranks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+  const suits = ['♠','♥','♦','♣'];
+
+  return (
+    <div className="ccard">
+      {label && <div className="ccardLabel">{label}</div>}
+      <div className="ccardRow">
+        <select className="p-input ccardSel" value={rank} onChange={e=>setRank(e.target.value)}>
+          <option value="">–</option>
+          {ranks.map(r => <option key={r} value={r}>{r}</option>)}
+        </select>
+        <div className="ccardSuits">
+          {suits.map(s => (
+            <button
+              key={s}
+              type="button"
+              className={`ccardSuit ${s===suit ? 'active':''}`}
+              style={{ color: suitColor(s) }}
+              onClick={()=>setSuit(s)}
+              aria-label={`Suit ${s}`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+        {value && (
+          <div className="ccardPreview"><CardSpan c={value} /></div>
+        )}
+      </div>
+    </div>
+  );
 }
 
-const suitColor = (suit: string) => (isRed(suit) ? '#dc2626' : '#111827');
+/** =================== CoachCard (pretty GTO box) =================== */
+type CoachPlan = { preflop: string[]; flop: string[]; turn: string[]; river: string[] };
+type CoachData = {
+  decision: string;
+  price?: string;
+  rangeHero?: string;
+  rangeVillain?: string;
+  why: string[];
+  plan: CoachPlan;
+  mistakes: string[];
+};
 
-function CardText({ c }: { c: string }) {
-  if (!c) return null;
-  const suit = c.slice(-1);
-  return <span style={{ fontWeight: 700, color: suitColor(suit) }}>{c}</span>;
-}
+function parseCoachCard(text: string): CoachData {
+  const clean = (text || '').replace(/\r/g, '');
 
-/* --- lightweight parsing from the story box (best effort; editable summary overrides) --- */
-
-function parseStakes(t: string): string {
-  // "$1/$3", "1/3", "2.5/5", "1bb/0.5bb + 1bb BBA"
-  const m =
-    t.match(/\$?\d+(?:\.\d+)?\s*\/\s*\$?\d+(?:\.\d+)?(?:\s*\+\s*\$?\d+(?:\.\d+)?\s*(?:bb|bba|ante))?/i) ||
-    t.match(/\d+bb\/\d+bb(?:\s*\+\s*\d+bb\s*bba)?/i);
-  return m ? m[0] : '';
-}
-
-function parsePosition(t: string): string {
-  const up = ` ${t.toUpperCase()} `;
-  const POS = ['SB','BB','BTN','CO','HJ','MP','UTG+2','UTG+1','UTG'];
-  for (const p of POS) if (up.includes(` ${p} `)) return p.replace('+', '+');
-  return '';
-}
-
-function parseHeroCardsSmart(t: string): string {
-  // prefer patterns with "hero/i/with/holding"
-  const s = t.toLowerCase();
-
-  // "with Ks Kd", "hero has Kc Kh"
-  let m = s.match(/\b(?:hero|i|holding|with|have|has)\b[^.\n]{0,20}?([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])/i);
-  if (m) return prettyCards(`${m[1]} ${m[2]}`);
-
-  // "Kc Kh" anywhere as a last resort (but not 5 cards)
-  const tokens = Array.from(s.matchAll(/([2-9tjqka][shdc♥♦♣♠])/ig)).map(x => x[0]).slice(0,2);
-  if (tokens.length === 2) return prettyCards(tokens.join(' '));
-
-  return '';
-}
-
-function parseBoardFromStory(t: string) {
-  const grab = (label: 'flop'|'turn'|'river') => {
-    const m = t.match(new RegExp(`${label}[^:]*:\\s*([^\\n]+)`, 'i'));
-    return m ? prettyCards(m[1]) : '';
+  const grab = (label: string) => {
+    const re = new RegExp(`^${label}\\s*:([\\s\\S]*?)(?:^\\w+\\s*:|\\Z)`, 'im');
+    const m = clean.match(re);
+    return m ? m[1].trim() : '';
   };
-  const flop = grab('flop');
-  const turn = grab('turn');
-  const river = grab('river');
-  return { flop, turn, river };
+
+  const decision = grab('DECISION').replace(/^\-+\s*/gm, '').split('\n')[0] || '';
+  const price = grab('PRICE');
+  const range = grab('RANGE');
+
+  let rangeHero = '', rangeVillain = '';
+  if (range) {
+    const mh = range.match(/hero\s*([^;,\n]+)/i);
+    const mv = range.match(/villain\s*([^;,\n]+)/i);
+    rangeHero = mh ? mh[1].trim() : '';
+    rangeVillain = mv ? mv[1].trim() : '';
+    if (!rangeHero && !rangeVillain) rangeHero = range;
+  }
+
+  const lines = (block: string) =>
+    block
+      .split(/\n+/)
+      .map(s => s.replace(/^[•\-]\s*/, '').trim())
+      .filter(Boolean);
+
+  const why = lines(grab('WHY'));
+
+  const planBlock = grab('PLAN');
+  const street = (name: string) => {
+    const re = new RegExp(`\\b${name}\\s*:\\s*([\\s\\S]*?)(?:^\\s*\\-\\s*\\w+\\s*:|\\Z)`, 'im');
+    const m = planBlock.match(re);
+    return m ? lines(m[1]) : [];
+  };
+  const plan: CoachPlan = {
+    preflop: street('Preflop'),
+    flop: street('Flop'),
+    turn: street('Turn'),
+    river: street('River'),
+  };
+
+  const mistakes = lines(grab('MISTAKES'));
+  return { decision, price, rangeHero, rangeVillain, why, plan, mistakes };
 }
 
-/* ====================== Page ====================== */
+function colorForDecision(d: string) {
+  const s = (d || '').toLowerCase();
+  if (s.includes('fold')) return '#ef4444';
+  if (s.includes('jam') || s.includes('all-in')) return '#10b981';
+  if (s.includes('bet')) return '#3b82f6';
+  if (s.includes('check')) return '#6b7280';
+  if (s.includes('call')) return '#f59e0b';
+  return '#334155';
+}
 
+function Badge({ children, tone='#475569' }: { children: React.ReactNode; tone?: string }) {
+  return (
+    <span
+      className="cc-badge"
+      style={{ borderColor: tone, color: tone, background: '#ffffff' }}
+    >
+      {children}
+    </span>
+  );
+}
+
+function BulletList({ items }: { items: string[] }) {
+  if (!items?.length) return null;
+  return (
+    <ul className="cc-ul">
+      {items.map((t, i) => <li key={i}>{t}</li>)}
+    </ul>
+  );
+}
+
+function StreetCol({ title, items }: { title: string; items: string[] }) {
+  if (!items?.length) return null;
+  return (
+    <div className="cc-street">
+      <div className="cc-streetTitle">{title}</div>
+      <BulletList items={items} />
+    </div>
+  );
+}
+
+function CoachCard({ text, onChange }: { text: string; onChange: (v: string) => void }) {
+  const [rawMode, setRawMode] = useState(false);
+  const data = parseCoachCard(text);
+  const tone = colorForDecision(data.decision);
+
+  if (rawMode) {
+    return (
+      <div className="coachCard">
+        <textarea
+          className="p-input p-mono"
+          rows={12}
+          value={text}
+          onChange={(e)=>onChange(e.target.value)}
+        />
+        <div className="cc-actions">
+          <button className="p-btn" onClick={()=>setRawMode(false)}>Done</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="coachCard">
+      <div className="cc-head">
+        <div className="cc-decision" style={{ background: tone + '1a', borderColor: tone }}>
+          <span className="cc-dot" style={{ background: tone }} />
+          {data.decision || '—'}
+        </div>
+        {data.price ? <Badge tone={tone}>Price: {data.price}</Badge> : null}
+        <div className="cc-spacer" />
+        <button className="p-btn" onClick={()=>setRawMode(true)}>Edit</button>
+      </div>
+
+      {(data.rangeHero || data.rangeVillain) && (
+        <div className="cc-range">
+          {data.rangeHero && <Badge>Hero: {data.rangeHero}</Badge>}
+          {data.rangeVillain && <Badge>Villain: {data.rangeVillain}</Badge>}
+        </div>
+      )}
+
+      {data.why?.length ? (
+        <div className="cc-section">
+          <div className="cc-title">Why</div>
+          <BulletList items={data.why} />
+        </div>
+      ) : null}
+
+      {(data.plan.preflop.length + data.plan.flop.length + data.plan.turn.length + data.plan.river.length) > 0 && (
+        <div className="cc-section">
+          <div className="cc-title">Plan</div>
+          <div className="cc-planGrid">
+            <StreetCol title="Preflop" items={data.plan.preflop} />
+            <StreetCol title="Flop" items={data.plan.flop} />
+            <StreetCol title="Turn" items={data.plan.turn} />
+            <StreetCol title="River" items={data.plan.river} />
+          </div>
+        </div>
+      )}
+
+      {data.mistakes?.length ? (
+        <div className="cc-section">
+          <div className="cc-title">Mistakes</div>
+          <ul className="cc-ul cc-warn">
+            {data.mistakes.map((t, i) => <li key={i}>{t}</li>)}
+          </ul>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** =================== Page =================== */
 export default function Page() {
-  /* ----- story text ----- */
+  // Input narrative
   const [input, setInput] = useState('');
 
-  /* ----- model results ----- */
+  // Parsed / server fields
   const [fields, setFields] = useState<Fields | null>(null);
+
+  // Async state
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
-  /* ----- FE & SPR small calculators ----- */
-  const [risk, setRisk] = useState<string>('');     // bb
-  const [reward, setReward] = useState<string>(''); // bb
-  const feNeeded = useMemo(() => {
-    const r = parseFloat(risk);
-    const w = parseFloat(reward);
-    if (!isFinite(r) || !isFinite(w) || r < 0 || w <= 0) return '';
-    const x = (r / (r + w)) * 100;
-    return `${x.toFixed(1)}%`;
-  }, [risk, reward]);
+  // Situation Summary editors
+  const [mode, setMode] = useState<'CASH'|'MTT'|''>('CASH');
+  const [stakes, setStakes] = useState('');
+  const [effStack, setEffStack] = useState('');
+  const [position, setPosition] = useState('SB');
 
-  const [flopPot, setFlopPot] = useState<string>(''); // bb
-  const [behind, setBehind] = useState<string>('');   // bb behind after c-bet
-  const spr = useMemo(() => {
-    const p = parseFloat(flopPot);
-    const b = parseFloat(behind);
-    if (!isFinite(p) || !isFinite(b) || p <= 0) return '';
-    return (b / p).toFixed(1);
-  }, [flopPot, behind]);
+  const [heroA, setHeroA] = useState('K♥');
+  const [heroB, setHeroB] = useState('K♠');
 
-  /* ----- preview (from story) ----- */
-  const preview = useMemo(() => ({
-    stakes: parseStakes(input),
-    position: parsePosition(input),
-    heroCards: parseHeroCardsSmart(input),
-    board: parseBoardFromStory(input),
-  }), [input]);
+  const [f1, setF1] = useState('J♠');
+  const [f2, setF2] = useState('T♠');
+  const [f3, setF3] = useState('4♣');
+  const [turn, setTurn] = useState('9♣');
+  const [river, setRiver] = useState('3♠');
 
-  /* ----- Situation Summary (editable) ----- */
-  const [mode, setMode] = useState<'CASH' | 'MTT' | ''>('');
-  const [stakes, setStakes] = useState<string>('');
-  const [eff, setEff] = useState<string>('');
-  const [position, setPosition] = useState<string>('');
-  const [h1, setH1] = useState<string>('');   // hero card 1
-  const [h2, setH2] = useState<string>('');   // hero card 2
-  const [f1, setF1] = useState<string>('');   // flop 1
-  const [f2, setF2] = useState<string>('');   // flop 2
-  const [f3, setF3] = useState<string>('');   // flop 3
-  const [tr, setTr] = useState<string>('');   // turn
-  const [rv, setRv] = useState<string>('');   // river
-
-  // on story change, prefill empty summary fields once
-  useEffect(() => {
-    if (!stakes && preview.stakes) setStakes(preview.stakes);
-    if (!position && preview.position) setPosition(preview.position);
-    if (!h1 || !h2) {
-      const pcs = (preview.heroCards || '').split(' ').filter(Boolean);
-      if (pcs.length === 2) { if (!h1) setH1(pcs[0]); if (!h2) setH2(pcs[1]); }
-    }
-    if (!f1 && !f2 && !f3) {
-      const arr = (preview.board.flop || '').split(' ').filter(Boolean);
-      if (arr.length === 3) { setF1(arr[0]); setF2(arr[1]); setF3(arr[2]); }
-    }
-    if (!tr && preview.board.turn) setTr(preview.board.turn);
-    if (!rv && preview.board.river) setRv(preview.board.river);
-  }, [preview]); // eslint-disable-line react-hooks/exhaustive-deps
-
+  // Top-right info
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
-  const heroCardsStr = useMemo(() => {
-    const a = suitifyToken(h1);
-    const b = suitifyToken(h2);
-    return [a, b].filter(Boolean).join(' ');
-  }, [h1, h2]);
+  const cardsStr = useMemo(() => joinDefined([heroA, heroB]), [heroA, heroB]);
 
-  const flopStr = useMemo(() => {
-    const a = suitifyToken(f1), b = suitifyToken(f2), c = suitifyToken(f3);
-    return [a, b, c].filter(Boolean).join(' ');
-  }, [f1, f2, f3]);
+  const boardStr = useMemo(() => {
+    const flop = joinDefined([f1, f2, f3]);
+    const t = turn;
+    const r = river;
+    return [flop && `Flop: ${flop}`, t && `Turn: ${t}`, r && `River: ${r}`].filter(Boolean).join('  |  ');
+  }, [f1, f2, f3, turn, river]);
 
-  const turnStr = suitifyToken(tr);
-  const riverStr = suitifyToken(rv);
-
-  /* ----- network calls ----- */
-
-  async function analyze() {
-    setError(null);
-    setStatus(null);
+  /** ------------- API calls ------------- */
+  async function analyzeParsedHand(parsed: Fields) {
+    setAiError(null);
     setAiLoading(true);
     try {
-      const board = [
-        flopStr && `Flop: ${flopStr}`,
-        turnStr && `Turn: ${turnStr}`,
-        riverStr && `River: ${riverStr}`,
-      ].filter(Boolean).join('  |  ');
-
       const payload = {
         date: today,
-        stakes: stakes || undefined,
-        position: position || undefined,
-        cards: heroCardsStr || undefined,
-        board: board || undefined,
-        notes: input || undefined,
-        rawText: input || undefined,
-        // include tiny numeric context for FE/SPR if user filled it
-        fe_hint: feNeeded,
-        spr_hint: spr
+        stakes: stakes || parsed.stakes || undefined,
+        position: position || parsed.position || undefined,
+        cards: cardsStr || parsed.cards || undefined,
+        board: boardStr || parsed.board || undefined,
+        notes: parsed.notes ?? input,
+        rawText: input,
       };
 
       const r = await fetch('/api/analyze-hand', {
@@ -220,331 +342,409 @@ export default function Page() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+
       if (!r.ok) {
-        const e = await r.json().catch(() => ({}));
-        throw new Error(e?.error || `Analyze failed (${r.status})`);
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err?.error || `AI analyze failed (${r.status})`);
       }
+
       const data = await r.json();
-      setFields(prev => ({
-        ...(prev ?? {}),
-        gto_strategy: (data?.gto_strategy ?? '') || '',
-        exploit_deviation: (data?.exploit_deviation ?? '') || '',
-        learning_tag: Array.isArray(data?.learning_tag) ? data.learning_tag : [],
-        date: today,
-        stakes,
-        position,
-        cards: heroCardsStr,
-        board
-      }));
+
+      setFields(prev => {
+        const base = prev ?? parsed ?? {};
+        const tags: string[] =
+          Array.isArray(data.learning_tag)
+            ? data.learning_tag
+            : typeof data.learning_tag === 'string'
+              ? data.learning_tag.split(',').map((s: string) => s.trim()).filter(Boolean)
+              : [];
+        return {
+          ...base,
+          cards: cardsStr || base.cards || '',
+          position,
+          stakes: stakes || base.stakes || '',
+          board: boardStr,
+          gto_strategy: asText(data.gto_strategy),
+          exploit_deviation: asText(data.exploit_deviation),
+          learning_tag: tags,
+        };
+      });
     } catch (e: any) {
-      setError(e?.message || 'Analyze error');
+      setAiError(e.message || 'AI analysis error');
     } finally {
       setAiLoading(false);
     }
   }
 
-  async function saveToNotion() {
+  async function handleParse() {
+    setStatus(null);
+    setAiError(null);
+    try {
+      const res = await fetch('/api/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input }),
+      });
+      const parsed: Fields = await res.json();
+      setFields(parsed);
+      if (parsed) analyzeParsedHand(parsed);
+    } catch (e: any) {
+      setAiError(e.message || 'Parse failed');
+    }
+  }
+
+  async function handleSave() {
     if (!fields) return;
     setSaving(true);
     setStatus(null);
     try {
-      const r = await fetch('/api/notion', {
+      const res = await fetch('/api/notion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fields }),
       });
-      const data = await r.json();
-      if (data?.ok) setStatus(`Saved! Open in Notion: ${data.url}`);
-      else setStatus(data?.error || 'Failed to save');
+      const data = await res.json();
+      if (data.ok) setStatus(`Saved! Open in Notion: ${data.url}`);
+      else setStatus(data.error || 'Failed to save');
     } catch (e: any) {
-      setStatus(e?.message || 'Failed to save');
+      setStatus(e.message);
     } finally {
       setSaving(false);
     }
   }
 
-  /* ====================== UI ====================== */
-
   return (
-    <main className="p">
-      <div className="wrap">
-        <h1 className="title">Only Poker</h1>
+    <main className="p-page">
+      <div className="p-container">
+        <header className="p-header">
+          <h1 className="p-title">Only Poker</h1>
+        </header>
 
-        <div className="grid">
-          {/* LEFT column */}
-          <div className="col">
-            {/* Story box */}
-            <section className="card">
-              <div className="cardTitle">Hand Played</div>
+        <section className="p-grid">
+          {/* LEFT COLUMN */}
+          <div className="p-col">
+            <div className="p-card">
+              <div className="p-cardTitle">Hand Played</div>
               <textarea
-                className="textarea"
+                className="p-textarea"
+                placeholder="Type your hand like a story — stakes, position, cards, actions..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={`Type your hand like a story — stakes, position, cards, actions…
-
-Example:
-Cash 6-max 100bb. BTN (Hero) 2.3x, BB calls.
-Flop 8♠ 6♠ 2♦ — bet 50%, call.
-Turn K♦ — ...`}
               />
-              <div className="row gap">
-                <button className="btn primary" onClick={analyze} disabled={aiLoading || !input.trim()}>
+              <div className="p-row p-gap">
+                <button className="p-btn p-primary" onClick={handleParse} disabled={!input.trim() || aiLoading}>
                   {aiLoading ? 'Analyzing…' : 'Send'}
                 </button>
                 <button
-                  className="btn"
+                  className="p-btn"
                   onClick={() => {
-                    setInput(''); setFields(null); setStatus(null); setError(null);
-                    setMode(''); setStakes(''); setEff(''); setPosition('');
-                    setH1(''); setH2(''); setF1(''); setF2(''); setF3(''); setTr(''); setRv('');
-                    setRisk(''); setReward(''); setFlopPot(''); setBehind('');
+                    setInput('');
+                    setFields(null);
+                    setStatus(null);
+                    setAiError(null);
                   }}
-                >Clear</button>
+                >
+                  Clear
+                </button>
               </div>
-              {error && <div className="err">{error}</div>}
-            </section>
+              {aiError && <div className="p-err">{aiError}</div>}
+              {status && <div className="p-note">{status}</div>}
+            </div>
 
             {/* Situation Summary (editable) */}
-            <section className="card">
-              <div className="cardTitle">Situation Summary</div>
+            <div className="p-card">
+              <div className="p-subTitle">Situation Summary</div>
 
-              <div className="summaryGrid">
-                <Info label="Mode">
-                  <select className="input" value={mode} onChange={e=>setMode(e.target.value as any)}>
-                    <option value="">(unknown)</option>
+              <div className="sumGrid">
+                <div className="ibox">
+                  <div className="iboxLabel">Mode</div>
+                  <select className="p-input" value={mode} onChange={e=>setMode(e.target.value as any)}>
                     <option value="CASH">CASH</option>
                     <option value="MTT">MTT</option>
                   </select>
-                </Info>
+                </div>
 
-                <Info label="Blinds / Stakes">
-                  <input className="input" value={stakes} onChange={e=>setStakes(e.target.value)} placeholder={preview.stakes || '(unknown)'} />
-                </Info>
+                <div className="ibox">
+                  <div className="iboxLabel">Blinds / Stakes</div>
+                  <input className="p-input" value={stakes} onChange={e=>setStakes(e.target.value)} placeholder="$1/$2" />
+                </div>
 
-                <Info label="Effective Stack (bb)">
-                  <input className="input" value={eff} onChange={e=>setEff(e.target.value)} placeholder="(unknown)" />
-                </Info>
-
-                <Info label="Positions">
-                  <input className="input" value={position} onChange={e=>setPosition(e.target.value.toUpperCase())} placeholder={preview.position || '(unknown)'} />
-                </Info>
-
-                <Info label="Hero Hand">
-                  <div className="cardsRow">
-                    <CardEditor value={h1} onChange={setH1} placeholder={(preview.heroCards || '').split(' ')[0] || 'K♠'} />
-                    <CardEditor value={h2} onChange={setH2} placeholder={(preview.heroCards || '').split(' ')[1] || 'K♦'} />
-                  </div>
-                </Info>
-
-                <Info label="Board">
-                  <div className="boardRow">
-                    <span className="pillLbl">Flop</span>
-                    <CardEditor value={f1} onChange={setF1} placeholder={(preview.board.flop || '').split(' ')[0] || 'J♠'} />
-                    <CardEditor value={f2} onChange={setF2} placeholder={(preview.board.flop || '').split(' ')[1] || 'T♠'} />
-                    <CardEditor value={f3} onChange={setF3} placeholder={(preview.board.flop || '').split(' ')[2] || '4♣'} />
-                  </div>
-                  <div className="boardRow">
-                    <span className="pillLbl">Turn</span>
-                    <CardEditor value={tr} onChange={setTr} placeholder={preview.board.turn || '9♣'} />
-                  </div>
-                  <div className="boardRow">
-                    <span className="pillLbl">River</span>
-                    <CardEditor value={rv} onChange={setRv} placeholder={preview.board.river || '3♠'} />
-                  </div>
-                </Info>
+                <div className="ibox">
+                  <div className="iboxLabel">Effective Stack (bb)</div>
+                  <input className="p-input" value={effStack} onChange={e=>setEffStack(e.target.value)} placeholder="e.g., 100" />
+                </div>
               </div>
 
-              <div className="hint">Postflop: add exact suits (e.g., <b>As 4s</b>) for best accuracy. Edits here override the story.</div>
-            </section>
+              <div className="sumGrid">
+                <div className="ibox">
+                  <div className="iboxLabel">Positions</div>
+                  <select className="p-input" value={position} onChange={e=>setPosition(e.target.value)}>
+                    {['UTG','MP','HJ','CO','BTN','SB','BB'].map(p=> <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+
+                <div className="ibox">
+                  <div className="iboxLabel">Hero Hand</div>
+                  <div className="heroRow">
+                    <CardInput value={heroA} onChange={setHeroA} />
+                    <span className="heroPlus">+</span>
+                    <CardInput value={heroB} onChange={setHeroB} />
+                  </div>
+                </div>
+
+                <div className="ibox">
+                  <div className="iboxLabel">Board</div>
+                  <div className="boardEdit">
+                    <div className="boardRow">
+                      <span className="pillLbl">Flop</span>
+                      <CardInput value={f1} onChange={setF1} />
+                      <CardInput value={f2} onChange={setF2} />
+                      <CardInput value={f3} onChange={setF3} />
+                    </div>
+                    <div className="boardRow">
+                      <span className="pillLbl">Turn</span>
+                      <CardInput value={turn} onChange={setTurn} />
+                    </div>
+                    <div className="boardRow">
+                      <span className="pillLbl">River</span>
+                      <CardInput value={river} onChange={setRiver} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-help">Postflop: add exact suits (e.g., <b>As 4s</b>) for best accuracy. Edits here override the story.</div>
+            </div>
 
             {/* FE & SPR */}
-            <section className="card">
-              <div className="cardTitle">Fold-Equity Threshold & SPR</div>
-
-              <div className="feSprGrid">
-                <div className="box">
-                  <div className="boxTitle">FE calculator (bb units)</div>
-                  <div className="grid2">
-                    <label className="lbl">Risk (bb)</label>
-                    <input className="input" value={risk} onChange={e=>setRisk(e.target.value)} placeholder="e.g., jam = eff BB" />
-                    <label className="lbl">Reward (bb)</label>
-                    <input className="input" value={reward} onChange={e=>setReward(e.target.value)} placeholder="pre-pot + bet size" />
+            <div className="p-card">
+              <div className="p-subTitle">Fold-Equity Threshold & SPR</div>
+              <div className="sprGrid">
+                <div className="ibox">
+                  <div className="iboxLabel">FE calculator (bb units)</div>
+                  <div className="feRow">
+                    <div className="feCol">
+                      <div className="feLbl">Risk (bb)</div>
+                      <input className="p-input" placeholder="e.g., jam = eff BB" />
+                    </div>
+                    <div className="feCol">
+                      <div className="feLbl">Reward (bb)</div>
+                      <input className="p-input" placeholder="pre-pot + bet size" />
+                    </div>
                   </div>
-                  <div className="calcLine">
-                    FE needed ≈ <b>{feNeeded || '0%'}</b> &nbsp;
-                    <span className="muted">(Risk / (Risk + Reward))</span>
-                  </div>
+                  <div className="p-muted" style={{marginTop:6}}>FE needed ≈ 0%  <span className="p-muted"> (Risk / (Risk + Reward))</span></div>
                 </div>
 
-                <div className="box">
-                  <div className="boxTitle">SPR (flop)</div>
-                  <div className="grid2">
-                    <label className="lbl">Flop pot (bb)</label>
-                    <input className="input" value={flopPot} onChange={e=>setFlopPot(e.target.value)} placeholder="e.g., 5.9" />
-                    <label className="lbl">Behind (bb)</label>
-                    <input className="input" value={behind} onChange={e=>setBehind(e.target.value)} placeholder="effective after prefl" />
+                <div className="ibox">
+                  <div className="iboxLabel">SPR (flop)</div>
+                  <div className="feRow">
+                    <div className="feCol">
+                      <div className="feLbl">Flop pot (bb)</div>
+                      <input className="p-input" placeholder="e.g., 5.9" />
+                    </div>
+                    <div className="feCol">
+                      <div className="feLbl">Behind (bb)</div>
+                      <input className="p-input" placeholder="effective after prefl" />
+                    </div>
                   </div>
-                  <div className="calcLine">SPR ≈ <b>{spr || '0'}</b></div>
                   <div className="sprChips">
-                    <span className="chip">SPR ≤ 2: jam / b50 / x</span>
-                    <span className="chip">SPR 2–5: b33 / b50 / x</span>
-                    <span className="chip">SPR 5+: b25–33 / x</span>
+                    <span className="sprChip">SPR ≤ 2: jam / b50 / x</span>
+                    <span className="sprChip">SPR 2–5: b33 / b50 / x</span>
+                    <span className="sprChip">SPR 5+: b25–33 / x</span>
                   </div>
                 </div>
               </div>
-            </section>
+            </div>
           </div>
 
-          {/* RIGHT column */}
-          <div className="col">
-            {/* top info card */}
-            <section className="card">
-              <div className="infoGrid">
-                <Info label="Date"><div>{today}</div></Info>
-                <Info label="Position"><div>{position || <span className="muted">(unknown)</span>}</div></Info>
-                <Info label="Stakes"><div>{stakes || <span className="muted">(unknown)</span>}</div></Info>
-                <Info label="Cards">
-                  {heroCardsStr
-                    ? heroCardsStr.split(' ').map((c,i)=>(
-                        <span key={i} style={{marginRight:6}}><CardText c={c} /></span>
-                      ))
-                    : <span className="muted">(unknown)</span>
-                  }
-                </Info>
+          {/* RIGHT COLUMN */}
+          <div className="p-col">
+            <div className="p-card">
+              <div className="p-grid2">
+                <InfoBox label="Date"><div>{today}</div></InfoBox>
+                <InfoBox label="Position"><div>{position}</div></InfoBox>
+                <InfoBox label="Stakes"><div>{stakes || <span className="p-muted">(unknown)</span>}</div></InfoBox>
+                <InfoBox label="Cards">
+                  <div className="p-cards">
+                    {cardsStr
+                      ? cardsStr.split(' ').map((c, i) => <span key={i} className="p-cardSpan"><CardSpan c={c} /></span>)
+                      : <span className="p-muted">(unknown)</span>
+                    }
+                  </div>
+                </InfoBox>
               </div>
-            </section>
+            </div>
 
-            {/* GTO Strategy */}
-            <section className="card">
-              <div className="cardTitle">GTO Strategy (detailed)</div>
-              <textarea
-                className="textarea mono"
-                rows={12}
-                placeholder="Preflop/Flop/Turn/River plan with sizes…"
-                value={fields?.gto_strategy ?? ''}
-                onChange={e => fields && setFields({ ...fields, gto_strategy: e.target.value })}
+            <div className="p-card">
+              <div className="p-subTitle">GTO Strategy</div>
+              <CoachCard
+                text={fields?.gto_strategy ?? ''}
+                onChange={(val)=> fields && setFields({ ...fields, gto_strategy: val })}
               />
-              <div className="muted small">We'll auto-fill this after “Send”. You can also edit.</div>
-            </section>
+            </div>
 
-            {/* Exploitative Deviations */}
-            <section className="card">
-              <div className="cardTitle">Exploitative Deviations</div>
-              <ul className="list">
+            <div className="p-card">
+              <div className="p-subTitle">Exploitative Deviations</div>
+              <ul className="p-list">
                 {(fields?.exploit_deviation || '')
                   .split(/(?<=\.)\s+/)
                   .filter(Boolean)
-                  .map((s,i)=><li key={i}>{s}</li>)}
+                  .map((line, i) => <li key={i}>{line}</li>)
+                }
               </ul>
 
-              <div className="row end gapTop">
-                <button className="btn" onClick={analyze} disabled={aiLoading}>
+              <div className="p-row p-end p-gapTop">
+                <button
+                  className="p-btn"
+                  disabled={!fields || aiLoading}
+                  onClick={() => fields && analyzeParsedHand(fields)}
+                >
                   {aiLoading ? 'Analyzing…' : 'Analyze Again'}
                 </button>
-                <button className="btn primary" onClick={saveToNotion} disabled={!fields || saving}>
+                <button
+                  className="p-btn p-primary"
+                  disabled={!fields || saving}
+                  onClick={handleSave}
+                >
                   {saving ? 'Saving…' : 'Confirm & Save to Notion'}
                 </button>
               </div>
-              {status && <div className="note">{status}</div>}
-            </section>
+            </div>
           </div>
-        </div>
+        </section>
       </div>
 
-      {/* ===================== Styles ===================== */}
+      {/* ============== Styles ============== */}
       <style jsx global>{`
         :root{
-          --bg:#f3f4f6; --card:#ffffff; --line:#e5e7eb; --text:#0f172a; --muted:#6b7280;
-          --primary:#2563eb; --primary2:#1d4ed8; --btnText:#f8fbff;
+          --bg1:#eef2f7; --bg2:#f8fafc;
+          --card1:#ffffff; --card2:#f3f4f6; --card3:#f8fafc;
+          --border:#e5e7eb; --line:#e5e7eb;
+          --text:#0f172a; --muted:#6b7280;
+          --primary:#3b82f6; --primary2:#2563eb; --btnText:#f8fbff;
         }
         *{box-sizing:border-box}
-        html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-        .p{padding:24px}
-        .wrap{max-width:1200px;margin:0 auto}
-        .title{margin:0 0 12px;font-size:28px;font-weight:800;text-align:center}
-        .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-        @media (max-width:980px){.grid{grid-template-columns:1fr}}
+        html,body{margin:0;background:linear-gradient(135deg,var(--bg2),var(--bg1));color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+        .p-page{min-height:100vh;padding:24px}
+        .p-container{max-width:1220px;margin:0 auto}
+        .p-header{display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+        .p-title{margin:0;font-size:28px;font-weight:800;letter-spacing:.2px}
+        .p-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+        @media (max-width:980px){.p-grid{grid-template-columns:1fr}}
+        .p-col{display:flex;flex-direction:column;gap:24px}
 
-        .col{display:flex;flex-direction:column;gap:18px}
-        .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
-        .cardTitle{font-size:13px;font-weight:800;color:#111827;margin-bottom:8px}
-        .textarea{width:100%;min-height:140px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}
-        .textarea.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,Monaco,monospace}
-        .row{display:flex;align-items:center}
-        .end{justify-content:flex-end}
-        .gap{gap:10px}
-        .gapTop{margin-top:10px}
-        .btn{border:1px solid var(--line);background:#fff;padding:10px 14px;border-radius:12px;cursor:pointer}
-        .btn.primary{background:linear-gradient(180deg,var(--primary),var(--primary2));color:var(--btnText);border-color:#9db7ff}
-        .btn[disabled]{opacity:.6;cursor:not-allowed}
-        .err{margin-top:10px;color:#b91c1c}
-        .note{margin-top:10px;color:#166534}
-        .muted{color:var(--muted)}
-        .small{font-size:12px}
+        .p-card{
+          background:linear-gradient(180deg,var(--card1),var(--card2) 55%,var(--card3));
+          border:1px solid var(--border);
+          border-radius:18px; padding:16px;
+          box-shadow:0 8px 24px rgba(0,0,0,.06);
+        }
+        .p-cardTitle{font-size:13px;font-weight:700;color:#334155;margin-bottom:10px}
+        .p-subTitle{font-size:14px;font-weight:800;margin-bottom:10px;color:#111827}
+        .p-textarea{
+          width:100%; min-height:160px; resize:vertical; padding:12px 14px;
+          border-radius:14px; border:1px solid var(--line); background:#ffffff; color:#0f172a; font-size:15px; line-height:1.5;
+        }
+        .p-row{display:flex;align-items:center}
+        .p-gap{gap:12px}
+        .p-gapTop{margin-top:10px}
+        .p-end{justify-content:flex-end}
+        .p-btn{
+          appearance:none; border:1px solid var(--line); background:#ffffff; color:#0f172a;
+          padding:10px 14px; border-radius:12px; cursor:pointer; transition:transform .02s ease, background .15s ease, border-color .15s ease;
+        }
+        .p-btn:hover{background:#f3f4f6}
+        .p-btn:active{transform:translateY(1px)}
+        .p-btn[disabled]{opacity:.55;cursor:not-allowed}
+        .p-btn.p-primary{
+          background:linear-gradient(180deg,var(--primary),var(--primary2));
+          color:var(--btnText); border-color:#9db7ff;
+          box-shadow:0 6px 18px rgba(59,130,246,.25);
+        }
 
-        .infoGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-        .summaryGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-        @media (max-width:900px){.summaryGrid{grid-template-columns:1fr}}
+        .p-grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:4px}
+        .ibox{background:#ffffff; border:1px solid var(--border); border-radius:12px; padding:10px 12px}
+        .iboxLabel{font-size:11px; color:#6b7280; margin-bottom:6px}
+        .p-input{
+          width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--line);
+          background:#ffffff; color:#0f172a; font-size:14.5px;
+        }
+        .p-input.p-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Courier New',monospace; line-height:1.45}
+        .p-help{margin-top:8px; font-size:12px; color:var(--muted)}
+        .p-muted{color:var(--muted)}
+        .p-cardSpan{margin-right:4px}
+        .p-list{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px}
 
-        .ibox{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;min-height:52px}
-        .lblSmall{font-size:11px;color:#6b7280;margin-bottom:4px}
-        .input{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
-        .cardsRow{display:flex;gap:8px;align-items:center}
-        .boardRow{display:flex;gap:8px;align-items:center;margin-top:6px}
-        .pillLbl{font-size:12px;color:#6b7280;min-width:40px;text-align:right}
+        /* Situation Summary */
+        .sumGrid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px}
+        @media (max-width:980px){ .sumGrid{ grid-template-columns:1fr } }
+        .heroRow{display:flex; align-items:center; gap:10px}
+        .heroPlus{font-weight:700; color:#64748b}
 
-        .cardInput{width:64px;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 8px}
-        .cardInput:focus{outline:2px solid #bfdbfe}
-        .cardEcho{margin-left:6px;font-size:14px}
+        .boardEdit{display:flex; flex-direction:column; gap:8px}
+        .boardRow{display:flex; align-items:center; gap:10px}
+        .pillLbl{font-size:12px; font-weight:700; color:#475569; width:40px}
 
-        .hint{margin-top:8px;font-size:12px;color:#6b7280}
+        /* CardInput */
+        .ccard{}
+        .ccardLabel{font-size:11px; color:#6b7280; margin-bottom:4px}
+        .ccardRow{display:flex; align-items:center; gap:8px}
+        .ccardSel{width:70px}
+        .ccardSuits{display:flex; gap:6px}
+        .ccardSuit{
+          border:1px solid #e5e7eb; background:#fff; border-radius:8px; padding:6px 9px; cursor:pointer;
+        }
+        .ccardSuit.active{box-shadow:0 0 0 2px rgba(59,130,246,.25)}
+        .ccardPreview{min-width:24px; text-align:center}
 
-        .feSprGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-        @media (max-width:900px){.feSprGrid{grid-template-columns:1fr}}
-        .box{border:1px solid var(--line);border-radius:12px;padding:10px}
-        .boxTitle{font-size:12px;font-weight:700;margin-bottom:6px;color:#374151}
-        .grid2{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center}
-        .lbl{font-size:12px;color:#6b7280}
-        .calcLine{margin-top:8px}
-        .sprChips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-        .chip{border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;background:#f8fafc}
-        .list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+        /* SPR/FE */
+        .sprGrid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+        @media (max-width:980px){ .sprGrid{grid-template-columns:1fr} }
+        .feRow{display:flex; gap:10px}
+        .feCol{flex:1}
+        .feLbl{font-size:11px; color:#6b7280; margin-bottom:4px}
+        .sprChips{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px}
+        .sprChip{border:1px solid #e5e7eb; background:#fff; border-radius:999px; padding:6px 10px; font-size:12.5px}
+
+        /* ---- CoachCard styles ---- */
+        .coachCard{
+          border:1px solid #e5e7eb; background:#fff; border-radius:14px; padding:12px;
+        }
+        .cc-head{display:flex; align-items:center; gap:10px; margin-bottom:8px}
+        .cc-decision{
+          border:1px solid; padding:8px 12px; border-radius:999px;
+          font-weight:700; letter-spacing:.2px; display:flex; align-items:center; gap:8px;
+        }
+        .cc-dot{width:10px;height:10px;border-radius:50%}
+        .cc-spacer{flex:1}
+        .cc-badge{
+          display:inline-flex; align-items:center; gap:6px;
+          padding:6px 10px; border-radius:999px; border:1px solid; font-size:12.5px;
+        }
+        .cc-range{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px}
+        .cc-section{margin-top:8px}
+        .cc-title{font-size:12px; font-weight:800; color:#334155; margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px}
+        .cc-planGrid{
+          display:grid; grid-template-columns:repeat(4,1fr); gap:10px;
+        }
+        @media (max-width:900px){ .cc-planGrid{ grid-template-columns:1fr 1fr } }
+        .cc-street{border:1px solid #eef2f7; background:#fafbff; border-radius:10px; padding:8px}
+        .cc-streetTitle{font-weight:700; font-size:12.5px; margin-bottom:4px; color:#1f2937}
+        .cc-ul{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:4px}
+        .cc-ul li{color:#0f172a}
+        .cc-ul.cc-warn li{color:#b45309}
+        .cc-actions{display:flex; justify-content:flex-end; margin-top:8px}
       `}</style>
     </main>
   );
 }
 
-/* ================ Small UI atoms ================ */
-
-function Info({ label, children }: { label: string; children: React.ReactNode }) {
+/** Small info box used on the right-side top card */
+function InfoBox({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="ibox">
-      <div className="lblSmall">{label}</div>
-      <div>{children}</div>
-    </div>
-  );
-}
-
-function CardEditor({
-  value, onChange, placeholder
-}: { value: string; onChange: (v: string)=>void; placeholder?: string }) {
-  const [local, setLocal] = useState<string>(value || '');
-
-  useEffect(()=>{ setLocal(value || ''); }, [value]);
-
-  const norm = suitifyToken(local);
-  const echo = norm ? <CardText c={norm} /> : <span style={{color:'#9ca3af'}}>{placeholder || ''}</span>;
-
-  return (
-    <div style={{display:'flex',alignItems:'center'}}>
-      <input
-        className="cardInput"
-        value={local}
-        onChange={(e)=>setLocal(e.target.value)}
-        onBlur={()=>onChange(suitifyToken(local))}
-        placeholder={placeholder || 'A♠'}
-      />
-      <div className="cardEcho" title="Normalized">{echo}</div>
+      <div className="iboxLabel">{label}</div>
+      <div className="iboxVal">{children}</div>
     </div>
   );
 }
