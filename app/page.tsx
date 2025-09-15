@@ -103,12 +103,16 @@ function parseBoardFromStory(t: string) {
 
 /* ====================== GTO Preview renderer ====================== */
 
+// find this near the top of app/page.tsx:
 const SECTION_HEADS = new Set([
   'SITUATION', 'RANGE SNAPSHOT',
   'PREFLOP', 'FLOP', 'TURN', 'RIVER',
   'NEXT CARDS', 'WHY', 'COMMON MISTAKES', 'LEARNING TAGS',
-  'DECISION', 'PRICE', 'BOARD CLASS'
+  'DECISION', 'PRICE', 'BOARD CLASS',
+  // add:
+  'RECOMMENDATION'
 ]);
+
 
 function renderGTO(text: string) {
   const lines = (text || '').split(/\r?\n/).filter(l => l.trim().length);
