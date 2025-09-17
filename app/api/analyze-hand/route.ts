@@ -10,7 +10,9 @@ function looksLikeTournament(s: string): { isMTT: boolean; hits: string[] } {
     "day 1","day 2","level ","bb ante","bba","ante","pay jump","payout"
   ];
   const hits = terms.filter(t => text.includes(t));
-  const levelLike = /\b\d+(?:[kKmM]?)[/]\d+(?:[kKmM]?)(?:[/]\d+(?:[kKmM]?))?\b/.test(text) && /ante|bba/.test(text);
+  const levelLike =
+    /\b\d+(?:[kKmM]?)[/]\d+(?:[kKmM]?)(?:[/]\d+(?:[kKmM]?))?\b/.test(text) &&
+    /ante|bba/.test(text);
   if (levelLike && !hits.includes("level-like")) hits.push("level-like");
   return { isMTT: hits.length > 0, hits };
 }
@@ -28,59 +30,100 @@ function asText(v: any): string {
   return String(v);
 }
 
+function extractQuestion(t: string): string {
+  if (!t) return "";
+  // use the last line with a question mark, else last sentence-ish
+  const lines = t.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  for (let i = lines.length - 1; i >= 0; i--) {
+    if (lines[i].includes("?")) return lines[i];
+  }
+  const last = lines[lines.length - 1] || "";
+  // trim to something short if it's extremely long
+  return last.length > 200 ? last.slice(0, 200) + "…" : last;
+}
+
 /* ----------------------- system prompt ----------------------- */
-const SYSTEM = `You are a CASH-GAME poker coach. CASH ONLY. 
+const SYSTEM = `You are a CASH-GAME poker coach. CASH ONLY.
+
 Return ONLY JSON with EXACT keys:
 {
   "gto_strategy": "string",
   "exploit_deviation": "string",
-  "learning_tag": ["string", "string?"]
+  "learning_tag": ["string","string?"],
+
+  "verdict": "BET|CHECK|CALL|FOLD|RAISE|JAM",
+  "size_hint": "string",
+  "confidence": 0.0,
+  "played_eval": "correct|ok|thin|mistake|blunder",
+  "ev_note": "string",
+  "pot_odds": "string?",
+  "range_notes": { "hero": "string", "villain": "string" }
 }
 
-Write "gto_strategy" as a compact, structured coaching plan with these sections IN THIS ORDER:
-
+Write "gto_strategy" as a compact coaching plan (≈180–260 words) with these sections IN THIS ORDER and IN ALL CAPS, each followed by a colon:
 DECISION
-- Node: Preflop | Flop | Turn | River (choose the node the user is asking about; if unclear, use the last street described in the raw text).
-- Action: one of Call / Fold / Check / Bet / Raise. If betting/raising, give a primary SIZE as % pot (and bb if obvious) and, if appropriate, a secondary acceptable size.
-- Quick reasons: 2–4 mini bullets (e.g., value vs worse, bluff candidates you unblock, fold-equity expectation).
-- If pot odds are explicit (or easily deduced), include a single line “Pot odds: ~XX% (equity needed).” Otherwise omit.
-
 SITUATION
-- One-liners: pot type (SRP/3BP), positions, effective stacks, pot and/or SPR if provided, hero cards (if provided).
-- BOARD CLASS: name the texture (e.g., low two-tone, paired, monotone, high disconnected). State "Range advantage: X" and "Nuts advantage: X".
-
 RANGE SNAPSHOT
-- 1 short line each for Hero and Villain describing typical range after the line taken.
-
-PREFLOP / FLOP / TURN / RIVER
-- Sizing family: suggested pot % or bb (give numbers). 
-- Value: 3–6 representative hands/classes.
-- Bluffs / Semi-bluffs: 3–6 classes.
-- Slowdowns / Check-backs: brief line.
-- Vs raise: 1 short rule for continue/fold.
-- NEXT CARDS (for FLOP and TURN): “Best:” and “Worst:” with 2–4 examples each.
-
+PREFLOP
+FLOP
+TURN
+RIVER
+NEXT CARDS
 WHY
-- 3–6 bullets. Include range- vs nuts-edge, blockers/unblockers, and (if fe_hint provided) fold-equity math “FE ≈ risk/(risk+reward) = <number>%”.
-
 COMMON MISTAKES
-- 2–4 bullets that warn about over/under-bluffing, bad sizings, or calling too wide/narrow.
-
 LEARNING TAGS
-- 2–4 short tags like ["range-advantage","two-tone-low","spr-5","river-thin-value"].
 
-Rules:
+Rules for content:
+- DECISION: pick ONE action at the user’s focus node (Call/Fold/Check/Bet/Raise/Jam). If betting/raising, give a primary numeric size (e.g., "33% pot", "2/3 pot", "jam 12bb"). Add a one-line "Pot odds: ~XX%" only when facing a call; otherwise omit.
+- SITUATION: one-liners: pot type (SRP/3BP), positions, effective stacks, pot/SPR if given, hero cards. Add a line "BOARD CLASS: … · Range advantage: X · Nuts advantage: X".
+- RANGE SNAPSHOT: one short line each for Hero and Villain after the line taken.
+- PREFLOP/FLOP/TURN/RIVER: give sizing family (numbers), 3–6 value classes, 3–6 bluff/semi-bluff classes, a brief "Slowdowns / Check-backs", and a one-line "Vs raise" rule for continues.
+- NEXT CARDS: for Flop and Turn, give "Best:" and "Worst:" with 2–4 examples each.
+- WHY: 3–6 bullets using range vs nuts edge, blockers/unblockers, and simple math (if FE hint or pot odds are provided).
+- COMMON MISTAKES: 2–4 bullets (over/under-bluffing, sizing errors, calling too wide/narrow).
+- LEARNING TAGS: 2–4 short tags like ["range-advantage","two-tone-low","spr-4"].
+
+Exploit layer:
+- After GTO, add "exploit_deviation" with 2–4 short sentences (not bullets) describing pool exploits (e.g., live low stakes overfold river raises; online reg pools stab too often vs turn checks).
+
+General rules:
 - CASH only; ignore ICM/players-left entirely.
-- Be prescriptive, not narrative. Use concise bullets; no markdown headings, no code blocks.
-- When info is missing, make reasonable cash-game assumptions (100bb, standard sizes) and proceed.
-- Keep the whole "gto_strategy" ~180–260 words (concise but informative).
-- "exploit_deviation" should be 2–4 bullets of pool exploits relevant to the spot.
+- Be prescriptive, not narrative. No markdown/code fences.
+- When info is missing, assume reasonable cash defaults (100bb, standard sizes) and proceed.
+- The “verdict/size_hint/confidence/played_eval/ev_note/pot_odds/range_notes” fields must be filled consistently with the DECISION.
 `;
 
 /* ----------------------- route handler ----------------------- */
+type AnalyzeReq = {
+  date?: string;
+  stakes?: string;
+  position?: string;
+  cards?: string;
+  board?: string;
+  notes?: string;
+  rawText?: string;
+  fe_hint?: string;
+  spr_hint?: string;
+  question?: string;   // optional: explicit "raise or check?" etc
+  hero_line?: string;  // optional: concise line of actions hero actually took
+};
+
+type ModelOut = {
+  gto_strategy?: string;
+  exploit_deviation?: string;
+  learning_tag?: string[];
+  verdict?: string;
+  size_hint?: string;
+  confidence?: number | string;
+  played_eval?: string;
+  ev_note?: string;
+  pot_odds?: string;
+  range_notes?: { hero?: string; villain?: string };
+};
+
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const body: AnalyzeReq = await req.json();
 
     const {
       date,
@@ -90,19 +133,14 @@ export async function POST(req: Request) {
       board = "",
       notes = "",
       rawText = "",
-      fe_hint,          // optional FE % hint string
-      spr_hint          // optional SPR hint
-    }: {
-      date?: string;
-      stakes?: string;
-      position?: string;
-      cards?: string;
-      board?: string;
-      notes?: string;
-      rawText?: string;
-      fe_hint?: string;
-      spr_hint?: string;
+      fe_hint,
+      spr_hint,
+      question,
+      hero_line
     } = body ?? {};
+
+    const combinedText = `${rawText || ""}\n${notes || ""}`.trim();
+    const inferredQuestion = question?.trim() || extractQuestion(combinedText);
 
     // Compact user block for the model
     const userBlock = [
@@ -114,24 +152,35 @@ export async function POST(req: Request) {
       `Board: ${board || "(unknown)"}`,
       spr_hint ? `SPR hint: ${spr_hint}` : ``,
       fe_hint ? `FE hint: ${fe_hint}` : ``,
+      inferredQuestion ? `QUESTION: ${inferredQuestion}` : ``,
+      hero_line ? `HERO_LINE: ${hero_line}` : ``,
       ``,
       `RAW HAND TEXT:`,
-      (rawText || notes || "").trim() || "(none provided)",
+      combinedText || "(none provided)",
       ``,
-      // subtle nudge: tell the model to pull the node from the question
-      `FOCUS: Identify the street the user is asking about (e.g., "river check — raise or check?") and make the DECISION for that node first, with a numeric size if betting.`
-    ].filter(Boolean).join("\n");
+      `FOCUS: Identify the exact street the QUESTION refers to and make the DECISION for that node first, with a numeric size if betting. CASH ONLY.`
+    ]
+      .filter(Boolean)
+      .join("\n");
 
     // cash-only guard
     const { isMTT, hits } = looksLikeTournament(userBlock);
     if (isMTT) {
-      return NextResponse.json({
+      const out: ModelOut = {
         gto_strategy:
           `Cash-only mode: your text looks like a TOURNAMENT hand (${hits.join(", ")}). ` +
           `Please re-enter as a cash hand (omit ICM/players-left).`,
         exploit_deviation: "",
-        learning_tag: ["cash-only","mtt-blocked"]
-      });
+        learning_tag: ["cash-only", "mtt-blocked"],
+        verdict: "CHECK",
+        size_hint: "",
+        confidence: 0.0,
+        played_eval: "ok",
+        ev_note: "",
+        pot_odds: "",
+        range_notes: { hero: "", villain: "" }
+      };
+      return NextResponse.json(out);
     }
 
     // call LLM
@@ -147,19 +196,38 @@ export async function POST(req: Request) {
 
     const raw = resp?.choices?.[0]?.message?.content?.trim() || "{}";
 
-    let parsed: any = {};
+    let parsed: ModelOut = {};
     try {
-      parsed = JSON.parse(raw);
+      parsed = JSON.parse(raw) as ModelOut;
     } catch {
+      // fallback: stuff raw into gto_strategy
       parsed = { gto_strategy: raw, exploit_deviation: "", learning_tag: [] };
     }
 
-    const out = {
-      gto_strategy: asText(parsed?.gto_strategy || ""),
-      exploit_deviation: asText(parsed?.exploit_deviation || ""),
-      learning_tag: Array.isArray(parsed?.learning_tag)
-        ? parsed.learning_tag.filter((t: unknown) => typeof t === "string" && t.trim())
+    // Normalize output and ensure required fields exist
+    const confidenceNum =
+      typeof parsed.confidence === "string"
+        ? Math.max(0, Math.min(1, parseFloat(parsed.confidence)))
+        : typeof parsed.confidence === "number"
+        ? Math.max(0, Math.min(1, parsed.confidence))
+        : 0.0;
+
+    const out: Required<ModelOut> = {
+      gto_strategy: asText(parsed.gto_strategy || ""),
+      exploit_deviation: asText(parsed.exploit_deviation || ""),
+      learning_tag: Array.isArray(parsed.learning_tag)
+        ? parsed.learning_tag.filter((t) => typeof t === "string" && t.trim())
         : [],
+      verdict: (parsed.verdict || "").toUpperCase() as any,
+      size_hint: asText(parsed.size_hint || ""),
+      confidence: confidenceNum,
+      played_eval: (parsed.played_eval || "").toLowerCase() as any,
+      ev_note: asText(parsed.ev_note || ""),
+      pot_odds: asText(parsed.pot_odds || ""),
+      range_notes: {
+        hero: asText(parsed.range_notes?.hero || ""),
+        villain: asText(parsed.range_notes?.villain || "")
+      }
     };
 
     return NextResponse.json(out);
