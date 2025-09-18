@@ -32,13 +32,11 @@ function asText(v: any): string {
 
 function extractQuestion(t: string): string {
   if (!t) return "";
-  // use the last line with a question mark, else last sentence-ish
   const lines = t.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
   for (let i = lines.length - 1; i >= 0; i--) {
     if (lines[i].includes("?")) return lines[i];
   }
   const last = lines[lines.length - 1] || "";
-  // trim to something short if it's extremely long
   return last.length > 200 ? last.slice(0, 200) + "…" : last;
 }
 
@@ -51,7 +49,7 @@ Return ONLY JSON with EXACT keys:
   "exploit_deviation": "string",
   "learning_tag": ["string","string?"],
 
-  "verdict": "BET|CHECK|CALL|FOLD|RAISE|JAM",
+  "verdict": "BET|CHECK|CALL|FOLD|RAISE|JAM|MIXED",
   "size_hint": "string",
   "confidence": 0.0,
   "played_eval": "correct|ok|thin|mistake|blunder",
@@ -74,7 +72,12 @@ COMMON MISTAKES
 LEARNING TAGS
 
 Rules for content:
-- DECISION: pick ONE action at the user’s focus node (Call/Fold/Check/Bet/Raise/Jam). If betting/raising, give a primary numeric size (e.g., "33% pot", "2/3 pot", "jam 12bb"). Add a one-line "Pot odds: ~XX%" only when facing a call; otherwise omit.
+- DECISION: If one action clearly dominates, pick ONE action at the user’s focus node (Call/Fold/Check/Bet/Raise/Jam). If betting/raising, give a primary numeric size (e.g., "33% pot", "2/3 pot", "jam 12bb"). Add a one-line "Pot odds: ~XX%" only when facing a call; otherwise omit.
+- MIXED handling: If two (or more) actions are close in EV (≈ within 0.10bb), treat the node as MIXED and write:
+  - Verdict: MIXED (e.g., "Check ≈60% / Bet 33% ≈40%")
+  - Primary: <Action + size if betting/raising>
+  - Secondary: <Action + size if applicable>
+  - Action: <repeat the Primary action here for compatibility>   <-- keep this exact key
 - SITUATION: one-liners: pot type (SRP/3BP), positions, effective stacks, pot/SPR if given, hero cards. Add a line "BOARD CLASS: … · Range advantage: X · Nuts advantage: X".
 - RANGE SNAPSHOT: one short line each for Hero and Villain after the line taken.
 - PREFLOP/FLOP/TURN/RIVER: give sizing family (numbers), 3–6 value classes, 3–6 bluff/semi-bluff classes, a brief "Slowdowns / Check-backs", and a one-line "Vs raise" rule for continues.
@@ -82,6 +85,7 @@ Rules for content:
 - WHY: 3–6 bullets using range vs nuts edge, blockers/unblockers, and simple math (if FE hint or pot odds are provided).
 - COMMON MISTAKES: 2–4 bullets (over/under-bluffing, sizing errors, calling too wide/narrow).
 - LEARNING TAGS: 2–4 short tags like ["range-advantage","two-tone-low","spr-4"].
+- Sizing defaults: SRP IP flop 25–33% common; 3BP IP A-high flop c-bet small frequently; 3BP OOP A-high flop mostly check. Thin-value rivers prefer small (25–40%) unless clearly polarized.
 
 Exploit layer:
 - After GTO, add "exploit_deviation" with 2–4 short sentences (not bullets) describing pool exploits (e.g., live low stakes overfold river raises; online reg pools stab too often vs turn checks).
@@ -90,7 +94,7 @@ General rules:
 - CASH only; ignore ICM/players-left entirely.
 - Be prescriptive, not narrative. No markdown/code fences.
 - When info is missing, assume reasonable cash defaults (100bb, standard sizes) and proceed.
-- The “verdict/size_hint/confidence/played_eval/ev_note/pot_odds/range_notes” fields must be filled consistently with the DECISION.
+- The “verdict/size_hint/confidence/played_eval/ev_note/pot_odds/range_notes” fields must be filled consistently with the DECISION (or MIXED primary).
 `;
 
 /* ----------------------- route handler ----------------------- */
@@ -212,16 +216,16 @@ export async function POST(req: Request) {
         ? Math.max(0, Math.min(1, parsed.confidence))
         : 0.0;
 
-    const out: Required<ModelOut> = {
+    const out = {
       gto_strategy: asText(parsed.gto_strategy || ""),
       exploit_deviation: asText(parsed.exploit_deviation || ""),
       learning_tag: Array.isArray(parsed.learning_tag)
         ? parsed.learning_tag.filter((t) => typeof t === "string" && t.trim())
         : [],
-      verdict: (parsed.verdict || "").toUpperCase() as any,
+      verdict: (parsed.verdict || "").toUpperCase(),
       size_hint: asText(parsed.size_hint || ""),
       confidence: confidenceNum,
-      played_eval: (parsed.played_eval || "").toLowerCase() as any,
+      played_eval: (parsed.played_eval || "").toLowerCase(),
       ev_note: asText(parsed.ev_note || ""),
       pot_odds: asText(parsed.pot_odds || ""),
       range_notes: {
