@@ -29,7 +29,7 @@
       "expected": { "verdict": "BET", "size_like": "33%" }
     },
 
-    /* MIXED verdict here */
+    
     {
       "id": "T05_srp_bb_vs_btn_fd_raiser",
       "stakes": "Cash 6-max 100bb",
