@@ -77,46 +77,18 @@ function parsePosition(t: string): string {
 }
 
 function parseHeroCardsSmart(t: string): string {
-  if (!t) return "";
-  let s = t.toLowerCase();
+  const s = (t || '').toLowerCase();
 
-  // normalize punctuation / separators so "with JcJd," "(Hero) has J♦J♣" etc. are easy to scan
-  s = s
-    .replace(/[(),]/g, " ")
-    .replace(/[–—-]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  // "with Ks Kd", "hero has Kc Kh"
+  let m = s.match(/\b(?:hero|i|holding|with|have|has)\b[^.\n]{0,20}?([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])/i);
+  if (m) return prettyCards(`${m[1]} ${m[2]}`);
 
-  // 1) strongest signal: "... hero/i ... has/holding/holds/with/have <two cards>"
-  const heroBlock = s.match(/\b(hero|i)\b[^.\n]{0,40}?\b(has|holding|holds|with|have)\b([^.\n]+)/i);
-  if (heroBlock) {
-    const tail = heroBlock[3];
+  // fallback: first two card-like tokens
+  const tokens = Array.from(s.matchAll(/([2-9tjqka][shdc♥♦♣♠])/ig)).map(x => x[0]).slice(0,2);
+  if (tokens.length === 2) return prettyCards(tokens.join(' '));
 
-    // packed like "JdJh" or "AsKh"
-    let m = tail.match(/\b([2-9tjqka])[shdc♥♦♣♠]\s*([2-9tjqka])[shdc♥♦♣♠]\b/i);
-    if (m) return prettyCards(`${m[1]}${m[0][1]} ${m[2]}${m[0][m[0].length-1]}`);
-
-    // spaced “J♣ J♦”
-    m = tail.match(/\b([2-9tjqka])[♥♦♣♠]\s+([2-9tjqka])[♥♦♣♠]\b/i);
-    if (m) return prettyCards(`${m[0].split(/\s+/).join(" ")}`);
-
-    // letters suits spaced “As Kh”
-    m = tail.match(/\b([2-9tjqka])[shdc]\s+([2-9tjqka])[shdc]\b/i);
-    if (m) return prettyCards(`${m[0].split(/\s+/).join(" ")}`);
-
-    // pair without suits “JJ”
-    m = tail.match(/\b([2-9tjqka])\1\b/i);
-    if (m) return prettyCards(`${m[1]} ${m[1]}`);
-  }
-
-  // 2) fallback: first two card-like tokens anywhere
-  const toks = Array.from(s.matchAll(/\b([2-9tjqka])[shdc♥♦♣♠]|\b([2-9tjqka])\b/gi))
-    .map(x => x[0]).slice(0, 2);
-  if (toks.length === 2) return prettyCards(toks.join(" "));
-
-  return "";
+  return '';
 }
-
 
 function parseBoardFromStory(t: string) {
   const grab = (label: 'flop'|'turn'|'river') => {
@@ -298,15 +270,6 @@ export default function Page() {
         throw new Error(e?.error || `Analyze failed (${r.status})`);
       }
       const data = await r.json();
-      // If server echoed a normalized read, adopt it into the UI when ours is blank/ambiguous.
-if (data?.resolved_cards) {
-  const parts = String(data.resolved_cards).split(" ").filter(Boolean);
-  if (parts.length === 2) {
-    if (!h1) setH1(parts[0]);
-    if (!h2) setH2(parts[1]);
-  }
-}
-
       setFields(prev => ({
         ...(prev ?? {}),
         gto_strategy: (data?.gto_strategy ?? '') || '',
