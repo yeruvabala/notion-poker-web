@@ -2,12 +2,12 @@
 import { NextResponse } from "next/server";
 import { openai } from "@/lib/openai";
 
-/* ------------ light tournament detector (we are cash-only) ------------ */
+/* ------------ light tournament detector (cash-only guard) ------------ */
 function looksLikeTournament(s: string): { isMTT: boolean; hits: string[] } {
   const text = (s || "").toLowerCase();
   const terms = [
-    "tournament","mtt","icm","players left","final table","bubble","itm",
-    "day 1","day 2","level ","bb ante","bba","ante","pay jump","payout"
+    "tournament", "mtt", "icm", "players left", "final table", "bubble", "itm",
+    "day 1", "day 2", "level ", "bb ante", "bba", "ante", "pay jump", "payout"
   ];
   const hits = terms.filter(t => text.includes(t));
   const levelLike =
@@ -30,104 +30,64 @@ function asText(v: any): string {
   return String(v);
 }
 
-function extractQuestion(t: string): string {
-  if (!t) return "";
-  const lines = t.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-  for (let i = lines.length - 1; i >= 0; i--) {
-    if (lines[i].includes("?")) return lines[i];
-  }
-  const last = lines[lines.length - 1] || "";
-  return last.length > 200 ? last.slice(0, 200) + "…" : last;
+type MixedOption = {
+  action?: string;        // CALL | FOLD | CHECK | BET | RAISE
+  size_hint?: string;     // e.g., "25%", "33%", "2.5x"
+  freq?: string;          // "~55%"
+  when?: string;          // short reason/condition
+};
+
+function sanitizeOptions(v: unknown): MixedOption[] {
+  if (!Array.isArray(v)) return [];
+  const ALLOWED = new Set(["CALL", "FOLD", "CHECK", "BET", "RAISE"]);
+  return v
+    .map((o: any) => ({
+      action: typeof o?.action === "string" && ALLOWED.has(o.action.toUpperCase())
+        ? o.action.toUpperCase()
+        : undefined,
+      size_hint: typeof o?.size_hint === "string" ? o.size_hint.trim() : undefined,
+      freq: typeof o?.freq === "string" ? o.freq.trim() : undefined,
+      when: typeof o?.when === "string" ? o.when.trim() : undefined,
+    }))
+    .filter(o => !!o.action);
 }
 
 /* ----------------------- system prompt ----------------------- */
 const SYSTEM = `You are a CASH-GAME poker coach. CASH ONLY.
 
-Return ONLY JSON with EXACT keys:
+Return ONLY strict JSON with exactly these top-level keys:
 {
   "gto_strategy": "string",
   "exploit_deviation": "string",
-  "learning_tag": ["string","string?"],
-
-  "verdict": "BET|CHECK|CALL|FOLD|RAISE|JAM|MIXED",
-  "size_hint": "string",
-  "confidence": 0.0,
-  "played_eval": "correct|ok|thin|mistake|blunder",
-  "ev_note": "string",
-  "pot_odds": "string?",
-  "range_notes": { "hero": "string", "villain": "string" }
+  "learning_tag": ["string", ...],
+  "verdict": "CALL" | "FOLD" | "CHECK" | "BET" | "RAISE" | "MIXED",
+  "size_hint": "string (optional; for BET/RAISE give primary size, e.g., '33%' or '2.5x')",
+  "options": [
+    {
+      "action": "CALL" | "FOLD" | "CHECK" | "BET" | "RAISE",
+      "size_hint": "string (optional; needed if BET/RAISE)",
+      "freq": "string like '~60%'",
+      "when": "one concise reason/condition"
+    }
+  ] (optional; required when verdict='MIXED')
 }
 
-Write "gto_strategy" as a compact coaching plan (≈180–260 words) with these sections IN THIS ORDER and IN ALL CAPS, each followed by a colon:
-DECISION
-SITUATION
-RANGE SNAPSHOT
-PREFLOP
-FLOP
-TURN
-RIVER
-NEXT CARDS
-WHY
-COMMON MISTAKES
-LEARNING TAGS
-
-Rules for content:
-- DECISION: If one action clearly dominates, pick ONE action at the user’s focus node (Call/Fold/Check/Bet/Raise/Jam). If betting/raising, give a primary numeric size (e.g., "33% pot", "2/3 pot", "jam 12bb"). Add a one-line "Pot odds: ~XX%" only when facing a call; otherwise omit.
-- MIXED handling: If two (or more) actions are close in EV (≈ within 0.10bb), treat the node as MIXED and write:
-  - Verdict: MIXED (e.g., "Check ≈60% / Bet 33% ≈40%")
-  - Primary: <Action + size if betting/raising>
-  - Secondary: <Action + size if applicable>
-  - Action: <repeat the Primary action here for compatibility>   <-- keep this exact key
-- SITUATION: one-liners: pot type (SRP/3BP), positions, effective stacks, pot/SPR if given, hero cards. Add a line "BOARD CLASS: … · Range advantage: X · Nuts advantage: X".
-- RANGE SNAPSHOT: one short line each for Hero and Villain after the line taken.
-- PREFLOP/FLOP/TURN/RIVER: give sizing family (numbers), 3–6 value classes, 3–6 bluff/semi-bluff classes, a brief "Slowdowns / Check-backs", and a one-line "Vs raise" rule for continues.
-- NEXT CARDS: for Flop and Turn, give "Best:" and "Worst:" with 2–4 examples each.
-- WHY: 3–6 bullets using range vs nuts edge, blockers/unblockers, and simple math (if FE hint or pot odds are provided).
-- COMMON MISTAKES: 2–4 bullets (over/under-bluffing, sizing errors, calling too wide/narrow).
-- LEARNING TAGS: 2–4 short tags like ["range-advantage","two-tone-low","spr-4"].
-- Sizing defaults: SRP IP flop 25–33% common; 3BP IP A-high flop c-bet small frequently; 3BP OOP A-high flop mostly check. Thin-value rivers prefer small (25–40%) unless clearly polarized.
-
-Exploit layer:
-- After GTO, add "exploit_deviation" with 2–4 short sentences (not bullets) describing pool exploits (e.g., live low stakes overfold river raises; online reg pools stab too often vs turn checks).
-
-General rules:
+Decision format and MIXED policy:
+- Always set "verdict" to exactly one of CALL/FOLD/CHECK/BET/RAISE/MIXED.
+- If "verdict" is BET or RAISE, include a "size_hint" like "25%", "33%", "half-pot", or "2.5x".
+- If more than one line is viable (≥25% each), use "verdict":"MIXED" and list 2–3 entries in "options".
+  Each option must include "action", a rough "freq" (e.g., "~55%"), and a short "when" explaining *why/when*.
+  If the option is BET/RAISE, also include "size_hint".
+- Keep "gto_strategy" concise (≈180–260 words) with sections like:
+  DECISION (state the action or that it's MIXED, and give sizes), SITUATION, RANGE SNAPSHOT,
+  PREFLOP / FLOP / TURN / RIVER (sizing families + examples), NEXT CARDS, WHY, COMMON MISTAKES, LEARNING TAGS.
 - CASH only; ignore ICM/players-left entirely.
-- Be prescriptive, not narrative. No markdown/code fences.
-- When info is missing, assume reasonable cash defaults (100bb, standard sizes) and proceed.
-- The “verdict/size_hint/confidence/played_eval/ev_note/pot_odds/range_notes” fields must be filled consistently with the DECISION (or MIXED primary).
-`;
+- No markdown, no code fences, and the response must be valid JSON (no comments).`;
 
 /* ----------------------- route handler ----------------------- */
-type AnalyzeReq = {
-  date?: string;
-  stakes?: string;
-  position?: string;
-  cards?: string;
-  board?: string;
-  notes?: string;
-  rawText?: string;
-  fe_hint?: string;
-  spr_hint?: string;
-  question?: string;   // optional: explicit "raise or check?" etc
-  hero_line?: string;  // optional: concise line of actions hero actually took
-};
-
-type ModelOut = {
-  gto_strategy?: string;
-  exploit_deviation?: string;
-  learning_tag?: string[];
-  verdict?: string;
-  size_hint?: string;
-  confidence?: number | string;
-  played_eval?: string;
-  ev_note?: string;
-  pot_odds?: string;
-  range_notes?: { hero?: string; villain?: string };
-};
-
 export async function POST(req: Request) {
   try {
-    const body: AnalyzeReq = await req.json();
+    const body = await req.json();
 
     const {
       date,
@@ -137,14 +97,19 @@ export async function POST(req: Request) {
       board = "",
       notes = "",
       rawText = "",
-      fe_hint,
-      spr_hint,
-      question,
-      hero_line
+      fe_hint,          // optional FE % hint string ("xx.x%")
+      spr_hint          // optional SPR hint
+    }: {
+      date?: string;
+      stakes?: string;
+      position?: string;
+      cards?: string;
+      board?: string;
+      notes?: string;
+      rawText?: string;
+      fe_hint?: string;
+      spr_hint?: string;
     } = body ?? {};
-
-    const combinedText = `${rawText || ""}\n${notes || ""}`.trim();
-    const inferredQuestion = question?.trim() || extractQuestion(combinedText);
 
     // Compact user block for the model
     const userBlock = [
@@ -156,35 +121,29 @@ export async function POST(req: Request) {
       `Board: ${board || "(unknown)"}`,
       spr_hint ? `SPR hint: ${spr_hint}` : ``,
       fe_hint ? `FE hint: ${fe_hint}` : ``,
-      inferredQuestion ? `QUESTION: ${inferredQuestion}` : ``,
-      hero_line ? `HERO_LINE: ${hero_line}` : ``,
       ``,
       `RAW HAND TEXT:`,
-      combinedText || "(none provided)",
+      (rawText || notes || "").trim() || "(none provided)",
       ``,
-      `FOCUS: Identify the exact street the QUESTION refers to and make the DECISION for that node first, with a numeric size if betting. CASH ONLY.`
-    ]
-      .filter(Boolean)
-      .join("\n");
+      `FOCUS: If multiple lines are reasonable (≥25% each), return verdict=MIXED and fill "options" with action/size_hint/freq/when. Otherwise choose a single best line and, if betting/raising, include size_hint.`
+    ].filter(Boolean).join("\n");
 
     // cash-only guard
     const { isMTT, hits } = looksLikeTournament(userBlock);
     if (isMTT) {
-      const out: ModelOut = {
+      return NextResponse.json({
         gto_strategy:
           `Cash-only mode: your text looks like a TOURNAMENT hand (${hits.join(", ")}). ` +
           `Please re-enter as a cash hand (omit ICM/players-left).`,
         exploit_deviation: "",
         learning_tag: ["cash-only", "mtt-blocked"],
-        verdict: "CHECK",
+        verdict: "MIXED",
         size_hint: "",
-        confidence: 0.0,
-        played_eval: "ok",
-        ev_note: "",
-        pot_odds: "",
-        range_notes: { hero: "", villain: "" }
-      };
-      return NextResponse.json(out);
+        options: [
+          { action: "CHECK", freq: "~50%", when: "Blocked due to MTT/ICM references" },
+          { action: "FOLD",  freq: "~50%", when: "Blocked due to MTT/ICM references" }
+        ]
+      });
     }
 
     // call LLM
@@ -198,40 +157,45 @@ export async function POST(req: Request) {
       ],
     });
 
+    // Parse model JSON (be strict but with a fallback)
     const raw = resp?.choices?.[0]?.message?.content?.trim() || "{}";
+
+    type ModelOut = {
+      gto_strategy?: string;
+      exploit_deviation?: string;
+      learning_tag?: string[];
+      verdict?: string;
+      size_hint?: string;
+      options?: MixedOption[];
+    };
 
     let parsed: ModelOut = {};
     try {
-      parsed = JSON.parse(raw) as ModelOut;
+      parsed = JSON.parse(raw);
     } catch {
-      // fallback: stuff raw into gto_strategy
+      // Fallback: keep text in gto_strategy so the UI shows something,
+      // but still return empty decision fields (tests will show as unknown).
       parsed = { gto_strategy: raw, exploit_deviation: "", learning_tag: [] };
     }
 
-    // Normalize output and ensure required fields exist
-    const confidenceNum =
-      typeof parsed.confidence === "string"
-        ? Math.max(0, Math.min(1, parseFloat(parsed.confidence)))
-        : typeof parsed.confidence === "number"
-        ? Math.max(0, Math.min(1, parsed.confidence))
-        : 0.0;
+    // Sanitize / coerce
+    const ALLOWED_VERDICTS = new Set([
+      "CALL", "FOLD", "CHECK", "BET", "RAISE", "MIXED"
+    ]);
+
+    let verdict = (parsed?.verdict || "").toUpperCase();
+    if (!ALLOWED_VERDICTS.has(verdict)) verdict = ""; // keeps tests honest
 
     const out = {
-      gto_strategy: asText(parsed.gto_strategy || ""),
-      exploit_deviation: asText(parsed.exploit_deviation || ""),
-      learning_tag: Array.isArray(parsed.learning_tag)
+      gto_strategy: asText(parsed?.gto_strategy || ""),
+      exploit_deviation: asText(parsed?.exploit_deviation || ""),
+      learning_tag: Array.isArray(parsed?.learning_tag)
         ? parsed.learning_tag.filter((t) => typeof t === "string" && t.trim())
         : [],
-      verdict: (parsed.verdict || "").toUpperCase(),
-      size_hint: asText(parsed.size_hint || ""),
-      confidence: confidenceNum,
-      played_eval: (parsed.played_eval || "").toLowerCase(),
-      ev_note: asText(parsed.ev_note || ""),
-      pot_odds: asText(parsed.pot_odds || ""),
-      range_notes: {
-        hero: asText(parsed.range_notes?.hero || ""),
-        villain: asText(parsed.range_notes?.villain || "")
-      }
+      verdict,
+      size_hint:
+        typeof parsed?.size_hint === "string" ? parsed.size_hint.trim() : "",
+      options: sanitizeOptions(parsed?.options)
     };
 
     return NextResponse.json(out);
