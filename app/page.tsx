@@ -8,13 +8,17 @@ type Fields = {
   date?: string | null;
   stakes?: string | null;
   position?: string | null;
-  cards?: string | null;
-  board?: string | null;
+  cards?: string | null; // hero cards, like "K♥ T♥"
+  board?: string | null; // "Flop: … | Turn: … | River: …"
   gto_strategy?: string | null;
   exploit_deviation?: string | null;
   learning_tag?: string[];
+  hand_class?: string | null;
+  source_used?: 'SUMMARY' | 'STORY' | null;
 };
 
+type RankSym = 'A'|'K'|'Q'|'J'|'T'|'9'|'8'|'7'|'6'|'5'|'4'|'3'|'2';
+const RANKS: RankSym[] = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
 const SUIT_MAP: Record<string, string> = { s: '♠', h: '♥', d: '♦', c: '♣' };
 const SUIT_WORD: Record<string, string> = {
   spade: '♠', spades: '♠', heart: '♥', hearts: '♥',
@@ -60,7 +64,7 @@ function CardText({ c }: { c: string }) {
   return <span style={{ fontWeight: 700, color: suitColor(suit) }}>{c}</span>;
 }
 
-/* --- lightweight parsing from the story box (best effort; summary can override) --- */
+/* ---------- story parsing (stakes, position, hero, board, actions) ---------- */
 
 function parseStakes(t: string): string {
   const m =
@@ -70,36 +74,17 @@ function parseStakes(t: string): string {
 }
 
 function parsePosition(t: string): string {
-  const s = ` ${String(t || "").toLowerCase()} `;
-
-  // Prefer explicit "hero on the button" signals
-  if (/\b(hero).{0,24}\bbutton\b/.test(s)) return "BTN";
-  if (/\bon the button\b|\bbutton\b/.test(s)) return "BTN";
-
-  // Usual tokens
-  if (/\bbtn\b/.test(s)) return "BTN";
-  if (/\bcutoff\b|\bco\b/.test(s)) return "CO";
-  if (/\bhijack\b|\bhj\b/.test(s)) return "HJ";
-  if (/\bmp\b/.test(s)) return "MP";
-
-  // UTG variants
-  if (/\butg\+2\b/.test(s)) return "UTG+2";
-  if (/\butg\+1\b/.test(s)) return "UTG+1";
-  if (/\butg\b/.test(s)) return "UTG";
-
-  // Blinds
-  if (/\bsmall blind\b|\bsb\b/.test(s)) return "SB";
-  if (/\bbig blind\b|\bbb\b/.test(s)) return "BB";
-
-  return "";
+  const up = ` ${t.toUpperCase()} `;
+  const POS = ['SB','BB','BTN','CO','HJ','MP','UTG+2','UTG+1','UTG'];
+  for (const p of POS) if (up.includes(` ${p} `)) return p.replace('+', '+');
+  return '';
 }
-
 
 function parseHeroCardsSmart(t: string): string {
   const s = (t || '').toLowerCase();
 
   // "with Ks Kd", "hero has Kc Kh"
-  let m = s.match(/\b(?:hero|i|holding|with|have|has)\b[^.\n]{0,20}?([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])/i);
+  let m = s.match(/\b(?:hero|i|holding|with|have|has)\b[^.\n]{0,30}?([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])/i);
   if (m) return prettyCards(`${m[1]} ${m[2]}`);
 
   // fallback: first two card-like tokens
@@ -120,29 +105,113 @@ function parseBoardFromStory(t: string) {
   return { flop, turn, river };
 }
 
+/** Extract a structured river action from free text */
+function parseActionHint(text: string): string {
+  const s = text.toLowerCase().replace(/villian|villain/gi, 'villain');
+  // river lines
+  const riverLine = s.split('\n').find(l => /river|riv /.test(l));
+  if (!riverLine) return '';
+
+  // facing bet xx% or “bets 3/4 pot”
+  const betMatch = riverLine.match(/(villain|btn|utg|sb|bb).{0,20}\bbet[s]?\b[^0-9%]*(\d{1,3})\s?%/i)
+                || riverLine.match(/(villain|btn|utg|sb|bb).{0,20}\bbet[s]?\b[^a-z0-9]*(?:([1-4])\/([1-4]))\s*pot/i);
+  if (betMatch) {
+    if (betMatch[2] && betMatch[3]) {
+      const p = Math.round((Number(betMatch[2]) / Number(betMatch[3])) * 100);
+      return `RIVER: facing-bet ~${p}%`;
+    }
+    if (betMatch[2]) return `RIVER: facing-bet ~${betMatch[2]}%`;
+  }
+
+  // check
+  if (/check(?:s|ed)?\s*(?:through)?/.test(riverLine)) return 'RIVER: check-through';
+
+  return '';
+}
+
+/* ---------- determine hand class deterministically ---------- */
+
+const PLACEHOLDER_SET = new Set(['J♣','J♠','T♦','4♠','4♣','9♣','9♠','3♣','3♠']); // UI placeholders
+
+function isPlaceholder(v: string | undefined) {
+  const x = (v || '').trim();
+  if (!x) return true;
+  return PLACEHOLDER_SET.has(x);
+}
+
+function ranksOnly(card: string) {
+  return (card || '').replace(/[♥♦♣♠]/g, '').toUpperCase();
+}
+
+function handClass(heroCards: string, flop: string, turn: string, river: string): string {
+  // very lightweight evaluator sufficient for: high-card/pair/two-pair/trips/straight/flush/boat/quads
+  // parse hero
+  const hero = heroCards.split(' ').filter(Boolean);
+  const board = [flop, turn, river].join(' ').trim().split(' ').filter(Boolean);
+  const all = [...hero, ...board]; // tokens like "K♥"
+
+  if (hero.length !== 2 || board.length < 3) return 'Unknown';
+
+  const suit = (c: string) => c.slice(-1);
+  const rank = (c: string) => c.slice(0, -1).toUpperCase();
+
+  // count ranks
+  const counts: Record<string, number> = {};
+  for (const c of all) counts[rank(c)] = (counts[rank(c)] || 0) + 1;
+
+  const ranks = Object.values(counts).sort((a,b)=>b-a);
+  const flush = (() => {
+    const sCount: Record<string, number> = {};
+    for (const c of all) sCount[suit(c)] = (sCount[suit(c)] || 0) + 1;
+    return Object.values(sCount).some(n => n >= 5);
+  })();
+
+  // straight (rough – checks unique ranks sequence length >= 5)
+  const rankToVal: Record<string, number> = {
+    A:14,K:13,Q:12,J:11,T:10,9:9,8:8,7:7,6:6,5:5,4:4,3:3,2:2
+  };
+  const uniqVals = Array.from(new Set(all.map(rank).map(r=>rankToVal[r]).filter(Boolean))).sort((a,b)=>b-a);
+  let straight = false;
+  if (uniqVals.length >= 5) {
+    let run = 1;
+    for (let i=1;i<uniqVals.length;i++){
+      if (uniqVals[i]===uniqVals[i-1]-1) { run++; if (run>=5) { straight=true; break; } }
+      else if (uniqVals[i]!==uniqVals[i-1]) run=1;
+    }
+    // wheel
+    if (!straight && uniqVals.includes(14)) {
+      const wheel = [5,4,3,2,1].every(v => uniqVals.includes(v===1?14:v));
+      if (wheel) straight = true;
+    }
+  }
+
+  if (ranks[0]===4) return 'Quads';
+  if (ranks[0]===3 && ranks[1]===2) return 'Full House';
+  if (flush && straight) return 'Straight Flush';
+  if (flush) return 'Flush';
+  if (straight) return 'Straight';
+  if (ranks[0]===3) return 'Trips';
+  if (ranks[0]===2 && ranks[1]===2) return 'Two Pair';
+  if (ranks[0]===2) return 'Pair';
+  return 'High Card';
+}
+
 /* ====================== GTO Preview renderer ====================== */
 
-// find this near the top of app/page.tsx:
 const SECTION_HEADS = new Set([
-  'SITUATION', 'RANGE SNAPSHOT',
-  'PREFLOP', 'FLOP', 'TURN', 'RIVER',
-  'NEXT CARDS', 'WHY', 'COMMON MISTAKES', 'LEARNING TAGS',
-  'DECISION', 'PRICE', 'BOARD CLASS',
-  // add:
-  'RECOMMENDATION'
+  'SITUATION','RANGE SNAPSHOT',
+  'PREFLOP','FLOP','TURN','RIVER',
+  'NEXT CARDS','WHY','COMMON MISTAKES','LEARNING TAGS',
+  'DECISION','PRICE','BOARD CLASS','RECOMMENDATION','MIXED'
 ]);
-
 
 function renderGTO(text: string) {
   const lines = (text || '').split(/\r?\n/).filter(l => l.trim().length);
   if (!lines.length) return <div className="muted">No strategy yet. Click Analyze or Edit.</div>;
-
   return (
     <div className="gtoBody">
       {lines.map((raw, i) => {
         const line = raw.trim();
-
-        // "HEAD: content" → bold the head
         const m = line.match(/^([A-Z ]+):\s*(.*)$/);
         if (m && SECTION_HEADS.has(m[1].trim())) {
           return (
@@ -152,13 +221,7 @@ function renderGTO(text: string) {
             </div>
           );
         }
-
-        // bullets – keep them aligned
-        if (/^[-•]/.test(line)) {
-          return <div key={i} className="gtoBullet">{line.replace(/^\s*/, '')}</div>;
-        }
-
-        // default plain line
+        if (/^[-•]/.test(line)) return <div key={i} className="gtoBullet">{line.replace(/^\s*/, '')}</div>;
         return <div key={i} className="gtoLine">{line}</div>;
       })}
     </div>
@@ -168,17 +231,14 @@ function renderGTO(text: string) {
 /* ====================== Page ====================== */
 
 export default function Page() {
-  /* ----- story text ----- */
   const [input, setInput] = useState('');
 
-  /* ----- model results ----- */
   const [fields, setFields] = useState<Fields | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  /* ----- FE & SPR small calculators ----- */
   const [risk, setRisk] = useState<string>('');     // bb
   const [reward, setReward] = useState<string>(''); // bb
   const feNeeded = useMemo(() => {
@@ -198,19 +258,12 @@ export default function Page() {
     return (b / p).toFixed(1);
   }, [flopPot, behind]);
 
-  /* ----- preview (from story) ----- */
-  const preview = useMemo(() => ({
-    stakes: parseStakes(input),
-    position: parsePosition(input),
-    heroCards: parseHeroCardsSmart(input),
-    board: parseBoardFromStory(input),
-  }), [input]);
-
-  /* ----- Situation Summary (editable) ----- */
-  const [mode, setMode] = useState<'CASH' | 'MTT' | ''>('');
+  // editable summary
+  const [mode, setMode] = useState<'CASH' | 'MTT' | ''>('CASH');
   const [stakes, setStakes] = useState<string>('');
   const [eff, setEff] = useState<string>('');
   const [position, setPosition] = useState<string>('');
+
   const [h1, setH1] = useState<string>('');   // hero card 1
   const [h2, setH2] = useState<string>('');   // hero card 2
   const [f1, setF1] = useState<string>('');   // flop 1
@@ -219,42 +272,64 @@ export default function Page() {
   const [tr, setTr] = useState<string>('');   // turn
   const [rv, setRv] = useState<string>('');   // river
 
-  // single GTO box: toggle edit/preview
   const [gtoEdit, setGtoEdit] = useState(false);
 
-  // on story change, prefill empty summary fields once
-  useEffect(() => {
+  // parsed preview from story
+  const preview = useMemo(() => ({
+    stakes: parseStakes(input),
+    position: parsePosition(input),
+    heroCards: parseHeroCardsSmart(input),
+    board: parseBoardFromStory(input),
+    action_hint: parseActionHint(input)
+  }), [input]);
+
+  // “Sync from Story” – fills empty editors with parsed values
+  function syncFromStory() {
     if (!stakes && preview.stakes) setStakes(preview.stakes);
     if (!position && preview.position) setPosition(preview.position);
-    if (!h1 || !h2) {
-      const pcs = (preview.heroCards || '').split(' ').filter(Boolean);
-      if (pcs.length === 2) { if (!h1) setH1(pcs[0]); if (!h2) setH2(pcs[1]); }
+    const pcs = (preview.heroCards || '').split(' ').filter(Boolean);
+    if ((!h1 || !h2) && pcs.length === 2) {
+      if (!h1) setH1(pcs[0]); if (!h2) setH2(pcs[1]);
     }
-    if (!f1 && !f2 && !f3) {
-      const arr = (preview.board.flop || '').split(' ').filter(Boolean);
-      if (arr.length === 3) { setF1(arr[0]); setF2(arr[1]); setF3(arr[2]); }
-    }
+    const arr = (preview.board.flop || '').split(' ').filter(Boolean);
+    if ((!f1 && !f2 && !f3) && arr.length === 3) { setF1(arr[0]); setF2(arr[1]); setF3(arr[2]); }
     if (!tr && preview.board.turn) setTr(preview.board.turn);
     if (!rv && preview.board.river) setRv(preview.board.river);
-  }, [preview]); // eslint-disable-line react-hooks/exhaustive-deps
+  }
+
+  // source used badge (summary if any non-placeholder editor card present)
+  const sourceUsed: 'SUMMARY' | 'STORY' = useMemo(() => {
+    const heroOK = (!isPlaceholder(h1) && !!suitifyToken(h1)) && (!isPlaceholder(h2) && !!suitifyToken(h2));
+    const flopOK = (!isPlaceholder(f1) && !!suitifyToken(f1)) && (!isPlaceholder(f2) && !!suitifyToken(f2)) && (!isPlaceholder(f3) && !!suitifyToken(f3));
+    const turnOK = (!isPlaceholder(tr) && !!suitifyToken(tr));
+    const riverOK = (!isPlaceholder(rv) && !!suitifyToken(rv));
+    return (heroOK || flopOK || turnOK || riverOK) ? 'SUMMARY' : 'STORY';
+  }, [h1,h2,f1,f2,f3,tr,rv]);
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   const heroCardsStr = useMemo(() => {
-    const a = suitifyToken(h1);
-    const b = suitifyToken(h2);
-    return [a, b].filter(Boolean).join(' ');
-  }, [h1, h2]);
+    if (sourceUsed === 'SUMMARY') {
+      const a = suitifyToken(h1); const b = suitifyToken(h2);
+      return [a, b].filter(Boolean).join(' ');
+    }
+    return preview.heroCards || '';
+  }, [sourceUsed, h1, h2, preview.heroCards]);
 
   const flopStr = useMemo(() => {
-    const a = suitifyToken(f1), b = suitifyToken(f2), c = suitifyToken(f3);
-    return [a, b, c].filter(Boolean).join(' ');
-  }, [f1, f2, f3]);
+    if (sourceUsed === 'SUMMARY') {
+      const a = suitifyToken(f1), b = suitifyToken(f2), c = suitifyToken(f3);
+      return [a, b, c].filter(Boolean).join(' ');
+    }
+    return preview.board.flop || '';
+  }, [sourceUsed, f1, f2, f3, preview.board.flop]);
 
-  const turnStr = suitifyToken(tr);
-  const riverStr = suitifyToken(rv);
+  const turnStr = useMemo(() => (sourceUsed === 'SUMMARY' ? suitifyToken(tr) : preview.board.turn || ''), [sourceUsed, tr, preview.board.turn]);
+  const riverStr = useMemo(() => (sourceUsed === 'SUMMARY' ? suitifyToken(rv) : preview.board.river || ''), [sourceUsed, rv, preview.board.river]);
 
-  /* ----- network calls ----- */
+  const actionHint = useMemo(() => preview.action_hint || '', [preview.action_hint]);
+
+  const derivedHandClass = useMemo(() => handClass(heroCardsStr, flopStr, turnStr, riverStr), [heroCardsStr, flopStr, turnStr, riverStr]);
 
   async function analyze() {
     setError(null);
@@ -269,14 +344,17 @@ export default function Page() {
 
       const payload = {
         date: today,
-        stakes: stakes || undefined,
-        position: position || undefined,
+        stakes: stakes || preview.stakes || undefined,
+        position: (position || preview.position || '').toUpperCase() || undefined,
         cards: heroCardsStr || undefined,
         board: board || undefined,
         notes: input || undefined,
         rawText: input || undefined,
-        fe_hint: feNeeded,
-        spr_hint: spr
+        fe_hint: feNeeded || undefined,
+        spr_hint: spr || undefined,
+        action_hint: actionHint || undefined,
+        hand_class: derivedHandClass || undefined,
+        source_used: sourceUsed
       };
 
       const r = await fetch('/api/analyze-hand', {
@@ -295,10 +373,12 @@ export default function Page() {
         exploit_deviation: (data?.exploit_deviation ?? '') || '',
         learning_tag: Array.isArray(data?.learning_tag) ? data.learning_tag : [],
         date: today,
-        stakes,
-        position,
+        stakes: payload.stakes || '',
+        position: payload.position || '',
         cards: heroCardsStr,
-        board
+        board,
+        hand_class: derivedHandClass,
+        source_used: sourceUsed
       }));
     } catch (e: any) {
       setError(e?.message || 'Analyze error');
@@ -327,8 +407,6 @@ export default function Page() {
     }
   }
 
-  /* ====================== UI ====================== */
-
   return (
     <main className="p">
       <div className="wrap">
@@ -355,11 +433,14 @@ Turn K♦ — ...`}
                 <button className="btn primary" onClick={analyze} disabled={aiLoading || !input.trim()}>
                   {aiLoading ? 'Analyzing…' : 'Send'}
                 </button>
+                <button className="btn" onClick={syncFromStory} title="Copy stakes/position/hero/board from the story preview into the editors">
+                  Sync from Story
+                </button>
                 <button
                   className="btn"
                   onClick={() => {
                     setInput(''); setFields(null); setStatus(null); setError(null);
-                    setMode(''); setStakes(''); setEff(''); setPosition('');
+                    setStakes(''); setEff(''); setPosition('');
                     setH1(''); setH2(''); setF1(''); setF2(''); setF3(''); setTr(''); setRv('');
                     setRisk(''); setReward(''); setFlopPot(''); setBehind('');
                   }}
@@ -375,7 +456,6 @@ Turn K♦ — ...`}
               <div className="summaryGrid">
                 <Info label="Mode">
                   <select className="input" value={mode} onChange={e=>setMode(e.target.value as any)}>
-                    <option value="">(unknown)</option>
                     <option value="CASH">CASH</option>
                     <option value="MTT">MTT</option>
                   </select>
@@ -418,7 +498,11 @@ Turn K♦ — ...`}
                 </Info>
               </div>
 
-              <div className="hint">Postflop: add exact suits (e.g., <b>As 4s</b>) for best accuracy. Edits here override the story.</div>
+              <div className="hint">
+                <b>Source:</b> <span className="chip">{sourceUsed === 'SUMMARY' ? 'Using: Summary editors' : 'Using: Story parse'}</span>
+                &nbsp; • Postflop: add exact suits (e.g., <b>As 4s</b>) for accuracy. “Sync from Story” copies the parse below.
+              </div>
+              {actionHint && <div className="hint">Detected action: <b>{actionHint}</b></div>}
             </section>
 
             {/* FE & SPR */}
@@ -465,8 +549,8 @@ Turn K♦ — ...`}
             <section className="card">
               <div className="infoGrid">
                 <Info label="Date"><div>{today}</div></Info>
-                <Info label="Position"><div>{position || <span className="muted">(unknown)</span>}</div></Info>
-                <Info label="Stakes"><div>{stakes || <span className="muted">(unknown)</span>}</div></Info>
+                <Info label="Position"><div>{(position || preview.position) || <span className="muted">(unknown)</span>}</div></Info>
+                <Info label="Stakes"><div>{(stakes || preview.stakes) || <span className="muted">(unknown)</span>}</div></Info>
                 <Info label="Cards">
                   {heroCardsStr
                     ? heroCardsStr.split(' ').map((c,i)=>(
@@ -482,11 +566,8 @@ Turn K♦ — ...`}
             <section className="card">
               <div className="cardTitleRow">
                 <div className="cardTitle">GTO Strategy</div>
-                <button
-                  className="btn tiny"
-                  onClick={() => setGtoEdit(v => !v)}
-                  title={gtoEdit ? 'Finish editing' : 'Edit raw text'}
-                >
+                <span className="chip small">{sourceUsed === 'SUMMARY' ? 'Using: Summary editors' : 'Using: Story parse'}</span>
+                <button className="btn tiny" onClick={() => setGtoEdit(v => !v)} title={gtoEdit ? 'Finish editing' : 'Edit raw text'}>
                   {gtoEdit ? 'Done' : 'Edit'}
                 </button>
               </div>
@@ -551,7 +632,7 @@ Turn K♦ — ...`}
         .col{display:flex;flex-direction:column;gap:18px}
         .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
         .cardTitle{font-size:13px;font-weight:800;color:#111827;margin-bottom:8px}
-        .cardTitleRow{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+        .cardTitleRow{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:8px}
         .textarea{width:100%;min-height:140px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}
         .textarea.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,Monaco,monospace}
         .row{display:flex;align-items:center}
@@ -583,6 +664,8 @@ Turn K♦ — ...`}
         .cardEcho{margin-left:6px;font-size:14px}
 
         .hint{margin-top:8px;font-size:12px;color:#6b7280}
+        .chip{border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;background:#f8fafc}
+        .chip.small{padding:4px 8px;font-size:11px}
 
         .feSprGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
         @media (max-width:900px){.feSprGrid{grid-template-columns:1fr}}
@@ -592,10 +675,8 @@ Turn K♦ — ...`}
         .lbl{font-size:12px;color:#6b7280}
         .calcLine{margin-top:8px}
         .sprChips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-        .chip{border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;background:#f8fafc}
         .list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
 
-        /* GTO preview styles */
         .gtoBox{border:1px dashed #cbd5e1;border-radius:12px;background:#f8fafc;padding:12px}
         .gtoBody{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,Monaco,monospace;font-size:13.5px;line-height:1.45}
         .gtoLine{margin:2px 0}
@@ -605,8 +686,6 @@ Turn K♦ — ...`}
     </main>
   );
 }
-
-/* ================ Small UI atoms ================ */
 
 function Info({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -621,11 +700,12 @@ function CardEditor({
   value, onChange, placeholder
 }: { value: string; onChange: (v: string)=>void; placeholder?: string }) {
   const [local, setLocal] = useState<string>(value || '');
-
   useEffect(()=>{ setLocal(value || ''); }, [value]);
 
   const norm = suitifyToken(local);
-  const echo = norm ? <CardText c={norm} /> : <span style={{color:'#9ca3af'}}>{placeholder || ''}</span>;
+  const echo = norm
+    ? <CardText c={norm} />
+    : <span style={{color:'#9ca3af'}}>{placeholder || ''}</span>;
 
   return (
     <div style={{display:'flex',alignItems:'center'}}>
