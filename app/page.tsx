@@ -70,11 +70,30 @@ function parseStakes(t: string): string {
 }
 
 function parsePosition(t: string): string {
-  const up = ` ${t.toUpperCase()} `;
-  const POS = ['SB','BB','BTN','CO','HJ','MP','UTG+2','UTG+1','UTG'];
-  for (const p of POS) if (up.includes(` ${p} `)) return p.replace('+', '+');
-  return '';
+  const s = ` ${String(t || "").toLowerCase()} `;
+
+  // Prefer explicit "hero on the button" signals
+  if (/\b(hero).{0,24}\bbutton\b/.test(s)) return "BTN";
+  if (/\bon the button\b|\bbutton\b/.test(s)) return "BTN";
+
+  // Usual tokens
+  if (/\bbtn\b/.test(s)) return "BTN";
+  if (/\bcutoff\b|\bco\b/.test(s)) return "CO";
+  if (/\bhijack\b|\bhj\b/.test(s)) return "HJ";
+  if (/\bmp\b/.test(s)) return "MP";
+
+  // UTG variants
+  if (/\butg\+2\b/.test(s)) return "UTG+2";
+  if (/\butg\+1\b/.test(s)) return "UTG+1";
+  if (/\butg\b/.test(s)) return "UTG";
+
+  // Blinds
+  if (/\bsmall blind\b|\bsb\b/.test(s)) return "SB";
+  if (/\bbig blind\b|\bbb\b/.test(s)) return "BB";
+
+  return "";
 }
+
 
 function parseHeroCardsSmart(t: string): string {
   const s = (t || '').toLowerCase();
