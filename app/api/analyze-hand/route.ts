@@ -1,133 +1,161 @@
-// app/api/analyze-hand/route.ts
 import { NextResponse } from "next/server";
 import { openai } from "@/lib/openai";
 
-/* ------------ light tournament detector (we are cash-only) ------------ */
+/* ---------------- small utilities ---------------- */
+function asText(v: any): string {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (Array.isArray(v)) return v.map(asText).join("\n");
+  if (typeof v === "object") return Object.entries(v).map(([k,val]) => `${k}: ${asText(val)}`).join("\n");
+  return String(v);
+}
+
 function looksLikeTournament(s: string): { isMTT: boolean; hits: string[] } {
   const text = (s || "").toLowerCase();
-  const terms = [
-    "tournament","mtt","icm","players left","final table","bubble","itm",
-    "day 1","day 2","level ","bb ante","bba","ante","pay jump","payout"
-  ];
+  const terms = ["tournament","mtt","icm","players left","final table","bubble","itm","day 1","day 2","level ","bb ante","bba","ante","pay jump","payout"];
   const hits = terms.filter(t => text.includes(t));
   const levelLike = /\b\d+(?:[kKmM]?)[/]\d+(?:[kKmM]?)(?:[/]\d+(?:[kKmM]?))?\b/.test(text) && /ante|bba/.test(text);
   if (levelLike && !hits.includes("level-like")) hits.push("level-like");
   return { isMTT: hits.length > 0, hits };
 }
 
-/* ----------------------- small helpers ----------------------- */
-function asText(v: any): string {
-  if (v == null) return "";
-  if (typeof v === "string") return v;
-  if (Array.isArray(v)) return v.map(asText).join("\n");
-  if (typeof v === "object") {
-    return Object.entries(v)
-      .map(([k, val]) => `${k}: ${asText(val)}`)
-      .join("\n");
-  }
-  return String(v);
-}
-
-/* ----------- heuristics: detect river IP vs check from story ----------- */
+/* ----------- story heuristics (check vs bet on river) ----------- */
 function detectRiverFacingCheck(text: string): boolean {
   const s = (text || "").toLowerCase();
-  // If the "river" line mentions a check that is NOT explicitly "hero checks",
-  // assume villain checked to us (we are facing a check IP).
-  // This is intentionally permissive to fire the hint when likely.
-  const riverLineMatch = s.match(/(?:^|\n)\s*river[^:\n]*[: ]?\s*([^\n]*)/i);
-  const riverLine = riverLineMatch ? riverLineMatch[1] : "";
+  const riverLine = (s.match(/(?:^|\n)\s*river[^:\n]*[: ]?\s*([^\n]*)/i)?.[1] || "").toLowerCase();
   const hasCheck = /\b(checks?|x)\b/.test(riverLine);
-  const saysHeroCheck = /\b(hero|i)\s*(checks?|x)\b/.test(riverLine);
-  return hasCheck && !saysHeroCheck;
+  const heroChecks = /\b(hero|i)\s*(checks?|x)\b/.test(riverLine);
+  return hasCheck && !heroChecks;
 }
 
-/* ----------------------- system prompt ----------------------- */
+function detectRiverFacingBet(text: string): { facing: boolean; large: boolean } {
+  const s = (text || "").toLowerCase();
+  const riverLine = (s.match(/(?:^|\n)\s*river[^:\n]*[: ]?\s*([^\n]*)/i)?.[1] || "").toLowerCase();
+  const heroActsFirst = /\b(hero|i)\b/.test(riverLine) && /\b(bets?|jam|shove|raise)/.test(riverLine);
+  // If the river line has "bets", "jam", "shove", "pot" etc. without "hero/i" owner, treat as villain bet to us
+  const facing = /\b(bets?|bet\b|jam|shove|all[- ]?in|pot)\b/.test(riverLine) && !heroActsFirst && !/\b(checks?|x)\b/.test(riverLine);
+  const large = facing && /\b(3\/4|0\.75|75%|two[- ]?thirds|2\/3|0\.66|66%|pot|all[- ]?in|jam|shove)\b/.test(riverLine);
+  return { facing, large };
+}
+
+/* ----------- light rank parsing (hero + board) ----------- */
+type Rank = "A"|"K"|"Q"|"J"|"T"|"9"|"8"|"7"|"6"|"5"|"4"|"3"|"2";
+const RANKS: Rank[] = ["A","K","Q","J","T","9","8","7","6","5","4","3","2"];
+const RANK_VAL: Record<Rank, number> = {A:14,K:13,Q:12,J:11,T:10,9:9,8:8,7:7,6:6,5:5,4:4,3:3,2:2};
+
+function pickRanksFromCards(str: string): Rank[] {
+  const s = (str || "").toUpperCase();
+  const out: Rank[] = [];
+  for (const ch of s) if ((RANKS as string[]).includes(ch)) out.push(ch as Rank);
+  return out;
+}
+
+function extractHeroRanks(cardsField?: string, rawText?: string): Rank[] {
+  // Prefer explicit 'cards' field, fallback to raw text "with kh th" etc.
+  const c = pickRanksFromCards(cardsField || "");
+  if (c.length >= 2) return c.slice(0,2);
+  const m = (rawText || "").match(/\bwith\s+([akqjt2-9hcds\s]+)\b/i);
+  if (m) return pickRanksFromCards(m[1]).slice(0,2);
+  // final fallback: search for patterns like "hero ah jh" on a separate line
+  const m2 = (rawText || "").match(/\bhero\s+([akqjt2-9hcds\s]{2,10})\b/i);
+  if (m2) return pickRanksFromCards(m2[1]).slice(0,2);
+  return [];
+}
+
+function extractBoardRanks(boardField?: string, rawText?: string): Rank[] {
+  // board field might contain separate streets; grab all rank letters in order
+  const a = pickRanksFromCards(boardField || "");
+  if (a.length) return a;
+  // From story lines (flop/turn/river)
+  const s = (rawText || "");
+  const ranks: Rank[] = [];
+  const add = (line: string) => pickRanksFromCards(line).forEach(r => ranks.push(r));
+  const flop = s.match(/flop[^:\n]*[: ]?([^\n]*)/i)?.[1] || "";
+  const turn = s.match(/turn[^:\n]*[: ]?([^\n]*)/i)?.[1] || "";
+  const river= s.match(/river[^:\n]*[: ]?([^\n]*)/i)?.[1] || "";
+  add(flop); add(turn); add(river);
+  return ranks;
+}
+
+function hasTripsWeakKicker(hero: Rank[], board: Rank[]): boolean {
+  if (hero.length < 2 || board.length < 3) return false;
+  // Count ranks on board
+  const counts: Record<string, number> = {};
+  for (const r of board) counts[r] = (counts[r] || 0) + 1;
+  // Find any rank paired on board (==2)
+  const paired = RANKS.filter(r => (counts[r] || 0) >= 2);
+  if (!paired.length) return false;
+  // If hero holds exactly one of that paired rank, it's trips (board pair + hero singleton)
+  const heroCounts: Record<string, number> = {};
+  for (const r of hero) heroCounts[r] = (heroCounts[r] || 0) + 1;
+  const tripsRank = paired.find(r => (heroCounts[r] || 0) === 1);
+  if (!tripsRank) return false;
+  // Weak kicker if the *other* hero card is <= Q by rank value (no Ace or broad K kicker)
+  const other = hero.find(r => r !== tripsRank) as Rank | undefined;
+  if (!other) return false;
+  return RANK_VAL[other] <= RANK_VAL["Q"]; // Q, J, T, ...
+}
+
+/* ------------------- SYSTEM PROMPT ------------------- */
 const SYSTEM = `You are a CASH-GAME poker coach. CASH ONLY.
 
 Return ONLY JSON with EXACT keys:
 {
   "gto_strategy": "string",
   "exploit_deviation": "string",
-  "learning_tag": ["string", "string?"]
+  "learning_tag": ["string","string?"]
 }
 
 General style:
 - Be prescriptive, concise, solver-like.
-- Keep "gto_strategy" ~180–260 words.
-- Use the section order we’ve been using (DECISION, SITUATION, RANGE SNAPSHOT, PREFLOP/FLOP/TURN/RIVER, WHY, COMMON MISTAKES, LEARNING TAGS).
-- When numbers are needed, give pot % (and bb if obvious). Avoid made-up exact equities.
+- Keep "gto_strategy" ~180–260 words using our section order.
+- Use pot-% sizes; avoid fabricated exact equities.
 
-CRITICAL RIVER RULES (to avoid regressions):
-- If HINT says ip_river_facing_check=true (i.e., Hero is in position on the river and action checks to Hero), you MUST consider both thin value and pot control.
-- Unless the spot is clearly pure (e.g., nutted value vs many worse calls, or obvious give-up), output a MIXED recommendation with frequency split, like:
-  "MIXED: Bet small 35–50% ~60% / Check ~40%."
-  Then explain when to prefer each: bet vs likely calls by worse, check vs bluff-catchers / scare runouts / capped ranges, etc.
-- If it *is* clearly pure, you may give a single action, but state briefly why the alternative is dominated.
+RIVER RULES (guardrails):
+- If HINT ip_river_facing_check=true and the spot is close, output a MIXED plan with small bet (25–50%) frequency + check frequency, and WHEN to prefer each.
+- If HINT river_facing_bet=true and trips_weak_kicker=true (board pair + hero has one of that rank with a non-premium kicker), **default to CALL** vs sizable bets. Raising is usually dominated (isolation vs better Kx/boats). Only suggest raises with explicit exploit notes or strong blockers; otherwise explain why call > raise.
 
 DECISION
-- Node: Preflop | Flop | Turn | River (choose the node the user is asking about; if unclear, pick the last street described).
-- Action: Call / Fold / Check / Bet / Raise OR "MIXED: ..." with frequencies as above.
-- Quick reasons: 2–4 bullets.
-- If pot odds are explicit (or easily deduced), include “Pot odds: ~XX% (equity needed).” Otherwise omit.
+- Node: pick the last street asked about (usually River).
+- Action: Call / Fold / Check / Bet / Raise OR "MIXED: ..." with frequencies if appropriate.
+- Include brief reasons; “Pot odds: ~XX%” only if they are explicit.
 
 SITUATION
-- SRP/3BP, positions, effective stacks, pot/SPR if provided, hero cards (if provided).
+- SRP/3BP, positions, eff stacks, pot/SPR if given, hero cards (if given).
 
-RANGE SNAPSHOT
-- 1 short line each for Hero and Villain describing typical range after the line taken.
+RANGE SNAPSHOT + per-street summaries
+- Sizing family, Value classes, Bluffs/semi-bluffs, Slowdowns/Check-backs, Vs raise rule.
+- NEXT CARDS on earlier streets.
 
-PREFLOP / FLOP / TURN / RIVER
-- Sizing family: suggested pot % or bb.
-- Value classes: 3–6 examples.
-- Bluffs / Semi-bluffs: 3–6 examples.
-- Slowdowns / Check-backs: brief line.
-- Vs raise: 1 short continue/fold rule.
-- NEXT CARDS on FLOP/TURN: “Best:” and “Worst:” with 2–4 examples each.
-
-WHY
-- 3–6 bullets: range vs nuts edge, blockers, and (if fe_hint provided) fold-equity math “FE ≈ risk/(risk+reward) = <number>%”.
-
-COMMON MISTAKES
-- 2–4 bullets.
-
-LEARNING TAGS
-- 2–4 tags like ["thin-value","ip-river-check","spr-5"].
+WHY + COMMON MISTAKES + LEARNING TAGS
+- 2–5 bullets each.
 
 Rules:
 - CASH only; ignore ICM/players-left.
-- Prefer small sizes for thin value on river when appropriate (25–50%).
-- Do NOT narrate what Hero “did”; give the best play(s) **now** given ranges.
+- Thin-value bets are small; polar lines get big.
+- Do NOT narrate what Hero “did.” Give the best play(s) now.
 `;
 
-/* ----------------------- route handler ----------------------- */
+/* ------------------- handler ------------------- */
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
     const {
-      date,
-      stakes,
-      position,
-      cards,
-      board = "",
-      notes = "",
-      rawText = "",
-      fe_hint,
-      spr_hint
+      date, stakes, position, cards, board = "",
+      notes = "", rawText = "", fe_hint, spr_hint
     }: {
-      date?: string;
-      stakes?: string;
-      position?: string;
-      cards?: string;
-      board?: string;
-      notes?: string;
-      rawText?: string;
-      fe_hint?: string;
-      spr_hint?: string;
+      date?: string; stakes?: string; position?: string;
+      cards?: string; board?: string; notes?: string; rawText?: string;
+      fe_hint?: string; spr_hint?: string;
     } = body ?? {};
 
-    // Compact user block for the model with explicit hints
-    const ipRiverFacingCheck = detectRiverFacingCheck(rawText || notes || "");
+    const story = (rawText || notes || "");
+    const ipRiverFacingCheck = detectRiverFacingCheck(story);
+    const { facing: riverFacingBet, large: riverBetLarge } = detectRiverFacingBet(story);
+
+    const heroRanks = extractHeroRanks(cards, story);
+    const boardRanks = extractBoardRanks(board, story);
+    const tripsWeak = hasTripsWeakKicker(heroRanks, boardRanks);
 
     const userBlock = [
       `MODE: CASH`,
@@ -138,28 +166,27 @@ export async function POST(req: Request) {
       `Board: ${board || "(unknown)"}`,
       spr_hint ? `SPR hint: ${spr_hint}` : ``,
       fe_hint ? `FE hint: ${fe_hint}` : ``,
-      ipRiverFacingCheck ? `HINT: ip_river_facing_check=true` : `HINT: ip_river_facing_check=false`,
+      `HINT: ip_river_facing_check=${ipRiverFacingCheck ? "true":"false"}`,
+      `HINT: river_facing_bet=${riverFacingBet ? "true":"false"}`,
+      riverFacingBet ? `HINT: river_bet_large=${riverBetLarge ? "true":"false"}` : ``,
+      tripsWeak ? `HINT: trips_weak_kicker=true` : `HINT: trips_weak_kicker=false`,
       ``,
       `RAW HAND TEXT:`,
-      (rawText || notes || "").trim() || "(none provided)",
+      story.trim() || "(none provided)",
       ``,
-      // Nudge: pick the decision node the user is asking about and respect HINTs
-      `FOCUS: Make the DECISION for the street implied by the question (usually the last street described). If ip_river_facing_check=true and the spot is close, give a MIXED plan with small bet frequency + check frequency and when to prefer each.`
+      `FOCUS: Decide the final-street action in a solver-like way. Respect HINTs above.`
     ].filter(Boolean).join("\n");
 
-    // cash-only guard
+    // CASH-only guard
     const { isMTT, hits } = looksLikeTournament(userBlock);
     if (isMTT) {
       return NextResponse.json({
-        gto_strategy:
-          `Cash-only mode: your text looks like a TOURNAMENT hand (${hits.join(", ")}). ` +
-          `Please re-enter as a cash hand (omit ICM/players-left).`,
+        gto_strategy: `Cash-only mode: your text looks like a TOURNAMENT hand (${hits.join(", ")}). Please re-enter as a cash hand (omit ICM/players-left).`,
         exploit_deviation: "",
         learning_tag: ["cash-only","mtt-blocked"]
       });
     }
 
-    // call LLM
     const resp = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       temperature: 0.2,
@@ -171,13 +198,8 @@ export async function POST(req: Request) {
     });
 
     const raw = resp?.choices?.[0]?.message?.content?.trim() || "{}";
-
     let parsed: any = {};
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      parsed = { gto_strategy: raw, exploit_deviation: "", learning_tag: [] };
-    }
+    try { parsed = JSON.parse(raw); } catch { parsed = { gto_strategy: raw, exploit_deviation: "", learning_tag: [] }; }
 
     const out = {
       gto_strategy: asText(parsed?.gto_strategy || ""),
@@ -186,11 +208,9 @@ export async function POST(req: Request) {
         ? parsed.learning_tag.filter((t: unknown) => typeof t === "string" && t.trim())
         : [],
     };
-
     return NextResponse.json(out);
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : "Failed to analyze hand";
-    console.error("analyze-hand error:", msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+  } catch (e: any) {
+    console.error("analyze-hand error:", e?.message || e);
+    return NextResponse.json({ error: "Failed to analyze hand" }, { status: 500 });
   }
 }
