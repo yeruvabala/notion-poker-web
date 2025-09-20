@@ -12,9 +12,15 @@ type RankSym =
 type Card = { r: RankSym; s: Suit };
 
 const RANK_ORDER: RankSym[] = ["A","K","Q","J","T","9","8","7","6","5","4","3","2"];
-const RANK_TO_VAL: Record<RankSym, number> = Object.fromEntries(
-  RANK_ORDER.map((r,i)=>[r, 14 - i]) // A=14 ... 2=2
+
+const RANK_TO_VAL: Record<RankSym, number> = RANK_ORDER.reduce(
+  (acc, r, i) => {
+    acc[r] = 14 - i; // A=14 ... 2=2
+    return acc;
+  },
+  {} as Record<RankSym, number>
 );
+
 
 /** Kc, Kh, Ks, K♥, K/ h, k h → normalized {r,s} or null */
 function parseCard(raw: string): Card | null {
