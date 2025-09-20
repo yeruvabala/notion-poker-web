@@ -1,257 +1,250 @@
-// app/lib/poker-eval.ts
-// 7-card hand evaluator with robust rank parsing (Kh / K♥ / K h / "10" -> T)
-// Produces a comparable score tuple + a nice human-readable description.
+// Lightweight poker hand evaluator + tolerant card parsing.
+// Supports inputs like "Kh", "K♥", "10h", "T h", "Ah Kh", etc.
+// Exports: parseCard, parseMany, evaluateHeroAndBoard
 
-export type RankSym = "A"|"K"|"Q"|"J"|"T"|"9"|"8"|"7"|"6"|"5"|"4"|"3"|"2";
+export type RankSym = "A" | "K" | "Q" | "J" | "T" | "9" | "8" | "7" | "6" | "5" | "4" | "3" | "2";
+export type SuitSym = "s" | "h" | "d" | "c";
 
-const RANKS: RankSym[] = ["A","K","Q","J","T","9","8","7","6","5","4","3","2"];
-const RVAL: Record<RankSym, number> = {
+const RANK_ORDER: RankSym[] = ["A","K","Q","J","T","9","8","7","6","5","4","3","2"];
+const RANK_TO_VAL: Record<RankSym, number> = {
   A:14, K:13, Q:12, J:11, T:10, "9":9, "8":8, "7":7, "6":6, "5":5, "4":4, "3":3, "2":2
 };
-const RSTR = (v:number): RankSym =>
-  (v===14?"A":v===13?"K":v===12?"Q":v===11?"J":v===10?"T":String(v)) as RankSym;
 
-const SUIT_CHARS = ["s","h","d","c","♠","♥","♦","♣"];
+// Map any suit glyph/letter to canonical SuitSym.
+function normalizeSuit(ch: string): SuitSym | null {
+  const c = ch.toLowerCase();
+  if (c === "s" || c === "♠") return "s";
+  if (c === "h" || c === "♥") return "h";
+  if (c === "d" || c === "♦") return "d";
+  if (c === "c" || c === "♣") return "c";
+  return null;
+}
 
-export type Card = { r: number; s: string }; // r ∈ [2..14], s ∈ {s/h/d/c/♠/♥/♦/♣}
+// Map any rank token to canonical RankSym (accepts 10/ten/T variants).
+function normalizeRank(token: string): RankSym | null {
+  const t = token.trim().toUpperCase();
 
-/** Parse a single card token (Kh, K♥, K h, 10d, T♦, etc.). Unknown suit defaults to 'x'. */
-export function parseCard(token: string): Card | null {
-  if (!token) return null;
-  const t = token.trim().replace(/\s+/g, "");
-  // Extract rank
-  let rank: RankSym | null = null;
-  // handle "10" -> "T"
-  if (/^10/i.test(t)) rank = "T";
-  else {
-    const m = t.match(/[AKQJT2-9]/i);
-    if (m) {
-      const ch = m[0].toUpperCase();
-      rank = (ch === ch.toUpperCase() ? ch : ch.toUpperCase()) as RankSym;
-      if (rank === "1") rank = "T" as RankSym;
-      if (rank === "0") rank = "T" as RankSym;
-      if (rank === "t") rank = "T" as RankSym;
-    }
+  // Accept "10", "T", "t" as Ten.
+  if (t === "10" || t === "T") return "T";
+
+  // Accept A,K,Q,J or digits 2-9.
+  if (t.length === 1) {
+    if (t === "A" || t === "K" || t === "Q" || t === "J") return t as RankSym;
+    if ("23456789".includes(t)) return t as RankSym;
   }
-  if (!rank) return null;
-
-  // Extract suit if present; otherwise 'x' (unknown)
-  let suit = "x";
-  const ms = t.match(/[shdc♠♥♦♣]/i);
-  if (ms && SUIT_CHARS.includes(ms[0])) suit = ms[0];
-
-  return { r: RVAL[rank], s: suit };
+  return null;
 }
 
-export function parseMany(input: string): Card[] {
-  // Split on spaces / commas / pipes
-  return input
+/**
+ * Parse a single card string.
+ * Accepts:
+ *  - "Kh", "K h", "K♥"
+ *  - "10h", "10 h", "Td", "T d"
+ *  - "Ah", "A h", "A♥"
+ */
+export function parseCard(str: string): { r: number; s: SuitSym } | null {
+  if (!str) return null;
+  const raw = str.replace(/\s+/g, ""); // remove spaces like "K h"
+  if (raw.length < 2) return null;
+
+  // Try two styles:
+  // 1) rank then suit, e.g. "Kh", "K♥", "10h"
+  // 2) sometimes users paste emojis next to rank with no space; we treat last char as suit if valid
+
+  // Extract suit candidate = last char (letter or emoji)
+  const suitCandidate = raw.slice(-1);
+  const suit = normalizeSuit(suitCandidate);
+  if (!suit) return null;
+
+  // Rank candidate = everything except the last char
+  const rankToken = raw.slice(0, -1);
+  const rankSym = normalizeRank(rankToken);
+  if (!rankSym) return null;
+
+  return { r: RANK_TO_VAL[rankSym], s: suit };
+}
+
+/**
+ * Parse many cards from a free-form string.
+ * Returns canonical list (up to as many as we can parse).
+ */
+export function parseMany(text: string): { r: number; s: SuitSym }[] {
+  if (!text) return [];
+  const tokens = text
+    // Split on whitespace, commas, pipes and slashes but keep things like "10h"
     .split(/[\s,|/]+/)
-    .map(parseCard)
-    .filter((c): c is Card => !!c);
-}
+    .filter(Boolean);
 
-/** Utility: choose k from array (small N; this is fine for 7 choose 5) */
-function combos<T>(arr: T[], k: number): T[][] {
-  const out: T[][] = [];
-  const cur: T[] = [];
-  const rec = (i: number, need: number) => {
-    if (need === 0) { out.push(cur.slice()); return; }
-    for (let j = i; j <= arr.length - need; j++) {
-      cur.push(arr[j]);
-      rec(j+1, need-1);
-      cur.pop();
-    }
-  };
-  rec(0, k);
+  const out: { r: number; s: SuitSym }[] = [];
+  for (const t of tokens) {
+    const c = parseCard(t);
+    if (c) out.push(c);
+  }
   return out;
 }
 
-/** Category ordering (higher is better). */
-const CAT = {
-  High: 1,
-  Pair: 2,
-  TwoPair: 3,
-  Trips: 4,
-  Straight: 5,
-  Flush: 6,
-  FullHouse: 7,
-  Quads: 8,
-  StraightFlush: 9,
-} as const;
-type CatKey = keyof typeof CAT;
+/* ------------------------------------------------------------------------ */
+/* Hand evaluation (7-card to best 5)                                       */
+/* ------------------------------------------------------------------------ */
 
-type Score = {
-  cat: number;
-  // tie-break vector (lexicographically compared, length depends on cat)
-  tb: number[];
-  // for description
-  ranks: number[]; // sorted desc 5 ranks of the 5-card hand
-  isFlush: boolean;
-  isStraight: boolean;
-};
+type Cat =
+  | 1  // High Card
+  | 2  // One Pair
+  | 3  // Two Pair
+  | 4  // Three of a Kind
+  | 5  // Straight
+  | 6  // Flush
+  | 7  // Full House
+  | 8  // Four of a Kind
+  | 9; // Straight Flush
 
-/** Compare two scores (return >0 if a>b) */
-function cmpScore(a: Score, b: Score): number {
-  if (a.cat !== b.cat) return a.cat - b.cat;
-  const L = Math.max(a.tb.length, b.tb.length);
-  for (let i=0;i<L;i++) {
-    const av = a.tb[i] ?? 0, bv = b.tb[i] ?? 0;
+type Card = { r: number; s: SuitSym };
+
+function byRankDesc(a: Card, b: Card) { return b.r - a.r; }
+
+function isStraight(valuesDesc: number[]): number | null {
+  // Remove duplicates
+  const uniq = [...new Set(valuesDesc)];
+  // Add wheel (A=14) as 1 to detect A-5 straight
+  if (uniq[0] === 14) uniq.push(1);
+  // Sliding window of length >=5
+  for (let i = 0; i <= uniq.length - 5; i++) {
+    let ok = true;
+    for (let j = 1; j < 5; j++) {
+      if (uniq[i + j - 1] - 1 !== uniq[i + j]) { ok = false; break; }
+    }
+    if (ok) return uniq[i]; // high card of straight
+  }
+  return null;
+}
+
+function classify5(cards: Card[]) {
+  const sorted = [...cards].sort(byRankDesc);
+  const ranks = sorted.map(c => c.r);
+  const suits = sorted.map(c => c.s);
+  const counts: Record<number, number> = {};
+  for (const r of ranks) counts[r] = (counts[r] ?? 0) + 1;
+
+  const isFlush = suits.every(s => s === suits[0]);
+  const straightHi = isStraight(ranks);
+  const isStraightBool = straightHi !== null;
+
+  // Straight flush
+  if (isFlush && isStraightBool) {
+    return { cat: 9 as Cat, tiebreak: [straightHi!] };
+  }
+
+  // Rank multiplicities
+  const byCount = Object.entries(counts)
+    .map(([r, c]) => ({ r: +r, c }))
+    .sort((a, b) => b.c - a.c || b.r - a.r);
+
+  // Four of a kind
+  if (byCount[0]?.c === 4) {
+    const quad = byCount[0].r;
+    const kicker = sorted.find(c => c.r !== quad)!.r;
+    return { cat: 8 as Cat, tiebreak: [quad, kicker] };
+  }
+
+  // Full house
+  if (byCount[0]?.c === 3 && byCount[1]?.c >= 2) {
+    const trips = byCount[0].r;
+    const pair = byCount[1].r;
+    return { cat: 7 as Cat, tiebreak: [trips, pair] };
+  }
+
+  if (isFlush) {
+    return { cat: 6 as Cat, tiebreak: ranks };
+  }
+
+  if (isStraightBool) {
+    return { cat: 5 as Cat, tiebreak: [straightHi!] };
+  }
+
+  if (byCount[0]?.c === 3) {
+    const trips = byCount[0].r;
+    const kickers = sorted.filter(c => c.r !== trips).map(c => c.r).slice(0, 2);
+    return { cat: 4 as Cat, tiebreak: [trips, ...kickers] };
+  }
+
+  if (byCount[0]?.c === 2 && byCount[1]?.c === 2) {
+    const topPair = Math.max(byCount[0].r, byCount[1].r);
+    const botPair = Math.min(byCount[0].r, byCount[1].r);
+    const kicker = sorted.find(c => c.r !== topPair && c.r !== botPair)!.r;
+    return { cat: 3 as Cat, tiebreak: [topPair, botPair, kicker] };
+  }
+
+  if (byCount[0]?.c === 2) {
+    const pair = byCount[0].r;
+    const kickers = sorted.filter(c => c.r !== pair).map(c => c.r).slice(0, 3);
+    return { cat: 2 as Cat, tiebreak: [pair, ...kickers] };
+  }
+
+  return { cat: 1 as Cat, tiebreak: ranks };
+}
+
+function compareRanks(a: number[], b: number[]): number {
+  const len = Math.max(a.length, b.length);
+  for (let i = 0; i < len; i++) {
+    const av = a[i] ?? 0;
+    const bv = b[i] ?? 0;
     if (av !== bv) return av - bv;
   }
   return 0;
 }
 
-function isFlush(cards: Card[]): boolean {
-  const s = cards.map(c=>c.s).filter(x=>x!=="x");
-  if (s.length < 5) return false; // unclear suits -> assume not flush
-  const by = new Map<string, number>();
-  for (const v of s) by.set(v, 1+(by.get(v)??0));
-  for (const v of by.values()) if (v>=5) return true;
-  return false;
-}
-
-function rankCounts(cards: Card[]): Map<number, number> {
-  const m = new Map<number, number>();
-  for (const c of cards) m.set(c.r, 1+(m.get(c.r)??0));
-  return m;
-}
-
-function straightHigh(cards: Card[]): number | 0 {
-  // Unique ranks desc
-  const u = Array.from(new Set(cards.map(c=>c.r))).sort((a,b)=>b-a);
-  // Add wheel (A as 1) if A present
-  if (u.includes(14)) u.push(1);
-  let run = 1;
-  for (let i=1;i<u.length;i++) {
-    if (u[i] === u[i-1]-1) {
-      run++;
-      if (run>=5) return Math.max(u[i-1]+4, 5); // return high rank (A-high straight -> 14)
-    } else if (u[i] !== u[i-1]) {
-      run = 1;
+function best5of7(cards: Card[]) {
+  let best = { cat: 1 as Cat, tiebreak: [0,0,0,0,0] as number[] };
+  for (let i = 0; i < cards.length; i++) {
+    for (let j = i + 1; j < cards.length; j++) {
+      const pick = cards.filter((_, idx) => idx !== i && idx !== j);
+      const cur = classify5(pick);
+      if (
+        cur.cat > best.cat ||
+        (cur.cat === best.cat && compareRanks(cur.tiebreak, best.tiebreak) > 0)
+      ) {
+        best = cur;
+      }
     }
-  }
-  return 0;
-}
-
-/** Evaluate a 5-card hand into a Score. */
-function eval5(cards: Card[]): Score {
-  const rs = cards.map(c=>c.r).sort((a,b)=>b-a);
-  const flush = isFlush(cards);
-  const sh = straightHigh(cards);
-
-  // Straight/Flush detection needs exact 5 cards: for flush, ensure all 5 same suit.
-  let allSameSuit = false;
-  if (flush) {
-    const suit = cards[0].s;
-    allSameSuit = cards.every(c=>c.s===suit);
-  }
-
-  const counts = rankCounts(cards);
-  const groups = Array.from(counts.entries()).sort((a,b)=>{
-    // sort by count desc then rank desc
-    if (b[1] !== a[1]) return b[1]-a[1];
-    return b[0]-a[0];
-  });
-  const byCount = groups.map(([r,c])=>({r,c}));
-
-  // Straight Flush
-  if (allSameSuit && sh) {
-    return { cat: CAT.StraightFlush, tb:[sh], ranks: rs, isFlush:true, isStraight:true };
-  }
-  // Quads
-  if (byCount[0]?.c === 4) {
-    const quad = byCount[0].r;
-    const kicker = Math.max(...rs.filter(x=>x!==quad));
-    return { cat: CAT.Quads, tb:[quad, kicker], ranks: rs, isFlush:false, isStraight:false };
-  }
-  // Full House
-  if (byCount[0]?.c === 3 && byCount[1]?.c >= 2) {
-    const trips = byCount[0].r;
-    const pair = byCount[1].r;
-    return { cat: CAT.FullHouse, tb:[trips, pair], ranks: rs, isFlush:false, isStraight:false };
-  }
-  // Flush
-  if (allSameSuit) {
-    return { cat: CAT.Flush, tb: rs, ranks: rs, isFlush:true, isStraight:false };
-  }
-  // Straight
-  if (sh) {
-    return { cat: CAT.Straight, tb:[sh], ranks: rs, isFlush:false, isStraight:true };
-  }
-  // Trips
-  if (byCount[0]?.c === 3) {
-    const trips = byCount[0].r;
-    const kickers = rs.filter(x=>x!==trips).slice(0,2);
-    return { cat: CAT.Trips, tb:[trips, ...kickers], ranks: rs, isFlush:false, isStraight:false };
-  }
-  // Two Pair
-  if (byCount[0]?.c === 2 && byCount[1]?.c === 2) {
-    const [p1, p2] = [byCount[0].r, byCount[1].r].sort((a,b)=>b-a);
-    const kicker = Math.max(...rs.filter(x=>x!==p1 && x!==p2));
-    return { cat: CAT.TwoPair, tb:[p1,p2,kicker], ranks: rs, isFlush:false, isStraight:false };
-  }
-  // Pair
-  if (byCount[0]?.c === 2) {
-    const pr = byCount[0].r;
-    const ks = rs.filter(x=>x!==pr).slice(0,3);
-    return { cat: CAT.Pair, tb:[pr, ...ks], ranks: rs, isFlush:false, isStraight:false };
-  }
-  // High card
-  return { cat: CAT.High, tb: rs, ranks: rs, isFlush:false, isStraight:false };
-}
-
-/** Best 5 out of up to 7 cards. Returns the top Score. */
-export function best5ofN(all: Card[]): Score {
-  const picks = combos(all, 5);
-  let best = eval5(picks[0]);
-  for (let i=1;i<picks.length;i++) {
-    const sc = eval5(picks[i]);
-    if (cmpScore(sc, best) > 0) best = sc;
   }
   return best;
 }
 
-/** Pretty description like "Two Pair — Aces and Kings, kicker Queen" */
-export function describe(score: Score): string {
-  const name = ((): CatKey => {
-    for (const k in CAT) if (CAT[k as CatKey] === score.cat) return k as CatKey;
-    return "High";
-  })();
+function describe(cat: Cat, tiebreak: number[]) {
+  const valToFace = (v: number) =>
+    v === 14 ? "A" : v === 13 ? "K" : v === 12 ? "Q" : v === 11 ? "J" : v === 10 ? "T" : String(v);
 
-  const labelRank = (v:number) => {
-    const s = RSTR(v);
-    return s==="A"?"Ace":s==="K"?"King":s==="Q"?"Queen":s==="J"?"Jack":s==="T"?"Ten":s;
-  };
-
-  switch (name) {
-    case "StraightFlush":
-      return `Straight Flush — high card ${labelRank(score.tb[0])}`;
-    case "Quads":
-      return `Four of a Kind — ${labelRank(score.tb[0])}s, kicker ${labelRank(score.tb[1])}`;
-    case "FullHouse":
-      return `Full House — ${labelRank(score.tb[0])}s over ${labelRank(score.tb[1])}s`;
-    case "Flush":
-      return `Flush — ${score.tb.map(labelRank).map(w=>w).join(", ")}`;
-    case "Straight":
-      return `Straight — high card ${labelRank(score.tb[0])}`;
-    case "Trips":
-      return `Three of a Kind — ${labelRank(score.tb[0])}s, kickers ${labelRank(score.tb[1])}, ${labelRank(score.tb[2])}`;
-    case "TwoPair":
-      return `Two Pair — ${labelRank(score.tb[0])}s and ${labelRank(score.tb[1])}s, kicker ${labelRank(score.tb[2])}`;
-    case "Pair":
-      return `One Pair — ${labelRank(score.tb[0])}s, kickers ${labelRank(score.tb[1])}, ${labelRank(score.tb[2])}, ${labelRank(score.tb[3])}`;
-    case "High":
-    default:
-      return `High Card — ${labelRank(score.tb[0])}, then ${labelRank(score.tb[1])}, ${labelRank(score.tb[2])}, ${labelRank(score.tb[3])}, ${labelRank(score.tb[4])}`;
+  switch (cat) {
+    case 9: return `Straight Flush, high ${valToFace(tiebreak[0])}`;
+    case 8: return `Four of a Kind, ${valToFace(tiebreak[0])}s (kicker ${valToFace(tiebreak[1])})`;
+    case 7: return `Full House, ${valToFace(tiebreak[0])}s over ${valToFace(tiebreak[1])}s`;
+    case 6: return `Flush`;
+    case 5: return `Straight, high ${valToFace(tiebreak[0])}`;
+    case 4: return `Three of a Kind, ${valToFace(tiebreak[0])}s`;
+    case 3: return `Two Pair — ${valToFace(tiebreak[0])}${valToFace(tiebreak[1])} (kicker ${valToFace(tiebreak[2])})`;
+    case 2: return `One Pair — ${valToFace(tiebreak[0])}s`;
+    default: return `High Card — ${valToFace(tiebreak[0])}`;
   }
 }
 
-/** Convenience: evaluate hero+board (strings or Card[]) */
-export function evaluateHeroAndBoard(hero: (string|Card)[], board: (string|Card)[]) {
-  const toCard = (x:string|Card)=> typeof x==="string" ? parseCard(x) : x;
-  const hc = hero.map(toCard).filter(Boolean) as Card[];
-  const bc = board.map(toCard).filter(Boolean) as Card[];
-  const score = best5ofN([...hc, ...bc]);
-  return { score, label: describe(score) };
+/**
+ * Evaluate hero + board arrays (any of "Kh","K♥","10h","Td" etc).
+ * Returns best 5-of-7 classification + human label.
+ */
+export function evaluateHeroAndBoard(
+  heroTokens: string[],
+  boardTokens: string[]
+) {
+  const hero = heroTokens.map(parseCard).filter(Boolean) as Card[];
+  const board = boardTokens.map(parseCard).filter(Boolean) as Card[];
+  const all = [...hero, ...board].slice(0, 7);
+
+  // Not enough cards? Return high-card-ish placeholder.
+  if (all.length < 5) {
+    return { score: { cat: 1 as Cat, tiebreak: [0,0,0,0,0] }, label: "Unknown — insufficient cards" };
+  }
+
+  const score = best5of7(all);
+  const label = describe(score.cat, score.tiebreak);
+  return { score, label };
 }
