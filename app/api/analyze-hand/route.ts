@@ -71,8 +71,11 @@ LEARNING TAGS
 Critical rules:
 - CASH only; ignore ICM/players-left entirely.
 - Position & action-closure rule:
-  * If Hero is in-position on the RIVER and Villain checks to Hero, any "Check" by Hero is a check-back to showdown. Do NOT say "induce bluffs" there. Use reasons like "showdown value / pot control / thin-value not mandatory".
+  * If Hero is in-position on the RIVER and Villain checks to Hero, a Hero check is a check-back to showdown. Do NOT say "induce bluffs" there. Use reasons like "showdown value / pot control / thin-value not mandatory".
   * Only use "induce bluffs" for checks that leave future betting options for Villain (earlier streets or when Hero is out of position).
+- Thin value guidance (important):
+  * On RIVER IP vs check, if Hero holds **top pair or marginal value** and can be called by enough worse hands, prefer **MIXED**. Give explicit frequencies and a concrete size (commonly 25–50% pot) for the value line, and “check-back” frequency for pot control.
+  * If worse calls are unlikely (opponent capped/underdefends river bets), allow pure check-back. If clear value, allow pure bet. When borderline, default to MIXED with frequencies.
 - Be prescriptive, not narrative. Use concise bullets; no markdown headings, no code blocks.
 - When info is missing, make reasonable cash-game assumptions (100bb, standard sizes) and proceed.
 - Keep the whole "gto_strategy" ~180–260 words (concise but informative).
@@ -106,7 +109,6 @@ export async function POST(req: Request) {
       spr_hint?: string;
     } = body ?? {};
 
-    // Compact user block for the model
     const userBlock = [
       `MODE: CASH`,
       `Date: ${date || "today"}`,
@@ -120,11 +122,9 @@ export async function POST(req: Request) {
       `RAW HAND TEXT:`,
       (rawText || notes || "").trim() || "(none provided)",
       ``,
-      // Nudge to anchor on the right node and avoid "induce" when last to act
-      `FOCUS: Choose the most relevant node (often the last street described). If Villain checked to an in-position Hero on the river, a Hero check is a check-back (no "induce bluffs").`
+      `FOCUS: Choose the most relevant node (often the last street described). If Villain checked to an in-position Hero on the river, a Hero check is a check-back (no "induce bluffs"). In close thin-value spots, prefer MIXED and show frequencies.`
     ].filter(Boolean).join("\n");
 
-    // cash-only guard
     const { isMTT, hits } = looksLikeTournament(userBlock);
     if (isMTT) {
       return NextResponse.json({
@@ -136,7 +136,6 @@ export async function POST(req: Request) {
       });
     }
 
-    // call LLM
     const resp = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       temperature: 0.2,
