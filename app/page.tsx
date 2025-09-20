@@ -95,15 +95,44 @@ function parseHeroCardsSmart(t: string): string {
 }
 
 function parseBoardFromStory(t: string) {
+  const src = (t || '').toLowerCase();
+
+  // capture everything on the line after the keyword, with or without ":" and with optional "is"
   const grab = (label: 'flop'|'turn'|'river') => {
-    const m = t.match(new RegExp(`${label}[^:]*:\\s*([^\\n]+)`, 'i'));
-    return m ? prettyCards(m[1]) : '';
+    const rx = new RegExp(`\\b${label}\\b(?:\\s+is)?\\s*:?\\s*([^\\n]*)`, 'i');
+    const m = src.match(rx);
+    return m ? m[1] : '';
   };
-  const flop = grab('flop');
-  const turn = grab('turn');
-  const river = grab('river');
-  return { flop, turn, river };
+
+  // tokenize a line into up to N card-like tokens and suitify them
+  const takeCards = (line: string, n: number) => {
+    if (!line) return [];
+    // split on spaces and common punctuation
+    const raw = line.replace(/[.,;|]/g, ' ').split(/\s+/).filter(Boolean);
+    const cards: string[] = [];
+    for (const tok of raw) {
+      const c = suitifyToken(tok);
+      if (c) cards.push(c);
+      if (cards.length >= n) break;
+    }
+    return cards;
+  };
+
+  const flopLine  = grab('flop');
+  const turnLine  = grab('turn');
+  const riverLine = grab('river');
+
+  const flopArr  = takeCards(flopLine, 3);
+  const turnArr  = takeCards(turnLine, 1);
+  const riverArr = takeCards(riverLine, 1);
+
+  return {
+    flop:  flopArr.join(' '),
+    turn:  turnArr[0]  || '',
+    river: riverArr[0] || '',
+  };
 }
+
 
 /** Extract a structured river action from free text */
 function parseActionHint(text: string): string {
