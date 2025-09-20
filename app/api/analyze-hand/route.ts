@@ -2,35 +2,34 @@
 import { NextResponse } from "next/server";
 import { openai } from "@/lib/openai";
 
-/* ───────────────────────── helpers ───────────────────────── */
-
-function asText(v: any): string {
-  if (v == null) return "";
-  if (typeof v === "string") return v;
-  try {
-    return JSON.stringify(v, null, 2);
-  } catch {
-    return String(v);
-  }
-}
-
-function detectTournamentHints(s: string): { isMTT: boolean; hits: string[] } {
-  const t = (s || "").toLowerCase();
-  const hits: string[] = [];
+/* ------------ light tournament detector (we are cash-only) ------------ */
+function looksLikeTournament(s: string): { isMTT: boolean; hits: string[] } {
+  const text = (s || "").toLowerCase();
   const terms = [
-    "tournament", "mtt", "players left", "icm", "final table", "bubble",
-    "pay jump", "payout", "day 1", "day 2", "level ", "ante", "bba"
+    "tournament","mtt","icm","players left","final table","bubble","itm",
+    "day 1","day 2","level ","bb ante","bba","ante","pay jump","payout"
   ];
-  for (const k of terms) if (t.includes(k)) hits.push(k);
-  // level-like with ante
-  if (/\b\d+\/\d+(?:\/\d+)?\b/.test(t) && /ante|bba/.test(t)) hits.push("level-like");
+  const hits = terms.filter(t => text.includes(t));
+  const levelLike = /\b\d+(?:[kKmM]?)[/]\d+(?:[kKmM]?)(?:[/]\d+(?:[kKmM]?))?\b/.test(text) && /ante|bba/.test(text);
+  if (levelLike && !hits.includes("level-like")) hits.push("level-like");
   return { isMTT: hits.length > 0, hits };
 }
 
-/* ───────────────────────── system prompt ───────────────────────── */
+/* ----------------------- small helpers ----------------------- */
+function asText(v: any): string {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (Array.isArray(v)) return v.map(asText).join("\n");
+  if (typeof v === "object") {
+    return Object.entries(v)
+      .map(([k, val]) => `${k}: ${asText(val)}`)
+      .join("\n");
+  }
+  return String(v);
+}
 
-const SYSTEM = `You are a CASH-GAME No-Limit Hold'em coach. CASH ONLY.
-
+/* ----------------------- system prompt ----------------------- */
+const SYSTEM = `You are a CASH-GAME poker coach. CASH ONLY. 
 Return ONLY JSON with EXACT keys:
 {
   "gto_strategy": "string",
@@ -38,49 +37,49 @@ Return ONLY JSON with EXACT keys:
   "learning_tag": ["string", "string?"]
 }
 
-Principles:
-- Decide from first principles; DO NOT justify based on what the user *did*. Treat their line as history only.
-- If the summary gives hero cards / board, you may infer hand class (air / pair / 2pr / set / straight / flush / combo draw).
-- When information is missing, assume 6-max, 100bb, standard sizings.
-
-Write "gto_strategy" as a compact plan (180–260 words) with sections in this order (plain text, no markdown):
+Write "gto_strategy" as a compact, structured coaching plan with these sections IN THIS ORDER:
 
 DECISION
-- Street: Preflop | Flop | Turn | River (pick the street the question targets; if unclear use last street described).
-- Action: Call / Fold / Check / Bet / Raise. If betting/raising give a primary SIZE as % pot (and bb if obvious).
-- If multiple lines are viable, say "MIXED:" and list 2–3 lines with a rough frequency hint (e.g., "Bet 33% ~60% / Check ~40%") and when each applies.
-- Pot odds line only if explicit (else omit).
+- Node: Preflop | Flop | Turn | River (choose the node the user is asking about; if unclear, use the last street described in the raw text).
+- Action: one of Call / Fold / Check / Bet / Raise. If betting/raising, give a primary SIZE as % pot (and bb if obvious) and, if appropriate, a secondary acceptable size.
+- MIXED: If multiple lines are viable, say "MIXED:" and list them with rough frequencies, e.g., "Bet 50% ~60% (for value) / Check-back ~40% (showdown/pot control)". Use "check-back" when the action closes with Hero.
+- Pot odds: include a single line “Pot odds: ~XX% (equity needed)” only if pot odds are explicit or easy to deduce.
 
 SITUATION
-- SRP/3BP, positions, effective stacks, pot/SPR (if provided), hero hand class.
+- One-liners: pot type (SRP/3BP), positions, effective stacks, pot and/or SPR if provided, hero cards (if provided).
 
 RANGE SNAPSHOT
-- One short line each for Hero and Villain after the line so far.
+- 1 short line each for Hero and Villain describing typical range after the line taken.
 
 PREFLOP / FLOP / TURN / RIVER
-- Sizing family (numbers).
-- Value classes (3–6).
-- Bluff/semi-bluff classes (3–6).
-- Slowdowns / Check-backs (brief).
-- Vs raise: one compact continue/fold rule.
-- NEXT CARDS (for Flop/Turn): Best/Worst 2–4 each.
+- Sizing family: suggested pot % or bb (give numbers). 
+- Value: 3–6 representative hands/classes.
+- Bluffs / Semi-bluffs: 3–6 classes.
+- Slowdowns / Check-backs: brief line.
+- Vs raise: 1 short rule for continue/fold.
+- NEXT CARDS (for FLOP and TURN): “Best:” and “Worst:” with 2–4 examples each.
 
 WHY
-- 3–6 bullets: range edge, nuts edge, blockers/unblockers, and FE math if the user passed FE hint.
+- 3–6 bullets. Include range- vs nuts-edge, blockers/unblockers, and (if fe_hint provided) fold-equity math “FE ≈ risk/(risk+reward) = <number>%”.
 
 COMMON MISTAKES
-- 2–4 bullets.
+- 2–4 bullets that warn about over/under-bluffing, bad sizings, or calling too wide/narrow.
 
 LEARNING TAGS
-- 2–4 short tags like ["range-advantage","two-tone-low","spr-3","thin-value"].
+- 2–4 short tags like ["range-advantage","two-tone-low","spr-5","river-thin-value"].
 
-Rules:
-- CASH only; ignore ICM and "players left".
-- Be prescriptive and concise. No markdown, no code fences.
+Critical rules:
+- CASH only; ignore ICM/players-left entirely.
+- Position & action-closure rule:
+  * If Hero is in-position on the RIVER and Villain checks to Hero, any "Check" by Hero is a check-back to showdown. Do NOT say "induce bluffs" there. Use reasons like "showdown value / pot control / thin-value not mandatory".
+  * Only use "induce bluffs" for checks that leave future betting options for Villain (earlier streets or when Hero is out of position).
+- Be prescriptive, not narrative. Use concise bullets; no markdown headings, no code blocks.
+- When info is missing, make reasonable cash-game assumptions (100bb, standard sizes) and proceed.
+- Keep the whole "gto_strategy" ~180–260 words (concise but informative).
+- "exploit_deviation" should be 2–4 bullets of pool exploits relevant to the spot.
 `;
 
-/* ───────────────────────── route handler ───────────────────────── */
-
+/* ----------------------- route handler ----------------------- */
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -89,12 +88,12 @@ export async function POST(req: Request) {
       date,
       stakes,
       position,
-      cards,        // normalized hero cards, e.g. "K♠ T♥"
-      board = "",   // "Flop: ... | Turn: ... | River: ..."
-      notes = "",   // free text
-      rawText = "", // same as notes, legacy
-      fe_hint,      // optional FE %
-      spr_hint,     // optional SPR
+      cards,
+      board = "",
+      notes = "",
+      rawText = "",
+      fe_hint,          // optional FE % hint string
+      spr_hint          // optional SPR hint
     }: {
       date?: string;
       stakes?: string;
@@ -107,71 +106,67 @@ export async function POST(req: Request) {
       spr_hint?: string;
     } = body ?? {};
 
-    // Build a compact user block for the model
-    const userLines = [
+    // Compact user block for the model
+    const userBlock = [
       `MODE: CASH`,
       `Date: ${date || "today"}`,
       `Stakes: ${stakes || "(unknown)"}`,
-      `Positions: ${position || "(unknown)"}`,
+      `Position: ${position || "(unknown)"}`,
       `Hero Cards: ${cards || "(unknown)"}`,
       `Board: ${board || "(unknown)"}`,
-      spr_hint ? `SPR hint: ${spr_hint}` : "",
-      fe_hint ? `FE hint: ${fe_hint}` : "",
-      "",
-      "RAW HAND TEXT:",
+      spr_hint ? `SPR hint: ${spr_hint}` : ``,
+      fe_hint ? `FE hint: ${fe_hint}` : ``,
+      ``,
+      `RAW HAND TEXT:`,
       (rawText || notes || "").trim() || "(none provided)",
-      "",
-      // Very explicit: ignore what hero did; answer for EV-max
-      "FOCUS: Decide the EV-max line NOW (not what hero did). If several lines are close, return a MIXED plan with when/why/size."
-    ].filter(Boolean);
+      ``,
+      // Nudge to anchor on the right node and avoid "induce" when last to act
+      `FOCUS: Choose the most relevant node (often the last street described). If Villain checked to an in-position Hero on the river, a Hero check is a check-back (no "induce bluffs").`
+    ].filter(Boolean).join("\n");
 
-    const userBlock = userLines.join("\n");
-
-    // Cash-only guard
-    const { isMTT, hits } = detectTournamentHints(userBlock);
+    // cash-only guard
+    const { isMTT, hits } = looksLikeTournament(userBlock);
     if (isMTT) {
       return NextResponse.json({
         gto_strategy:
           `Cash-only mode: your text looks like a TOURNAMENT hand (${hits.join(", ")}). ` +
           `Please re-enter as a cash hand (omit ICM/players-left).`,
         exploit_deviation: "",
-        learning_tag: ["cash-only", "mtt-blocked"],
+        learning_tag: ["cash-only","mtt-blocked"]
       });
     }
 
-    // Call model
+    // call LLM
     const resp = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       temperature: 0.2,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: SYSTEM },
-        { role: "user", content: userBlock },
+        { role: "user", content: userBlock }
       ],
     });
 
-    const raw = resp?.choices?.[0]?.message?.content ?? "{}";
+    const raw = resp?.choices?.[0]?.message?.content?.trim() || "{}";
 
-    // Robust parsing + [object Object] fix
-    let parsed: any;
+    let parsed: any = {};
     try {
       parsed = JSON.parse(raw);
     } catch {
-      // If the model ever returns non-JSON, salvage as text
       parsed = { gto_strategy: raw, exploit_deviation: "", learning_tag: [] };
     }
 
     const out = {
-      gto_strategy: asText(parsed?.gto_strategy ?? ""),
-      exploit_deviation: asText(parsed?.exploit_deviation ?? ""),
+      gto_strategy: asText(parsed?.gto_strategy || ""),
+      exploit_deviation: asText(parsed?.exploit_deviation || ""),
       learning_tag: Array.isArray(parsed?.learning_tag)
         ? parsed.learning_tag.filter((t: unknown) => typeof t === "string" && t.trim())
         : [],
     };
 
     return NextResponse.json(out);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : "Failed to analyze hand";
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Failed to analyze hand";
     console.error("analyze-hand error:", msg);
     return NextResponse.json({ error: msg }, { status: 500 });
   }
