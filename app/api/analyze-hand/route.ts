@@ -16,21 +16,8 @@ function asText(v: any): string {
 function looksLikeTournament(s: string): { isMTT: boolean; hits: string[] } {
   const text = (s || "").toLowerCase();
   const terms = [
-    "tournament",
-    "mtt",
-    "icm",
-    "players left",
-    "final table",
-    "bubble",
-    "itm",
-    "day 1",
-    "day 2",
-    "level ",
-    "bb ante",
-    "bba",
-    "ante",
-    "pay jump",
-    "payout",
+    "tournament","mtt","icm","players left","final table","bubble","itm",
+    "day 1","day 2","level ","bb ante","bba","ante","pay jump","payout",
   ];
   const hits = terms.filter((t) => text.includes(t));
   const levelLike =
@@ -58,8 +45,6 @@ function detectRiverFacingBet(
     (s.match(/(?:^|\n)\s*river[^:\n]*[: ]?\s*([^\n]*)/i)?.[1] || "").toLowerCase();
   const heroActsFirst =
     /\b(hero|i)\b/.test(riverLine) && /\b(bets?|jam|shove|raise)/.test(riverLine);
-  // If the river line has "bets", "jam", "shove", "pot" etc. without "hero/i" owner,
-  // treat as villain bet we are facing.
   const facing =
     /\b(bets?|bet\b|jam|shove|all[- ]?in|pot)\b/.test(riverLine) &&
     !heroActsFirst &&
@@ -87,35 +72,46 @@ function pickRanksFromCards(str: string): Rank[] {
 }
 
 function extractHeroRanks(cardsField?: string, rawText?: string): Rank[] {
-  // Prefer explicit 'cards' field, fallback to raw text "with kh th" etc.
   const c = pickRanksFromCards(cardsField || "");
   if (c.length >= 2) return c.slice(0, 2);
   const m = (rawText || "").match(/\bwith\s+([akqjt2-9hcds\s]+)\b/i);
   if (m) return pickRanksFromCards(m[1]).slice(0, 2);
-  // final fallback: search "hero ah jh"
   const m2 = (rawText || "").match(/\bhero\s+([akqjt2-9hcds\s]{2,10})\b/i);
   if (m2) return pickRanksFromCards(m2[1]).slice(0, 2);
   return [];
 }
 
 function extractBoardRanks(boardField?: string, rawText?: string): Rank[] {
-  // board field might contain separate streets; grab all rank letters in order
   const a = pickRanksFromCards(boardField || "");
   if (a.length) return a;
-  // From story lines
   const s = rawText || "";
   const ranks: Rank[] = [];
   const add = (line: string) => pickRanksFromCards(line).forEach((r) => ranks.push(r));
   const flop = s.match(/flop[^:\n]*[: ]?([^\n]*)/i)?.[1] || "";
   const turn = s.match(/turn[^:\n]*[: ]?([^\n]*)/i)?.[1] || "";
   const river = s.match(/river[^:\n]*[: ]?([^\n]*)/i)?.[1] || "";
-  add(flop);
-  add(turn);
-  add(river);
+  add(flop); add(turn); add(river);
   return ranks;
 }
 
-/** Board pair + hero has one of that rank with non-premium kicker -> "trips_weak_kicker". */
+/** True if any rank appears >= 2 on the board. */
+function isBoardPaired(board: Rank[]): boolean {
+  const counts: Record<string, number> = {};
+  for (const r of board) counts[r] = (counts[r] || 0) + 1;
+  return Object.values(counts).some((n) => n >= 2);
+}
+
+/** True if Hero actually pairs the highest visible board rank. */
+function isHeroTopPair(hero: Rank[], board: Rank[]): boolean {
+  if (hero.length < 2 || board.length < 3) return false;
+  const topBoard = board.reduce<Rank>(
+    (best, r) => (RANK_VAL[r] > RANK_VAL[best] ? r : best),
+    "2",
+  );
+  return hero.includes(topBoard);
+}
+
+/** Board pair + hero has one of that rank with non-premium kicker */
 function hasTripsWeakKicker(hero: Rank[], board: Rank[]): boolean {
   if (hero.length < 2 || board.length < 3) return false;
   const counts: Record<string, number> = {};
@@ -128,29 +124,17 @@ function hasTripsWeakKicker(hero: Rank[], board: Rank[]): boolean {
   if (!tripsRank) return false;
   const other = hero[0] === tripsRank ? hero[1] : hero[0];
   if (!other) return false;
-  // "weak" kicker if <= Q (i.e., NOT Ace). (Ace is strong; K vs K-top board is also fine.)
-  return RANK_VAL[other] <= RANK_VAL["Q"];
+  return RANK_VAL[other] <= RANK_VAL["Q"]; // Q or lower -> weak kicker
 }
 
-/** If hero has TOP PAIR and the other hole card is an Ace, mark strong kicker. */
-function computeStrongKickerTopPair(
-  cardsField?: string,
-  boardField?: string,
-  rawText?: string,
-): boolean {
-  const hero = extractHeroRanks(cardsField, rawText); // e.g., ["A","Q"]
-  const board = extractBoardRanks(boardField, rawText);
+/** Top pair with Ace kicker is strong. */
+function computeStrongKickerTopPair(hero: Rank[], board: Rank[]): boolean {
   if (hero.length < 2 || board.length < 3) return false;
-
-  // Find highest rank visible on the board (proxy for "top pair" checks).
   const topBoard = board.reduce<Rank>(
     (best, r) => (RANK_VAL[r] > RANK_VAL[best] ? r : best),
     "2",
   );
-
-  // If hero pairs that top board rank, kicker is the *other* card.
-  const pairsTop = hero.includes(topBoard);
-  if (!pairsTop) return false;
+  if (!hero.includes(topBoard)) return false;
   const other = hero[0] === topBoard ? hero[1] : hero[0];
   return other === "A";
 }
@@ -172,20 +156,20 @@ General style:
 
 RIVER RULES (guardrails):
 - If HINT ip_river_facing_check=true and the spot is close, output a MIXED plan with small bet (25–50%) frequency + check frequency, and WHEN to prefer each.
-- If HINT river_facing_bet=true and trips_weak_kicker=true (board pair + hero has one of that rank with a non-premium kicker), **default to CALL** vs sizable bets. Raising is usually dominated (isolation vs better Kx/boats). Only suggest raises with explicit exploit notes or strong blockers; otherwise explain why call > raise.
+- If HINT river_facing_bet=true and trips_weak_kicker=true (board pair + hero has one of that rank with a non-premium kicker), **default to CALL** vs sizable bets. Raising is usually dominated. Only suggest raises with explicit exploit notes or strong blockers; otherwise explain why call > raise.
 - If HINT strong_kicker=true, do NOT call the kicker weak; treat it as strong (e.g., top pair with Ace kicker).
+- If HINT hero_top_pair=false, do NOT describe hero as having "top pair".
+- If HINT board_paired=true and hero does not hold that paired rank, do NOT imply trips or two-pair from the board.
 
 DECISION
-- Node: pick the last street asked about (usually River).
+- Node: choose the final street (usually River).
 - Action: Call / Fold / Check / Bet / Raise OR "MIXED: ..." with frequencies if appropriate.
-- Include brief reasons; “Pot odds: ~XX%” only if they are explicit.
 
 SITUATION
-- SRP/3BP, positions, eff stacks, pot/SPR if given, hero cards (if given).
+- SRP/3BP, positions, eff stacks, pot/SPR if supplied, hero cards (if supplied).
 
-RANGE SNAPSHOT + per-street summaries
+RANGE SNAPSHOT + street summaries
 - Sizing family, Value classes, Bluffs/semi-bluffs, Slowdowns/Check-backs, Vs raise rule.
-- NEXT CARDS on earlier streets.
 
 WHY + COMMON MISTAKES + LEARNING TAGS
 - 2–5 bullets each.
@@ -224,16 +208,24 @@ export async function POST(req: Request) {
 
     const story = rawText || notes || "";
 
-    // Hints
     const ipRiverFacingCheck = detectRiverFacingCheck(story);
     const { facing: riverFacingBet, large: riverBetLarge } = detectRiverFacingBet(story);
 
     const heroRanks = extractHeroRanks(cards, story);
     const boardRanks = extractBoardRanks(board, story);
-    const tripsWeak = hasTripsWeakKicker(heroRanks, boardRanks);
-    const strongKickerTopPair = computeStrongKickerTopPair(cards, board, story);
 
-    // Compose the user block
+    const boardPaired = isBoardPaired(boardRanks);
+    const heroTopPair = isHeroTopPair(heroRanks, boardRanks);
+    const tripsWeak = hasTripsWeakKicker(heroRanks, boardRanks);
+    const strongKickerTopPair = computeStrongKickerTopPair(heroRanks, boardRanks);
+
+    const facts = [
+      `Hero ranks: ${heroRanks.join(",") || "(unknown)"}`,
+      `Board ranks: ${boardRanks.join(",") || "(unknown)"}`,
+      `board_paired=${boardPaired}`,
+      `hero_top_pair=${heroTopPair}`,
+    ].join(" | ");
+
     const userBlock = [
       `MODE: CASH`,
       `Date: ${date || "today"}`,
@@ -246,18 +238,21 @@ export async function POST(req: Request) {
       `HINT: ip_river_facing_check=${ipRiverFacingCheck ? "true" : "false"}`,
       `HINT: river_facing_bet=${riverFacingBet ? "true" : "false"}`,
       riverFacingBet ? `HINT: river_bet_large=${riverBetLarge ? "true" : "false"}` : ``,
+      `HINT: board_paired=${boardPaired ? "true" : "false"}`,
+      `HINT: hero_top_pair=${heroTopPair ? "true" : "false"}`,
       `HINT: trips_weak_kicker=${tripsWeak ? "true" : "false"}`,
       `HINT: strong_kicker=${strongKickerTopPair ? "true" : "false"}`,
+      ``,
+      `FACTS: ${facts}`,
       ``,
       `RAW HAND TEXT:`,
       story.trim() || "(none provided)",
       ``,
-      `FOCUS: Decide the final-street action in a solver-like way. Respect HINTs above.`,
+      `FOCUS: Decide the final-street action in a solver-like way. Respect the HINTS and FACTS above.`,
     ]
       .filter(Boolean)
       .join("\n");
 
-    // CASH-only guard
     const { isMTT, hits } = looksLikeTournament(userBlock);
     if (isMTT) {
       return NextResponse.json({
