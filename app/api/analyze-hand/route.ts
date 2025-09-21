@@ -32,7 +32,7 @@ function detectRiverFacingBet(text: string): { facing: boolean; large: boolean }
   return { facing, large };
 }
 
-/* ----------- rank helpers just for one guard hint ----------- */
+/* ----------- rank helpers & hints ----------- */
 type Rank = "A"|"K"|"Q"|"J"|"T"|"9"|"8"|"7"|"6"|"5"|"4"|"3"|"2";
 const RANKS: Rank[] = ["A","K","Q","J","T","9","8","7","6","5","4","3","2"];
 const RANK_VAL: Record<Rank, number> = {A:14,K:13,Q:12,J:11,T:10,9:9,8:8,7:7,6:6,5:5,4:4,3:3,2:2};
@@ -57,7 +57,7 @@ function extractBoardRanks(boardField?: string, rawText?: string): Rank[] {
   return ranks;
 }
 
-/** Guard-hint: true only when board-pair + hero has exactly one of that rank + kicker <= Q */
+/** Guard-hint 1: trips with weak kicker (board pair + hero singleton + weak other card) */
 function computeTripsWeakKickerHint(heroCards: string, boardField?: string, rawText?: string) {
   const hero = pickRanksFromCards(heroCards);
   const board = extractBoardRanks(boardField, rawText);
@@ -78,6 +78,26 @@ function computeTripsWeakKickerHint(heroCards: string, boardField?: string, rawT
   if (!other) return false;
 
   return RANK_VAL[other] <= RANK_VAL["Q"]; // Q/J/T/… = “weak” kicker
+}
+
+/** Guard-hint 2: pair-on-board is shared (Hero's "pair" comes from board; not trips) */
+function computePairOnBoardShared(heroCards: string, boardField?: string, rawText?: string) {
+  const hero = pickRanksFromCards(heroCards);
+  const board = extractBoardRanks(boardField, rawText);
+  if (hero.length < 2 || board.length < 3) return false;
+
+  const boardCounts: Record<string, number> = {};
+  for (const r of board) boardCounts[r] = (boardCounts[r] || 0) + 1;
+  // any paired rank on board…
+  const pairedOnBoard = RANKS.filter(r => (boardCounts[r] || 0) >= 2);
+  if (!pairedOnBoard.length) return false;
+
+  // shared only if Hero does NOT hold that rank (otherwise Hero has trips)
+  const heroCounts: Record<string, number> = {};
+  for (const r of hero) heroCounts[r] = (heroCounts[r] || 0) + 1;
+
+  // if at least one board-paired rank doesn't appear in hero, then both players share that pair
+  return pairedOnBoard.some(r => (heroCounts[r] || 0) === 0);
 }
 
 /* ------------------- CASH-only filter ------------------- */
@@ -102,12 +122,15 @@ Return ONLY JSON with EXACT keys:
 
 Authoritative inputs:
 - HAND_CLASS is computed deterministically by the UI. **Do not contradict it.**
-- If HAND_CLASS says "Two Pair", you must not call it "Trips" or "Top pair", etc.
-- HERO_CARDS and BOARD are provided as normalized tokens (e.g., "Kh Th" and "Flop: Kd 5h 2s | Turn: Qs | River: Ks").
+- HERO_CARDS and BOARD are normalized tokens.
 
-RIVER RULES (guardrails):
+RIVER GUARDRAILS:
 - If HINT ip_river_facing_check=true and the spot is close, output a MIXED plan with small bet (25–50%) frequency + check frequency, and WHEN to prefer each.
-- If HINT river_facing_bet=true and HINT trips_weak_kicker=true, default to CALL vs sizable bets. Raising is dominated unless explicit exploits apply.
+- If HINT river_facing_bet=true and HINT trips_weak_kicker=true, default to CALL vs sizable bets; raising is dominated unless explicit exploits apply.
+- **If HINT pair_on_board_shared=true and HAND_CLASS is "Pair":**
+  - On river facing a check, prefer CHECK or a SMALL **20–33%** thin value bet at most (never >33%).
+  - Emphasize that both players share the board pair (kicker wars / reverse implied risk).
+  - Avoid raise recommendations; vs bets use call/fold logic.
 
 DECISION
 - Node: choose the last street (usually River).
@@ -127,11 +150,10 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    // Payload from page (story or summary); all are optional strings
     const {
       date, stakes, position, cards, board = "",
       notes = "", rawText = "", fe_hint, spr_hint,
-      hand_class // <-- NEW: authoritative classification coming from the page
+      hand_class
     }: {
       date?: string; stakes?: string; position?: string;
       cards?: string; board?: string; notes?: string; rawText?: string;
@@ -140,15 +162,13 @@ export async function POST(req: Request) {
 
     const story = (rawText || notes || "");
 
-    // Heuristic context flags from story text
+    // Heuristic context flags
     const ipRiverFacingCheck = detectRiverFacingCheck(story);
     const { facing: riverFacingBet, large: riverBetLarge } = detectRiverFacingBet(story);
+    const tripsWeak = !!cards && computeTripsWeakKickerHint(cards, board, story);
+    const pairOnBoardShared = !!cards && computePairOnBoardShared(cards, board, story);
 
-    // Guard-hint: trips with weak kicker (board pair + hero singleton + weak other card)
-    const tripsWeak =
-      !!cards && computeTripsWeakKickerHint(cards, board, story);
-
-    // Build user message with clean, explicit inputs
+    // Build user message
     const userBlock = [
       `MODE: CASH`,
       `Date: ${date || "today"}`,
@@ -163,6 +183,7 @@ export async function POST(req: Request) {
       `HINT: river_facing_bet=${riverFacingBet ? "true":"false"}`,
       riverFacingBet ? `HINT: river_bet_large=${riverBetLarge ? "true":"false"}` : ``,
       `HINT: trips_weak_kicker=${tripsWeak ? "true":"false"}`,
+      `HINT: pair_on_board_shared=${pairOnBoardShared ? "true":"false"}`,
       ``,
       `RAW HAND TEXT:`,
       story.trim() || "(none provided)",
