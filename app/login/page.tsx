@@ -1,118 +1,82 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 export default function LoginPage() {
   const supabase = createClient();
   const router = useRouter();
 
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [err, setErr] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  if (!supabase) {
+    return (
+      <main style={{padding:20}}>
+        Missing Supabase env vars. Open <code>/api/env-ok</code> and set
+        {' '}<code>NEXT_PUBLIC_SUPABASE_URL</code> / <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>.
+      </main>
+    );
+  }
 
-  // If already signed in, bounce home
-  useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) router.replace("/");
-    })();
-  }, [router, supabase]);
+  const [email, setEmail]       = useState('');
+  const [password, setPassword] = useState('');
+  const [mode, setMode]         = useState<'signin'|'signup'>('signin');
+  const [loading, setLoading]   = useState(false);
+  const [err, setErr]           = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
     setLoading(true);
-
     try {
-      if (mode === "signin") {
+      if (mode === 'signin') {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        router.replace("/"); // success → go to dashboard/home
       } else {
-        // Sign up (may require email confirmation depending on your settings)
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback` }
-        });
+        const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        // If confirm-email is ON, tell the user to check email.
-        router.replace("/login?check-email=true");
       }
+      router.replace('/'); // go to home
+      router.refresh();
     } catch (e: any) {
-      setErr(e.message ?? "Something went wrong");
+      setErr(e?.message || 'Auth error');
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleResetPassword() {
-    setErr(null);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
-    });
-    if (error) setErr(error.message);
-    else alert("Password reset link sent (if the email exists). Check your inbox.");
-  }
-
   return (
-    <div className="mx-auto max-w-sm p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">
-          {mode === "signin" ? "Sign in" : "Create account"}
-        </h1>
-        <button
-          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-          className="text-sm underline"
+    <main style={{display:'grid',placeItems:'center',minHeight:'100dvh',padding:24,background:'#f3f4f6'}}>
+      <form onSubmit={handleSubmit}
+        style={{width:360,maxWidth:'100%',display:'grid',gap:12,padding:18,border:'1px solid #e5e7eb',borderRadius:12,background:'#fff',boxShadow:'0 8px 24px rgba(0,0,0,.06)'}}
+      >
+        <h1 style={{margin:0,fontSize:18,fontWeight:800}}>Only Poker — {mode === 'signin' ? 'Sign in' : 'Create account'}</h1>
+
+        <label style={{display:'grid',gap:6}}>
+          <span style={{fontSize:12,color:'#6b7280'}}>Email</span>
+          <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" type="email" required
+            style={{padding:10,border:'1px solid #e5e7eb',borderRadius:10,background:'#fff'}} />
+        </label>
+
+        <label style={{display:'grid',gap:6}}>
+          <span style={{fontSize:12,color:'#6b7280'}}>Password</span>
+          <input value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" type="password" required
+            style={{padding:10,border:'1px solid #e5e7eb',borderRadius:10,background:'#fff'}} />
+        </label>
+
+        <button disabled={loading}
+          style={{padding:10,borderRadius:10,border:'1px solid #1d4ed8',background:'#2563eb',color:'#fff',cursor:'pointer'}}
         >
-          {mode === "signin" ? "Need an account?" : "Have an account?"}
+          {loading ? 'Please wait…' : (mode === 'signin' ? 'Sign in' : 'Sign up')}
         </button>
-      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <input
-          className="w-full border rounded p-2"
-          type="email"
-          placeholder="email@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          className="w-full border rounded p-2"
-          type="password"
-          placeholder="Your password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        {err && <div style={{color:'#b91c1c'}}>{err}</div>}
 
-        {err && <p className="text-red-600 text-sm">{err}</p>}
-
-        <button
-          className="w-full rounded p-2 border"
-          disabled={loading}
-          type="submit"
+        <button type="button" onClick={()=>setMode(mode==='signin'?'signup':'signin')}
+          style={{border:'none',background:'transparent',color:'#2563eb',cursor:'pointer',padding:6,justifySelf:'start'}}
         >
-          {loading ? "Please wait..." :
-            mode === "signin" ? "Sign in" : "Sign up"}
+          {mode === 'signin' ? 'No account? Sign up' : 'Have an account? Sign in'}
         </button>
       </form>
-
-      {mode === "signin" && (
-        <button
-          className="text-sm underline"
-          onClick={handleResetPassword}
-          disabled={!email}
-          title={!email ? "Enter your email above first" : ""}
-        >
-          Forgot password?
-        </button>
-      )}
-    </div>
+    </main>
   );
 }
