@@ -1,5 +1,5 @@
 'use client';
-
+import { saveHandToSupabase } from '@/lib/saveToSupabase';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -453,28 +453,7 @@ export default function Page() {
   setSaving(true);
   setStatus(null);
   try {
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) {
-      setStatus("You must be signed in.");
-      setSaving(false);
-      return;
-    }
-    const row = {
-      user_id: user.id,
-      date: fields.date ?? null,
-      stakes: fields.stakes ?? null,
-      position: fields.position ?? null,
-      cards: fields.cards ?? null,
-      board: fields.board ?? null,
-      gto_strategy: fields.gto_strategy ?? null,
-      exploit_deviation: fields.exploit_deviation ?? null,
-      learning_tag: fields.learning_tag ?? [],
-      hand_class: fields.hand_class ?? null,
-      source_used: fields.source_used ?? null,
-      notes: input || null,
-    };
-    const { error } = await sb.from('hands').insert(row);
-    if (error) throw error;
+    await saveHandToSupabase(fields, input || null);
     setStatus('Saved to Supabase ✅');
   } catch (e: any) {
     setStatus(e?.message || 'Failed to save');
