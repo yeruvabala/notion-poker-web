@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 /* ====================== Types & helpers ====================== */
 
@@ -260,6 +262,34 @@ function renderGTO(text: string) {
 /* ====================== Page ====================== */
 
 export default function Page() {
+  /* ---------- AUTH GATE (added) ---------- */
+  const router = useRouter();
+  const supabase = createClient();
+
+  const [authChecked, setAuthChecked] = useState(false);
+  const [user, setUser] = useState<null | { id: string; email?: string }>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.replace('/login'); // not signed in → go to login
+        return;
+      }
+      setUser({ id: user.id, email: user.email ?? undefined });
+      setAuthChecked(true);
+    })();
+  }, [router, supabase]);
+
+  if (!authChecked) {
+    return (
+      <main className="p">
+        <div className="wrap">Checking session…</div>
+      </main>
+    );
+  }
+  /* ---------- END AUTH GATE ---------- */
+
   const [input, setInput] = useState('');
 
   const [fields, setFields] = useState<Fields | null>(null);
