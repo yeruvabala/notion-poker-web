@@ -254,29 +254,33 @@ export default function Page() {
   /* ---------- AUTH GATE (added) ---------- */
   const router = useRouter();
   const supabase = createClient();
+
   if (!supabase) {
     return (
       <main className="p">
-        <div className="wrap">
-          Missing Supabase env vars. See <code>/api/env-ok</code>.
-        </div>
+        <div className="wrap">Missing Supabase env vars. See <code>/api/env-ok</code>.</div>
       </main>
     );
   }
+
+/** Narrow once and use `sb` everywhere below */
+  const sb = supabase as NonNullable<typeof supabase>;
+
   const [authChecked, setAuthChecked] = useState(false);
   const [user, setUser] = useState<null | { id: string; email?: string }>(null);
 
   useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.replace('/login'); // not signed in → go to login
-        return;
-      }
-      setUser({ id: user.id, email: user.email ?? undefined });
-      setAuthChecked(true);
-    })();
-  }, [router, supabase]);
+  (async () => {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) {
+      router.replace('/login');
+      return;
+    }
+    setUser({ id: user.id, email: user.email ?? undefined });
+    setAuthChecked(true);
+  })();
+}, [router, sb]);
+
 
   if (!authChecked) {
     return (
@@ -445,43 +449,39 @@ export default function Page() {
 
   // ===== NEW: save directly to Supabase instead of Notion =====
   async function saveToSupabase() {
-    if (!fields) return;
-    setSaving(true);
-    setStatus(null);
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setStatus("You must be signed in.");
-        setSaving(false);
-        return;
-      }
-
-      const row = {
-        user_id: user.id,
-        date: fields.date ?? null,
-        stakes: fields.stakes ?? null,
-        position: fields.position ?? null,
-        cards: fields.cards ?? null,
-        board: fields.board ?? null,
-        gto_strategy: fields.gto_strategy ?? null,
-        exploit_deviation: fields.exploit_deviation ?? null,
-        learning_tag: fields.learning_tag ?? [], // text[] or jsonb depending on your schema
-        hand_class: fields.hand_class ?? null,
-        source_used: fields.source_used ?? null,
-        notes: input || null,
-      };
-
-      const { error } = await supabase.from('hands').insert(row);
-      if (error) throw error;
-
-      setStatus('Saved to Supabase ✅');
-    } catch (e: any) {
-      setStatus(e?.message || 'Failed to save');
-    } finally {
+  if (!fields) return;
+  setSaving(true);
+  setStatus(null);
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) {
+      setStatus("You must be signed in.");
       setSaving(false);
+      return;
     }
+    const row = {
+      user_id: user.id,
+      date: fields.date ?? null,
+      stakes: fields.stakes ?? null,
+      position: fields.position ?? null,
+      cards: fields.cards ?? null,
+      board: fields.board ?? null,
+      gto_strategy: fields.gto_strategy ?? null,
+      exploit_deviation: fields.exploit_deviation ?? null,
+      learning_tag: fields.learning_tag ?? [],
+      hand_class: fields.hand_class ?? null,
+      source_used: fields.source_used ?? null,
+      notes: input || null,
+    };
+    const { error } = await sb.from('hands').insert(row);
+    if (error) throw error;
+    setStatus('Saved to Supabase ✅');
+  } catch (e: any) {
+    setStatus(e?.message || 'Failed to save');
+  } finally {
+    setSaving(false);
   }
+}
 
   return (
     <main className="p">
