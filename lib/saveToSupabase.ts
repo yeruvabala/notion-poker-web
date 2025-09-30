@@ -1,9 +1,12 @@
-import { supabase } from './supabaseClient';
-import type { ParsedFields } from './types';
+// lib/saveToSupabase.ts
+import { createClient } from '@/lib/supabase/client'
+import type { ParsedFields } from '@/lib/types'
 
 export async function saveToSupabase(f: ParsedFields) {
-  const { data: { user }, error: userErr } = await supabase.auth.getUser();
-  if (userErr || !user) throw new Error('Not signed in');
+  const supabase = createClient()
+
+  const { data: { user }, error: userErr } = await supabase.auth.getUser()
+  if (userErr || !user) throw new Error('Not signed in')
 
   const payload = {
     user_id: user.id,
@@ -15,14 +18,14 @@ export async function saveToSupabase(f: ParsedFields) {
     gto_strategy: f.gto_strategy ?? null,
     exploit_deviation: f.exploit_deviation ?? null,
     learning_tags: f.learning_tag ?? [],
-  };
+  }
 
   const { data, error } = await supabase
     .from('poker_entries')
     .insert(payload)
     .select()
-    .single();
+    .single()
 
-  if (error) throw error;
-  return data;
+  if (error) throw error
+  return data
 }
