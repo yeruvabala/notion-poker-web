@@ -1,31 +1,23 @@
-// lib/saveToSupabase.ts
-import { createClient } from '@/lib/supabase/client'
-import type { ParsedFields } from '@/lib/types'
+import { createClient } from '@/lib/supabase/client';
 
-export async function saveToSupabase(f: ParsedFields) {
-  const supabase = createClient()
+export async function saveToSupabase(payload: {
+  hand_date?: string | null;
+  stakes?: string | null;
+  position?: string | null;
+  cards?: string | null;
+  villain_action?: string | null;
+  gto_strategy?: string | null;
+  exploit_deviation?: string | null;
+}) {
+  const supabase = createClient();
 
-  const { data: { user }, error: userErr } = await supabase.auth.getUser()
-  if (userErr || !user) throw new Error('Not signed in')
+  // (optional) require auth on the client
+  const { data: { user }, error: userErr } = await supabase.auth.getUser();
+  if (userErr || !user) throw new Error('Not signed in');
 
-  const payload = {
-    user_id: user.id,
-    hand_date: f.date ?? null,
-    stakes: f.stakes ?? null,
-    position: f.position ?? null,
-    cards: f.cards ?? null,
-    villain_action: f.villain_action ?? null,
-    gto_strategy: f.gto_strategy ?? null,
-    exploit_deviation: f.exploit_deviation ?? null,
-    learning_tags: f.learning_tag ?? [],
-  }
+  const { error } = await supabase
+    .from('hands')
+    .insert([{ user_id: user.id, ...payload }]);
 
-  const { data, error } = await supabase
-    .from('poker_entries')
-    .insert(payload)
-    .select()
-    .single()
-
-  if (error) throw error
-  return data
+  if (error) throw error;
 }
