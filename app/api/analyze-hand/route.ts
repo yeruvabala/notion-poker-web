@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { openai } from "@/lib/openai";
+import { createClient } from "@/lib/supabase/server";
 
 /* ---------------- small utilities ---------------- */
 function asText(v: any): string {
@@ -183,6 +184,15 @@ Rules:
 /* ------------------- handler ------------------- */
 export async function POST(req: Request) {
   try {
+    // 🔐 Require a signed-in user
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
     const {
       date,
@@ -194,6 +204,9 @@ export async function POST(req: Request) {
       rawText = "",
       fe_hint,
       spr_hint,
+      hand_class,
+      source_used,
+      save, // <- if true, we will insert into Postgres
     }: {
       date?: string;
       stakes?: string;
@@ -204,9 +217,12 @@ export async function POST(req: Request) {
       rawText?: string;
       fe_hint?: string;
       spr_hint?: string;
+      hand_class?: string;
+      source_used?: "SUMMARY" | "STORY";
+      save?: boolean;
     } = body ?? {};
 
-    const story = rawText || notes || "";
+    const story = (rawText || notes || "").slice(0, 8000); // small guard
 
     const ipRiverFacingCheck = detectRiverFacingCheck(story);
     const { facing: riverFacingBet, large: riverBetLarge } = detectRiverFacingBet(story);
@@ -261,6 +277,7 @@ export async function POST(req: Request) {
         )}). Please re-enter as a cash hand (omit ICM/players-left).`,
         exploit_deviation: "",
         learning_tag: ["cash-only", "mtt-blocked"],
+        saved: false,
       });
     }
 
@@ -292,7 +309,43 @@ export async function POST(req: Request) {
         : [],
     };
 
-    return NextResponse.json(out);
+    // --------- Optional: save to Supabase when client asks ---------
+    let insertedId: string | null = null;
+    if (save) {
+      const { data, error } = await supabase
+        .from("hands")
+        .insert({
+          user_id: user.id,
+          date: date ?? null,
+          stakes: stakes ?? null,
+          position: position ?? null,
+          cards: cards ?? null,
+          board: board ?? null,
+          gto_strategy: out.gto_strategy,
+          exploit_deviation: out.exploit_deviation,
+          learning_tag: out.learning_tag, // expects text[]; switch to json if your column is jsonb
+          hand_class: hand_class ?? null,
+          source_used: source_used ?? null,
+          notes: notes ?? rawText ?? null,
+        })
+        .select("id")
+        .single();
+
+      if (error) {
+        // Still return the analysis, but indicate save failed
+        return NextResponse.json(
+          { ...out, saved: false, save_error: error.message },
+          { status: 200 },
+        );
+      }
+      insertedId = data?.id ?? null;
+    }
+
+    return NextResponse.json({
+      ...out,
+      saved: Boolean(save && insertedId),
+      id: insertedId,
+    });
   } catch (e: any) {
     console.error("analyze-hand error:", e?.message || e);
     return NextResponse.json({ error: "Failed to analyze hand" }, { status: 500 });
