@@ -254,7 +254,15 @@ export default function Page() {
   /* ---------- AUTH GATE (added) ---------- */
   const router = useRouter();
   const supabase = createClient();
-
+  if (!supabase) {
+    return (
+      <main className="p">
+        <div className="wrap">
+          Missing Supabase env vars. See <code>/api/env-ok</code>.
+        </div>
+      </main>
+    );
+  }
   const [authChecked, setAuthChecked] = useState(false);
   const [user, setUser] = useState<null | { id: string; email?: string }>(null);
 
