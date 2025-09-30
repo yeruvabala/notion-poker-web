@@ -99,17 +99,14 @@ function parseHeroCardsSmart(t: string): string {
 function parseBoardFromStory(t: string) {
   const src = (t || '').toLowerCase();
 
-  // capture everything on the line after the keyword, with or without ":" and with optional "is"
   const grab = (label: 'flop'|'turn'|'river') => {
     const rx = new RegExp(`\\b${label}\\b(?:\\s+is)?\\s*:?\\s*([^\\n]*)`, 'i');
     const m = src.match(rx);
     return m ? m[1] : '';
   };
 
-  // tokenize a line into up to N card-like tokens and suitify them
   const takeCards = (line: string, n: number) => {
     if (!line) return [];
-    // split on spaces and common punctuation
     const raw = line.replace(/[.,;|]/g, ' ').split(/\s+/).filter(Boolean);
     const cards: string[] = [];
     for (const tok of raw) {
@@ -139,11 +136,9 @@ function parseBoardFromStory(t: string) {
 /** Extract a structured river action from free text */
 function parseActionHint(text: string): string {
   const s = text.toLowerCase().replace(/villian|villain/gi, 'villain');
-  // river lines
   const riverLine = s.split('\n').find(l => /river|riv /.test(l));
   if (!riverLine) return '';
 
-  // facing bet xx% or “bets 3/4 pot”
   const betMatch = riverLine.match(/(villain|btn|utg|sb|bb).{0,20}\bbet[s]?\b[^0-9%]*(\d{1,3})\s?%/i)
                 || riverLine.match(/(villain|btn|utg|sb|bb).{0,20}\bbet[s]?\b[^a-z0-9]*(?:([1-4])\/([1-4]))\s*pot/i);
   if (betMatch) {
@@ -154,7 +149,6 @@ function parseActionHint(text: string): string {
     if (betMatch[2]) return `RIVER: facing-bet ~${betMatch[2]}%`;
   }
 
-  // check
   if (/check(?:s|ed)?\s*(?:through)?/.test(riverLine)) return 'RIVER: check-through';
 
   return '';
@@ -175,18 +169,15 @@ function ranksOnly(card: string) {
 }
 
 function handClass(heroCards: string, flop: string, turn: string, river: string): string {
-  // very lightweight evaluator sufficient for: high-card/pair/two-pair/trips/straight/flush/boat/quads
-  // parse hero
   const hero = heroCards.split(' ').filter(Boolean);
   const board = [flop, turn, river].join(' ').trim().split(' ').filter(Boolean);
-  const all = [...hero, ...board]; // tokens like "K♥"
+  const all = [...hero, ...board];
 
   if (hero.length !== 2 || board.length < 3) return 'Unknown';
 
   const suit = (c: string) => c.slice(-1);
   const rank = (c: string) => c.slice(0, -1).toUpperCase();
 
-  // count ranks
   const counts: Record<string, number> = {};
   for (const c of all) counts[rank(c)] = (counts[rank(c)] || 0) + 1;
 
@@ -197,7 +188,6 @@ function handClass(heroCards: string, flop: string, turn: string, river: string)
     return Object.values(sCount).some(n => n >= 5);
   })();
 
-  // straight (rough – checks unique ranks sequence length >= 5)
   const rankToVal: Record<string, number> = {
     A:14,K:13,Q:12,J:11,T:10,9:9,8:8,7:7,6:6,5:5,4:4,3:3,2:2
   };
@@ -209,7 +199,6 @@ function handClass(heroCards: string, flop: string, turn: string, river: string)
       if (uniqVals[i]===uniqVals[i-1]-1) { run++; if (run>=5) { straight=true; break; } }
       else if (uniqVals[i]!==uniqVals[i-1]) run=1;
     }
-    // wheel
     if (!straight && uniqVals.includes(14)) {
       const wheel = [5,4,3,2,1].every(v => uniqVals.includes(v===1?14:v));
       if (wheel) straight = true;
@@ -446,19 +435,39 @@ export default function Page() {
     }
   }
 
-  async function saveToNotion() {
+  // ===== NEW: save directly to Supabase instead of Notion =====
+  async function saveToSupabase() {
     if (!fields) return;
     setSaving(true);
     setStatus(null);
+
     try {
-      const r = await fetch('/api/notion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields }),
-      });
-      const data = await r.json();
-      if (data?.ok) setStatus(`Saved! Open in Notion: ${data.url}`);
-      else setStatus(data?.error || 'Failed to save');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setStatus("You must be signed in.");
+        setSaving(false);
+        return;
+      }
+
+      const row = {
+        user_id: user.id,
+        date: fields.date ?? null,
+        stakes: fields.stakes ?? null,
+        position: fields.position ?? null,
+        cards: fields.cards ?? null,
+        board: fields.board ?? null,
+        gto_strategy: fields.gto_strategy ?? null,
+        exploit_deviation: fields.exploit_deviation ?? null,
+        learning_tag: fields.learning_tag ?? [], // text[] or jsonb depending on your schema
+        hand_class: fields.hand_class ?? null,
+        source_used: fields.source_used ?? null,
+        notes: input || null,
+      };
+
+      const { error } = await supabase.from('hands').insert(row);
+      if (error) throw error;
+
+      setStatus('Saved to Supabase ✅');
     } catch (e: any) {
       setStatus(e?.message || 'Failed to save');
     } finally {
@@ -664,8 +673,8 @@ Turn K♦ — ...`}
                 <button className="btn" onClick={analyze} disabled={aiLoading}>
                   {aiLoading ? 'Analyzing…' : 'Analyze Again'}
                 </button>
-                <button className="btn primary" onClick={saveToNotion} disabled={!fields || saving}>
-                  {saving ? 'Saving…' : 'Confirm & Save to Notion'}
+                <button className="btn primary" onClick={saveToSupabase} disabled={!fields || saving}>
+                  {saving ? 'Saving…' : 'Confirm & Save'}
                 </button>
               </div>
               {status && <div className="note">{status}</div>}
