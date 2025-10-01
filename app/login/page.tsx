@@ -1,123 +1,134 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 export default function LoginPage() {
-  const supabase = createClient(); // SupabaseClient | null
   const router = useRouter();
+  const supabase = createClient();
 
-  // Render a friendly message if env vars are missing
+  // Env guard (helps on first deploys)
   if (!supabase) {
     return (
-      <main style={{ padding: 20 }}>
-        Missing Supabase env vars. Open <code>/api/env-ok</code> and set
-        {' '}<code>NEXT_PUBLIC_SUPABASE_URL</code> / <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>.
+      <main style={{ display: 'grid', placeItems: 'center', minHeight: '100dvh' }}>
+        Missing Supabase env vars. See <code>/api/env-ok</code>.
       </main>
     );
   }
+  // Narrow once so TS stops complaining about possibly null
+  const sb = supabase as NonNullable<typeof supabase>;
 
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
+  // If already signed in, bounce to home
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await sb.auth.getUser();
+      if (user) {
+        router.replace('/');
+        router.refresh();
+      }
+    })();
+  }, [router, sb]);
+
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
+    setInfo(null);
     setLoading(true);
-
     try {
-      // Narrow the type for TypeScript (supabase is definitely not null past render guard)
-      const sb = supabase as NonNullable<typeof supabase>;
-
       if (mode === 'signin') {
         const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        router.replace('/');
+        router.refresh();
       } else {
-        const { error } = await sb.auth.signUp({ email, password });
+        const { error } = await sb.auth.signUp({
+          email,
+          password,
+          options: {
+            // 👇 important: where Supabase will send users after clicking the email link
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
         if (error) throw error;
+        setInfo('Check your email for a confirmation link to finish signing up.');
       }
-
-      router.replace('/');
-      router.refresh();
     } catch (e: any) {
-      setErr(e?.message || 'Auth error');
+      setErr(e?.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main style={{ display: 'grid', placeItems: 'center', minHeight: '100dvh', padding: 24, background: '#f3f4f6' }}>
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          width: 360,
-          maxWidth: '100%',
-          display: 'grid',
-          gap: 12,
-          padding: 18,
-          border: '1px solid #e5e7eb',
-          borderRadius: 12,
-          background: '#fff',
-          boxShadow: '0 8px 24px rgba(0,0,0,.06)',
-        }}
-      >
-        <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>
-          Only Poker — {mode === 'signin' ? 'Sign in' : 'Create account'}
-        </h1>
+    <main className="loginWrap">
+      <form className="card" onSubmit={onSubmit}>
+        <h1 className="title">Only Poker — {mode === 'signin' ? 'Sign in' : 'Sign up'}</h1>
 
-        <label style={{ display: 'grid', gap: 6 }}>
-          <span style={{ fontSize: 12, color: '#6b7280' }}>Email</span>
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            type="email"
-            required
-            style={{ padding: 10, border: '1px solid #e5e7eb', borderRadius: 10, background: '#fff' }}
-          />
-        </label>
+        <label className="lbl">Email</label>
+        <input
+          className="input"
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          autoComplete="email"
+        />
 
-        <label style={{ display: 'grid', gap: 6 }}>
-          <span style={{ fontSize: 12, color: '#6b7280' }}>Password</span>
-          <input
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            type="password"
-            required
-            style={{ padding: 10, border: '1px solid #e5e7eb', borderRadius: 10, background: '#fff' }}
-          />
-        </label>
+        <label className="lbl">Password</label>
+        <input
+          className="input"
+          type="password"
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+        />
 
-        <button
-          disabled={loading}
-          style={{
-            padding: 10,
-            borderRadius: 10,
-            border: '1px solid #1d4ed8',
-            background: '#2563eb',
-            color: '#fff',
-            cursor: 'pointer',
-          }}
-        >
-          {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Sign up'}
+        <button className="btn primary" type="submit" disabled={loading}>
+          {loading ? (mode === 'signin' ? 'Signing in…' : 'Signing up…') : (mode === 'signin' ? 'Sign in' : 'Sign up')}
         </button>
 
-        {err && <div style={{ color: '#b91c1c' }}>{err}</div>}
+        <div className="muted small" style={{ marginTop: 12 }}>
+          {mode === 'signin' ? (
+            <>No account?{' '}
+              <button type="button" className="link" onClick={() => setMode('signup')}>Sign up</button>
+            </>
+          ) : (
+            <>Have an account?{' '}
+              <button type="button" className="link" onClick={() => setMode('signin')}>Sign in</button>
+            </>
+          )}
+        </div>
 
-        <button
-          type="button"
-          onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
-          style={{ border: 'none', background: 'transparent', color: '#2563eb', cursor: 'pointer', padding: 6, justifySelf: 'start' }}
-        >
-          {mode === 'signin' ? 'No account? Sign up' : 'Have an account? Sign in'}
-        </button>
+        {err && <div className="err">{err}</div>}
+        {info && <div className="note">{info}</div>}
       </form>
+
+      <style jsx global>{`
+        .loginWrap{min-height:100dvh;display:grid;place-items:center;background:#f3f4f6}
+        .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:28px 24px;box-shadow:0 8px 24px rgba(0,0,0,.06);width:100%;max-width:540px;display:flex;flex-direction:column;gap:10px}
+        .title{margin:0 0 6px;font-size:26px;font-weight:800}
+        .lbl{font-size:12px;color:#6b7280}
+        .input{border:1px solid #e5e7eb;border-radius:12px;padding:10px 12px}
+        .btn{border:1px solid #e5e7eb;background:#fff;padding:10px 14px;border-radius:12px;cursor:pointer}
+        .btn.primary{background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#f8fbff;border-color:#9db7ff;margin-top:8px}
+        .btn[disabled]{opacity:.6;cursor:not-allowed}
+        .muted{color:#6b7280}
+        .small{font-size:12px}
+        .link{background:none;border:none;padding:0;margin:0;color:#2563eb;cursor:pointer}
+        .err{margin-top:8px;color:#b91c1c}
+        .note{margin-top:8px;color:#166534}
+      `}</style>
     </main>
   );
 }
