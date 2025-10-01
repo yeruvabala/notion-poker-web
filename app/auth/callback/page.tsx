@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
-export default function AuthCallback() {
+// Avoid static prerender of this page – it relies on search params at runtime.
+export const dynamic = 'force-dynamic';
+
+function CallbackInner() {
   const router = useRouter();
   const params = useSearchParams();
   const supabase = createClient();
@@ -27,8 +30,7 @@ export default function AuthCallback() {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) throw error;
         } else if (tokenHash) {
-          // Hash-token style (signup / magic link / recovery / email change)
-          // Map the type if present; default to 'signup' for confirm-email.
+          // Hash-token style (signup / magiclink / recovery / email change)
           const allowed = ['signup', 'magiclink', 'recovery', 'email_change'] as const;
           const type = (allowed.includes(rawType as any) ? rawType : 'signup') as
             | 'signup' | 'magiclink' | 'recovery' | 'email_change';
@@ -40,7 +42,6 @@ export default function AuthCallback() {
           return;
         }
 
-        // Success → go home
         setStatus('Signed in! Redirecting…');
         router.replace('/');
       } catch (err: any) {
@@ -53,5 +54,19 @@ export default function AuthCallback() {
     <main className="p">
       <div className="wrap">{status}</div>
     </main>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense
+      fallback={
+        <main className="p">
+          <div className="wrap">Completing sign-in…</div>
+        </main>
+      }
+    >
+      <CallbackInner />
+    </Suspense>
   );
 }
