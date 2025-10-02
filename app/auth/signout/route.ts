@@ -1,13 +1,19 @@
+// app/auth/signout/route.ts
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@/lib/supabase/server';
 
 export async function POST() {
-  const supabase = createClient();
-  await supabase.auth.signOut();
+  const supabase = createServerClient();
+  if (!supabase) {
+    return NextResponse.json(
+      { error: 'Server misconfigured: missing Supabase env vars' },
+      { status: 500 }
+    );
+  }
 
-  const fallbackBase =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
-
-  return NextResponse.redirect(new URL('/', fallbackBase));
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+  return NextResponse.json({ ok: true });
 }
