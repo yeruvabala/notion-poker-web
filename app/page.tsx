@@ -354,7 +354,7 @@ export default function Page() {
 
   const derivedHandClass = useMemo(() => handClass(heroCardsStr, flopStr, turnStr, riverStr), [heroCardsStr, flopStr, turnStr, riverStr]);
 
-  async function analyze() {
+    async function analyze() {
     setError(null);
     setStatus(null);
     setAiLoading(true);
@@ -380,15 +380,24 @@ export default function Page() {
         source_used: sourceUsed
       };
 
+      // NEW: include the current access token so the API can authenticate you
+      const { data: sessionData } = await sb.auth.getSession();
+      const access = sessionData?.session?.access_token;
+
       const r = await fetch('/api/analyze-hand', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(access ? { Authorization: `Bearer ${access}` } : {}),
+        },
         body: JSON.stringify(payload),
       });
+
       if (!r.ok) {
         const e = await r.json().catch(() => ({}));
         throw new Error(e?.error || `Analyze failed (${r.status})`);
       }
+
       const data = await r.json();
       setFields(prev => ({
         ...(prev ?? {}),
@@ -409,6 +418,7 @@ export default function Page() {
       setAiLoading(false);
     }
   }
+
 
   async function saveToSupabaseHandler() {
     if (!fields) return;
