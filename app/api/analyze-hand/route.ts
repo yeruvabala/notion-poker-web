@@ -3,13 +3,10 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { createServerClient } from '@/lib/supabase/server';
 
-// (Keep default Node.js runtime; don't set runtime = 'edge' because we read cookies)
 export async function POST(req: Request) {
   try {
-    // Body the client sends (keep loose to avoid type friction)
     const body = await req.json().catch(() => ({} as any));
 
-    // Create server-side Supabase client (cookie-based session)
     const supabase = createServerClient();
     if (!supabase) {
       return NextResponse.json(
@@ -32,7 +29,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // ==== Your analysis logic (OpenAI or otherwise) ====
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
         { error: 'Server misconfigured: missing OPENAI_API_KEY' },
@@ -42,7 +38,6 @@ export async function POST(req: Request) {
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    // Build a simple prompt from inputs you already collect on the client
     const prompt = [
       'You are a poker coach. Summarize strategy and exploits for this hand.',
       'Return short, clear bullets. If details are missing, be generic.',
@@ -51,23 +46,25 @@ export async function POST(req: Request) {
       JSON.stringify(body, null, 2),
     ].join('\n');
 
-    // Minimal example using Responses API
-    const completion = await openai.responses.create({
-      model: 'gpt-4o-mini',
-      input: prompt,
+    // Use chat.completions for broad SDK compatibility
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini', // or 'gpt-4o' / another model you have access to
+      messages: [
+        { role: 'system', content: 'You are a concise poker coach.' },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.2,
     });
 
-    const text = (completion as any)?.output_text?.trim?.() || 'No output generated';
+    const text =
+      completion.choices?.[0]?.message?.content?.trim() || 'No output generated';
 
-    // Shape the response for your UI
-    const payload = {
+    return NextResponse.json({
       ok: true,
-      gto_strategy: text,     // your UI shows this in the GTO box
-      exploit_deviation: '',  // fill / parse if you want
+      gto_strategy: text,
+      exploit_deviation: '',
       learning_tag: [] as string[],
-    };
-
-    return NextResponse.json(payload);
+    });
   } catch (err: any) {
     console.error('analyze-hand error:', err);
     return NextResponse.json(
