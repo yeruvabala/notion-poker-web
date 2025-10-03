@@ -1,19 +1,25 @@
 // app/auth/callback/route.ts
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server'; // your server helper
+import { cookies } from 'next/headers';
+import { createRouteHandlerClient } from '@supabase/ssr';
 
 export async function POST(req: Request) {
-  const supabase = createServerClient();
-  const { event, session } = await req.json();
+  const body = await req.json().catch(() => ({}));
+  const { event, session } = body as {
+    event?: string;
+    session?: { access_token?: string; refresh_token?: string } | null;
+  };
 
-  // When signed in or refreshed, store the session in cookies so server layouts see it
-  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-    // @ts-ignore - session type from Supabase
-    await supabase.auth.setSession(session);
-  }
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
   if (event === 'SIGNED_OUT') {
     await supabase.auth.signOut();
+  } else if (session?.access_token && session.refresh_token) {
+    await supabase.auth.setSession({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+    });
   }
 
   return NextResponse.json({ ok: true });
