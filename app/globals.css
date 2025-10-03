@@ -1,10 +1,6 @@
-/* app/globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html, body {
-  @apply bg-slate-50 text-slate-900;
-}
-
-button { @apply cursor-pointer; }
+/* optional: tiny reset for the demo */
+html,body{height:100%}
