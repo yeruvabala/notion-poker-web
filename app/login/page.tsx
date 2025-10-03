@@ -1,134 +1,80 @@
+// app/login/page.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/browser';
 
 export default function LoginPage() {
-  const router = useRouter();
   const supabase = createClient();
+  const router = useRouter();
 
-  // Env guard (helps on first deploys)
-  if (!supabase) {
-    return (
-      <main style={{ display: 'grid', placeItems: 'center', minHeight: '100dvh' }}>
-        Missing Supabase env vars. See <code>/api/env-ok</code>.
-      </main>
-    );
-  }
-  // Narrow once so TS stops complaining about possibly null
-  const sb = supabase as NonNullable<typeof supabase>;
-
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
-
-  // If already signed in, bounce to home
-  useEffect(() => {
-    (async () => {
-      const { data: { user } } = await sb.auth.getUser();
-      if (user) {
-        router.replace('/');
-        router.refresh();
-      }
-    })();
-  }, [router, sb]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
-    setInfo(null);
-    setLoading(true);
-    try {
-      if (mode === 'signin') {
-        const { error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        router.replace('/');
-        router.refresh();
-      } else {
-        const { error } = await sb.auth.signUp({
-          email,
-          password,
-          options: {
-            // 👇 important: where Supabase will send users after clicking the email link
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-          },
-        });
-        if (error) throw error;
-        setInfo('Check your email for a confirmation link to finish signing up.');
-      }
-    } catch (e: any) {
-      setErr(e?.message || 'Something went wrong');
-    } finally {
-      setLoading(false);
+    setSubmitting(true);
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    setSubmitting(false);
+
+    if (error) {
+      setErr(error.message);
+      return;
     }
+
+    // AuthSync will set server cookies via /auth/callback; then refresh and go home
+    router.replace('/');
+    router.refresh();
   }
 
   return (
-    <main className="loginWrap">
-      <form className="card" onSubmit={onSubmit}>
-        <h1 className="title">Only Poker — {mode === 'signin' ? 'Sign in' : 'Sign up'}</h1>
+    <div className="min-h-screen grid place-items-center bg-slate-50 p-6">
+      <form
+        onSubmit={onSubmit}
+        className="w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm"
+      >
+        <h1 className="mb-6 text-2xl font-bold tracking-tight">Only Poker — Sign in</h1>
 
-        <label className="lbl">Email</label>
+        <label className="block text-sm font-medium text-slate-700">Email</label>
         <input
-          className="input"
           type="email"
-          required
+          className="mt-1 mb-4 w-full rounded-lg border p-2"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          autoComplete="email"
+          required
         />
 
-        <label className="lbl">Password</label>
+        <label className="block text-sm font-medium text-slate-700">Password</label>
         <input
-          className="input"
           type="password"
-          required
+          className="mt-1 mb-4 w-full rounded-lg border p-2"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="••••••••"
-          autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+          required
         />
 
-        <button className="btn primary" type="submit" disabled={loading}>
-          {loading ? (mode === 'signin' ? 'Signing in…' : 'Signing up…') : (mode === 'signin' ? 'Sign in' : 'Sign up')}
+        {err && <div className="mb-3 text-sm text-red-600">{err}</div>}
+
+        <button
+          type="submit"
+          disabled={submitting}
+          className="w-full rounded-lg bg-indigo-600 px-3 py-2 text-white disabled:opacity-60"
+        >
+          {submitting ? 'Signing in…' : 'Sign in'}
         </button>
 
-        <div className="muted small" style={{ marginTop: 12 }}>
-          {mode === 'signin' ? (
-            <>No account?{' '}
-              <button type="button" className="link" onClick={() => setMode('signup')}>Sign up</button>
-            </>
-          ) : (
-            <>Have an account?{' '}
-              <button type="button" className="link" onClick={() => setMode('signin')}>Sign in</button>
-            </>
-          )}
-        </div>
-
-        {err && <div className="err">{err}</div>}
-        {info && <div className="note">{info}</div>}
+        {/* optional: link to sign up route if you have one */}
+        {/* <p className="mt-3 text-sm text-slate-600">
+          No account? <a href="/signup" className="text-indigo-600 underline">Sign up</a>
+        </p> */}
       </form>
-
-      <style jsx global>{`
-        .loginWrap{min-height:100dvh;display:grid;place-items:center;background:#f3f4f6}
-        .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:28px 24px;box-shadow:0 8px 24px rgba(0,0,0,.06);width:100%;max-width:540px;display:flex;flex-direction:column;gap:10px}
-        .title{margin:0 0 6px;font-size:26px;font-weight:800}
-        .lbl{font-size:12px;color:#6b7280}
-        .input{border:1px solid #e5e7eb;border-radius:12px;padding:10px 12px}
-        .btn{border:1px solid #e5e7eb;background:#fff;padding:10px 14px;border-radius:12px;cursor:pointer}
-        .btn.primary{background:linear-gradient(180deg,#2563eb,#1d4ed8);color:#f8fbff;border-color:#9db7ff;margin-top:8px}
-        .btn[disabled]{opacity:.6;cursor:not-allowed}
-        .muted{color:#6b7280}
-        .small{font-size:12px}
-        .link{background:none;border:none;padding:0;margin:0;color:#2563eb;cursor:pointer}
-        .err{margin-top:8px;color:#b91c1c}
-        .note{margin-top:8px;color:#166534}
-      `}</style>
-    </main>
+    </div>
   );
 }
