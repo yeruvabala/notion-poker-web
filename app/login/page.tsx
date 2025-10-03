@@ -4,7 +4,6 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/browser';
-import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,63 +11,75 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    setSubmitting(true);
     setErr(null);
-    setLoading(true);
+
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
+
+    setSubmitting(false);
+
     if (error) {
       setErr(error.message);
       return;
     }
-    // AuthSync will set server cookies; then go to app
-    router.push('/');
+
+    // The AuthSync listener will POST the session to /auth/callback,
+    // which sets the cookies. Then we can go to the app.
+    router.replace('/');
   }
 
   return (
-    <div className="min-h-screen grid place-items-center bg-slate-50">
-      <form
-        onSubmit={onSubmit}
-        className="w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm"
-      >
-        <h1 className="text-2xl font-semibold mb-4">Only Poker — Sign in</h1>
+    <main className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm">
+        <h1 className="mb-4 text-2xl font-bold">Only Poker — Sign in</h1>
+        <form onSubmit={onSubmit} className="space-y-3">
+          <div>
+            <label className="block text-sm mb-1">Email</label>
+            <input
+              className="w-full rounded-lg border p-2"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-1">Password</label>
+            <input
+              className="w-full rounded-lg border p-2"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
-        <label className="block text-sm mb-1">Email</label>
-        <input
-          className="w-full rounded-lg border p-2 mb-3"
-          type="email"
-          placeholder="you@example.com"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          required
-        />
+          {err && <div className="text-red-600 text-sm">{err}</div>}
 
-        <label className="block text-sm mb-1">Password</label>
-        <input
-          className="w-full rounded-lg border p-2 mb-4"
-          type="password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-        />
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full rounded-lg bg-indigo-600 py-2 text-white hover:bg-indigo-700 disabled:opacity-60"
+          >
+            {submitting ? 'Signing in…' : 'Sign in'}
+          </button>
+        </form>
 
-        {err && <div className="mb-3 text-sm text-red-600">{err}</div>}
-
-        <button
-          className="w-full rounded-lg bg-indigo-600 text-white py-2 disabled:opacity-60"
-          disabled={loading}
-        >
-          {loading ? 'Signing in…' : 'Sign in'}
-        </button>
-
-        <div className="text-sm mt-3">
-          No account? <Link href="/login?signup=1" className="text-indigo-600">Sign up</Link>
+        <div className="mt-3 text-sm text-slate-600">
+          No account?{' '}
+          <a className="text-indigo-600 hover:underline" href="/login?signup=1">
+            Sign up
+          </a>
         </div>
-      </form>
-    </div>
+      </div>
+    </main>
   );
 }
