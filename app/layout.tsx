@@ -1,25 +1,16 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import Sidebar from "@/components/Sidebar";
+// app/layout.tsx
+import './globals.css';
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Only Poker",
-  description: "Only Poker — preview",
+  title: 'Only Poker',
+  description: 'Only Poker – preview',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-slate-50 text-slate-900">
-        <div className="flex">
-          <Sidebar />
-          <main className="min-h-screen flex-1">
-            <div className="mx-auto max-w-6xl p-6 md:p-10">
-              {children}
-            </div>
-          </main>
-        </div>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
