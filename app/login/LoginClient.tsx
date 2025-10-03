@@ -6,15 +6,15 @@ import { createBrowserClient } from '@/lib/supabase/browser';
 
 export default function LoginClient() {
   const router = useRouter();
-  const search = useSearchParams();
-  const redirectTo = search.get('redirectTo') || '/';
+  const params = useSearchParams();
+  const redirectTo = params.get('redirectTo') || '/';
+
+  const supabase = createBrowserClient();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const supabase = createBrowserClient();
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -22,8 +22,8 @@ export default function LoginClient() {
     setLoading(true);
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-
     setLoading(false);
+
     if (error) {
       setErr(error.message);
       return;
@@ -33,10 +33,7 @@ export default function LoginClient() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-900 p-6">
-      <form
-        onSubmit={onSubmit}
-        className="w-full max-w-lg rounded-2xl border bg-white p-6 shadow-sm"
-      >
+      <form onSubmit={onSubmit} className="w-full max-w-lg rounded-2xl border bg-white p-6 shadow-sm">
         <h1 className="mb-4 text-2xl font-bold">Only Poker — Sign in</h1>
 
         <label className="block text-sm font-medium text-slate-700">Email</label>
