@@ -1,6 +1,9 @@
+/* app/globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* optional: tiny reset for the demo */
-html,body{height:100%}
+/* Optional: your design tokens / tweaks */
+:root {
+  --bg: #f3f4f6;
+}
