@@ -9,7 +9,7 @@ export default function AuthSync() {
     const supabase = createBrowserClient();
 
     const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // tell the server to set/clear cookies
+      // Send current session to the server so it can set/clear cookies
       await fetch('/auth/callback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
