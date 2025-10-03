@@ -4,6 +4,7 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/browser';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,62 +21,54 @@ export default function LoginPage() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-
     if (error) {
       setErr(error.message);
       return;
     }
-
-    // auth cookies will be synced by <AuthSync />, then go home
-    router.replace('/');
+    // AuthSync will set server cookies; then go to app
+    router.push('/');
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-      <div className="w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-bold mb-4">Only Poker — Sign in</h1>
+    <div className="min-h-screen grid place-items-center bg-slate-50">
+      <form
+        onSubmit={onSubmit}
+        className="w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm"
+      >
+        <h1 className="text-2xl font-semibold mb-4">Only Poker — Sign in</h1>
 
-        <form onSubmit={onSubmit} className="space-y-3">
-          <div>
-            <label className="block text-sm text-slate-600 mb-1">Email</label>
-            <input
-              className="w-full rounded-lg border px-3 py-2 text-sm"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-slate-600 mb-1">Password</label>
-            <input
-              className="w-full rounded-lg border px-3 py-2 text-sm"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
-          </div>
+        <label className="block text-sm mb-1">Email</label>
+        <input
+          className="w-full rounded-lg border p-2 mb-3"
+          type="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          required
+        />
 
-          {err && <div className="text-sm text-rose-700">{err}</div>}
+        <label className="block text-sm mb-1">Password</label>
+        <input
+          className="w-full rounded-lg border p-2 mb-4"
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          required
+        />
 
-          <button
-            className="w-full rounded-lg bg-indigo-600 py-2 text-white text-sm font-medium disabled:opacity-60"
-            disabled={loading}
-            type="submit"
-          >
-            {loading ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
+        {err && <div className="mb-3 text-sm text-red-600">{err}</div>}
 
-        <div className="mt-3 text-xs text-slate-500">
-          No account? <a href="/login?signup=1" className="underline">Sign up</a>
+        <button
+          className="w-full rounded-lg bg-indigo-600 text-white py-2 disabled:opacity-60"
+          disabled={loading}
+        >
+          {loading ? 'Signing in…' : 'Sign in'}
+        </button>
+
+        <div className="text-sm mt-3">
+          No account? <Link href="/login?signup=1" className="text-indigo-600">Sign up</Link>
         </div>
-      </div>
+      </form>
     </div>
   );
 }
