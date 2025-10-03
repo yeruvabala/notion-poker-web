@@ -1,70 +1,31 @@
 // app/auth/callback/route.ts
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient } from '@/lib/supabase/server';
 
-/**
- * GET: Handles PKCE email links  (.../auth/callback?code=...)
- */
-export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const code = url.searchParams.get('code');
-
-  const cookieStore = cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name) { return cookieStore.get(name)?.value; },
-        set(name, value, options) { cookieStore.set({ name, value, ...options }); },
-        remove(name, options) { cookieStore.set({ name, value: '', ...options }); },
-      },
-    }
-  );
+export async function GET(request: Request) {
+  // Handles links like /auth/callback?code=...
+  const { searchParams } = new URL(request.url);
+  const code = searchParams.get('code');
 
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (error) {
-      url.pathname = '/login';
-      url.search = '';
-      return NextResponse.redirect(url);
-    }
+    const supabase = createServerClient();
+    // this will set the cookies based on the code in the URL
+    await supabase.auth.exchangeCodeForSession(code);
   }
 
-  url.pathname = '/';
-  url.search = '';
-  return NextResponse.redirect(url);
+  return NextResponse.redirect(new URL('/', request.url));
 }
 
-/**
- * POST: Called by components/AuthSync to set/clear auth cookies on the server.
- */
-export async function POST(req: Request) {
-  const { event, session } = await req.json().catch(() => ({}));
-
-  const cookieStore = cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name) { return cookieStore.get(name)?.value; },
-        set(name, value, options) { cookieStore.set({ name, value, ...options }); },
-        remove(name, options) { cookieStore.set({ name, value: '', ...options }); },
-      },
-    }
-  );
+export async function POST(request: Request) {
+  // Handles events from AuthSync
+  const supabase = createServerClient();
+  const { event, session } = await request.json().catch(() => ({}));
 
   if (event === 'SIGNED_OUT') {
-    await supabase.auth.signOut();
-  } else if (session?.access_token && session?.refresh_token) {
-    // write/refresh cookies on the server
-    await supabase.auth.setSession({
-      access_token: session.access_token,
-      refresh_token: session.refresh_token,
-    });
+    await supabase.auth.signOut(); // clears cookies
   }
 
+  // If SIGNED_IN/USER_UPDATED etc., cookies were already set by the SDK
   return NextResponse.json({ ok: true });
 }
