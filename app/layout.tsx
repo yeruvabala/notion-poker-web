@@ -1,13 +1,12 @@
-// app/layout.tsx
+// app/layout.tsx  (ROOT LAYOUT)
 import './globals.css';
-import type { ReactNode } from 'react';
 import AuthSync from '@/components/AuthSync';
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        {/* Keeps server cookies in sync with client session (works on /login too) */}
+        {/* Keeps server cookies in sync on any route, including /login */}
         <AuthSync />
         {children}
       </body>
