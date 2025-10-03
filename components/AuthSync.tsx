@@ -2,30 +2,34 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/browser'; // your browser client
+import { createBrowserClient } from '@/lib/supabase/browser';
 
 export default function AuthSync() {
-  const supabase = createClient();
-  const router = useRouter();
-
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        // Tell the server to set/clear cookies to match the client session
-        await fetch('/auth/callback', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ event, session }),
-        });
+    const supabase = createBrowserClient();
 
-        // re-run server components so the layouts see the new session
-        router.refresh();
-      }
-    );
+    // On first load, send current session to the server
+    supabase.auth.getSession().then(({ data }) => {
+      fetch('/auth/callback', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ event: 'INITIAL', session: data.session }),
+      }).catch(() => {});
+    });
 
-    return () => subscription.unsubscribe();
-  }, [supabase, router]);
+    // Keep server cookies up-to-date for sign-in, sign-out, refresh
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      fetch('/auth/callback', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ event, session }),
+      }).catch(() => {});
+    });
+
+    return () => {
+      sub.subscription.unsubscribe();
+    };
+  }, []);
 
   return null;
 }
