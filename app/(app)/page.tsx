@@ -1,6 +1,5 @@
 'use client';
-import { redirect } from 'next/navigation';
-export default function Page(){ redirect('/login'); }
+ 
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
