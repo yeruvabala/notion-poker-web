@@ -1,16 +1,16 @@
 // app/layout.tsx
 import './globals.css';
-import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
+import AuthSync from '@/components/AuthSync';
 
-export const metadata: Metadata = {
-  title: 'Only Poker',
-  description: 'Only Poker – preview',
-};
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {/* Keeps server cookies in sync with client session (works on /login too) */}
+        <AuthSync />
+        {children}
+      </body>
     </html>
   );
 }
