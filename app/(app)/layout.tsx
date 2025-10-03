@@ -1,32 +1,24 @@
 // app/(app)/layout.tsx
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient } from '@/lib/supabase/server';
 import Sidebar from '@/components/Sidebar';
 
-export default async function PrivateLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name) { return cookieStore.get(name)?.value; },
-        set(name, value, options) { cookieStore.set({ name, value, ...options }); },
-        remove(name, options) { cookieStore.set({ name, value: '', ...options }); },
-      },
-    }
-  );
+export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
+  const supabase = createServerClient();
+  const { data: { session } } = await supabase.auth.getSession();
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  if (!session) {
+    redirect('/login');
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="flex">
-        <Sidebar />
-        <main className="min-h-screen flex-1">{children}</main>
-      </div>
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex">
+      <Sidebar />
+      <main className="flex-1">
+        <div className="mx-auto max-w-6xl p-6 md:p-10">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }
