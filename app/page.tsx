@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { saveHandToSupabase } from '@/lib/saveToSupabase';
 import SignOutButton from '@/components/SignOutButton';
+import Link from 'next/link';
 
 /* ====================== Local Error Boundary ====================== */
 class LocalErrorBoundary extends React.Component<
@@ -453,6 +454,10 @@ export default function Page() {
             </div>
 
             <h1 className="title">Only Poker</h1>
+            {/* NEW: link to the History page */}
+    <div className="row" style={{ justifyContent: 'center', gap: 10, marginBottom: 10 }}>
+      <Link href="/history" className="btn">My Hands</Link>
+    </div>
 
             <div className="grid">
               {/* LEFT column */}
