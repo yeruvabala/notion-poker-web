@@ -3,10 +3,11 @@ import { cookies } from 'next/headers';
 import { createServerClient as createSSRClient, type CookieOptions } from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+// If you have generated DB types, replace `any` with your `Database` type.
 export function createServerClient(): SupabaseClient {
   const cookieStore = cookies();
 
-  const supabase = createSSRClient<any>(              // 👈 use a generic to quiet TS
+  const supabase = createSSRClient<any>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -24,6 +25,5 @@ export function createServerClient(): SupabaseClient {
     }
   );
 
-  // Cast to the plain SupabaseClient shape expected elsewhere
   return supabase as unknown as SupabaseClient;
 }
