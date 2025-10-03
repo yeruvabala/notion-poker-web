@@ -3,4 +3,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* You can keep any custom CSS below */
+html, body {
+  @apply bg-slate-50 text-slate-900;
+}
+
+button { @apply cursor-pointer; }
