@@ -7,35 +7,39 @@ import { createBrowserClient } from '@/lib/supabase/browser';
 export default function Page() {
   const router = useRouter();
   const supabase = createBrowserClient();
-  const [checking, setChecking] = useState(true);
+
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let mounted = true;
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    supabase.auth.getSession().then(({ data }) => {
       if (!mounted) return;
-      if (!session) {
-        router.replace('/login');
+      if (!data.session) {
+        router.replace('/login?redirectTo=/');
       } else {
-        setChecking(false);
+        setReady(true);
       }
-    })();
+    });
     return () => { mounted = false; };
   }, [router, supabase]);
 
-  if (checking) {
-    return (
-      <main className="min-h-screen grid place-items-center">
-        <div className="text-slate-500">Loading…</div>
-      </main>
-    );
+  if (!ready) {
+    // small branded skeleton while we check the session
+    return <div className="p-6 text-lg font-semibold">Only Poker</div>;
   }
 
-  // ===== Your current two-column UI EXACTLY as-is below this line =====
   return (
-    <main className="p-6">
-      <h1 className="text-3xl font-bold text-center mb-6">Only Poker</h1>
-      {/* your existing two-column grid/content here */}
+    <main className="p">
+      {/* ⬇️ Paste your full two-column JSX here (the big UI you had before) */}
+      {/* Example:
+      <div className="wrap">
+        <h1 className="title">Only Poker</h1>
+        <div className="grid">
+          <div className="col">...left column sections...</div>
+          <div className="col">...right column sections...</div>
+        </div>
+      </div>
+      */}
     </main>
   );
 }
