@@ -9,6 +9,7 @@ type Parsed = {
   stakes?: string | null;
   position?: string | null;
   cards?: string | null;
+  board?: string | null;
   gto_strategy?: string | null;
   exploit_deviation?: string | null;
   learning_tag?: string[];
@@ -21,13 +22,17 @@ export default function Page() {
   const [checking, setChecking] = useState(true);
   const [email, setEmail] = useState<string | null>(null);
 
-  // UI state (kept here so the content branch uses no hooks)
+  // UI state
   const [story, setStory] = useState('');
-  const [metaDate, setMetaDate] = useState<string>('');
-  const [position, setPosition] = useState<string>('');
-  const [stakes, setStakes] = useState<string>('');
-  const [cards, setCards] = useState<string>('');
-  const [gto, setGto] = useState<string>('');
+  const [metaDate, setMetaDate] = useState('');
+  const [position, setPosition] = useState('');
+  const [stakes, setStakes] = useState('');
+  const [cards, setCards] = useState('');
+  const [gto, setGto] = useState('');
+
+  const [busyParse, setBusyParse] = useState(false);
+  const [busyAnalyze, setBusyAnalyze] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -44,6 +49,8 @@ export default function Page() {
   }, [router, supabase]);
 
   async function handleParse() {
+    setErrorMsg(null);
+    setBusyParse(true);
     setGto('');
     try {
       const resp = await fetch('/api/parse', {
@@ -51,18 +58,22 @@ export default function Page() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input: story }),
       });
-      const json: Parsed = await resp.json();
+      const json: Parsed & { error?: string } = await resp.json();
+      if (!resp.ok) throw new Error(json?.error || 'Parse failed');
       setMetaDate(json?.date || '');
       setPosition(json?.position || '');
       setStakes(json?.stakes || '');
       setCards(json?.cards || '');
-    } catch (e) {
-      console.error('parse failed', e);
-      alert('Parse failed. Please try again.');
+    } catch (e: any) {
+      setErrorMsg(e?.message || 'Parse failed');
+    } finally {
+      setBusyParse(false);
     }
   }
 
   async function handleAnalyze() {
+    setErrorMsg(null);
+    setBusyAnalyze(true);
     try {
       const resp = await fetch('/api/analyze-hand', {
         method: 'POST',
@@ -75,23 +86,28 @@ export default function Page() {
           text: story,
         }),
       });
-      const json = await resp.json();
+      const json: { ok?: boolean; gto_strategy?: string; error?: string } = await resp.json();
       if (!resp.ok) throw new Error(json?.error || 'Analyze failed');
       setGto(json?.gto_strategy || '');
-    } catch (e) {
-      console.error('analyze failed', e);
-      alert('Analyze failed. Please try again.');
+    } catch (e: any) {
+      setErrorMsg(e?.message || 'Analyze failed');
+    } finally {
+      setBusyAnalyze(false);
     }
   }
 
-  if (checking) {
-    return <div className="p-6 text-lg font-semibold">Only Poker</div>;
-  }
+  if (checking) return <div className="p-6 text-lg font-semibold">Only Poker</div>;
 
   return (
     <main className="mx-auto max-w-[1200px] p-6">
       <h1 className="text-2xl font-bold mb-2">Only Poker</h1>
       {email && <p className="mb-6 text-sm text-slate-600">Signed in as {email}</p>}
+
+      {errorMsg && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {errorMsg}
+        </div>
+      )}
 
       {/* Hand Played */}
       <section className="rounded-xl border bg-white p-4 shadow-sm mb-6">
@@ -103,10 +119,17 @@ export default function Page() {
           placeholder="Type your hand like a story — stakes, position, cards, actions…"
         />
         <div className="mt-3 flex gap-2">
-          <button onClick={handleParse} className="rounded-xl bg-indigo-600 px-4 py-2 text-white">
-            Send
+          <button
+            onClick={handleParse}
+            disabled={busyParse || !story.trim()}
+            className="rounded-xl bg-indigo-600 px-4 py-2 text-white disabled:opacity-60"
+          >
+            {busyParse ? 'Sending…' : 'Send'}
           </button>
-          <button onClick={() => setStory('')} className="rounded-xl border px-4 py-2">
+          <button
+            onClick={() => { setStory(''); setGto(''); setErrorMsg(null); }}
+            className="rounded-xl border px-4 py-2"
+          >
             Clear
           </button>
         </div>
@@ -169,8 +192,12 @@ export default function Page() {
             placeholder="No strategy yet. Click Analyze or Edit."
           />
           <div className="mt-3 flex gap-2">
-            <button onClick={handleAnalyze} className="rounded-xl border px-4 py-2">
-              Analyze Again
+            <button
+              onClick={handleAnalyze}
+              disabled={busyAnalyze}
+              className="rounded-xl border px-4 py-2 disabled:opacity-60"
+            >
+              {busyAnalyze ? 'Analyzing…' : 'Analyze Again'}
             </button>
             <button className="rounded-xl bg-indigo-600 px-4 py-2 text-white">
               Confirm &amp; Save
