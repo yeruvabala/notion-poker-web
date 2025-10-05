@@ -1,30 +1,20 @@
-// lib/supabase/browser.ts
 'use client';
 
-import {
-  createClient as createSupabaseBrowserClient,
-  type SupabaseClient,
-} from '@supabase/supabase-js';
+// Use the plain browser client in the browser, not @supabase/ssr
+import { createClient as createSupabaseBrowserClient, type SupabaseClient } from '@supabase/supabase-js';
 
-let cached: SupabaseClient | null = null;
+let client: SupabaseClient | null = null;
 
-/** A single browser client instance for the whole app. */
 export function createBrowserClient(): SupabaseClient {
-  if (cached) return cached;
+  if (client) return client;
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
   if (!url || !anon) {
-    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY');
+    // Still return a client to avoid null errors; it will fail on use if misconfigured
+    console.error('Missing NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY');
   }
-
-  cached = createSupabaseBrowserClient(url, anon, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-    },
-  });
-
-  return cached;
+  client = createSupabaseBrowserClient(url, anon);
+  return client;
 }
