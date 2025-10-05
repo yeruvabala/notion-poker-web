@@ -8,7 +8,6 @@ export default function LoginClient() {
   const router = useRouter();
   const params = useSearchParams();
   const redirectTo = params.get('redirectTo') || '/';
-
   const supabase = createBrowserClient();
 
   const [email, setEmail] = useState('');
@@ -20,7 +19,6 @@ export default function LoginClient() {
     e.preventDefault();
     setErr(null);
     setLoading(true);
-
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
 
@@ -64,10 +62,6 @@ export default function LoginClient() {
         >
           {loading ? 'Signing in…' : 'Sign in'}
         </button>
-
-        <div className="mt-3 text-sm text-slate-600">
-          No account? <a href="/signup" className="text-indigo-600 underline">Sign up</a>
-        </div>
       </form>
     </div>
   );
