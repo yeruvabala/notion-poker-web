@@ -21,10 +21,11 @@
   },
 
   "devDependencies": {
+  "tailwindcss": "^3.4.10",
+  "postcss": "^8.4.44",
+  "autoprefixer": "^10.4.20",
+
   "typescript": "^5.4.5",
   "@types/react": "^18.2.66",
   "@types/node": "^20.11.30"
-  },
-  "type": "module"
-  
 }
