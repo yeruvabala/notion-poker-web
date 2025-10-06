@@ -1,218 +1,203 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase/browser';
-import { useRouter } from 'next/navigation';
 
 export default function LoginClient() {
   const supabase = createBrowserClient();
   const router = useRouter();
+  const search = useSearchParams();
 
-  const [tab, setTab] = useState<'login' | 'signup'>('login');
+  // ui state
+  const initialTab = (search?.get('mode') === 'signup') ? 'signup' : 'signin';
+  const [mode, setMode] = useState<'signin' | 'signup'>(initialTab);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  async function doLogin(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setErr(null); setMsg(null); setBusy(true);
+    setErr(null);
+    setMsg(null);
+    setBusy(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      router.replace('/');
+      if (mode === 'signin') {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        router.replace('/'); // go home
+        router.refresh();
+      } else {
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) throw error;
+        // If email confirmations are enabled, user must check inbox
+        if (data?.user && !data.user.email_confirmed_at) {
+          setMsg('Account created. Check your email to confirm before signing in.');
+        } else {
+          router.replace('/');
+          router.refresh();
+        }
+      }
     } catch (e: any) {
-      setErr(e?.message || 'Login failed');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function doSignup(e: React.FormEvent) {
-    e.preventDefault();
-    setErr(null); setMsg(null); setBusy(true);
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-      });
-      if (error) throw error;
-      setMsg('Check your email to confirm your account.');
-    } catch (e: any) {
-      setErr(e?.message || 'Signup failed');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function doReset() {
-    setErr(null); setMsg(null); setBusy(true);
-    try {
-      if (!email) throw new Error('Enter your email first.');
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/update-password`,
-      });
-      if (error) throw error;
-      setMsg('Password reset link sent. Check your email.');
-    } catch (e: any) {
-      setErr(e?.message || 'Could not send reset email');
+      setErr(e?.message || 'Failed. Please try again.');
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <main className="authRoot">
-      {/* Left brand (light theme) */}
-      <section className="brand">
-        <div className="brandInner">
-          <div className="brandMark">Only Poker</div>
-          <div className="brandSub">v0.1 · preview</div>
-        </div>
-      </section>
-
-      {/* Right panel */}
-      <section className="panel">
-        <div className="card">
-          <div className="tabs">
-            <button
-              className={`tab ${tab === 'login' ? 'active' : ''}`}
-              onClick={() => setTab('login')}
-              type="button"
-            >
-              Log in
-            </button>
-            <button
-              className={`tab ${tab === 'signup' ? 'active' : ''}`}
-              onClick={() => setTab('signup')}
-              type="button"
-            >
-              Create account
-            </button>
+    <main className="p">
+      <div className="wrap">
+        <div className="panel">
+          {/* Left brand side – optional graphic area */}
+          <div className="brand">
+            <div className="logo">Only Poker</div>
           </div>
 
-          <form className="form" onSubmit={tab === 'login' ? doLogin : doSignup}>
-            <label className="lbl">Email</label>
-            <input
-              className="input"
-              type="email"
-              required
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+          {/* Right auth form */}
+          <div className="auth">
+            <div className="tabs">
+              <button
+                className={`tab ${mode === 'signin' ? 'active' : ''}`}
+                onClick={() => setMode('signin')}
+              >
+                Log in
+              </button>
+              <button
+                className={`tab ${mode === 'signup' ? 'active' : ''}`}
+                onClick={() => setMode('signup')}
+              >
+                Create account
+              </button>
+            </div>
 
-            <label className="lbl">Password</label>
-            <input
-              className="input"
-              type="password"
-              required
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <form onSubmit={onSubmit} className="form">
+              <label className="lbl">Email</label>
+              <input
+                className="input"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+              />
 
-            {tab === 'login' && (
-              <div className="row end">
-                <button
-                  className="link"
-                  type="button"
-                  onClick={doReset}
-                  disabled={busy}
-                >
-                  Forgot password?
-                </button>
-              </div>
-            )}
+              <label className="lbl">Password</label>
+              <input
+                className="input"
+                type="password"
+                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+              />
 
-            <button className="cta" type="submit" disabled={busy}>
-              {busy ? (tab === 'login' ? 'Signing in…' : 'Creating…') : (tab === 'login' ? 'Sign in' : 'Create account')}
-            </button>
+              <button className="cta altBlack" type="submit" disabled={busy}>
+                {busy ? (mode === 'signin' ? 'Signing in…' : 'Creating…') : (mode === 'signin' ? 'Sign in' : 'Create account')}
+              </button>
 
-            {err && <div className="alert err">{err}</div>}
-            {msg && <div className="alert ok">{msg}</div>}
-          </form>
+              {err && <div className="err">{err}</div>}
+              {msg && <div className="note">{msg}</div>}
+            </form>
+          </div>
         </div>
-      </section>
+      </div>
 
       <style jsx>{`
-        /* ===== Light theme tokens to match the app ===== */
         :root{
-          --bg:#f5f6f8;          /* page background */
-          --card:#ffffff;        /* cards */
-          --line:#e5e7eb;        /* borders */
-          --text:#0f172a;        /* main text */
-          --muted:#6b7280;       /* muted text */
-          --indigo:#4f46e5;      /* primary */
-          --indigo-700:#4338ca;  /* primary hover */
-          --ok:#065f46;          /* success bg */
-          --ok2:#d1fae5;         /* success text */
-          --err:#991b1b;         /* error bg */
-          --err2:#fee2e2;        /* error text */
+          --bg:#f5f6f8;         /* match app */
+          --card:#ffffff;
+          --line:#e5e7eb;
+          --text:#0f172a;
+          --muted:#6b7280;
+          --black:#111111;
         }
-
-        .authRoot{
-          min-height:100dvh;
-          display:grid;
-          grid-template-columns: 1fr 1fr;
-          background:var(--bg);
-          color:var(--text);
-        }
-        @media(max-width:980px){ .authRoot{ grid-template-columns:1fr; } }
-
-        .brand{
-          display:flex;align-items:center;justify-content:center;
-          padding:32px;
-          background:
-            radial-gradient(1200px 600px at -10% 100%, #f9fafb 0, var(--bg) 60%);
-          border-right:1px solid var(--line);
-        }
-        @media(max-width:980px){ .brand{ display:none; } }
-
-        .brandInner{ text-align:center }
-        .brandMark{ font-size:40px; font-weight:900; letter-spacing:.5px; }
-        .brandSub{ margin-top:6px; font-size:12px; color:var(--muted) }
-
-        .panel{ display:flex; align-items:center; justify-content:center; padding:24px }
-        .card{
-          width:min(480px, 92vw);
+        *{box-sizing:border-box}
+        html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+        .p{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px}
+        .wrap{width:100%;max-width:980px}
+        .panel{
           background:var(--card);
           border:1px solid var(--line);
           border-radius:16px;
-          box-shadow:0 8px 24px rgba(0,0,0,.06);
-          padding:20px;
+          overflow:hidden;
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          box-shadow:0 12px 40px rgba(0,0,0,.06);
         }
-        .tabs{ display:flex; gap:20px; border-bottom:1px solid var(--line); padding-bottom:6px; }
+        @media (max-width:900px){ .panel{grid-template-columns:1fr} }
+
+        .brand{
+          background:linear-gradient(180deg,#fafafa,#f0f1f5);
+          border-right:1px solid var(--line);
+          padding:32px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+        }
+        @media (max-width:900px){ .brand{display:none} }
+
+        .logo{
+          font-size:32px;
+          font-weight:800;
+          letter-spacing:.2px;
+        }
+
+        .auth{ padding:28px 28px 36px 28px; }
+
+        .tabs{
+          display:flex;
+          gap:20px;
+          border-bottom:1px solid var(--line);
+          margin-bottom:20px;
+        }
         .tab{
-          background:transparent; border:none; cursor:pointer; padding:8px 0;
-          color:var(--muted); font-weight:700;
+          appearance:none; background:none; border:none;
+          padding:14px 6px; margin:0; cursor:pointer;
+          font-weight:700; font-size:15px; color:var(--black);
           border-bottom:2px solid transparent;
         }
-        .tab.active{ color:var(--text); border-bottom-color:var(--indigo); }
+        .tab.active{
+          border-bottom-color:var(--black);
+        }
 
-        .form{ padding-top:14px; display:flex; flex-direction:column; gap:10px }
-        .lbl{ font-size:12px; color:var(--muted) }
+        .form{ display:flex; flex-direction:column; gap:10px; }
+        .lbl{ font-size:12px; color:var(--muted); }
         .input{
-          width:100%; border:1px solid var(--line); border-radius:12px;
-          background:#fff; padding:12px 14px; font-size:15px; color:var(--text);
+          width:100%; padding:12px 14px;
+          border:1px solid var(--line); border-radius:12px;
+          background:#fff; font-size:15px;
         }
-        .row.end{ display:flex; justify-content:flex-end; }
-        .link{
-          background:none; border:none; color:var(--indigo); cursor:pointer; padding:0; font-weight:600;
-        }
+        .input:focus{ outline:2px solid #cbd5e1; }
+
+        /* Base CTA (kept for reuse if you want indigo variant elsewhere) */
         .cta{
-          width:100%; margin-top:6px; padding:12px 14px; border-radius:12px;
-          background:var(--indigo); color:#fff; font-weight:800; border:1px solid #c7d2fe;
-          cursor:pointer;
+          margin-top:8px;
+          width:100%; padding:12px 14px; font-weight:700; border-radius:12px;
+          border:1px solid var(--line); background:#fff; color:var(--text); cursor:pointer;
+          transition:background .15s,color .15s,border-color .15s,opacity .15s;
         }
-        .cta:hover{ background:var(--indigo-700); }
         .cta[disabled]{ opacity:.6; cursor:not-allowed; }
 
-        .alert{ border-radius:12px; padding:10px 12px; margin-top:6px; font-size:14px }
-        .alert.err{ background:var(--err); color:#fff }
-        .alert.ok{ background:var(--ok); color:var(--ok2) }
+        /* Black text button variant (requested) */
+        .cta.altBlack{
+          background:#fff;
+          color:var(--black);
+          border:1px solid var(--black);
+        }
+        .cta.altBlack:hover{
+          background:var(--black);
+          color:#fff;
+          border-color:var(--black);
+        }
+
+        .err{ margin-top:10px; color:#b91c1c; font-size:14px; }
+        .note{ margin-top:10px; color:#166534; font-size:14px; }
       `}</style>
     </main>
   );
