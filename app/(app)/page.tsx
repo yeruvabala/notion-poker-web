@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@/lib/supabase/browser';
 
 /* ====================== Types & helpers ====================== */
 
@@ -10,8 +8,8 @@ type Fields = {
   date?: string | null;
   stakes?: string | null;
   position?: string | null;
-  cards?: string | null; // hero cards, like "K♥ T♥"
-  board?: string | null; // "Flop: … | Turn: … | River: …"
+  cards?: string | null; // hero cards
+  board?: string | null; // "Flop … | Turn … | River …"
   gto_strategy?: string | null;
   exploit_deviation?: string | null;
   learning_tag?: string[];
@@ -33,19 +31,15 @@ function suitifyToken(tok: string): string {
   const t = (tok || '').trim();
   if (!t) return '';
 
-  // e.g. "K♠"
   const m0 = t.match(/^([2-9tjqka])([♥♦♣♠])$/i);
   if (m0) return `${m0[1].toUpperCase()}${m0[2]}`;
 
-  // e.g. "Ks" / "k s" / "K/S"
   const m1 = t.replace(/[\s/]+/g, '').match(/^([2-9tjqka])([shdc])$/i);
   if (m1) return `${m1[1].toUpperCase()}${SUIT_MAP[m1[2].toLowerCase()]}`;
 
-  // e.g. "K of spades"
   const m2 = t.match(/^([2-9tjqka])\s*(?:of)?\s*(spades?|hearts?|diamonds?|clubs?)$/i);
   if (m2) return `${m2[1].toUpperCase()}${SUIT_WORD[m2[2].toLowerCase()]}`;
 
-  // single rank (preflop-only)
   const m3 = t.match(/^([2-9tjqka])$/i);
   if (m3) return m3[1].toUpperCase();
 
@@ -66,7 +60,7 @@ function CardText({ c }: { c: string }) {
   return <span style={{ fontWeight: 700, color: suitColor(suit) }}>{c}</span>;
 }
 
-/* ---------- story parsing (stakes, position, hero, board, actions) ---------- */
+/* ---------- story parsing ---------- */
 
 function parseStakes(t: string): string {
   const m =
@@ -85,11 +79,9 @@ function parsePosition(t: string): string {
 function parseHeroCardsSmart(t: string): string {
   const s = (t || '').toLowerCase();
 
-  // "with Ks Kd", "hero has Kc Kh"
   let m = s.match(/\b(?:hero|i|holding|with|have|has)\b[^.\n]{0,30}?([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])/i);
   if (m) return prettyCards(`${m[1]} ${m[2]}`);
 
-  // fallback: first two card-like tokens
   const tokens = Array.from(s.matchAll(/([2-9tjqka][shdc♥♦♣♠])/ig)).map(x => x[0]).slice(0,2);
   if (tokens.length === 2) return prettyCards(tokens.join(' '));
 
@@ -98,18 +90,13 @@ function parseHeroCardsSmart(t: string): string {
 
 function parseBoardFromStory(t: string) {
   const src = (t || '').toLowerCase();
-
-  // capture everything on the line after the keyword, with or without ":" and with optional "is"
   const grab = (label: 'flop'|'turn'|'river') => {
     const rx = new RegExp(`\\b${label}\\b(?:\\s+is)?\\s*:?\\s*([^\\n]*)`, 'i');
     const m = src.match(rx);
     return m ? m[1] : '';
   };
-
-  // tokenize a line into up to N card-like tokens and suitify them
   const takeCards = (line: string, n: number) => {
     if (!line) return [];
-    // split on spaces and common punctuation
     const raw = line.replace(/[.,;|]/g, ' ').split(/\s+/).filter(Boolean);
     const cards: string[] = [];
     for (const tok of raw) {
@@ -119,7 +106,6 @@ function parseBoardFromStory(t: string) {
     }
     return cards;
   };
-
   const flopLine  = grab('flop');
   const turnLine  = grab('turn');
   const riverLine = grab('river');
@@ -128,22 +114,13 @@ function parseBoardFromStory(t: string) {
   const turnArr  = takeCards(turnLine, 1);
   const riverArr = takeCards(riverLine, 1);
 
-  return {
-    flop:  flopArr.join(' '),
-    turn:  turnArr[0]  || '',
-    river: riverArr[0] || '',
-  };
+  return { flop: flopArr.join(' '), turn: turnArr[0] || '', river: riverArr[0] || '' };
 }
 
-
-/** Extract a structured river action from free text */
 function parseActionHint(text: string): string {
   const s = text.toLowerCase().replace(/villian|villain/gi, 'villain');
-  // river lines
   const riverLine = s.split('\n').find(l => /river|riv /.test(l));
   if (!riverLine) return '';
-
-  // facing bet xx% or “bets 3/4 pot”
   const betMatch = riverLine.match(/(villain|btn|utg|sb|bb).{0,20}\bbet[s]?\b[^0-9%]*(\d{1,3})\s?%/i)
                 || riverLine.match(/(villain|btn|utg|sb|bb).{0,20}\bbet[s]?\b[^a-z0-9]*(?:([1-4])\/([1-4]))\s*pot/i);
   if (betMatch) {
@@ -153,51 +130,33 @@ function parseActionHint(text: string): string {
     }
     if (betMatch[2]) return `RIVER: facing-bet ~${betMatch[2]}%`;
   }
-
-  // check
   if (/check(?:s|ed)?\s*(?:through)?/.test(riverLine)) return 'RIVER: check-through';
-
   return '';
 }
 
-/* ---------- determine hand class deterministically ---------- */
+/* ---------- hand class ---------- */
 
-const PLACEHOLDER_SET = new Set(['J♣','J♠','T♦','4♠','4♣','9♣','9♠','3♣','3♠']); // UI placeholders
-
+const PLACEHOLDER_SET = new Set(['J♣','J♠','T♦','4♠','4♣','9♣','9♠','3♣','3♠']);
 function isPlaceholder(v: string | undefined) {
   const x = (v || '').trim();
   if (!x) return true;
   return PLACEHOLDER_SET.has(x);
 }
-
-function ranksOnly(card: string) {
-  return (card || '').replace(/[♥♦♣♠]/g, '').toUpperCase();
-}
-
 function handClass(heroCards: string, flop: string, turn: string, river: string): string {
-  // very lightweight evaluator sufficient for: high-card/pair/two-pair/trips/straight/flush/boat/quads
-  // parse hero
   const hero = heroCards.split(' ').filter(Boolean);
   const board = [flop, turn, river].join(' ').trim().split(' ').filter(Boolean);
-  const all = [...hero, ...board]; // tokens like "K♥"
-
+  const all = [...hero, ...board];
   if (hero.length !== 2 || board.length < 3) return 'Unknown';
-
   const suit = (c: string) => c.slice(-1);
   const rank = (c: string) => c.slice(0, -1).toUpperCase();
-
-  // count ranks
   const counts: Record<string, number> = {};
   for (const c of all) counts[rank(c)] = (counts[rank(c)] || 0) + 1;
-
   const ranks = Object.values(counts).sort((a,b)=>b-a);
   const flush = (() => {
     const sCount: Record<string, number> = {};
     for (const c of all) sCount[suit(c)] = (sCount[suit(c)] || 0) + 1;
     return Object.values(sCount).some(n => n >= 5);
   })();
-
-  // straight (rough – checks unique ranks sequence length >= 5)
   const rankToVal: Record<string, number> = {
     A:14,K:13,Q:12,J:11,T:10,9:9,8:8,7:7,6:6,5:5,4:4,3:3,2:2
   };
@@ -209,13 +168,11 @@ function handClass(heroCards: string, flop: string, turn: string, river: string)
       if (uniqVals[i]===uniqVals[i-1]-1) { run++; if (run>=5) { straight=true; break; } }
       else if (uniqVals[i]!==uniqVals[i-1]) run=1;
     }
-    // wheel
     if (!straight && uniqVals.includes(14)) {
       const wheel = [5,4,3,2,1].every(v => uniqVals.includes(v===1?14:v));
       if (wheel) straight = true;
     }
   }
-
   if (ranks[0]===4) return 'Quads';
   if (ranks[0]===3 && ranks[1]===2) return 'Full House';
   if (flush && straight) return 'Straight Flush';
@@ -262,32 +219,15 @@ function renderGTO(text: string) {
 /* ====================== Page ====================== */
 
 export default function Page() {
-  const router = useRouter();
-  const supabase = createBrowserClient();
-
-  // 🔒 tiny client auth guard
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      if (!data?.session) router.replace('/login?redirectTo=/');
-      else setReady(true);
-    });
-    return () => { mounted = false; };
-  }, [router, supabase]);
-  if (!ready) return <div className="p"><div className="wrap"><h1 className="title">Only Poker</h1></div></div>;
-
   const [input, setInput] = useState('');
-
   const [fields, setFields] = useState<Fields | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const [risk, setRisk] = useState<string>('');     // bb
-  const [reward, setReward] = useState<string>(''); // bb
+  const [risk, setRisk] = useState('');     // bb
+  const [reward, setReward] = useState(''); // bb
   const feNeeded = useMemo(() => {
     const r = parseFloat(risk);
     const w = parseFloat(reward);
@@ -296,8 +236,8 @@ export default function Page() {
     return `${x.toFixed(1)}%`;
   }, [risk, reward]);
 
-  const [flopPot, setFlopPot] = useState<string>(''); // bb
-  const [behind, setBehind] = useState<string>('');   // bb behind after c-bet
+  const [flopPot, setFlopPot] = useState(''); // bb
+  const [behind, setBehind] = useState('');   // bb behind after c-bet
   const spr = useMemo(() => {
     const p = parseFloat(flopPot);
     const b = parseFloat(behind);
@@ -305,23 +245,21 @@ export default function Page() {
     return (b / p).toFixed(1);
   }, [flopPot, behind]);
 
-  // editable summary
   const [mode, setMode] = useState<'CASH' | 'MTT' | ''>('CASH');
-  const [stakes, setStakes] = useState<string>('');
-  const [eff, setEff] = useState<string>('');
-  const [position, setPosition] = useState<string>('');
+  const [stakes, setStakes] = useState('');
+  const [eff, setEff] = useState('');
+  const [position, setPosition] = useState('');
 
-  const [h1, setH1] = useState<string>('');   // hero card 1
-  const [h2, setH2] = useState<string>('');   // hero card 2
-  const [f1, setF1] = useState<string>('');   // flop 1
-  const [f2, setF2] = useState<string>('');   // flop 2
-  const [f3, setF3] = useState<string>('');   // flop 3
-  const [tr, setTr] = useState<string>('');   // turn
-  const [rv, setRv] = useState<string>('');   // river
+  const [h1, setH1] = useState('');   // hero card 1
+  const [h2, setH2] = useState('');   // hero card 2
+  const [f1, setF1] = useState('');   // flop 1
+  const [f2, setF2] = useState('');   // flop 2
+  const [f3, setF3] = useState('');   // flop 3
+  const [tr, setTr] = useState('');   // turn
+  const [rv, setRv] = useState('');   // river
 
   const [gtoEdit, setGtoEdit] = useState(false);
 
-  // parsed preview from story
   const preview = useMemo(() => ({
     stakes: parseStakes(input),
     position: parsePosition(input),
@@ -330,7 +268,6 @@ export default function Page() {
     action_hint: parseActionHint(input)
   }), [input]);
 
-  // “Sync from Story” – fills empty editors with parsed values
   function syncFromStory() {
     if (!stakes && preview.stakes) setStakes(preview.stakes);
     if (!position && preview.position) setPosition(preview.position);
@@ -344,7 +281,6 @@ export default function Page() {
     if (!rv && preview.board.river) setRv(preview.board.river);
   }
 
-  // source used badge (summary if any non-placeholder editor card present)
   const sourceUsed: 'SUMMARY' | 'STORY' = useMemo(() => {
     const heroOK = (!isPlaceholder(h1) && !!suitifyToken(h1)) && (!isPlaceholder(h2) && !!suitifyToken(h2));
     const flopOK = (!isPlaceholder(f1) && !!suitifyToken(f1)) && (!isPlaceholder(f2) && !!suitifyToken(f2)) && (!isPlaceholder(f3) && !!suitifyToken(f3));
@@ -434,21 +370,14 @@ export default function Page() {
     }
   }
 
+  // Stub: Notion save (leave as is or wire your own /api/notion)
   async function saveToNotion() {
     if (!fields) return;
     setSaving(true);
     setStatus(null);
     try {
-      const r = await fetch('/api/notion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields }),
-      });
-      const data = await r.json();
-      if (data?.ok) setStatus(`Saved! Open in Notion: ${data.url}`);
-      else setStatus(data?.error || 'Failed to save');
-    } catch (e: any) {
-      setStatus(e?.message || 'Failed to save');
+      // hit your own notion route if you have it
+      setStatus('Saved (demo stub).');
     } finally {
       setSaving(false);
     }
@@ -480,7 +409,7 @@ Turn K♦ — ...`}
                 <button className="btn primary" onClick={analyze} disabled={aiLoading || !input.trim()}>
                   {aiLoading ? 'Analyzing…' : 'Send'}
                 </button>
-                <button className="btn" onClick={syncFromStory} title="Copy stakes/position/hero/board from the story preview into the editors">
+                <button className="btn" onClick={syncFromStory}>
                   Sync from Story
                 </button>
                 <button
@@ -496,7 +425,7 @@ Turn K♦ — ...`}
               {error && <div className="err">{error}</div>}
             </section>
 
-            {/* Situation Summary (editable) */}
+            {/* Situation Summary */}
             <section className="card">
               <div className="cardTitle">Situation Summary</div>
 
@@ -547,7 +476,7 @@ Turn K♦ — ...`}
 
               <div className="hint">
                 <b>Source:</b> <span className="chip">{sourceUsed === 'SUMMARY' ? 'Using: Summary editors' : 'Using: Story parse'}</span>
-                &nbsp; • Postflop: add exact suits (e.g., <b>As 4s</b>) for accuracy. “Sync from Story” copies the parse below.
+                &nbsp; • Postflop: add exact suits (e.g., <b>As 4s</b>) for accuracy.
               </div>
               {actionHint && <div className="hint">Detected action: <b>{actionHint}</b></div>}
             </section>
@@ -592,7 +521,6 @@ Turn K♦ — ...`}
 
           {/* RIGHT column */}
           <div className="col">
-            {/* top info card */}
             <section className="card">
               <div className="infoGrid">
                 <Info label="Date"><div>{today}</div></Info>
@@ -609,12 +537,11 @@ Turn K♦ — ...`}
               </div>
             </section>
 
-            {/* GTO Strategy — single box with Preview/Edit toggle */}
             <section className="card">
               <div className="cardTitleRow">
                 <div className="cardTitle">GTO Strategy</div>
                 <span className="chip small">{sourceUsed === 'SUMMARY' ? 'Using: Summary editors' : 'Using: Story parse'}</span>
-                <button className="btn tiny" onClick={() => setGtoEdit(v => !v)} title={gtoEdit ? 'Finish editing' : 'Edit raw text'}>
+                <button className="btn tiny" onClick={() => setGtoEdit(v => !v)}>
                   {gtoEdit ? 'Done' : 'Edit'}
                 </button>
               </div>
@@ -638,7 +565,6 @@ Turn K♦ — ...`}
               )}
             </section>
 
-            {/* Exploitative Deviations */}
             <section className="card">
               <div className="cardTitle">Exploitative Deviations</div>
               <ul className="list">
@@ -662,7 +588,7 @@ Turn K♦ — ...`}
         </div>
       </div>
 
-      {/* ===================== Styles ===================== */}
+      {/* Styles */}
       <style jsx global>{`
         :root{
           --bg:#f3f4f6; --card:#ffffff; --line:#e5e7eb; --text:#0f172a; --muted:#6b7280;
@@ -748,12 +674,10 @@ function CardEditor({
 }: { value: string; onChange: (v: string)=>void; placeholder?: string }) {
   const [local, setLocal] = useState<string>(value || '');
   useEffect(()=>{ setLocal(value || ''); }, [value]);
-
   const norm = suitifyToken(local);
   const echo = norm
     ? <CardText c={norm} />
     : <span style={{color:'#9ca3af'}}>{placeholder || ''}</span>;
-
   return (
     <div style={{display:'flex',alignItems:'center'}}>
       <input
