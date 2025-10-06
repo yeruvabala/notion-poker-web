@@ -28,7 +28,7 @@ export default function LoginClient() {
         const { error } = await supabase.auth.signUp({ email, password: pw });
         if (error) throw error;
       }
-      router.replace('/'); // back to app/(app)/page
+      router.replace('/');
       router.refresh();
     } catch (e: any) {
       setErr(e?.message || 'Authentication failed');
@@ -87,7 +87,13 @@ export default function LoginClient() {
             {err && <div className="error">{err}</div>}
 
             <button className="cta" type="submit" disabled={loading}>
-              {loading ? (mode === 'login' ? 'Signing in…' : 'Creating…') : (mode === 'login' ? 'Sign in' : 'Create account')}
+              {loading
+                ? mode === 'login'
+                  ? 'Signing in…'
+                  : 'Creating…'
+                : mode === 'login'
+                ? 'Sign in'
+                : 'Create account'}
             </button>
           </form>
         </div>
@@ -101,7 +107,7 @@ export default function LoginClient() {
           --ink:#0f172a;
           --muted:#6b7280;
           --line:#e5e7eb;
-          --platinum:#E5E4E2; /* hover text */
+          --platinum:#E5E4E2; /* hover label */
           --black:#0a0a0a;    /* button background */
         }
         .wrap {
@@ -136,7 +142,7 @@ export default function LoginClient() {
         }
         .brandTitle {
           margin: 0 0 8px 0;
-          /* smaller + lighter than before */
+          /* smaller & lighter headline */
           font-size: clamp(28px, 4.0vw, 44px);
           font-weight: 700;
           color: var(--ink);
@@ -210,7 +216,7 @@ export default function LoginClient() {
           font-size: 13px;
         }
 
-        /* Black button with platinum hover label */
+        /* Black button / platinum label on hover */
         .cta {
           margin-top: 6px;
           border: 1px solid #111;
@@ -225,7 +231,7 @@ export default function LoginClient() {
           box-shadow: 0 2px 0 #000;
         }
         .cta:hover {
-          color: var(--platinum);           /* <-- platinum label on hover */
+          color: var(--platinum); /* text turns platinum */
           transform: translateY(-0.5px);
           box-shadow: 0 3px 0 #000;
         }
