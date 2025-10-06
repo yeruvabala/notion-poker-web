@@ -1,3 +1,4 @@
+// app/api/analyze-hand/route.ts
 import { NextResponse } from "next/server";
 import { openai } from "@/lib/openai";
 
@@ -183,6 +184,126 @@ Rules:
 /* ------------------- handler ------------------- */
 export async function POST(req: Request) {
   try {
+    // Guard: require API key
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { error: 'Server
+        { error: 'Server misconfigured: missing OPENAI_API_KEY' },
+        { status: 500 },
+      );
+    }
+
+    const body = await req.json();
+    const {
+      date,
+      stakes,
+      position,
+      cards,
+      board = "",
+      notes = "",
+      rawText = "",
+      fe_hint,
+      spr_hint,
+    }: {
+      date?: string;
+      stakes?: string;
+      position?: string;
+      cards?: string;
+      board?: string;
+      notes?: string;
+      rawText?: string;
+      fe_hint?: string;
+      spr_hint?: string;
+    } = body ?? {};
+
+    const story = rawText || notes || "";
+
+    const ipRiverFacingCheck = detectRiverFacingCheck(story);
+    const { facing: riverFacingBet, large: riverBetLarge } = detectRiverFacingBet(story);
+
+    const heroRanks = extractHeroRanks(cards, story);
+    const boardRanks = extractBoardRanks(board, story);
+
+    const boardPaired = isBoardPaired(boardRanks);
+    const heroTopPair = isHeroTopPair(heroRanks, boardRanks);
+    const tripsWeak = hasTripsWeakKicker(heroRanks, boardRanks);
+    const strongKickerTopPair = computeStrongKickerTopPair(heroRanks, boardRanks);
+
+    const facts = [
+      `Hero ranks: ${heroRanks.join(",") || "(unknown)"}`,
+      `Board ranks: ${boardRanks.join(",") || "(unknown)"}`,
+      `board_paired=${boardPaired}`,
+      `hero_top_pair=${heroTopPair}`,
+    ].join(" | ");
+
+    const userBlock = [
+      `MODE: CASH`,
+      `Date: ${date || "today"}`,
+      `Stakes: ${stakes || "(unknown)"}`,
+      `Position: ${position || "(unknown)"}`,
+      `Hero Cards: ${cards || "(unknown)"}`,
+      `Board: ${board || "(unknown)"}`,
+      spr_hint ? `SPR hint: ${spr_hint}` : ``,
+      fe_hint ? `FE hint: ${fe_hint}` : ``,
+      `HINT: ip_river_facing_check=${ipRiverFacingCheck ? "true" : "false"}`,
+      `HINT: river_facing_bet=${riverFacingBet ? "true" : "false"}`,
+      riverFacingBet ? `HINT: river_bet_large=${riverBetLarge ? "true" : "false"}` : ``,
+      `HINT: board_paired=${boardPaired ? "true" : "false"}`,
+      `HINT: hero_top_pair=${heroTopPair ? "true" : "false"}`,
+      `HINT: trips_weak_kicker=${tripsWeak ? "true" : "false"}`,
+      `HINT: strong_kicker=${strongKickerTopPair ? "true" : "false"}`,
+      ``,
+      `FACTS: ${facts}`,
+      ``,
+      `RAW HAND TEXT:`,
+      story.trim() || "(none provided)",
+      ``,
+      `FOCUS: Decide the final-street action in a solver-like way. Respect the HINTS and FACTS above.`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const { isMTT, hits } = looksLikeTournament(userBlock);
+    if (isMTT) {
+      return NextResponse.json({
+        gto_strategy: `Cash-only mode: your text looks like a TOURNAMENT hand (${hits.join(
+          ", ",
+        )}). Please re-enter as a cash hand (omit ICM/players-left).`,
+        exploit_deviation: "",
+        learning_tag: ["cash-only", "mtt-blocked"],
+      });
+    }
+
+    const resp = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      temperature: 0.2,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: SYSTEM },
+        { role: "user", content: userBlock },
+      ],
+    });
+
+    const raw = resp?.choices?.[0]?.message?.content?.trim() || "{}";
+    let parsed: any = {};
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      parsed = { gto_strategy: raw, exploit_deviation: "", learning_tag: [] };
+    }
+
+    const out = {
+      gto_strategy: asText(parsed?.gto_strategy || ""),
+      exploit_deviation: asText(parsed?.exploit_deviation || ""),
+      learning_tag: Array.isArray(parsed?.learning_tag)
+        ? parsed.learning_tag.filter(
+            (t: unknown) => typeof t === "string" && t.trim(),
+          )
+        : [],
+    };
+
+    return NextResponse.json(out);
+  } catch (e: any) {
+    console.error("analyze-hand error:", e?.message || e);
+    return NextResponse.json({ error: "Failed to analyze hand" }, { status: 500 });
+  }
+}
