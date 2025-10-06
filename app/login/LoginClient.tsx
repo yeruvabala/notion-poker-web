@@ -1,35 +1,44 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+
+// If your helper is at a different path, adjust this import:
 import { createBrowserClient } from '@/lib/supabase/browser';
 
-type Mode = 'login' | 'signup';
+type Mode = 'login' | 'register';
 
 export default function LoginClient() {
+  const supabase = useMemo(() => createBrowserClient(), []);
   const router = useRouter();
-  const supabase = createBrowserClient();
 
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
-  const [pw, setPw] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
+    setMsg(null);
     setLoading(true);
     try {
       if (mode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        router.replace('/'); // go home when signed-in
       } else {
-        const { error } = await supabase.auth.signUp({ email, password: pw });
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        });
         if (error) throw error;
+        setMsg('Account created. Check your inbox for a verification link.');
+        setMode('login');
       }
-      router.replace('/');
-      router.refresh();
     } catch (e: any) {
       setErr(e?.message || 'Authentication failed');
     } finally {
@@ -37,27 +46,33 @@ export default function LoginClient() {
     }
   }
 
+  const canSubmit = email.trim().length > 3 && password.length >= 6 && !loading;
+
   return (
-    <main className="wrap">
-      <div className="card">
-        {/* Left brand side */}
-        <div className="brandPanel">
-          <h1 className="brandTitle">Only Poker</h1>
-          <p className="brandSub">v0.1 · preview</p>
+    <main className="loginWrap">
+      <div className="box">
+        {/* LEFT brand panel */}
+        <div className="brand">
+          <div className="brandInner">
+            <div className="brandTitle">Only Poker</div>
+            <div className="brandSub">v0.1 · preview</div>
+          </div>
         </div>
 
-        {/* Right form side */}
-        <div className="formPanel">
+        {/* RIGHT auth panel */}
+        <div className="auth">
           <div className="tabs">
             <button
-              className={`tab ${mode === 'login' ? 'tabActive' : ''}`}
+              type="button"
+              className={`tab ${mode === 'login' ? 'active' : ''}`}
               onClick={() => setMode('login')}
             >
               Log in
             </button>
             <button
-              className={`tab ${mode === 'signup' ? 'tabActive' : ''}`}
-              onClick={() => setMode('signup')}
+              type="button"
+              className={`tab ${mode === 'register' ? 'active' : ''}`}
+              onClick={() => setMode('register')}
             >
               Create account
             </button>
@@ -66,177 +81,191 @@ export default function LoginClient() {
           <form onSubmit={onSubmit} className="form">
             <label className="lbl">Email</label>
             <input
-              className="input"
               type="email"
+              className="input"
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
+              autoComplete="email"
             />
 
             <label className="lbl">Password</label>
             <input
-              className="input"
               type="password"
+              className="input"
               placeholder="••••••••"
-              value={pw}
-              onChange={(e) => setPw(e.target.value)}
-              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             />
 
-            {err && <div className="error">{err}</div>}
-
-            <button className="cta" type="submit" disabled={loading}>
-              {loading
-                ? mode === 'login'
-                  ? 'Signing in…'
-                  : 'Creating…'
-                : mode === 'login'
-                ? 'Sign in'
-                : 'Create account'}
+            <button className="cta" disabled={!canSubmit}>
+              {mode === 'login' ? (loading ? 'Signing in…' : 'Sign in') : (loading ? 'Creating…' : 'Create account')}
             </button>
+
+            {err && <div className="err">{err}</div>}
+            {msg && <div className="note">{msg}</div>}
           </form>
         </div>
       </div>
 
-      {/* ===== Styles ===== */}
       <style jsx>{`
-        :root {
-          --bg:#f5f7fb;
+        :root{
           --card:#ffffff;
-          --ink:#0f172a;
-          --muted:#6b7280;
           --line:#e5e7eb;
-          --platinum:#E5E4E2; /* hover label */
-          --black:#0a0a0a;    /* button background */
+          --text:#0f172a;
+          --muted:#6b7280;
+          --brandGrad: radial-gradient(1200px 700px at -10% -30%, #eef2ff 0%, #ffffff 55%);
+          --platinum:#E5E4E2;
+          --shadow: 0 40px 120px rgba(0,0,0,.10), 0 4px 18px rgba(0,0,0,.05);
         }
-        .wrap {
-          min-height: 100dvh;
-          display: grid;
-          place-items: center;
-          background: radial-gradient(1200px 700px at 60% -10%, #eef2ff 0%, #f8fafc 40%, var(--bg) 80%);
-          padding: 32px;
+        html,body{background:#f5f7fb;color:var(--text)}
+        .loginWrap{
+          padding:48px 20px;
+          display:flex;
+          justify-content:center;
+          align-items:flex-start;
+          min-height:100dvh;
         }
-        .card {
-          width: min(1050px, 92vw);
-          display: grid;
-          grid-template-columns: 1.1fr 1fr;
-          background: var(--card);
-          border-radius: 24px;
-          box-shadow:
-            0 20px 60px rgba(15,23,42,.10),
-            0 6px 16px rgba(15,23,42,.06);
-          overflow: hidden;
-          border: 1px solid var(--line);
+        .box{
+          width: min(1080px, 95vw);
+          display:grid;
+          grid-template-columns: 1.05fr 1fr;
+          border-radius:26px;
+          background:var(--card);
+          box-shadow: var(--shadow);
+          overflow:hidden;
+          border:1px solid var(--line);
         }
-        @media (max-width: 900px) {
-          .card { grid-template-columns: 1fr; }
+        @media (max-width: 980px){
+          .box{ grid-template-columns: 1fr; }
+          .brand{ min-height: 140px; }
         }
 
-        /* Left */
-        .brandPanel {
-          padding: clamp(28px, 6vw, 56px);
-          background: radial-gradient(900px 600px at -30% -30%, #eef2ff 0%, #f5f7ff 40%, #ffffff 75%);
-          display: grid;
-          align-content: center;
+        /* LEFT panel */
+        .brand{
+          background: var(--brandGrad);
+          padding: 56px 54px;
+          display:flex;
+          align-items:center;
+          justify-content:flex-start;
         }
-        .brandTitle {
-          margin: 0 0 8px 0;
-          /* smaller & lighter headline */
-          font-size: clamp(28px, 4.0vw, 44px);
-          font-weight: 700;
-          color: var(--ink);
+        .brandInner{
+          transform: translateY(2px);
+        }
+        .brandTitle{
+          font-size: clamp(34px, 5.2vw, 52px);
+          font-weight: 800;
           letter-spacing: -0.02em;
+          color:#0f172a;
         }
-        .brandSub {
-          margin: 0;
+        .brandSub{
+          margin-top: 10px;
           color: var(--muted);
-          font-size: 14px;
+          font-size: 16px;
+          font-weight: 500;
         }
 
-        /* Right */
-        .formPanel {
-          padding: clamp(28px, 6vw, 56px);
-          display: grid;
-          align-content: center;
-          gap: 18px;
+        /* RIGHT panel */
+        .auth{
+          padding: 36px 34px 30px;
         }
-        .tabs {
-          display: flex;
-          gap: 18px;
-          margin-bottom: 6px;
+        .tabs{
+          display:flex;
+          gap: 22px;
+          margin: 8px 0 18px;
         }
-        .tab {
-          background: transparent;
-          border: none;
-          padding: 0;
-          font-weight: 600;
-          color: #1f2937;
-          cursor: pointer;
-          position: relative;
+        .tab{
+          color:#0f172a;
+          font-weight: 800;
           font-size: 18px;
+          background:transparent;
+          border:none;
+          padding: 8px 2px;
+          cursor:pointer;
+          border-bottom: 3px solid transparent;
         }
-        .tab::after {
-          content: '';
-          position: absolute;
-          left: 0; right: 0; bottom: -10px;
-          height: 2px;
-          background: transparent;
-          transition: background .2s ease;
+        .tab.active{
+          border-color:#0f172a;
         }
-        .tabActive { color: var(--ink); }
-        .tabActive::after { background: #111827; }
+        /* Remove the big blue focus ring; keep a subtle one */
+        .tab:focus{ outline:none; }
+        .tab:focus-visible{
+          outline:2px solid #94a3b8;
+          outline-offset:2px;
+          border-radius:6px;
+        }
 
-        .form {
-          margin-top: 8px;
-          display: grid;
+        .form{
+          display:grid;
+          grid-template-columns: 1fr;
           gap: 10px;
+          margin-top: 10px;
         }
-        .lbl {
-          font-size: 13px;
-          color: #374151;
-          font-weight: 600;
+        .lbl{
+          margin-top: 8px;
+          font-size: 14px;
+          color:#111827;
+          font-weight: 700;
         }
-        .input {
-          border: 1px solid var(--line);
+        .input{
+          border:1px solid var(--line);
           border-radius: 12px;
-          padding: 12px 14px;
-          font-size: 15px;
-          outline: none;
-          background: #fff;
+          padding: 14px 14px;
+          font-size: 16px;
+          background:#fff;
         }
-        .input:focus {
-          border-color: #bfd2ff;
-          box-shadow: 0 0 0 4px rgba(191,210,255,.35);
-        }
-
-        .error {
-          margin-top: 4px;
-          color: #b91c1c;
-          font-size: 13px;
+        .input:focus{
+          outline: 3px solid #c7d2fe;
+          border-color: #c7d2fe;
         }
 
-        /* Black button / platinum label on hover */
-        .cta {
+        /* ==== Button states ==== */
+        /* Default: white background, black text */
+        .cta{
           margin-top: 6px;
           border: 1px solid #111;
-          background: var(--black);
-          color: #E5E7EB;
+          background: #ffffff;
+          color: #0f172a;                 /* black/dark text by default */
           padding: 14px 16px;
           border-radius: 12px;
           font-weight: 700;
           font-size: 16px;
           cursor: pointer;
-          transition: color .18s ease, transform .02s ease-in-out, box-shadow .18s ease;
-          box-shadow: 0 2px 0 #000;
+          transition: background .18s ease, color .18s ease, transform .02s ease-in-out, box-shadow .18s ease;
+          box-shadow: 0 2px 0 #000;        /* subtle “raised” look */
         }
-        .cta:hover {
-          color: var(--platinum); /* text turns platinum */
+        /* Hover: whole button black, text platinum */
+        .cta:not(:disabled):hover{
+          background:#0a0a0a;             /* black */
+          color: var(--platinum);          /* platinum label */
           transform: translateY(-0.5px);
           box-shadow: 0 3px 0 #000;
         }
-        .cta:active { transform: translateY(0.5px); box-shadow: 0 1px 0 #000; }
-        .cta[disabled] { opacity: .6; cursor: not-allowed; }
+        /* Active press */
+        .cta:not(:disabled):active{
+          transform: translateY(0.5px);
+          box-shadow: 0 1px 0 #000;
+        }
+        /* Disabled */
+        .cta[disabled]{
+          background:#f3f4f6;
+          color:#9ca3af;
+          border-color:#e5e7eb;
+          box-shadow:none;
+          cursor:not-allowed;
+        }
+
+        .err{
+          margin-top: 6px;
+          color:#b91c1c;
+          font-weight:600;
+        }
+        .note{
+          margin-top: 6px;
+          color:#065f46;
+          font-weight:600;
+        }
       `}</style>
     </main>
   );
