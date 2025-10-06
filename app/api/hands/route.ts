@@ -1,19 +1,43 @@
+// app/api/hands/route.ts
+export const runtime = 'nodejs'; // <-- ensure Node runtime, not Edge
+
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
 function supa() {
+  const cookieStore = cookies();
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies }
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name: string, options: CookieOptions) {
+          cookieStore.set({ name, value: '', ...options });
+        },
+      },
+    }
   );
 }
 
 export async function GET() {
   const supabase = supa();
-  const { data: { user }, error: uerr } = await supabase.auth.getUser();
-  if (uerr || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const {
+    data: { user },
+    error: uerr,
+  } = await supabase.auth.getUser();
+
+  if (uerr || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   const { data, error } = await supabase
     .from('hands')
@@ -21,18 +45,27 @@ export async function GET() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
   return NextResponse.json({ ok: true, rows: data });
 }
 
 export async function POST(req: Request) {
   const supabase = supa();
-  const { data: { user }, error: uerr } = await supabase.auth.getUser();
-  if (uerr || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const body = await req.json();
+  const {
+    data: { user },
+    error: uerr,
+  } = await supabase.auth.getUser();
 
-  // Harden input: accept only the fields we store
+  if (uerr || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const body = await req.json().catch(() => ({} as any));
+
+  // Only accept the fields we store (avoid accidental extra props)
   const row = {
     user_id: user.id,
     date: body?.date ?? null,
@@ -54,6 +87,8 @@ export async function POST(req: Request) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
   return NextResponse.json({ ok: true, hand: data });
 }
