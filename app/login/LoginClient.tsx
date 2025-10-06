@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-// If your helper is at a different path, adjust this import:
+// Adjust the import path if your helper lives elsewhere
 import { createBrowserClient } from '@/lib/supabase/browser';
 
 type Mode = 'login' | 'register';
@@ -28,12 +28,15 @@ export default function LoginClient() {
       if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        router.replace('/'); // go home when signed-in
+        router.replace('/');
       } else {
+        // ✅ v2 syntax: redirect URL goes inside options
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
         });
         if (error) throw error;
         setMsg('Account created. Check your inbox for a verification link.');
@@ -150,9 +153,7 @@ export default function LoginClient() {
           align-items:center;
           justify-content:flex-start;
         }
-        .brandInner{
-          transform: translateY(2px);
-        }
+        .brandInner{ transform: translateY(2px); }
         .brandTitle{
           font-size: clamp(34px, 5.2vw, 52px);
           font-weight: 800;
@@ -167,14 +168,8 @@ export default function LoginClient() {
         }
 
         /* RIGHT panel */
-        .auth{
-          padding: 36px 34px 30px;
-        }
-        .tabs{
-          display:flex;
-          gap: 22px;
-          margin: 8px 0 18px;
-        }
+        .auth{ padding: 36px 34px 30px; }
+        .tabs{ display:flex; gap: 22px; margin: 8px 0 18px; }
         .tab{
           color:#0f172a;
           font-weight: 800;
@@ -185,10 +180,7 @@ export default function LoginClient() {
           cursor:pointer;
           border-bottom: 3px solid transparent;
         }
-        .tab.active{
-          border-color:#0f172a;
-        }
-        /* Remove the big blue focus ring; keep a subtle one */
+        .tab.active{ border-color:#0f172a; }
         .tab:focus{ outline:none; }
         .tab:focus-visible{
           outline:2px solid #94a3b8;
@@ -220,34 +212,30 @@ export default function LoginClient() {
           border-color: #c7d2fe;
         }
 
-        /* ==== Button states ==== */
-        /* Default: white background, black text */
+        /* Button states: default white+black; hover black+platinum */
         .cta{
           margin-top: 6px;
           border: 1px solid #111;
           background: #ffffff;
-          color: #0f172a;                 /* black/dark text by default */
+          color: #0f172a;
           padding: 14px 16px;
           border-radius: 12px;
           font-weight: 700;
           font-size: 16px;
           cursor: pointer;
           transition: background .18s ease, color .18s ease, transform .02s ease-in-out, box-shadow .18s ease;
-          box-shadow: 0 2px 0 #000;        /* subtle “raised” look */
+          box-shadow: 0 2px 0 #000;
         }
-        /* Hover: whole button black, text platinum */
         .cta:not(:disabled):hover{
-          background:#0a0a0a;             /* black */
-          color: var(--platinum);          /* platinum label */
+          background:#0a0a0a;
+          color: var(--platinum);
           transform: translateY(-0.5px);
           box-shadow: 0 3px 0 #000;
         }
-        /* Active press */
         .cta:not(:disabled):active{
           transform: translateY(0.5px);
           box-shadow: 0 1px 0 #000;
         }
-        /* Disabled */
         .cta[disabled]{
           background:#f3f4f6;
           color:#9ca3af;
@@ -256,16 +244,8 @@ export default function LoginClient() {
           cursor:not-allowed;
         }
 
-        .err{
-          margin-top: 6px;
-          color:#b91c1c;
-          font-weight:600;
-        }
-        .note{
-          margin-top: 6px;
-          color:#065f46;
-          font-weight:600;
-        }
+        .err{ margin-top: 6px; color:#b91c1c; font-weight:600; }
+        .note{ margin-top: 6px; color:#065f46; font-weight:600; }
       `}</style>
     </main>
   );
