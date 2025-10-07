@@ -1,0 +1,104 @@
+/* Everything is scoped under `.op-surface` so it never leaks globally */
+.op-surface {
+  /* design tokens (scoped variables) */
+  --ink:#0f172a;          /* near black text */
+  --muted:#6b7280;        /* secondary text */
+  --card:#ffffff;         /* white card */
+  --shade:#f5f5f5;        /* very light gray */
+  --border:#e6e6e6;       /* subtle borders */
+  --ring:#111111;         /* focus ring */
+  --shadow: 0 20px 70px rgba(0,0,0,.08);
+}
+
+/* Left gradient pane (matches login left panel) */
+.op-surface .ony-left-bg{
+  background: radial-gradient(1200px 400px at -200px -200px, #ffffff 0%, #f7f7f7 35%, #efefef 100%);
+}
+
+/* Cards/containers */
+.op-surface .ony-card{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+/* Inputs – only when you add .input-ony on the element */
+.op-surface .input-ony{
+  width:100%;
+  padding:14px 16px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:#fff;
+  color:var(--ink);
+  outline:none;
+  transition:border .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.op-surface .input-ony::placeholder{ color:#9ca3af; }
+.op-surface .input-ony:focus{
+  border-color:var(--ring);
+  box-shadow: 0 0 0 3px rgba(17,17,17,.12);
+}
+/* Autofill match (scoped) */
+.op-surface .input-ony:-webkit-autofill,
+.op-surface .input-ony:-webkit-autofill:hover,
+.op-surface .input-ony:-webkit-autofill:focus{
+  -webkit-text-fill-color: var(--ink);
+  caret-color: var(--ink);
+  box-shadow: 0 0 0px 1000px var(--shade) inset !important;
+  border:1px solid var(--border) !important;
+  transition: background-color 99999s ease-in-out 0s;
+}
+.op-surface .input-ony:-moz-ui-valid{
+  background-color: var(--shade) !important;
+}
+
+/* Buttons – same behavior as login “Sign in” */
+.op-surface .btn-ony{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.5rem;
+
+  margin-top: 6px;
+  padding: 14px 16px;
+  border-radius: 12px;
+
+  /* default look (light gray like the email shell) */
+  background: var(--shade);
+  color: var(--ink);
+  border: 1px solid var(--border);
+
+  font-weight: 800;
+  font-size: 16px;
+  cursor: pointer;
+
+  transition:
+    background .15s ease,
+    color .15s ease,
+    border-color .15s ease,
+    transform .02s ease-in-out,
+    box-shadow .15s ease;
+
+  box-shadow: 0 2px 0 rgba(0,0,0,.10);
+}
+.op-surface .btn-ony:hover{
+  background:#0a0a0a;
+  color:#ffffff;
+  border-color:#0a0a0a;
+  transform: translateY(-0.5px);
+  box-shadow: 0 3px 0 rgba(0,0,0,.25);
+}
+.op-surface .btn-ony:active{
+  transform: translateY(0.5px);
+  box-shadow: 0 1px 0 rgba(0,0,0,.15);
+}
+.op-surface .btn-ony[disabled]{
+  background:#f3f4f6;
+  color:#9ca3af;
+  border-color:#e5e7eb;
+  box-shadow:none;
+  cursor:not-allowed;
+}
+/* optional size variant */
+.op-surface .btn-ony--sm{ padding:10px 12px; font-size:14px; border-radius:10px; }
