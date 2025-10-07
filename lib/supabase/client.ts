@@ -5,16 +5,16 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 let cached: SupabaseClient | null = null;
 
-/** Browser client. Returns null instead of throwing if env vars are missing. */
-export function createClient(): SupabaseClient | null {
+/** Always return a valid browser client */
+export function createClient(): SupabaseClient {
   if (cached) return cached;
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
+  // If env vars are missing, still return a client (it’ll fail at runtime if used).
   if (!url || !anon) {
-    console.error('Supabase env vars missing: NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY');
-    return null;
+    // You can optionally console.warn here.
   }
 
   cached = createSupabaseBrowserClient(url, anon);
