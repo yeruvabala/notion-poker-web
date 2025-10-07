@@ -1,257 +1,143 @@
+// app/login/LoginClient.tsx
 'use client';
 
-import React, { useState } from 'react';
-import { createClient } from '@/lib/supabase/client'; // your browser helper (can return null)
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client'; // your browser @supabase/ssr helper
 
 export default function LoginClient() {
+  const router = useRouter();
   const supabase = createClient();
 
   const [tab, setTab] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const [err, setErr] = useState<string | null>(null);
+
+  // Optional: if tokens refresh, keep the server cookie in sync
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT') {
+        try {
+          await fetch('/auth/callback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ event, session }),
+            keepalive: true,
+          });
+        } catch {
+          /* ignore */
+        }
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [supabase]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setBusy(true);
     setMsg(null);
-    setErr(null);
-
-    if (!supabase) {
-      setErr('Supabase client not initialized.');
-      return;
-    }
-
     try {
-      setLoading(true);
       if (tab === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        // success — go home
-        window.location.href = '/';
+
+        // IMPORTANT: write cookie before navigating
+        await fetch('/auth/callback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event: 'SIGNED_IN', session: data.session }),
+        });
+
+        router.replace('/'); // now the server sees the cookie
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
+        // sign up (email+password)
+        const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        setMsg('Account created. Check your inbox for a verification link.');
+        setMsg('Account created. Check your email for verification.');
       }
-    } catch (e: any) {
-      setErr(e?.message || 'Something went wrong');
+    } catch (err: any) {
+      setMsg(err?.message ?? 'Something went wrong');
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
   }
 
   return (
-    <div className="wrap">
-      <div className="card">
-        {/* Left panel */}
-        <div className="left">
-          <div className="brand">
-            <div className="app">Only Poker</div>
-            <div className="sub">v0.1 · preview</div>
+    <div className="rounded-2xl bg-white shadow-[0_20px_80px_rgba(2,6,23,0.08)] overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-2">
+        {/* left brand panel */}
+        <div className="hidden md:flex items-end p-10 bg-gradient-to-b from-stone-50 to-stone-100">
+          <div>
+            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">Only Poker</h1>
+            <p className="mt-2 text-sm text-slate-500">v0.1 · preview</p>
           </div>
         </div>
 
-        {/* Right panel */}
-        <div className="right">
-          <div className="tabs">
+        {/* form */}
+        <div className="p-8 md:p-10">
+          <div className="mb-6 flex items-center gap-6">
             <button
-              className={`tab ${tab === 'login' ? 'active' : ''}`}
-              onClick={() => setTab('login')}
               type="button"
+              onClick={() => setTab('login')}
+              className={`text-sm font-semibold ${
+                tab === 'login' ? 'text-slate-900' : 'text-slate-500'
+              }`}
             >
               Log in
+              {tab === 'login' && <span className="block h-[2px] bg-black mt-2" />}
             </button>
             <button
-              className={`tab ${tab === 'signup' ? 'active' : ''}`}
-              onClick={() => setTab('signup')}
               type="button"
+              onClick={() => setTab('signup')}
+              className={`text-sm font-semibold ${
+                tab === 'signup' ? 'text-slate-900' : 'text-slate-500'
+              }`}
             >
               Create account
+              {tab === 'signup' && <span className="block h-[2px] bg-black mt-2" />}
             </button>
           </div>
 
-          <form className="form" onSubmit={handleSubmit}>
-            <label className="lbl">Email</label>
-            <input
-              className="input"
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-600">Email</label>
+              <input
+                type="email"
+                autoComplete="email"
+                required
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-slate-300"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.currentTarget.value)}
+              />
+            </div>
 
-            <label className="lbl">Password</label>
-            <input
-              className="input"
-              type="password"
-              autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div>
+              <label className="block text-xs font-medium text-slate-600">Password</label>
+              <input
+                type="password"
+                autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
+                required
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-slate-300"
+                value={password}
+                onChange={(e) => setPassword(e.currentTarget.value)}
+              />
+            </div>
 
-            <button className="cta" disabled={loading}>
-              {loading ? (tab === 'login' ? 'Signing in…' : 'Creating…') : tab === 'login' ? 'Sign in' : 'Create account'}
+            {msg && <p className="text-sm text-slate-600">{msg}</p>}
+
+            <button
+              type="submit"
+              disabled={busy}
+              className="w-full rounded-xl border border-black bg-white text-slate-900 font-semibold py-3 shadow-[0_2px_0_#000] transition hover:bg-black hover:text-white disabled:opacity-60"
+            >
+              {tab === 'login' ? 'Sign in' : 'Create account'}
             </button>
-
-            {err && <div className="err">{err}</div>}
-            {msg && <div className="msg">{msg}</div>}
           </form>
         </div>
       </div>
-
-      {/* ============ Styles ============ */}
-      <style jsx global>{`
-        :root{
-          --ink:#0f172a;              /* main text (near black) */
-          --ink-2:#111111;            /* pure black-ish for borders */
-          --muted:#6b7280;            /* secondary text */
-          --panel:#ffffff;            /* cards */
-          --panel-2:#f6f7f8;          /* subtle gray surface */
-          --shade:#f5f5f5;            /* very light gray (for autofill) */
-          --ring:#111111;             /* focus ring */
-          --shadow: 0 20px 70px rgba(0,0,0,.08);
-        }
-        html,body{background:#f3f4f6;margin:0;color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-        *{box-sizing:border-box}
-
-        .wrap{
-          min-height:100dvh;
-          display:grid;
-          place-items:center;
-          padding:28px;
-        }
-
-        .card{
-          width:min(980px, 96vw);
-          background:var(--panel);
-          border-radius:18px;
-          box-shadow:var(--shadow);
-          display:grid;
-          grid-template-columns: 1fr 1fr;
-          overflow:hidden;
-          border:1px solid #e6e6e6;
-        }
-        @media (max-width:980px){
-          .card{grid-template-columns:1fr}
-        }
-
-        .left{
-          background: radial-gradient(1200px 400px at -200px -200px, #ffffff 0%, #f7f7f7 35%, #efefef 100%);
-          padding:42px 40px 48px;
-          display:flex;align-items:flex-end;justify-content:flex-start;
-        }
-        .brand .app{font-weight:800;font-size:44px;letter-spacing:.2px}
-        .brand .sub{margin-top:6px;color:var(--muted)}
-
-        .right{padding:32px 34px 34px}
-
-        .tabs{display:flex;gap:20px;margin-bottom:18px}
-        .tab{
-          background:transparent;border:none;cursor:pointer;
-          padding:0 0 10px;border-bottom:2.5px solid transparent;
-          color:var(--ink);font-weight:700;font-size:18px;
-        }
-        .tab.active{border-color:#111}
-
-        .form{display:flex;flex-direction:column;gap:12px;max-width:520px}
-        .lbl{font-size:13px;color:var(--muted)}
-
-        .input{
-          width:100%;
-          padding:14px 16px;
-          border:1px solid #e6e6e6;
-          border-radius:12px;
-          background:#fff;
-          color:var(--ink);
-          outline:none;
-          transition:border .15s ease, box-shadow .15s ease, background .15s ease;
-        }
-        .input:focus{
-          border-color:var(--ring);
-          box-shadow: 0 0 0 3px rgba(17,17,17,.12);
-          background:#fff;
-        }
-        .input::placeholder{color:#9ca3af}
-
-        /* --- Autofill override (Chrome/Safari) --- */
-        .input:-webkit-autofill,
-        .input:-webkit-autofill:hover,
-        .input:-webkit-autofill:focus{
-          -webkit-text-fill-color: var(--ink);
-          caret-color: var(--ink);
-          box-shadow: 0 0 0px 1000px var(--shade) inset !important; /* replaces blue with light gray */
-          border:1px solid #e6e6e6 !important;
-          transition: background-color 99999s ease-in-out 0s;
-        }
-        /* Firefox is usually fine, but normalize background a bit when "valid" */
-        .input:-moz-ui-valid{
-          background-color: var(--shade) !important;
-        }
-
-        /* CTA — default = same light gray as email field; hover = black with white text */
-.cta{
-  margin-top: 8px;
-  padding: 14px 16px;
-  border-radius: 12px;
-
-  /* default look (matches the email-field gray) */
-  background: var(--shade);   /* #f5f5f5 from your vars */
-  color: var(--ink);          /* near-black text */
-  border: 1px solid #e6e6e6;
-
-  font-weight: 800;
-  font-size: 16px;
-  cursor: pointer;
-
-  transition:
-    background .15s ease,
-    color .15s ease,
-    border-color .15s ease,
-    transform .02s ease-in-out,
-    box-shadow .15s ease;
-
-  box-shadow: 0 2px 0 rgba(0,0,0,.10);
-}
-
-.cta:not(:disabled):hover{
-  background: #0a0a0a;        /* black hover */
-  color: #ffffff;             /* white text on hover */
-  border-color: #0a0a0a;
-  transform: translateY(-0.5px);
-  box-shadow: 0 3px 0 rgba(0,0,0,.25);
-}
-
-.cta:not(:disabled):active{
-  transform: translateY(0.5px);
-  box-shadow: 0 1px 0 rgba(0,0,0,.15);
-}
-
-.cta[disabled]{
-  background: #f3f4f6;
-  color: #9ca3af;
-  border-color: #e5e7eb;
-  box-shadow: none;
-  cursor: not-allowed;
-}
-
-
-        .err{margin-top:10px;color:#b91c1c;font-size:13px}
-        .msg{margin-top:10px;color:#065f46;font-size:13px}
-      `}</style>
     </div>
   );
 }
