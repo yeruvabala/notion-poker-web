@@ -1,78 +1,67 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@/lib/supabase/browser';
-
-type Mode = 'login' | 'register';
+import React, { useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function LoginClient() {
-  const supabase = useMemo(() => createBrowserClient(), []);
-  const router = useRouter();
+  const supabase = createClient();
 
-  const [mode, setMode] = useState<Mode>('login');
+  const [tab, setTab] = useState<'login'|'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [working, setWorking] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setErr(null);
-    setMsg(null);
-    setLoading(true);
+    setErr(null); setMsg(null); setWorking(true);
     try {
-      if (mode === 'login') {
+      if (tab === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        router.replace('/');
+        window.location.href = '/';
       } else {
         const { error } = await supabase.auth.signUp({
           email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-          },
+          password
+          // If you use email confirmation, configure in Supabase dashboard.
         });
         if (error) throw error;
         setMsg('Account created. Check your inbox for a verification link.');
-        setMode('login');
       }
     } catch (e: any) {
-      setErr(e?.message || 'Authentication failed');
+      setErr(e?.message || 'Auth failed');
     } finally {
-      setLoading(false);
+      setWorking(false);
     }
   }
 
-  const canSubmit = email.trim().length > 3 && password.length >= 6 && !loading;
-
   return (
-    <main className="loginWrap">
-      <div className="box">
-        {/* LEFT brand panel */}
-        <div className="brand">
-          <div className="brandInner">
-            <div className="brandTitle">Only Poker</div>
-            <div className="brandSub">v0.1 · preview</div>
+    <div className="auth">
+      <div className="card">
+        {/* LEFT brand area */}
+        <div className="left">
+          <div className="brand">
+            <div className="title">Only Poker</div>
+            <div className="subtle">v0.1 · preview</div>
           </div>
         </div>
 
-        {/* RIGHT auth panel */}
-        <div className="auth">
+        {/* RIGHT form */}
+        <div className="right">
           <div className="tabs">
             <button
               type="button"
-              className={`tab ${mode === 'login' ? 'active' : ''}`}
-              onClick={() => setMode('login')}
+              onClick={() => setTab('login')}
+              className={`t ${tab === 'login' ? 'active' : ''}`}
             >
               Log in
             </button>
             <button
               type="button"
-              className={`tab ${mode === 'register' ? 'active' : ''}`}
-              onClick={() => setMode('register')}
+              onClick={() => setTab('signup')}
+              className={`t ${tab === 'signup' ? 'active' : ''}`}
             >
               Create account
             </button>
@@ -81,176 +70,168 @@ export default function LoginClient() {
           <form onSubmit={onSubmit} className="form">
             <label className="lbl">Email</label>
             <input
+              className="in"
               type="email"
-              className="input"
-              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
               autoComplete="email"
+              required
             />
 
             <label className="lbl">Password</label>
             <input
+              className="in"
               type="password"
-              className="input"
-              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              placeholder="••••••••"
+              autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
+              required
             />
 
-            <button className="cta" disabled={!canSubmit}>
-              {mode === 'login' ? (loading ? 'Signing in…' : 'Sign in') : (loading ? 'Creating…' : 'Create account')}
+            <button className="cta" disabled={working}>
+              {tab === 'login' ? 'Sign in' : 'Create account'}
             </button>
 
             {err && <div className="err">{err}</div>}
-            {msg && <div className="note">{msg}</div>}
+            {msg && <div className="msg">{msg}</div>}
           </form>
         </div>
       </div>
 
+      {/* SCOPED styles */}
       <style jsx>{`
-        :root{
-          --card:#ffffff;
-          --line:#e5e7eb;
-          --text:#0f172a;
-          --muted:#6b7280;
-          --brandGrad: radial-gradient(1200px 700px at -10% -30%, #eef2ff 0%, #ffffff 55%);
-          --platinum:#E5E4E2;
-          --shadow: 0 40px 120px rgba(0,0,0,.10), 0 4px 18px rgba(0,0,0,.05);
-        }
-        html,body{background:#f5f7fb;color:var(--text);height:100%}
-        /* Center everything on the page */
-        .loginWrap{
-          display:grid;
-          place-items:center;
-          min-height:100dvh;
-          padding:24px;
-        }
-        .box{
-          width: min(1000px, 94vw);
-          display:grid;
-          grid-template-columns: 1.05fr 1fr;
-          border-radius:26px;
-          background:var(--card);
-          box-shadow: var(--shadow);
-          overflow:hidden;
-          border:1px solid var(--line);
-        }
-        @media (max-width: 980px){
-          .box{ grid-template-columns: 1fr; }
-          .brand{ min-height: 140px; }
-        }
+        :root { --platinum: #e5e4e2; }
 
-        /* LEFT panel */
-        .brand{
-          background: var(--brandGrad);
-          padding: 56px 54px;
-          display:flex;
-          align-items:center;
-          justify-content:flex-start;
+        .auth{
+          min-height: 100svh;
+          display: grid;
+          place-items: center;
+          background: #f6f7fb;
+          padding: 24px;
         }
-        .brandInner{ transform: translateY(2px); }
-        .brandTitle{
-          font-size: clamp(34px, 3.8vw, 46px);
+        .card{
+          width: min(980px, 92vw);
+          display: grid;
+          grid-template-columns: 1.1fr 1fr;
+          gap: 0;
+          border-radius: 22px;
+          background: #fff;
+          box-shadow: 0 25px 50px rgba(16,24,40,.08), 0 6px 12px rgba(16,24,40,.06);
+          overflow: hidden;
+        }
+        @media (max-width: 900px){
+          .card{ grid-template-columns: 1fr; }
+          .left{ display: none; }
+        }
+        .left{
+          background: linear-gradient(180deg, #f9fafb 0%, #eef2ff 100%);
+          padding: 56px 56px 80px;
+          display: flex;
+          align-items: flex-end;
+          justify-content: flex-start;
+        }
+        .brand .title{
+          font-size: 44px; /* toned down */
           font-weight: 800;
           letter-spacing: -0.02em;
-          color:#0f172a;
+          color: #0f172a;
         }
-        .brandSub{
-          margin-top: 10px;
-          color: var(--muted);
-          font-size: 15px;
-          font-weight: 600;
+        .brand .subtle{
+          margin-top: 8px;
+          color: #6b7280;
+          font-size: 14px;
         }
-
-        /* RIGHT panel */
-        .auth{ padding: 36px 34px 30px; }
-        .tabs{ display:flex; gap: 22px; margin: 8px 0 18px; }
-        .tab{
-          color:#0f172a;
-          font-weight: 800;
-          font-size: 18px;
-          background:transparent;
-          border:none;
-          padding: 8px 2px;
-          cursor:pointer;
-          border-bottom: 3px solid transparent;
+        .right{
+          padding: 40px 40px 46px;
         }
-        .tab.active{ border-color:#0f172a; }
-        .tab:focus{ outline:none; }
-        .tab:focus-visible{
-          outline:2px solid #94a3b8;
-          outline-offset:2px;
-          border-radius:6px;
+        .tabs{
+          display: flex;
+          gap: 22px;
+          margin-bottom: 16px;
         }
-
+        .t{
+          all: unset;
+          cursor: pointer;
+          color: #111827;
+          font-weight: 700;
+          padding-bottom: 8px;
+          border-bottom: 2px solid transparent;
+        }
+        .t.active{
+          border-color: #0b62ff;
+        }
         .form{
-          display:grid;
-          grid-template-columns: 1fr;
+          display: grid;
           gap: 10px;
-          margin-top: 10px;
+          margin-top: 6px;
         }
         .lbl{
-          margin-top: 8px;
-          font-size: 14px;
-          color:#111827;
-          font-weight: 700;
+          font-size: 13px;
+          color: #374151;
+          font-weight: 600;
         }
-        .input{
-          border:1px solid var(--line);
+        .in{
+          width: 100%;
+          border: 1px solid #e5e7eb;
+          background: #fff;
+          padding: 12px 14px;
           border-radius: 12px;
-          padding: 14px 14px;
-          font-size: 16px;
-          background:#fff;
+          font-size: 15px;
+          color: #111827;
+          outline: none;
         }
-        .input:focus{
-          outline: 3px solid #c7d2fe;
+        .in:focus{
           border-color: #c7d2fe;
+          box-shadow: 0 0 0 4px rgba(99,102,241,.12);
         }
 
-        /* Force default (idle) look: white bg + dark text */
-.auth .cta{
-  appearance: none;
-  background:#ffffff !important;
-  color:#0f172a !important;
-  border:1px solid #111 !important;
-  padding:14px 16px;
-  border-radius:12px;
-  font-weight:700;
-  font-size:16px;
-  cursor:pointer;
-  transition: background .18s ease, color .18s ease, transform .02s ease-in-out, box-shadow .18s ease;
-  box-shadow:0 2px 0 #000;
-}
+        /* ====== HARD RESET THE CTA then rebuild ====== */
+        .cta{
+          all: unset;                    /* wipe any global button styles */
+          display: block;
+          width: 100%;
+          box-sizing: border-box;
+          text-align: center;
+          user-select: none;
+          /* default (idle): white bg + dark text + black border */
+          background: #ffffff !important;
+          color: #0f172a !important;
+          border: 1px solid #111 !important;
+          padding: 14px 16px;
+          border-radius: 12px;
+          font-weight: 700;
+          font-size: 16px;
+          cursor: pointer;
+          transition: background .18s ease, color .18s ease, transform .02s ease-in-out, box-shadow .18s ease, border-color .18s ease;
+          box-shadow: 0 2px 0 #000;
+        }
+        /* Hover (enabled): full black + platinum text */
+        .cta:not(:disabled):hover{
+          background: #0a0a0a !important;
+          color: var(--platinum) !important;
+          transform: translateY(-0.5px);
+          box-shadow: 0 3px 0 #000;
+          border-color: #0a0a0a !important;
+        }
+        /* Active press effect */
+        .cta:not(:disabled):active{
+          transform: translateY(0.5px);
+          box-shadow: 0 1px 0 #000;
+        }
+        /* Disabled: light gray; never turns black */
+        .cta[disabled]{
+          background: #f3f4f6 !important;
+          color: #9ca3af !important;
+          border-color: #e5e7eb !important;
+          box-shadow: none !important;
+          cursor: not-allowed !important;
+        }
 
-/* Hover: full black + platinum text (while enabled) */
-.auth .cta:not(:disabled):hover{
-  background:#0a0a0a !important;
-  color:var(--platinum) !important; /* #E5E4E2 from your :root */
-  transform:translateY(-0.5px);
-  box-shadow:0 3px 0 #000;
-}
-
-/* Active press effect */
-.auth .cta:not(:disabled):active{
-  transform:translateY(0.5px);
-  box-shadow:0 1px 0 #000;
-}
-
-/* Disabled: light gray; do NOT turn black */
-.auth .cta[disabled]{
-  background:#f3f4f6 !important;
-  color:#9ca3af !important;
-  border-color:#e5e7eb !important;
-  box-shadow:none !important;
-  cursor:not-allowed !important;
-}
-
-
-        .err{ margin-top: 6px; color:#b91c1c; font-weight:600; }
-        .note{ margin-top: 6px; color:#065f46; font-weight:600; }
+        .err{ margin-top: 10px; color: #b91c1c; font-size: 14px; }
+        .msg{ margin-top: 10px; color: #166534; font-size: 14px; }
       `}</style>
-    </main>
+    </div>
   );
 }
