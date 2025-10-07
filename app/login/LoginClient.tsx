@@ -1,66 +1,113 @@
 'use client';
 
-import React, { useState } from 'react';
-import { createClient } from '@/lib/supabase/client'; // your browser helper (can return null)
+import { useState } from 'react';
+import type { FormEvent } from 'react';
+import { createClient } from '@/lib/supabase/client'; // <- adjust path if different
 
+/* ---------- Suits (SVG) ---------- */
+function Spade({ size = 56 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden fill="#0f172a">
+      <path d="M12 2c-3.8 3.9-8 6.8-8 10.4A3.6 3.6 0 0 0 7.7 16c.8 0 1.5-.3 2.1-.7-.2.9-.7 2-1.7 3.1-.2.2-.1.6.2.6h7.4c.3 0 .4-.4.2-.6-1-1.1-1.5-2.2-1.7-3.1.6.4 1.3.7 2.1.7a3.6 3.6 0 0 0 3.7-3.6C20 8.8 15.8 5.9 12 2Z"/>
+    </svg>
+  );
+}
+function Heart({ size = 56 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden fill="#0f172a">
+      <path d="M12 21s-7.5-5.6-9.6-9C1.2 9.3 2 6.5 4.6 5.3 6.6 4.4 8.9 5 10.3 6.7L12 8.6l1.7-1.9C15.1 5 17.4 4.4 19.4 5.3 22 6.5 22.8 9.3 21.6 12c-2.1 3.4-9.6 9-9.6 9Z"/>
+    </svg>
+  );
+}
+function Club({ size = 56 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden fill="#0f172a">
+      <path d="M12 9a3.5 3.5 0 1 1 3.3-4.6A3.5 3.5 0 1 1 20 12a3.5 3.5 0 0 1-4.4 3.3c.2.9.7 2.1 1.6 3.2.2.2.1.5-.2.5h-9c-.3 0-.4-.3-.2-.5.9-1.1 1.4-2.3 1.6-3.2A3.5 3.5 0 1 1 12 9Zm-1.4 8h2.8c-.3-1.3-.6-2.7-.6-3.6h-1.6c0 .9-.3 2.3-.6 3.6Z"/>
+    </svg>
+  );
+}
+function Diamond({ size = 56 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden fill="#0f172a">
+      <path d="M12 2 4 12l8 10 8-10-8-10Z"/>
+    </svg>
+  );
+}
+
+function SuitsRow() {
+  return (
+    <div className="suitsRow" aria-hidden>
+      <Spade />
+      <Heart />
+      <Club />
+      <Diamond />
+      <style jsx>{`
+        .suitsRow{
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          gap: 22px;
+          margin: 18px 0 8px;
+          user-select:none;
+        }
+        @media (max-width: 640px){
+          .suitsRow{ gap:14px; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+/* ---------- Login Client ---------- */
 export default function LoginClient() {
-  const supabase = createClient();
-
+  const supabase = createClient(); // your helper returns SupabaseClient | null
   const [tab, setTab] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const [err, setErr] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setMsg(null);
-    setErr(null);
-
     if (!supabase) {
-      setErr('Supabase client not initialized.');
+      setMsg('Supabase is not configured.');
       return;
     }
-
     try {
-      setLoading(true);
+      setBusy(true);
       if (tab === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        // success — go home
         window.location.href = '/';
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
+        const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        setMsg('Account created. Check your inbox for a verification link.');
+        setMsg('Account created. Check your inbox to verify, then log in.');
       }
-    } catch (e: any) {
-      setErr(e?.message || 'Something went wrong');
+    } catch (err: any) {
+      setMsg(err?.message || 'Something went wrong.');
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
   }
 
   return (
     <div className="wrap">
+      {/* Suits row above the card */}
+      <SuitsRow />
+
       <div className="card">
-        {/* Left panel */}
+        {/* Left column */}
         <div className="left">
           <div className="brand">
-            <div className="app">Only Poker</div>
-            <div className="sub">v0.1 · preview</div>
+            <h1>Only Poker</h1>
+            <p>v0.1 · preview</p>
           </div>
+          <div className="leftFade" />
         </div>
 
-        {/* Right panel */}
+        {/* Right column */}
         <div className="right">
           <div className="tabs">
             <button
@@ -79,178 +126,201 @@ export default function LoginClient() {
             </button>
           </div>
 
-          <form className="form" onSubmit={handleSubmit}>
-            <label className="lbl">Email</label>
+          <form onSubmit={onSubmit} className="form">
+            <label className="label">Email</label>
             <input
               className="input"
               type="email"
-              inputMode="email"
               autoComplete="email"
-              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              placeholder="you@example.com"
             />
 
-            <label className="lbl">Password</label>
+            <label className="label">Password</label>
             <input
               className="input"
               type="password"
               autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
-              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              placeholder="••••••••"
             />
 
-            <button className="cta" disabled={loading}>
-              {loading ? (tab === 'login' ? 'Signing in…' : 'Creating…') : tab === 'login' ? 'Sign in' : 'Create account'}
-            </button>
-
-            {err && <div className="err">{err}</div>}
             {msg && <div className="msg">{msg}</div>}
+
+            <button className="cta" disabled={busy}>
+              {tab === 'login' ? 'Sign in' : 'Create account'}
+            </button>
           </form>
         </div>
       </div>
 
-      {/* ============ Styles ============ */}
-      <style jsx global>{`
+      <style jsx>{`
         :root{
-          --ink:#0f172a;              /* main text (near black) */
-          --ink-2:#111111;            /* pure black-ish for borders */
-          --muted:#6b7280;            /* secondary text */
-          --panel:#ffffff;            /* cards */
-          --panel-2:#f6f7f8;          /* subtle gray surface */
-          --shade:#f5f5f5;            /* very light gray (for autofill) */
-          --ring:#111111;             /* focus ring */
-          --shadow: 0 20px 70px rgba(0,0,0,.08);
+          --ink:#0f172a;         /* near black */
+          --ink-weak:#111827;    /* darker for borders */
+          --ink-soft:#1f2937;    /* softer text if needed */
+          --paper:#ffffff;
+          --paper-weak:#f8fafc;
+          --paper-tint:#f3f4f6;  /* soft black-tinted background */
         }
-        html,body{background:#f3f4f6;margin:0;color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-        *{box-sizing:border-box}
 
         .wrap{
           min-height:100dvh;
-          display:grid;
-          place-items:center;
-          padding:28px;
+          display:flex;
+          flex-direction:column;
+          align-items:center;
+          justify-content:flex-start;
+          background:#f6f7f9;
+          padding:40px 16px 56px;
         }
 
         .card{
-          width:min(980px, 96vw);
-          background:var(--panel);
-          border-radius:18px;
-          box-shadow:var(--shadow);
-          display:grid;
-          grid-template-columns: 1fr 1fr;
+          width: min(980px, 95vw);
+          border-radius:22px;
+          background:var(--paper);
+          box-shadow:
+            0 40px 100px rgba(15,23,42,.10),
+            0 10px 20px rgba(15,23,42,.04);
           overflow:hidden;
-          border:1px solid #e6e6e6;
-        }
-        @media (max-width:980px){
-          .card{grid-template-columns:1fr}
+          display:grid;
+          grid-template-columns: 1.1fr 1fr;
+          gap:0;
         }
 
+        /* Left */
         .left{
-          background: radial-gradient(1200px 400px at -200px -200px, #ffffff 0%, #f7f7f7 35%, #efefef 100%);
-          padding:42px 40px 48px;
-          display:flex;align-items:flex-end;justify-content:flex-start;
+          position:relative;
+          padding:40px 46px;
+          background: linear-gradient(180deg,#fff 0%, #f7f8fa 50%, #f4f5f7 100%);
         }
-        .brand .app{font-weight:800;font-size:44px;letter-spacing:.2px}
-        .brand .sub{margin-top:6px;color:var(--muted)}
+        .brand h1{
+          font-size:40px;
+          line-height:1.1;
+          margin: 12px 0 8px;
+          color:var(--ink);
+          font-weight:800;
+          letter-spacing:-.02em;
+        }
+        .brand p{
+          margin:0;
+          color:#6b7280;
+          font-weight:500;
+        }
+        .leftFade{
+          position:absolute;
+          inset:auto 0 0 0;
+          height:120px;
+          background: radial-gradient(80% 60% at 50% 120%, rgba(0,0,0,0.06), transparent 60%);
+          pointer-events:none;
+        }
 
-        .right{padding:32px 34px 34px}
-
-        .tabs{display:flex;gap:20px;margin-bottom:18px}
+        /* Right */
+        .right{
+          padding:28px 28px 32px;
+          background:var(--paper);
+        }
+        .tabs{
+          display:flex;
+          gap:18px;
+          margin: 4px 0 18px;
+        }
         .tab{
-          background:transparent;border:none;cursor:pointer;
-          padding:0 0 10px;border-bottom:2.5px solid transparent;
-          color:var(--ink);font-weight:700;font-size:18px;
+          position:relative;
+          appearance:none;
+          background:transparent;
+          border:0;
+          padding:6px 6px 10px;
+          font-weight:700;
+          color:var(--ink);
+          cursor:pointer;
         }
-        .tab.active{border-color:#111}
+        .tab.active::after{
+          content:'';
+          position:absolute;
+          left:0; right:0; bottom:0;
+          height:3px;
+          background:var(--ink);   /* black underline */
+          border-radius:2px;
+        }
 
-        .form{display:flex;flex-direction:column;gap:12px;max-width:520px}
-        .lbl{font-size:13px;color:var(--muted)}
-
+        .form{
+          display:flex;
+          flex-direction:column;
+          gap:14px;
+          margin-top:6px;
+        }
+        .label{
+          font-size:14px;
+          font-weight:700;
+          color:var(--ink);
+        }
         .input{
-          width:100%;
           padding:14px 16px;
-          border:1px solid #e6e6e6;
           border-radius:12px;
-          background:#fff;
+          border:1px solid #e5e7eb;
+          background:#f1f2f4;         /* soft blackish (no blue) */
           color:var(--ink);
           outline:none;
-          transition:border .15s ease, box-shadow .15s ease, background .15s ease;
+          transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
         }
         .input:focus{
-          border-color:var(--ring);
-          box-shadow: 0 0 0 3px rgba(17,17,17,.12);
-          background:#fff;
-        }
-        .input::placeholder{color:#9ca3af}
-
-        /* --- Autofill override (Chrome/Safari) --- */
-        .input:-webkit-autofill,
-        .input:-webkit-autofill:hover,
-        .input:-webkit-autofill:focus{
-          -webkit-text-fill-color: var(--ink);
-          caret-color: var(--ink);
-          box-shadow: 0 0 0px 1000px var(--shade) inset !important; /* replaces blue with light gray */
-          border:1px solid #e6e6e6 !important;
-          transition: background-color 99999s ease-in-out 0s;
-        }
-        /* Firefox is usually fine, but normalize background a bit when "valid" */
-        .input:-moz-ui-valid{
-          background-color: var(--shade) !important;
+          border-color:#1f2937;
+          box-shadow:0 0 0 3px rgba(17,24,39,.12);
+          background:#eef0f2;
         }
 
-        /* CTA — default = same light gray as email field; hover = black with white text */
-.cta{
-  margin-top: 8px;
-  padding: 14px 16px;
-  border-radius: 12px;
+        /* CTA: starts soft-black like the email box, hover = full black + white text */
+        .cta{
+          margin-top:6px;
+          border:1px solid #0b0b0b;
+          background:#171717;        /* soft black */
+          color:#f9fafb;              /* white-ish */
+          padding:14px 16px;
+          border-radius:12px;
+          font-weight:800;
+          font-size:16px;
+          cursor:pointer;
+          transition:background .18s ease, color .18s ease, transform .02s ease-in-out, box-shadow .18s ease;
+          box-shadow: 0 2px 0 #000;
+        }
+        .cta:not(:disabled):hover{
+          background:#0a0a0a;        /* full black on hover */
+          color:#ffffff;
+          transform: translateY(-0.5px);
+          box-shadow: 0 3px 0 #000;
+        }
+        .cta:not(:disabled):active{
+          transform: translateY(0.5px);
+          box-shadow: 0 1px 0 #000;
+        }
+        .cta[disabled]{
+          background:#e5e7eb;
+          color:#9ca3af;
+          border-color:#e5e7eb;
+          box-shadow:none;
+          cursor:not-allowed;
+        }
 
-  /* default look (matches the email-field gray) */
-  background: var(--shade);   /* #f5f5f5 from your vars */
-  color: var(--ink);          /* near-black text */
-  border: 1px solid #e6e6e6;
+        .msg{
+          margin-top:2px;
+          padding:10px 12px;
+          border-radius:10px;
+          background:#f8fafc;
+          color:#0f172a;
+          border:1px solid #e5e7eb;
+          font-size:14px;
+        }
 
-  font-weight: 800;
-  font-size: 16px;
-  cursor: pointer;
-
-  transition:
-    background .15s ease,
-    color .15s ease,
-    border-color .15s ease,
-    transform .02s ease-in-out,
-    box-shadow .15s ease;
-
-  box-shadow: 0 2px 0 rgba(0,0,0,.10);
-}
-
-.cta:not(:disabled):hover{
-  background: #0a0a0a;        /* black hover */
-  color: #ffffff;             /* white text on hover */
-  border-color: #0a0a0a;
-  transform: translateY(-0.5px);
-  box-shadow: 0 3px 0 rgba(0,0,0,.25);
-}
-
-.cta:not(:disabled):active{
-  transform: translateY(0.5px);
-  box-shadow: 0 1px 0 rgba(0,0,0,.15);
-}
-
-.cta[disabled]{
-  background: #f3f4f6;
-  color: #9ca3af;
-  border-color: #e5e7eb;
-  box-shadow: none;
-  cursor: not-allowed;
-}
-
-
-        .err{margin-top:10px;color:#b91c1c;font-size:13px}
-        .msg{margin-top:10px;color:#065f46;font-size:13px}
+        /* layout tweaks */
+        @media (max-width: 940px){
+          .card{ grid-template-columns: 1fr; }
+          .left{ padding:28px 28px 22px; }
+          .brand h1{ font-size:34px; }
+        }
       `}</style>
     </div>
   );
