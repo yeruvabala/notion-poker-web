@@ -2,8 +2,6 @@
 
 import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-// Adjust the import path if your helper lives elsewhere
 import { createBrowserClient } from '@/lib/supabase/browser';
 
 type Mode = 'login' | 'register';
@@ -30,7 +28,6 @@ export default function LoginClient() {
         if (error) throw error;
         router.replace('/');
       } else {
-        // ✅ v2 syntax: redirect URL goes inside options
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -122,16 +119,16 @@ export default function LoginClient() {
           --platinum:#E5E4E2;
           --shadow: 0 40px 120px rgba(0,0,0,.10), 0 4px 18px rgba(0,0,0,.05);
         }
-        html,body{background:#f5f7fb;color:var(--text)}
+        html,body{background:#f5f7fb;color:var(--text);height:100%}
+        /* Center everything on the page */
         .loginWrap{
-          padding:48px 20px;
-          display:flex;
-          justify-content:center;
-          align-items:flex-start;
+          display:grid;
+          place-items:center;
           min-height:100dvh;
+          padding:24px;
         }
         .box{
-          width: min(1080px, 95vw);
+          width: min(1000px, 94vw);
           display:grid;
           grid-template-columns: 1.05fr 1fr;
           border-radius:26px;
@@ -155,7 +152,7 @@ export default function LoginClient() {
         }
         .brandInner{ transform: translateY(2px); }
         .brandTitle{
-          font-size: clamp(34px, 5.2vw, 52px);
+          font-size: clamp(34px, 3.8vw, 46px);
           font-weight: 800;
           letter-spacing: -0.02em;
           color:#0f172a;
@@ -163,8 +160,8 @@ export default function LoginClient() {
         .brandSub{
           margin-top: 10px;
           color: var(--muted);
-          font-size: 16px;
-          font-weight: 500;
+          font-size: 15px;
+          font-weight: 600;
         }
 
         /* RIGHT panel */
@@ -212,7 +209,7 @@ export default function LoginClient() {
           border-color: #c7d2fe;
         }
 
-        /* Button states: default white+black; hover black+platinum */
+        /* CTA: default white text on white background, black border; hover -> full black background + platinum text */
         .cta{
           margin-top: 6px;
           border: 1px solid #111;
@@ -228,7 +225,7 @@ export default function LoginClient() {
         }
         .cta:not(:disabled):hover{
           background:#0a0a0a;
-          color: var(--platinum);
+          color: var(--platinum) !important;
           transform: translateY(-0.5px);
           box-shadow: 0 3px 0 #000;
         }
