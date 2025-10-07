@@ -1,69 +1,77 @@
 'use client';
 
 import React, { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client'; // your browser helper (can return null)
 
 export default function LoginClient() {
-  const supabase = createClient(); // may be null in rare misconfig; we guard below
+  const supabase = createClient();
 
   const [tab, setTab] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+
+  const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  async function onSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
     setErr(null);
 
     if (!supabase) {
-      setErr('Supabase client not initialized. Check env vars.');
+      setErr('Supabase client not initialized.');
       return;
     }
 
     try {
-      setSubmitting(true);
-
+      setLoading(true);
       if (tab === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
         if (error) throw error;
+        // success — go home
         window.location.href = '/';
       } else {
-        // Email-link verification (no Google)
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+        });
         if (error) throw error;
         setMsg('Account created. Check your inbox for a verification link.');
       }
     } catch (e: any) {
       setErr(e?.message || 'Something went wrong');
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   }
 
   return (
-    <div className="shell">
+    <div className="wrap">
       <div className="card">
-        {/* Left side */}
+        {/* Left panel */}
         <div className="left">
-          <div className="brand">Only Poker</div>
-          <div className="version">v0.1 · preview</div>
+          <div className="brand">
+            <div className="app">Only Poker</div>
+            <div className="sub">v0.1 · preview</div>
+          </div>
         </div>
 
-        {/* Right side */}
+        {/* Right panel */}
         <div className="right">
           <div className="tabs">
             <button
-              className={`tabBtn ${tab === 'login' ? 'active' : ''}`}
+              className={`tab ${tab === 'login' ? 'active' : ''}`}
               onClick={() => setTab('login')}
               type="button"
             >
               Log in
             </button>
             <button
-              className={`tabBtn ${tab === 'signup' ? 'active' : ''}`}
+              className={`tab ${tab === 'signup' ? 'active' : ''}`}
               onClick={() => setTab('signup')}
               type="button"
             >
@@ -71,194 +79,156 @@ export default function LoginClient() {
             </button>
           </div>
 
-          <form onSubmit={onSubmit} className="form">
+          <form className="form" onSubmit={handleSubmit}>
             <label className="lbl">Email</label>
             <input
-              type="email"
               className="input"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
               placeholder="you@example.com"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               required
-              autoComplete="email"
             />
 
             <label className="lbl">Password</label>
             <input
-              type="password"
               className="input"
+              type="password"
+              autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
               placeholder="••••••••"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               required
-              autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
             />
 
-            <button className="btnBW" disabled={submitting}>
-              {submitting ? (tab === 'login' ? 'Signing in…' : 'Creating…') : (tab === 'login' ? 'Sign in' : 'Create account')}
+            <button className="cta" disabled={loading}>
+              {loading ? (tab === 'login' ? 'Signing in…' : 'Creating…') : tab === 'login' ? 'Sign in' : 'Create account'}
             </button>
 
-            {err && <div className="note err">{err}</div>}
-            {msg && <div className="note ok">{msg}</div>}
+            {err && <div className="err">{err}</div>}
+            {msg && <div className="msg">{msg}</div>}
           </form>
         </div>
       </div>
 
-      {/* Styles */}
+      {/* ============ Styles ============ */}
       <style jsx global>{`
         :root{
-          --ink:#0f172a;            /* near-black text */
-          --ink-2:#111111;          /* black for strokes/focus/button */
-          --ink-3:#1a1a1a;          /* lighter black hover */
-          --paper:#ffffff;          /* white */
-          --paper-2:#f7f7f7;        /* light gray (fields) */
-          --muted:#6b7280;          /* secondary text */
-          --shadow: 0 40px 80px rgba(0,0,0,.08), 0 12px 24px rgba(0,0,0,.05);
+          --ink:#0f172a;              /* main text (near black) */
+          --ink-2:#111111;            /* pure black-ish for borders */
+          --muted:#6b7280;            /* secondary text */
+          --panel:#ffffff;            /* cards */
+          --panel-2:#f6f7f8;          /* subtle gray surface */
+          --shade:#f5f5f5;            /* very light gray (for autofill) */
+          --ring:#111111;             /* focus ring */
+          --shadow: 0 20px 70px rgba(0,0,0,.08);
         }
+        html,body{background:#f3f4f6;margin:0;color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+        *{box-sizing:border-box}
 
-        .shell{
+        .wrap{
           min-height:100dvh;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          background: #f3f4f6;
-          padding: 28px;
+          display:grid;
+          place-items:center;
+          padding:28px;
         }
 
         .card{
-          width:min(1040px, 92vw);
+          width:min(980px, 96vw);
+          background:var(--panel);
+          border-radius:18px;
+          box-shadow:var(--shadow);
           display:grid;
           grid-template-columns: 1fr 1fr;
-          background:var(--paper);
-          border-radius:20px;
-          box-shadow: var(--shadow);
           overflow:hidden;
+          border:1px solid #e6e6e6;
+        }
+        @media (max-width:980px){
+          .card{grid-template-columns:1fr}
         }
 
         .left{
-          padding:40px 44px 44px;
-          display:flex;
-          flex-direction:column;
-          justify-content:flex-end;
-          background: radial-gradient(120% 140% at 20% 10%, #ffffff 0%, #f7f7f7 60%, #f1f1f1 100%);
-          border-right:1px solid #efefef;
+          background: radial-gradient(1200px 400px at -200px -200px, #ffffff 0%, #f7f7f7 35%, #efefef 100%);
+          padding:42px 40px 48px;
+          display:flex;align-items:flex-end;justify-content:flex-start;
         }
+        .brand .app{font-weight:800;font-size:44px;letter-spacing:.2px}
+        .brand .sub{margin-top:6px;color:var(--muted)}
 
-        .brand{
-          font-size:40px;
-          line-height:1.1;
-          font-weight:800;
-          letter-spacing:-0.015em;
-          color:var(--ink);
-        }
+        .right{padding:32px 34px 34px}
 
-        .version{
-          margin-top:8px;
-          color:var(--muted);
-          font-size:14px;
+        .tabs{display:flex;gap:20px;margin-bottom:18px}
+        .tab{
+          background:transparent;border:none;cursor:pointer;
+          padding:0 0 10px;border-bottom:2.5px solid transparent;
+          color:var(--ink);font-weight:700;font-size:18px;
         }
+        .tab.active{border-color:#111}
 
-        .right{
-          padding:40px 44px;
-          display:flex;
-          flex-direction:column;
-        }
-
-        .tabs{
-          display:flex;
-          gap:22px;
-          margin-bottom:18px;
-        }
-        .tabBtn{
-          border:none;
-          background:transparent;
-          color:var(--ink);
-          font-weight:600;
-          font-size:16px;
-          padding:0 0 8px;
-          cursor:pointer;
-          position:relative;
-        }
-        .tabBtn.active::after{
-          content:'';
-          position:absolute;
-          left:0; right:0; bottom:-2px;
-          height:2px;
-          background: var(--ink-2); /* black underline */
-          border-radius:2px;
-        }
-
-        .form{
-          display:flex;
-          flex-direction:column;
-          gap:10px;
-          margin-top:4px;
-        }
-        .lbl{
-          font-size:13px;
-          color:var(--muted);
-          margin-top:6px;
-        }
+        .form{display:flex;flex-direction:column;gap:12px;max-width:520px}
+        .lbl{font-size:13px;color:var(--muted)}
 
         .input{
-          height:48px;
-          border-radius:12px;
+          width:100%;
+          padding:14px 16px;
           border:1px solid #e6e6e6;
-          background: var(--paper-2);       /* light neutral (no blue) */
-          padding: 0 14px;
-          font-size:16px;
+          border-radius:12px;
+          background:#fff;
           color:var(--ink);
           outline:none;
-          transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+          transition:border .15s ease, box-shadow .15s ease, background .15s ease;
         }
-        .input::placeholder{ color:#9aa0a6; }
         .input:focus{
-          border-color: var(--ink-2);        /* black focus */
-          box-shadow: 0 0 0 3px rgba(17,17,17,.06);
-          background:#fafafa;
+          border-color:var(--ring);
+          box-shadow: 0 0 0 3px rgba(17,17,17,.12);
+          background:#fff;
+        }
+        .input::placeholder{color:#9ca3af}
+
+        /* --- Autofill override (Chrome/Safari) --- */
+        .input:-webkit-autofill,
+        .input:-webkit-autofill:hover,
+        .input:-webkit-autofill:focus{
+          -webkit-text-fill-color: var(--ink);
+          caret-color: var(--ink);
+          box-shadow: 0 0 0px 1000px var(--shade) inset !important; /* replaces blue with light gray */
+          border:1px solid #e6e6e6 !important;
+          transition: background-color 99999s ease-in-out 0s;
+        }
+        /* Firefox is usually fine, but normalize background a bit when "valid" */
+        .input:-moz-ui-valid{
+          background-color: var(--shade) !important;
         }
 
-        /* Black&White CTA: solid black, white text, notches a shade lighter on hover */
-        .btnBW{
-          margin-top:14px;
-          height:50px;
+        /* CTA — black button with white label; slightly lighter on hover */
+        .cta{
+          margin-top:8px;
+          padding:14px 16px;
           border-radius:12px;
-          border:1px solid var(--ink-2);
-          background: var(--ink-2);
-          color: #ffffff;
+          border:1px solid #0a0a0a;
+          background:#0a0a0a;      /* black */
+          color:#ffffff;           /* white text */
           font-weight:800;
           font-size:16px;
-          letter-spacing:.2px;
           cursor:pointer;
           transition: background .15s ease, transform .02s ease-in-out, box-shadow .15s ease;
           box-shadow: 0 2px 0 #000;
         }
-        .btnBW:hover:not(:disabled){
-          background: var(--ink-3);          /* lighter black on hover */
-          box-shadow: 0 3px 0 #000;
+        .cta:not(:disabled):hover{
+          background:#1a1a1a;      /* a hair lighter than black */
           transform: translateY(-0.5px);
+          box-shadow: 0 3px 0 #000;
         }
-        .btnBW:active:not(:disabled){
+        .cta:not(:disabled):active{
           transform: translateY(0.5px);
           box-shadow: 0 1px 0 #000;
         }
-        .btnBW:disabled{
-          opacity:.6;
-          cursor:not-allowed;
-        }
+        .cta[disabled]{opacity:.7;cursor:not-allowed}
 
-        .note{
-          margin-top:10px;
-          font-size:14px;
-        }
-        .note.err{ color:#b91c1c; }
-        .note.ok{ color:#166534; }
-
-        @media (max-width: 920px){
-          .card{ grid-template-columns: 1fr; }
-          .left{ border-right: none; border-bottom:1px solid #efefef; }
-          .brand{ font-size:32px; }
-        }
+        .err{margin-top:10px;color:#b91c1c;font-size:13px}
+        .msg{margin-top:10px;color:#065f46;font-size:13px}
       `}</style>
     </div>
   );
