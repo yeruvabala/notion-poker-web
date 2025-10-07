@@ -209,37 +209,44 @@ export default function LoginClient() {
           border-color: #c7d2fe;
         }
 
-        /* CTA: default white text on white background, black border; hover -> full black background + platinum text */
-        .cta{
-          margin-top: 6px;
-          border: 1px solid #111;
-          background: #ffffff;
-          color: #0f172a;
-          padding: 14px 16px;
-          border-radius: 12px;
-          font-weight: 700;
-          font-size: 16px;
-          cursor: pointer;
-          transition: background .18s ease, color .18s ease, transform .02s ease-in-out, box-shadow .18s ease;
-          box-shadow: 0 2px 0 #000;
-        }
-        .cta:not(:disabled):hover{
-          background:#0a0a0a;
-          color: var(--platinum) !important;
-          transform: translateY(-0.5px);
-          box-shadow: 0 3px 0 #000;
-        }
-        .cta:not(:disabled):active{
-          transform: translateY(0.5px);
-          box-shadow: 0 1px 0 #000;
-        }
-        .cta[disabled]{
-          background:#f3f4f6;
-          color:#9ca3af;
-          border-color:#e5e7eb;
-          box-shadow:none;
-          cursor:not-allowed;
-        }
+        /* Force default (idle) look: white bg + dark text */
+.auth .cta{
+  appearance: none;
+  background:#ffffff !important;
+  color:#0f172a !important;
+  border:1px solid #111 !important;
+  padding:14px 16px;
+  border-radius:12px;
+  font-weight:700;
+  font-size:16px;
+  cursor:pointer;
+  transition: background .18s ease, color .18s ease, transform .02s ease-in-out, box-shadow .18s ease;
+  box-shadow:0 2px 0 #000;
+}
+
+/* Hover: full black + platinum text (while enabled) */
+.auth .cta:not(:disabled):hover{
+  background:#0a0a0a !important;
+  color:var(--platinum) !important; /* #E5E4E2 from your :root */
+  transform:translateY(-0.5px);
+  box-shadow:0 3px 0 #000;
+}
+
+/* Active press effect */
+.auth .cta:not(:disabled):active{
+  transform:translateY(0.5px);
+  box-shadow:0 1px 0 #000;
+}
+
+/* Disabled: light gray; do NOT turn black */
+.auth .cta[disabled]{
+  background:#f3f4f6 !important;
+  color:#9ca3af !important;
+  border-color:#e5e7eb !important;
+  box-shadow:none !important;
+  cursor:not-allowed !important;
+}
+
 
         .err{ margin-top: 6px; color:#b91c1c; font-weight:600; }
         .note{ margin-top: 6px; color:#065f46; font-weight:600; }
