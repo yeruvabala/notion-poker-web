@@ -202,30 +202,52 @@ export default function LoginClient() {
           background-color: var(--shade) !important;
         }
 
-        /* CTA — black button with white label; slightly lighter on hover */
-        .cta{
-          margin-top:8px;
-          padding:14px 16px;
-          border-radius:12px;
-          border:1px solid #0a0a0a;
-          background:#0a0a0a;      /* black */
-          color:#ffffff;           /* white text */
-          font-weight:800;
-          font-size:16px;
-          cursor:pointer;
-          transition: background .15s ease, transform .02s ease-in-out, box-shadow .15s ease;
-          box-shadow: 0 2px 0 #000;
-        }
-        .cta:not(:disabled):hover{
-          background:#1a1a1a;      /* a hair lighter than black */
-          transform: translateY(-0.5px);
-          box-shadow: 0 3px 0 #000;
-        }
-        .cta:not(:disabled):active{
-          transform: translateY(0.5px);
-          box-shadow: 0 1px 0 #000;
-        }
-        .cta[disabled]{opacity:.7;cursor:not-allowed}
+        /* CTA — default = same light gray as email field; hover = black with white text */
+.cta{
+  margin-top: 8px;
+  padding: 14px 16px;
+  border-radius: 12px;
+
+  /* default look (matches the email-field gray) */
+  background: var(--shade);   /* #f5f5f5 from your vars */
+  color: var(--ink);          /* near-black text */
+  border: 1px solid #e6e6e6;
+
+  font-weight: 800;
+  font-size: 16px;
+  cursor: pointer;
+
+  transition:
+    background .15s ease,
+    color .15s ease,
+    border-color .15s ease,
+    transform .02s ease-in-out,
+    box-shadow .15s ease;
+
+  box-shadow: 0 2px 0 rgba(0,0,0,.10);
+}
+
+.cta:not(:disabled):hover{
+  background: #0a0a0a;        /* black hover */
+  color: #ffffff;             /* white text on hover */
+  border-color: #0a0a0a;
+  transform: translateY(-0.5px);
+  box-shadow: 0 3px 0 rgba(0,0,0,.25);
+}
+
+.cta:not(:disabled):active{
+  transform: translateY(0.5px);
+  box-shadow: 0 1px 0 rgba(0,0,0,.15);
+}
+
+.cta[disabled]{
+  background: #f3f4f6;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
 
         .err{margin-top:10px;color:#b91c1c;font-size:13px}
         .msg{margin-top:10px;color:#065f46;font-size:13px}
