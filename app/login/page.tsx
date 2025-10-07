@@ -1,13 +1,21 @@
 import { Suspense } from 'react';
-import LoginClient from './LoginClient';
+import SuitRow from './SuitRow';
+import LoginClient from './LoginClient'; // your existing client component
 
-// avoid the “missing suspense” warning in prod
 export const dynamic = 'force-dynamic';
 
 export default function Page() {
   return (
-    <Suspense fallback={null}>
-      <LoginClient />
-    </Suspense>
+    <div className="min-h-screen grid place-items-center px-4">
+      <div className="w-full max-w-5xl">
+        {/* Suits row */}
+        <SuitRow />
+
+        {/* Your existing card */}
+        <Suspense fallback={null}>
+          <LoginClient />
+        </Suspense>
+      </div>
+    </div>
   );
 }
