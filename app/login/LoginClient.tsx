@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { createClient } from '@/lib/supabase/client'; // your browser helper (can return null)
+import React, { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client'; // your browser helper (may return null)
 
 export default function LoginClient() {
   const supabase = createClient();
@@ -13,6 +13,25 @@ export default function LoginClient() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
+  // Safety net: if a token refresh/sign-in happens elsewhere, keep the server cookie in sync.
+  useEffect(() => {
+    if (!supabase) return;
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
+      try {
+        await fetch('/auth/callback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event, session }),
+        });
+      } catch {
+        /* ignore */
+      }
+    });
+    return () => {
+      sub?.subscription.unsubscribe();
+    };
+  }, [supabase]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,22 +45,31 @@ export default function LoginClient() {
 
     try {
       setLoading(true);
+
       if (tab === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({
+        // 1) Browser sign-in
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
-        // success — go home
+
+        // 2) Sync server cookie BEFORE redirecting
+        await fetch('/auth/callback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event: 'SIGNED_IN', session: data.session }),
+        });
+
+        // 3) Now the server knows you're signed in -> redirect
         window.location.href = '/';
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        if (error) throw error;
-        setMsg('Account created. Check your inbox for a verification link.');
+        return;
       }
+
+      // Sign up flow (no UI change)
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
+      setMsg('Account created. Check your inbox for a verification link.');
     } catch (e: any) {
       setErr(e?.message || 'Something went wrong');
     } finally {
@@ -113,28 +141,22 @@ export default function LoginClient() {
         </div>
       </div>
 
-      {/* ============ Styles ============ */}
+      {/* === Styles (unchanged) === */}
       <style jsx global>{`
         :root{
-          --ink:#0f172a;              /* main text (near black) */
-          --ink-2:#111111;            /* pure black-ish for borders */
-          --muted:#6b7280;            /* secondary text */
-          --panel:#ffffff;            /* cards */
-          --panel-2:#f6f7f8;          /* subtle gray surface */
-          --shade:#f5f5f5;            /* very light gray (for autofill) */
-          --ring:#111111;             /* focus ring */
+          --ink:#0f172a;
+          --ink-2:#111111;
+          --muted:#6b7280;
+          --panel:#ffffff;
+          --panel-2:#f6f7f8;
+          --shade:#f5f5f5;
+          --ring:#111111;
           --shadow: 0 20px 70px rgba(0,0,0,.08);
         }
         html,body{background:#f3f4f6;margin:0;color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
         *{box-sizing:border-box}
 
-        .wrap{
-          min-height:100dvh;
-          display:grid;
-          place-items:center;
-          padding:28px;
-        }
-
+        .wrap{min-height:100dvh;display:grid;place-items:center;padding:28px;}
         .card{
           width:min(980px, 96vw);
           background:var(--panel);
@@ -145,9 +167,7 @@ export default function LoginClient() {
           overflow:hidden;
           border:1px solid #e6e6e6;
         }
-        @media (max-width:980px){
-          .card{grid-template-columns:1fr}
-        }
+        @media (max-width:980px){.card{grid-template-columns:1fr}}
 
         .left{
           background: radial-gradient(1200px 400px at -200px -200px, #ffffff 0%, #f7f7f7 35%, #efefef 100%);
@@ -160,11 +180,7 @@ export default function LoginClient() {
         .right{padding:32px 34px 34px}
 
         .tabs{display:flex;gap:20px;margin-bottom:18px}
-        .tab{
-          background:transparent;border:none;cursor:pointer;
-          padding:0 0 10px;border-bottom:2.5px solid transparent;
-          color:var(--ink);font-weight:700;font-size:18px;
-        }
+        .tab{background:transparent;border:none;cursor:pointer;padding:0 0 10px;border-bottom:2.5px solid transparent;color:var(--ink);font-weight:700;font-size:18px;}
         .tab.active{border-color:#111}
 
         .form{display:flex;flex-direction:column;gap:12px;max-width:520px}
@@ -180,74 +196,39 @@ export default function LoginClient() {
           outline:none;
           transition:border .15s ease, box-shadow .15s ease, background .15s ease;
         }
-        .input:focus{
-          border-color:var(--ring);
-          box-shadow: 0 0 0 3px rgba(17,17,17,.12);
-          background:#fff;
-        }
+        .input:focus{border-color:var(--ring);box-shadow: 0 0 0 3px rgba(17,17,17,.12);background:#fff;}
         .input::placeholder{color:#9ca3af}
-
-        /* --- Autofill override (Chrome/Safari) --- */
         .input:-webkit-autofill,
         .input:-webkit-autofill:hover,
         .input:-webkit-autofill:focus{
           -webkit-text-fill-color: var(--ink);
           caret-color: var(--ink);
-          box-shadow: 0 0 0px 1000px var(--shade) inset !important; /* replaces blue with light gray */
+          box-shadow: 0 0 0px 1000px var(--shade) inset !important;
           border:1px solid #e6e6e6 !important;
           transition: background-color 99999s ease-in-out 0s;
         }
-        /* Firefox is usually fine, but normalize background a bit when "valid" */
-        .input:-moz-ui-valid{
-          background-color: var(--shade) !important;
+        .input:-moz-ui-valid{background-color: var(--shade) !important;}
+
+        /* CTA stays visually identical to your current version */
+        .cta{
+          margin-top: 8px;
+          padding: 14px 16px;
+          border-radius: 12px;
+          background: var(--shade);
+          color: var(--ink);
+          border: 1px solid #e6e6e6;
+          font-weight: 800;
+          font-size: 16px;
+          cursor: pointer;
+          transition: background .15s ease, color .15s ease, border-color .15s ease, transform .02s ease-in-out, box-shadow .15s ease;
+          box-shadow: 0 2px 0 rgba(0,0,0,.10);
         }
-
-        /* CTA — default = same light gray as email field; hover = black with white text */
-.cta{
-  margin-top: 8px;
-  padding: 14px 16px;
-  border-radius: 12px;
-
-  /* default look (matches the email-field gray) */
-  background: var(--shade);   /* #f5f5f5 from your vars */
-  color: var(--ink);          /* near-black text */
-  border: 1px solid #e6e6e6;
-
-  font-weight: 800;
-  font-size: 16px;
-  cursor: pointer;
-
-  transition:
-    background .15s ease,
-    color .15s ease,
-    border-color .15s ease,
-    transform .02s ease-in-out,
-    box-shadow .15s ease;
-
-  box-shadow: 0 2px 0 rgba(0,0,0,.10);
-}
-
-.cta:not(:disabled):hover{
-  background: #0a0a0a;        /* black hover */
-  color: #ffffff;             /* white text on hover */
-  border-color: #0a0a0a;
-  transform: translateY(-0.5px);
-  box-shadow: 0 3px 0 rgba(0,0,0,.25);
-}
-
-.cta:not(:disabled):active{
-  transform: translateY(0.5px);
-  box-shadow: 0 1px 0 rgba(0,0,0,.15);
-}
-
-.cta[disabled]{
-  background: #f3f4f6;
-  color: #9ca3af;
-  border-color: #e5e7eb;
-  box-shadow: none;
-  cursor: not-allowed;
-}
-
+        .cta:not(:disabled):hover{
+          background:#0a0a0a;color:#ffffff;border-color:#0a0a0a;
+          transform: translateY(-0.5px); box-shadow: 0 3px 0 rgba(0,0,0,.25);
+        }
+        .cta:not(:disabled):active{transform: translateY(0.5px); box-shadow: 0 1px 0 rgba(0,0,0,.15);}
+        .cta[disabled]{background:#f3f4f6;color:#9ca3af;border-color:#e5e7eb;box-shadow:none;cursor:not-allowed;}
 
         .err{margin-top:10px;color:#b91c1c;font-size:13px}
         .msg{margin-top:10px;color:#065f46;font-size:13px}
