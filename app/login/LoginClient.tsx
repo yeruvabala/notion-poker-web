@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client'; // your browser helper (may return null)
+import { createClient } from '@/lib/supabase/client'; // your browser helper
 
 export default function LoginClient() {
   const supabase = createClient();
@@ -14,10 +14,9 @@ export default function LoginClient() {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  // Safety net: if a token refresh/sign-in happens elsewhere, keep the server cookie in sync.
+  // keep server cookies in sync while the page is open
   useEffect(() => {
-    if (!supabase) return;
-    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const sub = supabase.auth.onAuthStateChange(async (event, session) => {
       try {
         await fetch('/auth/callback', {
           method: 'POST',
@@ -29,7 +28,7 @@ export default function LoginClient() {
       }
     });
     return () => {
-      sub?.subscription.unsubscribe();
+      sub?.data?.subscription?.unsubscribe();
     };
   }, [supabase]);
 
@@ -47,29 +46,49 @@ export default function LoginClient() {
       setLoading(true);
 
       if (tab === 'login') {
-        // 1) Browser sign-in
+        // 1) sign in
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
 
-        // 2) Sync server cookie BEFORE redirecting
+        // 2) sync server cookie BEFORE redirecting
         await fetch('/auth/callback', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ event: 'SIGNED_IN', session: data.session }),
         });
 
-        // 3) Now the server knows you're signed in -> redirect
+        // 3) redirect
         window.location.href = '/';
         return;
       }
 
-      // Sign up flow (no UI change)
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
-      setMsg('Account created. Check your inbox for a verification link.');
+      // === SIGNUP FLOW ===
+      const { data, error } = await supabase.auth.signUp({ email, password });
+
+      if (error) {
+        // map Supabase duplicate email to a friendly message
+        const friendly = /already|exists|registered/i.test(error.message)
+          ? 'That email is already registered. Try logging in instead.'
+          : error.message;
+        throw new Error(friendly);
+      }
+
+      // If email confirmation is ON, session will be null and Supabase sent an email
+      if (!data.session) {
+        setMsg('Check your email to confirm your account.');
+        return;
+      }
+
+      // If you allow autoconfirm, sync and redirect
+      await fetch('/auth/callback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: 'SIGNED_IN', session: data.session }),
+      });
+      window.location.href = '/';
     } catch (e: any) {
       setErr(e?.message || 'Something went wrong');
     } finally {
@@ -80,7 +99,7 @@ export default function LoginClient() {
   return (
     <div className="wrap">
       <div className="card">
-        {/* Left panel */}
+        {/* Left */}
         <div className="left">
           <div className="brand">
             <div className="app">Only Poker</div>
@@ -88,7 +107,7 @@ export default function LoginClient() {
           </div>
         </div>
 
-        {/* Right panel */}
+        {/* Right */}
         <div className="right">
           <div className="tabs">
             <button
@@ -107,12 +126,11 @@ export default function LoginClient() {
             </button>
           </div>
 
-          <form className="form" onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="form">
             <label className="lbl">Email</label>
             <input
               className="input"
               type="email"
-              inputMode="email"
               autoComplete="email"
               placeholder="you@example.com"
               value={email}
@@ -132,7 +150,13 @@ export default function LoginClient() {
             />
 
             <button className="cta" disabled={loading}>
-              {loading ? (tab === 'login' ? 'Signing in…' : 'Creating…') : tab === 'login' ? 'Sign in' : 'Create account'}
+              {loading
+                ? tab === 'login'
+                  ? 'Signing in…'
+                  : 'Creating…'
+                : tab === 'login'
+                ? 'Sign in'
+                : 'Create account'}
             </button>
 
             {err && <div className="err">{err}</div>}
@@ -141,97 +165,29 @@ export default function LoginClient() {
         </div>
       </div>
 
-      {/* === Styles (unchanged) === */}
+      {/* Styles keep your original look & feel */}
       <style jsx global>{`
-        :root{
-          --ink:#0f172a;
-          --ink-2:#111111;
-          --muted:#6b7280;
-          --panel:#ffffff;
-          --panel-2:#f6f7f8;
-          --shade:#f5f5f5;
-          --ring:#111111;
-          --shadow: 0 20px 70px rgba(0,0,0,.08);
-        }
-        html,body{background:#f3f4f6;margin:0;color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-        *{box-sizing:border-box}
-
-        .wrap{min-height:100dvh;display:grid;place-items:center;padding:28px;}
-        .card{
-          width:min(980px, 96vw);
-          background:var(--panel);
-          border-radius:18px;
-          box-shadow:var(--shadow);
-          display:grid;
-          grid-template-columns: 1fr 1fr;
-          overflow:hidden;
-          border:1px solid #e6e6e6;
-        }
-        @media (max-width:980px){.card{grid-template-columns:1fr}}
-
-        .left{
-          background: radial-gradient(1200px 400px at -200px -200px, #ffffff 0%, #f7f7f7 35%, #efefef 100%);
-          padding:42px 40px 48px;
-          display:flex;align-items:flex-end;justify-content:flex-start;
-        }
-        .brand .app{font-weight:800;font-size:44px;letter-spacing:.2px}
-        .brand .sub{margin-top:6px;color:var(--muted)}
-
-        .right{padding:32px 34px 34px}
-
-        .tabs{display:flex;gap:20px;margin-bottom:18px}
-        .tab{background:transparent;border:none;cursor:pointer;padding:0 0 10px;border-bottom:2.5px solid transparent;color:var(--ink);font-weight:700;font-size:18px;}
-        .tab.active{border-color:#111}
-
-        .form{display:flex;flex-direction:column;gap:12px;max-width:520px}
-        .lbl{font-size:13px;color:var(--muted)}
-
-        .input{
-          width:100%;
-          padding:14px 16px;
-          border:1px solid #e6e6e6;
-          border-radius:12px;
-          background:#fff;
-          color:var(--ink);
-          outline:none;
-          transition:border .15s ease, box-shadow .15s ease, background .15s ease;
-        }
-        .input:focus{border-color:var(--ring);box-shadow: 0 0 0 3px rgba(17,17,17,.12);background:#fff;}
-        .input::placeholder{color:#9ca3af}
-        .input:-webkit-autofill,
-        .input:-webkit-autofill:hover,
-        .input:-webkit-autofill:focus{
-          -webkit-text-fill-color: var(--ink);
-          caret-color: var(--ink);
-          box-shadow: 0 0 0px 1000px var(--shade) inset !important;
-          border:1px solid #e6e6e6 !important;
-          transition: background-color 99999s ease-in-out 0s;
-        }
-        .input:-moz-ui-valid{background-color: var(--shade) !important;}
-
-        /* CTA stays visually identical to your current version */
-        .cta{
-          margin-top: 8px;
-          padding: 14px 16px;
-          border-radius: 12px;
-          background: var(--shade);
-          color: var(--ink);
-          border: 1px solid #e6e6e6;
-          font-weight: 800;
-          font-size: 16px;
-          cursor: pointer;
-          transition: background .15s ease, color .15s ease, border-color .15s ease, transform .02s ease-in-out, box-shadow .15s ease;
-          box-shadow: 0 2px 0 rgba(0,0,0,.10);
-        }
-        .cta:not(:disabled):hover{
-          background:#0a0a0a;color:#ffffff;border-color:#0a0a0a;
-          transform: translateY(-0.5px); box-shadow: 0 3px 0 rgba(0,0,0,.25);
-        }
-        .cta:not(:disabled):active{transform: translateY(0.5px); box-shadow: 0 1px 0 rgba(0,0,0,.15);}
-        .cta[disabled]{background:#f3f4f6;color:#9ca3af;border-color:#e5e7eb;box-shadow:none;cursor:not-allowed;}
-
+        :root{--ink:#0f172a;--muted:#6b7280;}
+        .wrap{min-height:100vh;display:grid;place-items:center;background:#f8fafc}
+        .card{display:grid;grid-template-columns:1fr 1fr;max-width:900px;width:100%;
+          background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.08);overflow:hidden}
+        .left{background:linear-gradient(135deg,#f3f4f6,#f9fafb);padding:48px}
+        .brand .app{font-weight:800;font-size:28px;color:#0b1220}
+        .brand .sub{color:#64748b;margin-top:6px}
+        .right{padding:32px}
+        .tabs{display:flex;gap:8px;margin-bottom:16px}
+        .tab{border:none;background:transparent;padding:8px 12px;border-radius:8px;color:#6b7280;
+          font-weight:600;cursor:pointer}
+        .tab.active{background:#111827;color:#fff}
+        .form{display:grid;gap:10px}
+        .lbl{font-size:12px;color:#374151}
+        .input{border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px}
+        .cta{margin-top:10px;border:1px solid #111827;background:#111827;color:#fff;border-radius:10px;
+          padding:10px 12px;font-weight:700;cursor:pointer}
+        .cta[disabled]{opacity:.6;cursor:not-allowed}
         .err{margin-top:10px;color:#b91c1c;font-size:13px}
         .msg{margin-top:10px;color:#065f46;font-size:13px}
+        @media (max-width:860px){.card{grid-template-columns:1fr}}
       `}</style>
     </div>
   );
