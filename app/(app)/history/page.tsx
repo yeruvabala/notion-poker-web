@@ -12,6 +12,8 @@ type Hand = {
   stakes: string | null;
   position: string | null;
   cards?: string | null;
+  gto_strategy?: string | null;
+  exploit_deviation?: string | null;
 };
 
 export default function HistoryPage() {
@@ -19,47 +21,56 @@ export default function HistoryPage() {
   const supabase = createClient();
 
   const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
   const [hands, setHands] = useState<Hand[]>([]);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    (async () => {
+    async function load() {
       try {
-        if (!supabase) {
-          setError('Missing Supabase env vars. See /api/env-ok.');
-          setLoading(false);
-          return;
-        }
+        setLoading(true);
+        setErr(null);
 
-        // Ensure the user is signed in
-        const {
-          data: { user },
-          error: userErr,
-        } = await supabase.auth.getUser();
-
-        if (userErr || !user) {
+        // Ensure we have a user
+        const { data: userResp, error: userErr } = await supabase.auth.getUser();
+        if (userErr) throw userErr;
+        const user = userResp?.user;
+        if (!user) {
           router.replace('/login');
           return;
         }
 
-        // Fetch current user's hands (RLS will also restrict to their rows)
+        // Fetch hands including GTO + Deviation
         const { data, error } = await supabase
           .from('hands')
-          .select('id, created_at, date, stakes, position, cards')
-          .order('created_at', { ascending: false })
-          .limit(100);
+          .select(
+            `
+            id,
+            created_at,
+            date,
+            stakes,
+            position,
+            cards,
+            gto_strategy,
+            exploit_deviation
+          `
+          )
+          .eq('user_id', user.id)
+          .order('date', { ascending: false, nullsFirst: false })
+          .order('created_at', { ascending: false }); // fallback ordering
 
         if (error) throw error;
-        if (!cancelled) setHands(data ?? []);
+        if (cancelled) return;
+        setHands((data as Hand[]) ?? []);
       } catch (e: any) {
-        if (!cancelled) setError(e?.message || 'Failed to load history');
+        if (!cancelled) setErr(e?.message ?? 'Failed to load hands');
       } finally {
         if (!cancelled) setLoading(false);
       }
-    })();
+    }
 
+    load();
     return () => {
       cancelled = true;
     };
@@ -74,53 +85,98 @@ export default function HistoryPage() {
           <Link href="/" className="btn">← Back to App</Link>
         </div>
 
-        {loading && <div className="ibox">Loading…</div>}
-        {error && <div className="err">{error}</div>}
-
-        {!loading && !error && hands.length === 0 && (
-          <div className="ibox">No hands yet — analyze a hand and click “Confirm &amp; Save”.</div>
+        {loading && (
+          <div className="ibox">Loading…</div>
         )}
 
-        {!loading && !error && hands.length > 0 && (
+        {err && (
+          <div className="err">{err}</div>
+        )}
+
+        {!loading && !err && hands.length === 0 && (
+          <div className="ibox">No hands yet.</div>
+        )}
+
+        {!loading && !err && hands.length > 0 && (
           <ul className="list">
-            {hands.map((h) => (
-              <li key={h.id} className="row item">
-                <div className="left">
-                  <div className="big">{h.date || new Date(h.created_at).toISOString().slice(0, 10)}</div>
-                  <div className="muted small">{new Date(h.created_at).toLocaleString()}</div>
-                </div>
-                <div className="mid">
-                  <div><b>Stakes:</b> {h.stakes || '—'}</div>
-                  <div><b>Pos:</b> {h.position || '—'}</div>
-                </div>
-                <div className="right">
-                  <div><b>Cards:</b> {h.cards || '—'}</div>
-                </div>
-              </li>
-            ))}
+            {hands.map((h) => {
+              const d = h.date ? new Date(h.date) : h.created_at ? new Date(h.created_at) : null;
+              const dateISO = d ? d.toISOString().slice(0, 10) : '—';
+              const dateLocal = d ? d.toLocaleString() : '—';
+
+              return (
+                <li key={h.id} className="item">
+                  {/* Left block — date */}
+                  <div className="left">
+                    <div className="big">{dateISO}</div>
+                    <div className="small muted">{dateLocal}</div>
+                  </div>
+
+                  {/* Mid block — meta + NEW: GTO + Deviation */}
+                  <div className="mid">
+                    <div className="big">
+                      <span>Stakes: {h.stakes ?? '—'}</span>
+                    </div>
+                    <div className="big" style={{ marginTop: 2 }}>
+                      <span>Pos: {h.position ?? '—'}</span>
+                    </div>
+
+                    {/* NEW: GTO Strategy */}
+                    <div className="small" style={{ marginTop: 8 }}>
+                      <span className="muted" style={{ fontWeight: 700 }}>GTO: </span>
+                      <span className="clamp2">{(h.gto_strategy ?? '').trim() || '—'}</span>
+                    </div>
+                    {/* NEW: Exploit Deviation */}
+                    <div className="small" style={{ marginTop: 6 }}>
+                      <span className="muted" style={{ fontWeight: 700 }}>Deviation: </span>
+                      <span className="clamp2">{(h.exploit_deviation ?? '').trim() || '—'}</span>
+                    </div>
+                  </div>
+
+                  {/* Right block — cards */}
+                  <div className="big">
+                    Cards: {h.cards ?? '—'}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
 
+      {/* keep your existing look & feel */}
       <style jsx global>{`
         :root{
-          --bg:#f3f4f6; --card:#ffffff; --line:#e5e7eb; --text:#0f172a; --muted:#6b7280;
-          --primary:#2563eb; --primary2:#1d4ed8; --btnText:#f8fbff;
+          --ink:#0f172a;
+          --muted:#6b7280;
+          --card:#ffffff;
+          --line:#e5e7eb;
         }
-        .p{padding:24px}
-        .wrap{max-width:920px;margin:0 auto}
-        .title{margin:0 0 12px;font-size:28px;font-weight:800;text-align:center}
+        .p{padding:28px 18px}
+        .wrap{max-width:1100px;margin:0 auto}
+        .title{font-size:44px;font-weight:800;margin:0 0 18px}
         .row{display:flex;align-items:center}
-        .btn{border:1px solid var(--line);background:#fff;padding:10px 14px;border-radius:12px;cursor:pointer;text-decoration:none;color:inherit}
+        .btn{border:1px solid var(--line);background:#fff;padding:8px 12px;border-radius:12px;cursor:pointer;text-decoration:none;color:inherit}
         .ibox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
         .err{background:#fee2e2;border:1px solid #fecaca;border-radius:14px;padding:12px;color:#991b1b}
         .list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
-        .item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;justify-content:space-between}
+        .item{background:var(--card);border:1px solid var(--line);display:flex;gap:16px;align-items:flex-start;border-radius:14px;padding:12px;justify-content:space-between}
         .left{min-width:180px}
-        .mid{min-width:200px}
+        .mid{min-width:200px;flex:1}
         .big{font-weight:700}
         .muted{color:var(--muted)}
         .small{font-size:12px}
+        .clamp2{
+          display:-webkit-box;
+          -webkit-line-clamp:2;
+          -webkit-box-orient:vertical;
+          overflow:hidden;
+          word-break:break-word;
+        }
+        @media (max-width:780px){
+          .item{flex-direction:column}
+          .left,.mid{min-width:auto}
+        }
       `}</style>
     </main>
   );
