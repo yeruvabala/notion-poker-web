@@ -14,7 +14,7 @@ export default function LoginClient() {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  // Safety net: if a token refresh/sign-in happens elsewhere, keep the server cookie in sync.
+  // Keep server cookie in sync with client auth events
   useEffect(() => {
     if (!supabase) return;
     const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -47,7 +47,7 @@ export default function LoginClient() {
       setLoading(true);
 
       if (tab === 'login') {
-        // 1) Browser sign-in
+        // 1) Sign in
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -61,32 +61,44 @@ export default function LoginClient() {
           body: JSON.stringify({ event: 'SIGNED_IN', session: data.session }),
         });
 
-        // 3) Now the server knows you're signed in -> redirect
+        // 3) Redirect
         window.location.href = '/';
         return;
       }
 
       // === SIGNUP FLOW (logic only; UI unchanged) ===
-      const { data, error } = await supabase.auth.signUp({ email, password });
 
+      // 0) Hard gate: check if email already exists (case-insensitive)
+      const { data: existsData, error: existsErr } = await supabase.rpc('email_exists', {
+        email_input: email,
+      });
+      if (existsErr) {
+        // If the RPC fails, fall back to normal signup handling
+        // but surface a generic message so the user isn't stuck
+        console.warn('email_exists RPC error:', existsErr);
+      } else if (existsData === true) {
+        setErr('That email is already registered. Try logging in instead.');
+        return;
+      }
+
+      // 1) Create account (Supabase may send a verification email)
+      const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) {
-        // Map common duplicate-email messages to a friendly warning
-        // Supabase often returns messages like:
-        // "User already registered", "User already exists", "Email address already registered"
-        const msg =
+        // Fallback mapping if backend still returns a duplicate error
+        const friendly =
           /already|exists|registered/i.test(error.message)
             ? 'That email is already registered. Try logging in instead.'
             : error.message || 'Signup failed';
-        throw new Error(msg);
+        throw new Error(friendly);
       }
 
-      // If email confirmation is ON, Supabase sends a verification email and data.session is null
+      // 2) If email confirmations are enabled, there is no session yet
       if (!data?.session) {
         setMsg('Account created. Check your inbox for a verification link.');
         return;
       }
 
-      // If autoconfirm is enabled (rare), sync cookie and redirect
+      // 3) If autoconfirm is enabled: sync cookie and redirect
       await fetch('/auth/callback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
