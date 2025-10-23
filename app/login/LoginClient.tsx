@@ -66,10 +66,33 @@ export default function LoginClient() {
         return;
       }
 
-      // Sign up flow (no UI change)
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
-      setMsg('Account created. Check your inbox for a verification link.');
+      // === SIGNUP FLOW (logic only; UI unchanged) ===
+      const { data, error } = await supabase.auth.signUp({ email, password });
+
+      if (error) {
+        // Map common duplicate-email messages to a friendly warning
+        // Supabase often returns messages like:
+        // "User already registered", "User already exists", "Email address already registered"
+        const msg =
+          /already|exists|registered/i.test(error.message)
+            ? 'That email is already registered. Try logging in instead.'
+            : error.message || 'Signup failed';
+        throw new Error(msg);
+      }
+
+      // If email confirmation is ON, Supabase sends a verification email and data.session is null
+      if (!data?.session) {
+        setMsg('Account created. Check your inbox for a verification link.');
+        return;
+      }
+
+      // If autoconfirm is enabled (rare), sync cookie and redirect
+      await fetch('/auth/callback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: 'SIGNED_IN', session: data.session }),
+      });
+      window.location.href = '/';
     } catch (e: any) {
       setErr(e?.message || 'Something went wrong');
     } finally {
