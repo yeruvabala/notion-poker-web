@@ -3,6 +3,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import "@/styles/onlypoker-theme.css";
+import { createClient } from '@/lib/supabase/client'; // ← ADDED
 
 /* ====================== Types & helpers ====================== */
 
@@ -286,6 +287,20 @@ export default function HomeClient() {
 
   const [gtoEdit, setGtoEdit] = useState(false);
 
+  // ← ADDED: read signed-in user's email and show it under the title
+  const supabase = createClient();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (!error && !cancelled) setUserEmail(data?.user?.email ?? null);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [supabase]);
+
   // parsed preview from story
   const preview = useMemo(() => ({
     stakes: parseStakes(input),
@@ -423,6 +438,13 @@ export default function HomeClient() {
       <main className="p">
         <div className="wrap">
           <h1 className="title">Only Poker</h1>
+
+          {/* ← ADDED: subtle, right-aligned caption showing the signed-in user */}
+          {userEmail && (
+            <div className="small muted" style={{ textAlign: 'right', marginTop: 4, marginBottom: 10 }}>
+              Signed in as {userEmail}
+            </div>
+          )}
 
           <div className="grid">
             {/* LEFT column */}
