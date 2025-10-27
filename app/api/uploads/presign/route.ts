@@ -23,19 +23,18 @@ export async function POST(req: Request) {
     const safe = String(filename).replace(/[^a-zA-Z0-9._-]/g, '_');
     const key = `${user.id}/${Date.now()}_${safe}`;
 
-    // Create a fresh S3 client and DISABLE the flexible checksums middleware
+    // Fresh client per request and remove checksum middleware.
     const s3 = new S3Client({ region: REGION });
-    // This prevents x-amz-sdk-checksum-algorithm / x-amz-checksum-* from being added to the URL
-    s3.middlewareStack.remove('flexibleChecksumsMiddleware' as any);
+    // @ts-expect-error: internal middleware name
+    s3.middlewareStack.remove('flexibleChecksumsMiddleware');
 
     const cmd = new PutObjectCommand({
       Bucket: BUCKET,
       Key: key,
       ContentType: contentType || 'text/plain',
-      // DO NOT set any Checksum* fields here
+      // DO NOT set any Checksum* fields
     });
 
-    // Also ensure we don't sign any checksum headers just in case
     const url = await getSignedUrl(s3, cmd, {
       expiresIn: 15 * 60,
       unsignableHeaders: new Set([
