@@ -12,26 +12,30 @@ export default function Page() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setBusy(true); setMsg(null);
+    setBusy(true);
+    setMsg(null);
+
     try {
-      // 1) Ensure user is logged in
+      // 1) ensure user is logged in
       const { data: { user }, error: uerr } = await supabase.auth.getUser();
       if (uerr) throw new Error(`Supabase getUser error: ${uerr.message}`);
       if (!user) throw new Error('Please sign in');
 
-      // 2) Pick a content type and ask server to presign for it
-      const contentType = file.type || 'text/plain'; // could be 'application/octet-stream' if you prefer
+      // 2) choose content type and ask server to presign for THIS type
+      const contentType = file.type || 'text/plain';
+
       const presignRes = await fetch('/api/uploads/presign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename: file.name, contentType }),
       });
+
       const pj = await presignRes.json();
       if (!presignRes.ok) throw new Error(pj?.error || `presign ${presignRes.status}`);
       const { url, key } = pj as { url: string; key: string };
       if (!url || !key) throw new Error('presign returned no url/key');
 
-      // 3) Upload to S3 with the SAME content type we asked the server to sign
+      // 3) PUT to S3 using the SAME content type
       const put = await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': contentType },
@@ -39,7 +43,7 @@ export default function Page() {
       });
       if (!put.ok) throw new Error(`S3 upload failed: ${put.status}`);
 
-      // 4) Enqueue a row in hand_files
+      // 4) enqueue a row in hand_files
       const s3Path = `s3://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET}/${key}`;
       const enqueue = await fetch('/api/hand-files/enqueue', {
         method: 'POST',
