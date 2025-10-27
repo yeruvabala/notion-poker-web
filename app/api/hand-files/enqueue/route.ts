@@ -1,10 +1,10 @@
 export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server'; // ← change
+import { createServerClient } from '@/lib/supabase/server';
 
 export async function POST(req: Request) {
-  const sb = createServerClient(); // ← change
+  const sb = createServerClient();
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -14,9 +14,10 @@ export async function POST(req: Request) {
 
   const { error } = await sb.from('hand_files').insert({
     user_id: user.id,
-    storage_path,
+    storage_path, // s3://bucket/userid/ts_filename.txt
     status: 'new',
-    // original_filename, file_size_bytes, mime_type
+    // If you later add columns to hand_files, include them here:
+    // original_filename, file_size_bytes, mime_type,
   });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
