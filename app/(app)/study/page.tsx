@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 export default function Page() {
-  const supabase = createClient();
+  // avoid “Multiple GoTrueClient instances” warning
+  const supabase = useMemo(() => createClient(), []);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -21,29 +22,17 @@ export default function Page() {
       if (uerr) throw new Error(`Supabase getUser error: ${uerr.message}`);
       if (!user) throw new Error('Please sign in');
 
-      // 2) choose content type and ask server to presign for THIS type
-      const contentType = file.type || 'text/plain';
+      // 2) Direct upload to our API (server will put to S3)
+      const fd = new FormData();
+      fd.append('file', file);
 
-      const presignRes = await fetch('/api/uploads/presign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: file.name, contentType }),
-      });
+      const up = await fetch('/api/uploads/direct', { method: 'POST', body: fd });
+      const uj = await up.json();
+      if (!up.ok) throw new Error(uj?.error || `direct upload ${up.status}`);
 
-      const pj = await presignRes.json();
-      if (!presignRes.ok) throw new Error(pj?.error || `presign ${presignRes.status}`);
-      const { url, key } = pj as { url: string; key: string };
-      if (!url || !key) throw new Error('presign returned no url/key');
+      const { key, contentType } = uj as { key: string; contentType: string };
 
-      // 3) PUT to S3 using the SAME content type
-      const put = await fetch(url, {
-        method: 'PUT',
-        headers: { 'Content-Type': contentType },
-        body: file,
-      });
-      if (!put.ok) throw new Error(`S3 upload failed: ${put.status}`);
-
-      // 4) enqueue a row in hand_files
+      // 3) Enqueue a row in hand_files
       const s3Path = `s3://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET}/${key}`;
       const enqueue = await fetch('/api/hand-files/enqueue', {
         method: 'POST',
@@ -52,7 +41,7 @@ export default function Page() {
           storage_path: s3Path,
           original_filename: file.name,
           file_size_bytes: file.size,
-          mime_type: contentType,
+          mime_type: contentType || file.type || 'text/plain',
         }),
       });
       const ej = await enqueue.json().catch(() => ({}));
