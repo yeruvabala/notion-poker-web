@@ -4,13 +4,10 @@ import { NextResponse } from 'next/server';
 import { openai } from '@/lib/openai';
 
 /**
- * This route is a LOCKED-DOWN twin of /api/analyze-hand for batch enrichment.
- * - It requires X-APP-TOKEN to match process.env.COACH_API_TOKEN
- * - It accepts { raw_text, date?, stakes?, position?, cards?, board?, spr_hint?, fe_hint? }
- * - It returns { gto_strategy, exploit_deviation, learning_tag }
- *
- * It intentionally mirrors the heuristics/prompting style used in app/api/analyze-hand/route.ts
- * so your worker gets the same model behavior as the UI.
+ * Locked-down batch coach endpoint.
+ * - Requires X-APP-TOKEN to match process.env.COACH_API_TOKEN
+ * - Accepts { raw_text, date?, stakes?, position?, cards?, board?, spr_hint?, fe_hint? }
+ * - Returns { gto_strategy, exploit_deviation, learning_tag }
  */
 
 /* ---------------- tiny helpers reused from your analyzer ---------------- */
@@ -26,9 +23,15 @@ function asText(v: any): string {
   return String(v);
 }
 
+/**
+ * FIXED: high-precision tournament detection to avoid flagging cash hands.
+ */
 function looksLikeTournament(s: string): { isMTT: boolean; hits: string[] } {
   const text = (s || '').toLowerCase();
-  const terms = [
+  const hits: string[] = [];
+
+  // Strong signals — these alone indicate MTT
+  const strongTerms = [
     'tournament',
     'mtt',
     'icm',
@@ -38,18 +41,31 @@ function looksLikeTournament(s: string): { isMTT: boolean; hits: string[] } {
     'itm',
     'day 1',
     'day 2',
-    'level ',
-    'bb ante',
-    'bba',
-    'ante',
-    'pay jump',
     'payout',
+    'prize pool',
+    'registration',
+    'rebuy',
+    're-buy',
+    'addon',
+    'add-on',
   ];
-  const hits = terms.filter((t) => text.includes(t));
+  for (const t of strongTerms) {
+    if (text.includes(t)) hits.push(t);
+  }
+
+  // Only treat "ante" as a tournament signal if it's clearly non-zero somewhere.
+  // e.g., "ante 50" or "ante: 25"
+  const anteMatch = text.match(/ante[^0-9]*([1-9][0-9]*)/i);
+  if (anteMatch) hits.push('ante>0');
+
+  // Blind/level-like patterns *combined* with non-zero ante => MTT level
+  // e.g. "150/300/40" with ante>0 is a strong MTT sign
   const levelLike =
     /\b\d+(?:[kKmM]?)[/]\d+(?:[kKmM]?)(?:[/]\d+(?:[kKmM]?))?\b/.test(text) &&
-    /ante|bba/.test(text);
-  if (levelLike && !hits.includes('level-like')) hits.push('level-like');
+    !!anteMatch;
+
+  if (levelLike) hits.push('level-like');
+
   return { isMTT: hits.length > 0, hits };
 }
 
@@ -117,11 +133,10 @@ function extractHeroRanks(cardsField?: string, rawText?: string): Rank[] {
   return [];
 }
 
-// FIXED VERSION
+// FIXED version: uses one-arg helper closing over `ranks`
 function extractBoardRanks(boardField?: string, rawText?: string): Rank[] {
   const ranks: Rank[] = [];
 
-  // one-argument helper that closes over `ranks`
   const add = (src: string) => {
     const r = pickRanksFromCards(src);
     for (const x of r) {
@@ -269,7 +284,7 @@ export async function POST(req: Request) {
       .filter(Boolean)
       .join('\n');
 
-    // Block MTT leakage (same behavior)
+    // New, stricter MTT check: will NOT flag normal cash HH anymore
     const { isMTT } = looksLikeTournament(userBlock);
     if (isMTT) {
       return NextResponse.json({
