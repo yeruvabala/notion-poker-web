@@ -19,7 +19,9 @@ function asText(v: any): string {
   if (typeof v === 'string') return v;
   if (Array.isArray(v)) return v.map(asText).join('\n');
   if (typeof v === 'object') {
-    return Object.entries(v).map(([k, val]) => `${k}: ${asText(val)}`).join('\n');
+    return Object.entries(v)
+      .map(([k, val]) => `${k}: ${asText(val)}`)
+      .join('\n');
   }
   return String(v);
 }
@@ -27,10 +29,23 @@ function asText(v: any): string {
 function looksLikeTournament(s: string): { isMTT: boolean; hits: string[] } {
   const text = (s || '').toLowerCase();
   const terms = [
-    'tournament', 'mtt', 'icm', 'players left', 'final table', 'bubble', 'itm',
-    'day 1', 'day 2', 'level ', 'bb ante', 'bba', 'ante', 'pay jump', 'payout',
+    'tournament',
+    'mtt',
+    'icm',
+    'players left',
+    'final table',
+    'bubble',
+    'itm',
+    'day 1',
+    'day 2',
+    'level ',
+    'bb ante',
+    'bba',
+    'ante',
+    'pay jump',
+    'payout',
   ];
-  const hits = terms.filter(t => text.includes(t));
+  const hits = terms.filter((t) => text.includes(t));
   const levelLike =
     /\b\d+(?:[kKmM]?)[/]\d+(?:[kKmM]?)(?:[/]\d+(?:[kKmM]?))?\b/.test(text) &&
     /ante|bba/.test(text);
@@ -40,7 +55,8 @@ function looksLikeTournament(s: string): { isMTT: boolean; hits: string[] } {
 
 function detectRiverFacingCheck(text: string): boolean {
   const s = (text || '').toLowerCase();
-  const riverLine = (s.match(/(?:^|\n)\s*river[^:\n]*[: ]?\s*([^\n]*)/i)?.[1] || '').toLowerCase();
+  const riverLine =
+    (s.match(/(?:^|\n)\s*river[^:\n]*[: ]?\s*([^\n]*)/i)?.[1] || '').toLowerCase();
   const hasCheck = /\b(checks?|x)\b/.test(riverLine);
   const heroChecks = /\b(hero|i)\s*(checks?|x)\b/.test(riverLine);
   return hasCheck && !heroChecks;
@@ -48,22 +64,40 @@ function detectRiverFacingCheck(text: string): boolean {
 
 function detectRiverFacingBet(text: string): { facing: boolean; large: boolean } {
   const s = (text || '').toLowerCase();
-  const riverLine = (s.match(/(?:^|\n)\s*river[^:\n]*[: ]?\s*([^\n]*)/i)?.[1] || '').toLowerCase();
-  const heroActsFirst = /\b(hero|i)\b/.test(riverLine) && /\b(bets?|jam|shove|raise)/.test(riverLine);
+  const riverLine =
+    (s.match(/(?:^|\n)\s*river[^:\n]*[: ]?\s*([^\n]*)/i)?.[1] || '').toLowerCase();
+  const heroActsFirst =
+    /\b(hero|i)\b/.test(riverLine) && /\b(bets?|jam|shove|raise)/.test(riverLine);
   const facing =
     /\b(bets?|bet\b|jam|shove|all[- ]?in|pot)\b/.test(riverLine) &&
     !heroActsFirst &&
     !/\b(checks?|x)\b/.test(riverLine);
   const large =
     facing &&
-    /\b(3\/4|0\.75|75%|two[- ]?thirds|2\/3|0\.66|66%|pot|all[- ]?in|jam|shove)\b/.test(riverLine);
+    /\b(3\/4|0\.75|75%|two[- ]?thirds|2\/3|0\.66|66%|pot|all[- ]?in|jam|shove)\b/.test(
+      riverLine,
+    );
   return { facing, large };
 }
 
 /* ---- very light card/board rank extraction (same shape your analyzer uses) ---- */
-type Rank = 'A'|'K'|'Q'|'J'|'T'|'9'|'8'|'7'|'6'|'5'|'4'|'3'|'2';
-const RANKS: Rank[] = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
-const RANK_VAL: Record<Rank, number> = { A:14,K:13,Q:12,J:11,T:10,9:9,8:8,7:7,6:6,5:5,4:4,3:3,2:2 };
+type Rank = 'A' | 'K' | 'Q' | 'J' | 'T' | '9' | '8' | '7' | '6' | '5' | '4' | '3' | '2';
+const RANKS: Rank[] = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+const RANK_VAL: Record<Rank, number> = {
+  A: 14,
+  K: 13,
+  Q: 12,
+  J: 11,
+  T: 10,
+  9: 9,
+  8: 8,
+  7: 7,
+  6: 6,
+  5: 5,
+  4: 4,
+  3: 3,
+  2: 2,
+};
 
 function pickRanksFromCards(str: string): Rank[] {
   const s = (str || '').toUpperCase();
@@ -76,34 +110,50 @@ function extractHeroRanks(cardsField?: string, rawText?: string): Rank[] {
   const c = pickRanksFromCards(cardsField || '');
   if (c.length >= 2) return c.slice(0, 2) as Rank[];
   // try to guess from text like "Ah Kh"
-  const m = (rawText || '').match(/\b([AKQJT2-9])[^\S\r\n]*[shdc♠♥♦♣]?\b.*?\b([AKQJT2-9])[^\S\r\n]*[shdc♠♥♦♣]?\b/i);
+  const m = (rawText || '').match(
+    /\b([AKQJT2-9])[^\S\r\n]*[shdc♠♥♦♣]?\b.*?\b([AKQJT2-9])[^\S\r\n]*[shdc♠♥♦♣]?\b/i,
+  );
   if (m) return pickRanksFromCards(`${m[1]}${m[2]}`).slice(0, 2) as Rank[];
   return [];
 }
 
+// FIXED VERSION
 function extractBoardRanks(boardField?: string, rawText?: string): Rank[] {
-  const add = (src: string, acc: Rank[]) => {
-    const r = pickRanksFromCards(src);
-    for (const x of r) if (acc.length < 5) acc.push(x);
-  };
   const ranks: Rank[] = [];
+
+  // one-argument helper that closes over `ranks`
+  const add = (src: string) => {
+    const r = pickRanksFromCards(src);
+    for (const x of r) {
+      if (ranks.length < 5) ranks.push(x);
+    }
+  };
+
   add(boardField || '');
+
   const s = (rawText || '').toUpperCase();
   const flop = s.match(/\bFLOP[^:\n]*[: ]?([^\n]*)/i)?.[1] || '';
   const turn = s.match(/\bTURN[^:\n]*[: ]?([^\n]*)/i)?.[1] || '';
   const river = s.match(/\bRIVER[^:\n]*[: ]?([^\n]*)/i)?.[1] || '';
-  add(flop); add(turn); add(river);
+
+  add(flop);
+  add(turn);
+  add(river);
+
   return ranks;
 }
 
 function isBoardPaired(board: Rank[]): boolean {
   const counts: Record<string, number> = {};
   for (const r of board) counts[r] = (counts[r] || 0) + 1;
-  return Object.values(counts).some(n => n >= 2);
+  return Object.values(counts).some((n) => n >= 2);
 }
 function isHeroTopPair(hero: Rank[], board: Rank[]): boolean {
   if (hero.length < 2 || board.length < 3) return false;
-  const topBoard = board.reduce<Rank>((best, r) => (RANK_VAL[r] > RANK_VAL[best] ? r : best), '2');
+  const topBoard = board.reduce<Rank>(
+    (best, r) => (RANK_VAL[r] > RANK_VAL[best] ? r : best),
+    '2',
+  );
   return hero.includes(topBoard);
 }
 function hasTripsWeakKicker(hero: Rank[], board: Rank[]): boolean {
@@ -111,13 +161,16 @@ function hasTripsWeakKicker(hero: Rank[], board: Rank[]): boolean {
   const counts: Record<string, number> = {};
   for (const r of [...hero, ...board]) counts[r] = (counts[r] || 0) + 1;
   // "weak kicker" loosely: hero duplicates one low rank; top board not duplicated by hero
-  const low = hero.find(r => RANK_VAL[r] <= 9);
-  return Object.values(counts).some(n => n >= 3) && !!low;
+  const low = hero.find((r) => RANK_VAL[r] <= 9);
+  return Object.values(counts).some((n) => n >= 3) && !!low;
 }
 function computeStrongKickerTopPair(hero: Rank[], board: Rank[]): boolean {
   if (hero.length < 2 || board.length < 3) return false;
-  const topBoard = board.reduce<Rank>((best, r) => (RANK_VAL[r] > RANK_VAL[best] ? r : best), '2');
-  const other = hero.find(r => r !== topBoard);
+  const topBoard = board.reduce<Rank>(
+    (best, r) => (RANK_VAL[r] > RANK_VAL[best] ? r : best),
+    '2',
+  );
+  const other = hero.find((r) => r !== topBoard);
   return hero.includes(topBoard) && !!other && RANK_VAL[other] >= 11; // J+
 }
 
@@ -212,13 +265,16 @@ export async function POST(req: Request) {
       story.trim() || '(none provided)',
       ``,
       `FOCUS: Decide the final-street action in a solver-like way. Respect the HINTS and FACTS above.`,
-    ].filter(Boolean).join('\n');
+    ]
+      .filter(Boolean)
+      .join('\n');
 
     // Block MTT leakage (same behavior)
     const { isMTT } = looksLikeTournament(userBlock);
     if (isMTT) {
       return NextResponse.json({
-        gto_strategy: `This analyzer is CASH-GAME only. If this is a tournament (ICM/bubble/players-left), please re-enter as a cash hand (omit ICM/players-left).`,
+        gto_strategy:
+          'This analyzer is CASH-GAME only. If this is a tournament (ICM/bubble/players-left), please re-enter as a cash hand (omit ICM/players-left).',
         exploit_deviation: '',
         learning_tag: ['cash-only', 'mtt-blocked'],
       });
@@ -246,7 +302,9 @@ export async function POST(req: Request) {
       gto_strategy: asText(parsed?.gto_strategy || ''),
       exploit_deviation: asText(parsed?.exploit_deviation || ''),
       learning_tag: Array.isArray(parsed?.learning_tag)
-        ? parsed.learning_tag.filter((t: unknown) => typeof t === 'string' && t.trim())
+        ? parsed.learning_tag.filter(
+            (t: unknown) => typeof t === 'string' && t.trim(),
+          )
         : [],
     };
 
