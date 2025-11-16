@@ -8,6 +8,10 @@ import { openai } from '@/lib/openai';
  * - Requires X-APP-TOKEN to match process.env.COACH_API_TOKEN
  * - Accepts { raw_text, date?, stakes?, position?, cards?, board?, spr_hint?, fe_hint? }
  * - Returns { gto_strategy, exploit_deviation, learning_tag }
+ *
+ * IMPORTANT:
+ * For batch enrichment we DO NOT block tournaments.
+ * We always treat the spot as a cash-game style analysis.
  */
 
 /* ---------------- tiny helpers reused from your analyzer ---------------- */
@@ -21,52 +25,6 @@ function asText(v: any): string {
       .join('\n');
   }
   return String(v);
-}
-
-/**
- * FIXED: high-precision tournament detection to avoid flagging cash hands.
- */
-function looksLikeTournament(s: string): { isMTT: boolean; hits: string[] } {
-  const text = (s || '').toLowerCase();
-  const hits: string[] = [];
-
-  // Strong signals — these alone indicate MTT
-  const strongTerms = [
-    'tournament',
-    'mtt',
-    'icm',
-    'players left',
-    'final table',
-    'bubble',
-    'itm',
-    'day 1',
-    'day 2',
-    'payout',
-    'prize pool',
-    'registration',
-    'rebuy',
-    're-buy',
-    'addon',
-    'add-on',
-  ];
-  for (const t of strongTerms) {
-    if (text.includes(t)) hits.push(t);
-  }
-
-  // Only treat "ante" as a tournament signal if it's clearly non-zero somewhere.
-  // e.g., "ante 50" or "ante: 25"
-  const anteMatch = text.match(/ante[^0-9]*([1-9][0-9]*)/i);
-  if (anteMatch) hits.push('ante>0');
-
-  // Blind/level-like patterns *combined* with non-zero ante => MTT level
-  // e.g. "150/300/40" with ante>0 is a strong MTT sign
-  const levelLike =
-    /\b\d+(?:[kKmM]?)[/]\d+(?:[kKmM]?)(?:[/]\d+(?:[kKmM]?))?\b/.test(text) &&
-    !!anteMatch;
-
-  if (levelLike) hits.push('level-like');
-
-  return { isMTT: hits.length > 0, hits };
 }
 
 function detectRiverFacingCheck(text: string): boolean {
@@ -133,7 +91,7 @@ function extractHeroRanks(cardsField?: string, rawText?: string): Rank[] {
   return [];
 }
 
-// FIXED version: uses one-arg helper closing over `ranks`
+// uses one-arg helper closing over `ranks`
 function extractBoardRanks(boardField?: string, rawText?: string): Rank[] {
   const ranks: Rank[] = [];
 
@@ -175,7 +133,6 @@ function hasTripsWeakKicker(hero: Rank[], board: Rank[]): boolean {
   if (hero.length < 2 || board.length < 3) return false;
   const counts: Record<string, number> = {};
   for (const r of [...hero, ...board]) counts[r] = (counts[r] || 0) + 1;
-  // "weak kicker" loosely: hero duplicates one low rank; top board not duplicated by hero
   const low = hero.find((r) => RANK_VAL[r] <= 9);
   return Object.values(counts).some((n) => n >= 3) && !!low;
 }
@@ -189,8 +146,8 @@ function computeStrongKickerTopPair(hero: Rank[], board: Rank[]): boolean {
   return hero.includes(topBoard) && !!other && RANK_VAL[other] >= 11; // J+
 }
 
-/* ------------------------ SYSTEM prompt (same spirit as UI) ------------------------ */
-const SYSTEM = `You are a CASH-GAME poker coach. CASH ONLY.
+/* ------------------------ SYSTEM prompt (cash-game coach) ------------------------ */
+const SYSTEM = `You are a CASH-GAME poker coach.
 
 Return ONLY JSON with EXACT keys:
 {
@@ -204,7 +161,7 @@ General style:
 - Keep "gto_strategy" ~180–260 words using our section order.
 - Use pot-% sizes; avoid fabricated exact equities.
 
-RIVER RULES (guardrails):
+RIVER RULES:
 - If HINT ip_river_facing_check=true and the spot is close, output low-size bet (25–50%) frequency + check frequency, and WHEN to prefer each.
 - If HINT river_facing_bet=true, consider call/fold/raise trees; if HINT river_bet_large=true weight folds/raises more often when range is capped.
 - Respect FACTS booleans like board_paired, hero_top_pair, trips_weak_kicker, strong_kicker.
@@ -214,13 +171,13 @@ JSON ONLY. No prose outside the JSON.`;
 /* --------------------------------- HANDLER --------------------------------- */
 export async function POST(req: Request) {
   try {
-    // Auth: only the worker (or you) should call this
+    // Shared-secret auth
     const token = req.headers.get('x-app-token');
     if (!process.env.COACH_API_TOKEN || token !== process.env.COACH_API_TOKEN) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Accept either the simple shape { raw_text } or the richer fields
+    // Accept either { raw_text } or richer fields
     const body = await req.json().catch(() => ({} as any));
     const story: string = asText(body?.raw_text || body?.text || '');
 
@@ -236,7 +193,7 @@ export async function POST(req: Request) {
     const spr_hint = asText(body?.spr_hint || '');
     const fe_hint = asText(body?.fe_hint || '');
 
-    // same hints/facts used by your UI route
+    // Hints
     const ipRiverFacingCheck = detectRiverFacingCheck(story);
     const { facing: riverFacingBet, large: riverBetLarge } = detectRiverFacingBet(story);
 
@@ -279,21 +236,13 @@ export async function POST(req: Request) {
       `RAW HAND TEXT:`,
       story.trim() || '(none provided)',
       ``,
-      `FOCUS: Decide the final-street action in a solver-like way. Respect the HINTS and FACTS above.`,
+      `FOCUS: Decide the final-street action in a solver-like way. Treat this as a cash-game spot and ignore ICM.`,
     ]
       .filter(Boolean)
       .join('\n');
 
-    // New, stricter MTT check: will NOT flag normal cash HH anymore
-    const { isMTT } = looksLikeTournament(userBlock);
-    if (isMTT) {
-      return NextResponse.json({
-        gto_strategy:
-          'This analyzer is CASH-GAME only. If this is a tournament (ICM/bubble/players-left), please re-enter as a cash hand (omit ICM/players-left).',
-        exploit_deviation: '',
-        learning_tag: ['cash-only', 'mtt-blocked'],
-      });
-    }
+    // 🔴 IMPORTANT: NO MTT BLOCK HERE.
+    // Even if the hand looks like a tournament, we still analyze it as a cash-game spot.
 
     const resp = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
