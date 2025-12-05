@@ -1,17 +1,16 @@
 // app/api/analytics/route.ts
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 export const runtime = "nodejs";
 
 type AnalyticsQuery = {
-  month?: string;        // e.g. "2025-12"
-  stakes?: string | null; // e.g. "10NL" (from stakes_bucket)
+  month?: string;
+  stakes?: string | null;
 };
 
 function monthBounds(ym?: string) {
-  // "YYYY-MM" -> [first_day, first_day_next]
   if (!ym) {
     const now = new Date();
     const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
@@ -34,7 +33,21 @@ export async function GET(req: Request) {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: () => cookieStore }
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          // In Next 14, you "set" by setting the cookie name/value again
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name: string, options: CookieOptions) {
+          // Remove by setting empty value with same options
+          cookieStore.set({ name, value: "", ...options });
+        },
+      },
+    }
   );
 
   const {
@@ -137,7 +150,6 @@ export async function GET(req: Request) {
     `,
   };
 
-  // Use one round-trip each
   const { data: overview, error: e1 } = await supabase.rpc("exec_sql_json", {
     q: sql.overview,
     p: params,
