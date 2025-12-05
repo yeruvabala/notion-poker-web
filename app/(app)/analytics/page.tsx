@@ -193,6 +193,29 @@ function fmt(n: number) {
   return (Math.round(n * 100) / 100).toFixed(2);
 }
 
+function StatCard({
+  title,
+  value,
+  subtitle,
+  accent,
+}: {
+  title: string;
+  value: string;
+  subtitle?: string;
+  accent: string;
+}) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-semibold tracking-wide text-gray-600">{title}</div>
+        <span className="h-2 w-2 rounded-full" style={{ background: accent }} />
+      </div>
+      <div className="mt-2 text-xl font-semibold">{value}</div>
+      {subtitle ? <div className="text-xs text-gray-500">{subtitle}</div> : null}
+    </div>
+  );
+}
+
 function SeatPill({ label, bb, n }: { label: string; bb: number; n: number }) {
   const good = bb >= 0.0;
   const color = good ? green : red;
