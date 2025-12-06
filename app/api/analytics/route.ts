@@ -60,16 +60,20 @@ export async function GET(req: Request) {
     ? [user.id, fromDate, toDate, stakes]
     : [user.id, fromDate, toDate];
 
-  // Safely turn learning_tag (text[] OR text) into text[] for unnest
+  // ---- FIX: make every branch return text[] -----------------------------
   const tags_array_expr = `
     COALESCE(
       CASE
-        WHEN pg_typeof(learning_tag)::text = 'text[]' THEN learning_tag
-        ELSE string_to_array(NULLIF(learning_tag::text, ''), ',')
+        WHEN pg_typeof(learning_tag)::text = 'text[]'
+          THEN learning_tag::text[]
+        WHEN pg_typeof(learning_tag)::text = 'jsonb'
+          THEN ARRAY(SELECT jsonb_array_elements_text(learning_tag))
+        ELSE string_to_array(NULLIF(learning_tag::text, ''), ',')::text[]
       END,
       ARRAY[]::text[]
     )
   `;
+  // ----------------------------------------------------------------------
 
   const sql = {
     overview: `
