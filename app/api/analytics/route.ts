@@ -1,14 +1,10 @@
 // app/api/analytics/route.ts
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 
 export const runtime = "nodejs";
-
-type AnalyticsQuery = {
-  month?: string;
-  stakes?: string | null;
-};
+export const dynamic = "force-dynamic";
 
 function monthBounds(ym?: string) {
   if (!ym) {
@@ -38,13 +34,11 @@ export async function GET(req: Request) {
         get(name: string) {
           return cookieStore.get(name)?.value;
         },
-        set(name: string, value: string, options: CookieOptions) {
-          // In Next 14, you "set" by setting the cookie name/value again
-          cookieStore.set({ name, value, ...options });
+        set() {
+          // no-op in route handlers (read-only response)
         },
-        remove(name: string, options: CookieOptions) {
-          // Remove by setting empty value with same options
-          cookieStore.set({ name, value: "", ...options });
+        remove() {
+          // no-op in route handlers (read-only response)
         },
       },
     }
@@ -60,10 +54,10 @@ export async function GET(req: Request) {
   }
 
   const baseFilters = `
-    user_id = $1
-    AND hand_date >= $2
-    AND hand_date < $3
-    ${stakes ? "AND stakes_bucket = $4" : ""}
+    user_id = $1::uuid
+    AND hand_date >= $2::date
+    AND hand_date < $3::date
+    ${stakes ? "AND stakes_bucket = $4::text" : ""}
   `;
 
   const params = stakes
@@ -78,8 +72,8 @@ export async function GET(req: Request) {
         where ${baseFilters}
       ),
       win as (
-        select coalesce(avg(result_bb), 0)       as winrate_bb,
-               count(*)                          as total_hands
+        select coalesce(avg(result_bb), 0) as winrate_bb,
+               count(*)                   as total_hands
         from base
       ),
       seats as (
@@ -107,18 +101,18 @@ export async function GET(req: Request) {
         limit 1
       )
       select
-        (select winrate_bb from win)          as winrate_bb,
-        (select total_hands from win)         as total_hands,
-        (select hero_position from weakest)   as weakest_seat,
-        (select bb from weakest)              as weakest_bb,
-        (select learning_tag from leak)       as primary_leak,
-        (select bb from leak)                 as primary_leak_bb;
+        (select winrate_bb from win)        as winrate_bb,
+        (select total_hands from win)       as total_hands,
+        (select hero_position from weakest) as weakest_seat,
+        (select bb from weakest)            as weakest_bb,
+        (select learning_tag from leak)     as primary_leak,
+        (select bb from leak)               as primary_leak_bb;
     `,
     seatHeat: `
       select hero_position, avg(result_bb) as bb, count(*) as n
       from public.hands_silver
       where ${baseFilters}
-      and hero_position is not null
+        and hero_position is not null
       group by hero_position
       order by hero_position;
     `,
@@ -144,8 +138,10 @@ export async function GET(req: Request) {
         limit 200
       )
       select hand_date,
-             avg(result_bb) over (order by hand_date
-               rows between unbounded preceding and current row) as cum_avg_bb
+             avg(result_bb) over (
+               order by hand_date
+               rows between unbounded preceding and current row
+             ) as cum_avg_bb
       from base;
     `,
   };
