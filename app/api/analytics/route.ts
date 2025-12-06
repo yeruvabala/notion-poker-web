@@ -1,7 +1,7 @@
 // app/api/analytics/route.ts
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 export const runtime = "nodejs";
 
@@ -24,18 +24,21 @@ export async function GET(req: Request) {
   const stakes = searchParams.get("stakes") || null;
   const [fromDate, toDate] = monthBounds(month);
 
-  // Supabase SSR cookie bridge (Next.js app router)
   const cookieStore = cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get: (name: string) => cookieStore.get(name),
-        set: (name: string, value: string, options: any) =>
-          cookieStore.set({ name, value, ...options }),
-        remove: (name: string, options: any) =>
-          cookieStore.set({ name, value: "", ...options }),
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name: string, options: CookieOptions) {
+          cookieStore.set({ name, value: "", ...options });
+        },
       },
     }
   );
@@ -56,7 +59,6 @@ export async function GET(req: Request) {
     ${stakes ? "AND stakes_bucket = $4::text" : ""}
   `;
 
-  // learning_tag -> text[] robust coercion
   const tags_array_expr = `
     COALESCE(
       CASE
