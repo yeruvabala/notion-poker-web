@@ -4,7 +4,6 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 function monthBounds(ym?: string) {
   if (!ym) {
@@ -25,17 +24,18 @@ export async function GET(req: Request) {
   const stakes = searchParams.get("stakes") || null;
   const [fromDate, toDate] = monthBounds(month);
 
+  // Supabase SSR cookie bridge (Next.js app router)
   const cookieStore = cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set() {},
-        remove() {},
+        get: (name: string) => cookieStore.get(name),
+        set: (name: string, value: string, options: any) =>
+          cookieStore.set({ name, value, ...options }),
+        remove: (name: string, options: any) =>
+          cookieStore.set({ name, value: "", ...options }),
       },
     }
   );
@@ -56,24 +56,28 @@ export async function GET(req: Request) {
     ${stakes ? "AND stakes_bucket = $4::text" : ""}
   `;
 
-  const params = stakes
-    ? [user.id, fromDate, toDate, stakes]
-    : [user.id, fromDate, toDate];
-
-  // ---- FIX: make every branch return text[] -----------------------------
+  // learning_tag -> text[] robust coercion
   const tags_array_expr = `
     COALESCE(
       CASE
         WHEN pg_typeof(learning_tag)::text = 'text[]'
           THEN learning_tag::text[]
         WHEN pg_typeof(learning_tag)::text = 'jsonb'
-          THEN ARRAY(SELECT jsonb_array_elements_text(learning_tag))
-        ELSE string_to_array(NULLIF(learning_tag::text, ''), ',')::text[]
+          THEN ARRAY(SELECT jsonb_array_elements_text(learning_tag::jsonb))
+        ELSE
+          CASE
+            WHEN left(learning_tag::text, 1) = '['
+              THEN ARRAY(SELECT jsonb_array_elements_text(learning_tag::jsonb))
+            ELSE string_to_array(NULLIF(learning_tag::text, ''), ',')::text[]
+          END
       END,
       ARRAY[]::text[]
     )
   `;
-  // ----------------------------------------------------------------------
+
+  const params = stakes
+    ? [user.id, fromDate, toDate, stakes]
+    : [user.id, fromDate, toDate];
 
   const sql = {
     overview: `
@@ -112,12 +116,12 @@ export async function GET(req: Request) {
         limit 1
       )
       select
-        (select winrate_bb from win)        as winrate_bb,
-        (select total_hands from win)       as total_hands,
-        (select hero_position from weakest) as weakest_seat,
-        (select bb from weakest)            as weakest_bb,
-        (select learning_tag from leak)     as primary_leak,
-        (select bb from leak)               as primary_leak_bb;
+        (select winrate_bb from win)          as winrate_bb,
+        (select total_hands from win)         as total_hands,
+        (select hero_position from weakest)   as weakest_seat,
+        (select bb from weakest)              as weakest_bb,
+        (select learning_tag from leak)       as primary_leak,
+        (select bb from leak)                 as primary_leak_bb;
     `,
     seatHeat: `
       select hero_position, avg(result_bb) as bb, count(*) as n
@@ -149,32 +153,30 @@ export async function GET(req: Request) {
         limit 200
       )
       select hand_date,
-             avg(result_bb) over (
-               order by hand_date
-               rows between unbounded preceding and current row
-             ) as cum_avg_bb
+             avg(result_bb) over (order by hand_date
+               rows between unbounded preceding and current row) as cum_avg_bb
       from base;
     `,
   };
 
   const { data: overview, error: e1 } = await supabase.rpc("exec_sql_json", {
     q: sql.overview,
-    p: params,
+    p: params as any,
   } as any);
 
   const { data: seats, error: e2 } = await supabase.rpc("exec_sql_json", {
     q: sql.seatHeat,
-    p: params,
+    p: params as any,
   } as any);
 
   const { data: leaks, error: e3 } = await supabase.rpc("exec_sql_json", {
     q: sql.leakImpact,
-    p: params,
+    p: params as any,
   } as any);
 
   const { data: trend, error: e4 } = await supabase.rpc("exec_sql_json", {
     q: sql.recentTrend,
-    p: params,
+    p: params as any,
   } as any);
 
   const err = e1 || e2 || e3 || e4;
