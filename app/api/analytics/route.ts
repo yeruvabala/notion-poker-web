@@ -34,12 +34,8 @@ export async function GET(req: Request) {
         get(name: string) {
           return cookieStore.get(name)?.value;
         },
-        set() {
-          // no-op in route handlers (read-only response)
-        },
-        remove() {
-          // no-op in route handlers (read-only response)
-        },
+        set() {},
+        remove() {},
       },
     }
   );
@@ -63,6 +59,17 @@ export async function GET(req: Request) {
   const params = stakes
     ? [user.id, fromDate, toDate, stakes]
     : [user.id, fromDate, toDate];
+
+  // Safely turn learning_tag (text[] OR text) into text[] for unnest
+  const tags_array_expr = `
+    COALESCE(
+      CASE
+        WHEN pg_typeof(learning_tag)::text = 'text[]' THEN learning_tag
+        ELSE string_to_array(NULLIF(learning_tag::text, ''), ',')
+      END,
+      ARRAY[]::text[]
+    )
+  `;
 
   const sql = {
     overview: `
@@ -91,7 +98,7 @@ export async function GET(req: Request) {
       leak as (
         select tag as learning_tag, avg(result_bb) as bb, count(*) as n
         from (
-          select unnest(learning_tag) as tag, result_bb
+          select unnest(${tags_array_expr}) as tag, result_bb
           from public.hands_silver
           where ${baseFilters}
         ) t
@@ -119,7 +126,7 @@ export async function GET(req: Request) {
     leakImpact: `
       select tag as learning_tag, avg(result_bb) as bb, count(*) as n
       from (
-        select unnest(learning_tag) as tag, result_bb
+        select unnest(${tags_array_expr}) as tag, result_bb
         from public.hands_silver
         where ${baseFilters}
       ) t
