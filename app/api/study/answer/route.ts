@@ -1,6 +1,6 @@
+// app/api/study/answer/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@supabase/supabase-js';
 import { sql } from '@vercel/postgres';
 import OpenAI from 'openai';
 
@@ -10,6 +10,9 @@ export const dynamic = 'force-dynamic';
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 // --- Types -------------------------------------------------------------------
 
@@ -49,14 +52,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1) Auth: read Supabase session from cookies
-    const supabase = createRouteHandlerClient({ cookies });
+    // 1) Auth: read Supabase JWT from Authorization header and validate it
+    const authHeader = req.headers.get('Authorization') || '';
+    const tokenMatch = authHeader.match(/^Bearer\s+(.+)$/i);
+    const accessToken = tokenMatch?.[1];
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { ok: false, error: 'Missing access token' },
+        { status: 401 },
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: { persistSession: false },
+      global: {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    });
+
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      console.error('[/api/study/answer] auth error', authError);
       return NextResponse.json(
         { ok: false, error: 'Unauthorized' },
         { status: 401 },
@@ -90,7 +113,6 @@ export async function POST(req: NextRequest) {
     const embeddingVec = embedding as unknown as any; // TS-safe for @vercel/postgres
 
     // 4) Vector search in study_chunks for this user
-    //    (fetch a bit more than k, then filter in JS by stakes/position/street)
     const overFetch = k * 4;
 
     const { rows } = await sql<ChunkRow>`
@@ -112,7 +134,7 @@ export async function POST(req: NextRequest) {
 
     let chunks = rows;
 
-    // Filter client-side for now (simpler / less SQL gymnastics)
+    // Filter client-side for now
     chunks = chunks.filter((c) => {
       if (stakes && c.stakes_bucket !== stakes) return false;
       if (position && c.position !== position) return false;
@@ -219,7 +241,7 @@ export async function POST(req: NextRequest) {
           : [],
       };
     } catch (e) {
-      // Fallback if JSON parsing fails: treat whole content as a summary-only answer
+      // Fallback if JSON parsing fails
       coach = {
         summary: content || 'Coach answer is unavailable for this query.',
         rules: [],
