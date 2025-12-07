@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -11,9 +11,9 @@ type Hand = {
   date: string | null;
   stakes: string | null;
   position: string | null;
-  cards?: string | null;
-  gto_strategy?: string | null;
-  exploit_deviation?: string | null;
+  cards: string | null;
+  gto_strategy: string | null;
+  exploit_deviation: string | null;
 };
 
 export default function HistoryPage() {
@@ -23,159 +23,335 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [hands, setHands] = useState<Hand[]>([]);
+  const [uploadBusy, setUploadBusy] = useState(false);
+  const [uploadMsg, setUploadMsg] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
-      try {
-        setLoading(true);
-        setErr(null);
+      setLoading(true);
+      setErr(null);
 
-        // Ensure we have a user
-        const { data: userResp, error: userErr } = await supabase.auth.getUser();
-        if (userErr) throw userErr;
-        const user = userResp?.user;
-        if (!user) {
-          router.replace('/login');
-          return;
+      const {
+        data: { user },
+        error: userErr,
+      } = await supabase.auth.getUser();
+
+      if (userErr) {
+        console.error(userErr);
+        if (!cancelled) {
+          setErr('Could not load user session.');
+          setLoading(false);
         }
+        return;
+      }
 
-        // Fetch hands including GTO + Deviation
-        const { data, error } = await supabase
-          .from('hands')
-          .select(
-            `
-            id,
-            created_at,
-            date,
-            stakes,
-            position,
-            cards,
-            gto_strategy,
-            exploit_deviation
+      if (!user) {
+        if (!cancelled) {
+          router.push('/');
+        }
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('hands')
+        .select(
           `
-          )
-          .eq('user_id', user.id)
-          .order('date', { ascending: false, nullsFirst: false })
-          .order('created_at', { ascending: false }); // fallback ordering
+          id,
+          created_at,
+          date,
+          stakes,
+          position,
+          cards,
+          gto_strategy,
+          exploit_deviation
+        `
+        )
+        .eq('user_id', user.id)
+        .order('date', { ascending: false, nullsFirst: false })
+        .limit(200);
 
-        if (error) throw error;
-        if (cancelled) return;
-        setHands((data as Hand[]) ?? []);
-      } catch (e: any) {
-        if (!cancelled) setErr(e?.message ?? 'Failed to load hands');
-      } finally {
-        if (!cancelled) setLoading(false);
+      if (error) {
+        console.error(error);
+        if (!cancelled) {
+          setErr('Failed to load hands.');
+          setLoading(false);
+        }
+        return;
+      }
+
+      if (!cancelled) {
+        setHands((data || []) as Hand[]);
+        setLoading(false);
       }
     }
 
     load();
+
     return () => {
       cancelled = true;
     };
   }, [router, supabase]);
 
+  async function handleUploadChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadMsg(null);
+    setUploadBusy(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/uploads/direct', {
+        method: 'POST',
+        body: formData,
+      });
+
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
+      if (!res.ok) {
+        const msg =
+          (data && (data.error || data.message)) ||
+          `Upload failed with status ${res.status}`;
+        throw new Error(msg);
+      }
+
+      setUploadMsg(
+        "Upload received. We'll parse these hands in the background over the next few minutes."
+      );
+      // allow selecting the same file again
+      e.target.value = '';
+    } catch (error: any) {
+      console.error('upload error', error);
+      setUploadMsg(`Error: ${error?.message || 'Upload failed'}`);
+    } finally {
+      setUploadBusy(false);
+    }
+  }
+
+  const hasHands = hands.length > 0;
+
   return (
-    <main className="p">
-      <div className="wrap">
-        <h1 className="title">My Hands</h1>
+    <main className="op-page">
+      <div className="op-wrap">
+        <header className="op-header">
+          <div>
+            <h1 className="op-title">My Hands</h1>
+            <p className="op-sub">
+              Recent hands you&apos;ve sent to Only Poker. New uploads will appear
+              here after the background parser finishes.
+            </p>
+          </div>
+          <Link href="/" className="op-back">
+            ← Back to App
+          </Link>
+        </header>
 
-        <div className="row" style={{ gap: 10, marginBottom: 12 }}>
-          <Link href="/" className="btn">← Back to App</Link>
-        </div>
+        {/* Upload block moved here from Study tab */}
+        <section className="op-card op-upload">
+          <div className="op-upload-main">
+            <div>
+              <div className="op-upload-title">Upload hand history (.txt)</div>
+              <div className="op-upload-sub">
+                Choose a hand history file from your poker site. We&apos;ll store it
+                in S3 and queue it for parsing.
+              </div>
+            </div>
+            <div>
+              <input
+                type="file"
+                accept=".txt"
+                onChange={handleUploadChange}
+                disabled={uploadBusy}
+              />
+            </div>
+          </div>
+          {uploadMsg && <div className="op-upload-msg">{uploadMsg}</div>}
+        </section>
 
-        {loading && (
-          <div className="ibox">Loading…</div>
-        )}
+        {loading && <div className="op-muted">Loading hands…</div>}
+        {err && !loading && <div className="op-error">{err}</div>}
 
-        {err && (
-          <div className="err">{err}</div>
-        )}
+        {!loading && !err && (
+          <>
+            {!hasHands && (
+              <div className="op-muted">
+                No hands found yet. Upload a .txt history file to get started.
+              </div>
+            )}
 
-        {!loading && !err && hands.length === 0 && (
-          <div className="ibox">No hands yet.</div>
-        )}
-
-        {!loading && !err && hands.length > 0 && (
-          <ul className="list">
-            {hands.map((h) => {
-              const d = h.date ? new Date(h.date) : h.created_at ? new Date(h.created_at) : null;
-              const dateISO = d ? d.toISOString().slice(0, 10) : '—';
-              const dateLocal = d ? d.toLocaleString() : '—';
-
-              return (
-                <li key={h.id} className="item">
-                  {/* Left block — date */}
-                  <div className="left">
-                    <div className="big">{dateISO}</div>
-                    <div className="small muted">{dateLocal}</div>
-                  </div>
-
-                  {/* Mid block — meta + NEW: GTO + Deviation */}
-                  <div className="mid">
-                    <div className="big">
-                      <span>Stakes: {h.stakes ?? '—'}</span>
-                    </div>
-                    <div className="big" style={{ marginTop: 2 }}>
-                      <span>Pos: {h.position ?? '—'}</span>
-                    </div>
-
-                    {/* NEW: GTO Strategy */}
-                    <div className="small" style={{ marginTop: 8 }}>
-                      <span className="muted" style={{ fontWeight: 700 }}>GTO: </span>
-                      <span className="clamp2">{(h.gto_strategy ?? '').trim() || '—'}</span>
-                    </div>
-                    {/* NEW: Exploit Deviation */}
-                    <div className="small" style={{ marginTop: 6 }}>
-                      <span className="muted" style={{ fontWeight: 700 }}>Deviation: </span>
-                      <span className="clamp2">{(h.exploit_deviation ?? '').trim() || '—'}</span>
-                    </div>
-                  </div>
-
-                  {/* Right block — cards */}
-                  <div className="big">
-                    Cards: {h.cards ?? '—'}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+            {hasHands && (
+              <section className="op-card">
+                <div className="op-table-header">
+                  <span>Date</span>
+                  <span>Stakes</span>
+                  <span>Position</span>
+                  <span>Cards</span>
+                  <span>Coach status</span>
+                </div>
+                <div className="op-divider" />
+                <ul className="op-table-body">
+                  {hands.map((h) => {
+                    const d = h.date || h.created_at?.slice(0, 10);
+                    const coached = h.gto_strategy ? 'Coached' : 'Pending';
+                    return (
+                      <li key={h.id} className="op-row">
+                        <span>{d || '—'}</span>
+                        <span>{h.stakes || '—'}</span>
+                        <span>{h.position || '—'}</span>
+                        <span>{h.cards || '—'}</span>
+                        <span
+                          className={
+                            h.gto_strategy ? 'op-pill-ok' : 'op-pill-pending'
+                          }
+                        >
+                          {coached}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            )}
+          </>
         )}
       </div>
 
-      {/* keep your existing look & feel */}
       <style jsx global>{`
-        :root{
-          --ink:#0f172a;
-          --muted:#6b7280;
-          --card:#ffffff;
-          --line:#e5e7eb;
+        .op-page {
+          padding: 28px 18px;
         }
-        .p{padding:28px 18px}
-        .wrap{max-width:1100px;margin:0 auto}
-        .title{font-size:44px;font-weight:800;margin:0 0 18px}
-        .row{display:flex;align-items:center}
-        .btn{border:1px solid var(--line);background:#fff;padding:8px 12px;border-radius:12px;cursor:pointer;text-decoration:none;color:inherit}
-        .ibox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
-        .err{background:#fee2e2;border:1px solid #fecaca;border-radius:14px;padding:12px;color:#991b1b}
-        .list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
-        .item{background:var(--card);border:1px solid var(--line);display:flex;gap:16px;align-items:flex-start;border-radius:14px;padding:12px;justify-content:space-between}
-        .left{min-width:180px}
-        .mid{min-width:200px;flex:1}
-        .big{font-weight:700}
-        .muted{color:var(--muted)}
-        .small{font-size:12px}
-        .clamp2{
-          display:-webkit-box;
-          -webkit-line-clamp:2;
-          -webkit-box-orient:vertical;
-          overflow:hidden;
-          word-break:break-word;
+        .op-wrap {
+          max-width: 1100px;
+          margin: 0 auto;
         }
-        @media (max-width:780px){
-          .item{flex-direction:column}
-          .left,.mid{min-width:auto}
+        .op-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin-bottom: 18px;
+        }
+        .op-title {
+          font-size: 32px;
+          font-weight: 800;
+          margin: 0 0 4px;
+        }
+        .op-sub {
+          margin: 0;
+          font-size: 14px;
+          color: #6b7280;
+        }
+        .op-back {
+          font-size: 14px;
+          border-radius: 999px;
+          padding: 6px 14px;
+          border: 1px solid #e5e7eb;
+          text-decoration: none;
+        }
+        .op-card {
+          background: #ffffff;
+          border-radius: 16px;
+          border: 1px solid #e5e7eb;
+          padding: 16px 18px;
+          margin-bottom: 16px;
+        }
+        .op-upload {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .op-upload-main {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+        .op-upload-title {
+          font-weight: 600;
+          margin-bottom: 4px;
+        }
+        .op-upload-sub {
+          font-size: 13px;
+          color: #6b7280;
+        }
+        .op-upload-msg {
+          font-size: 12px;
+          color: #4b5563;
+        }
+        .op-muted {
+          font-size: 14px;
+          color: #6b7280;
+          margin-top: 8px;
+        }
+        .op-error {
+          font-size: 14px;
+          color: #b91c1c;
+          margin-top: 8px;
+        }
+        .op-table-header {
+          display: grid;
+          grid-template-columns: 120px 120px 120px 1fr 120px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #4b5563;
+          margin-bottom: 6px;
+        }
+        .op-divider {
+          height: 1px;
+          background: #e5e7eb;
+          margin-bottom: 4px;
+        }
+        .op-table-body {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+        .op-row {
+          display: grid;
+          grid-template-columns: 120px 120px 120px 1fr 120px;
+          font-size: 13px;
+          padding: 6px 0;
+          border-bottom: 1px solid #f3f4f6;
+        }
+        .op-row:last-child {
+          border-bottom: none;
+        }
+        .op-pill-ok,
+        .op-pill-pending {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2px 10px;
+          border-radius: 999px;
+          font-size: 12px;
+        }
+        .op-pill-ok {
+          background: #ecfdf3;
+          color: #15803d;
+        }
+        .op-pill-pending {
+          background: #eff6ff;
+          color: #1d4ed8;
+        }
+
+        @media (max-width: 768px) {
+          .op-page {
+            padding: 18px 12px;
+          }
+          .op-table-header,
+          .op-row {
+            grid-template-columns: 90px 90px 80px 1fr 90px;
+          }
         }
       `}</style>
     </main>
