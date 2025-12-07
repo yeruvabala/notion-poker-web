@@ -1,229 +1,241 @@
-// app/api/study/answer/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { sql } from '@vercel/postgres';
 import OpenAI from 'openai';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// --- Types -------------------------------------------------------------------
+
 type Drill = {
+  id: string;
   question: string;
   answer: string;
-  explanation: string;
+  explanation?: string;
 };
 
-type CoachResponse = {
+type CoachResult = {
   summary: string;
   rules: string[];
   drills: Drill[];
 };
 
-function normaliseFilter(value: string | null | undefined) {
-  if (!value) return null;
-  const v = value.toLowerCase();
-  if (v === 'any' || v === 'any street' || v === 'all' || v === 'all stakes') {
-    return null;
-  }
-  return value;
-}
+type ChunkRow = {
+  id: string;
+  user_id: string;
+  content: string;
+  source: string | null;
+  stakes_bucket: string | null;
+  position: string | null;
+  street: string | null;
+  tags: string[] | null;
+  score: number;
+};
+
+// --- Handler -----------------------------------------------------------------
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-
-    const q: string = body.q;
-    const stakes: string | null = body.stakes ?? null;
-    const position: string | null = body.position ?? null;
-    const street: string | null = body.street ?? null;
-    const k: number = Number(body.k ?? 5);
-    const userId: string | null = body.userId ?? null;
-
-    if (!userId) {
+    if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { error: 'Missing userId in request body' },
+        { ok: false, error: 'OPENAI_API_KEY is not configured' },
+        { status: 500 },
+      );
+    }
+
+    // 1) Auth: read Supabase session from cookies
+    const supabase = createRouteHandlerClient({ cookies });
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { ok: false, error: 'Unauthorized' },
+        { status: 401 },
+      );
+    }
+
+    const userId = user.id;
+
+    // 2) Parse body
+    const body = await req.json().catch(() => ({}));
+    const q = (body.q as string | undefined)?.trim() ?? '';
+    const stakes = body.stakes as string | undefined; // e.g. "10NL"
+    const position = body.position as string | undefined; // e.g. "BTN"
+    const street = body.street as string | undefined; // e.g. "river"
+    const kRaw = Number(body.k ?? 5);
+    const k = Number.isFinite(kRaw) && kRaw > 0 ? Math.min(kRaw, 20) : 5;
+
+    if (!q) {
+      return NextResponse.json(
+        { ok: false, error: 'Question (q) is required' },
         { status: 400 },
       );
     }
 
-    if (!q || typeof q !== 'string') {
-      return NextResponse.json(
-        { error: 'q (question) is required' },
-        { status: 400 },
-      );
-    }
-
-    const stakesFilter = normaliseFilter(stakes);
-    const positionFilter = normaliseFilter(position);
-    const streetFilter = normaliseFilter(street);
-
-    // 1) Embed the question
-    const embed = await openai.embeddings.create({
+    // 3) Embed the question
+    const embedResp = await openai.embeddings.create({
       model: 'text-embedding-3-small',
       input: q,
     });
-    const embedding = embed.data[0].embedding;
+    const embedding = embedResp.data[0].embedding;
+    const embeddingVec = embedding as unknown as any; // TS-safe for @vercel/postgres
 
-    // 2) Vector search over study_chunks
-    const { rows } = await sql<{
-      id: number;
-      user_id: string;
-      content: string;
-      stakes_bucket: string | null;
-      position_norm: string | null;
-      street: string | null;
-      tags: string[] | null;
-      source_type: string | null;
-      source_id: string | null;
-      meta: any;
-      score: number;
-    }>`
+    // 4) Vector search in study_chunks for this user
+    //    (fetch a bit more than k, then filter in JS by stakes/position/street)
+    const overFetch = k * 4;
+
+    const { rows } = await sql<ChunkRow>`
       select
         id,
         user_id,
         content,
+        source,
         stakes_bucket,
-        position_norm,
-        street,
+        position_norm as position,
+        street_reached as street,
         tags,
-        source_type,
-        source_id,
-        meta,
-        1 - (embedding <=> ${embedding}::vector) as score
+        1 - (embedding <=> ${embeddingVec}::vector) as score
       from public.study_chunks
       where user_id = ${userId}
-        and (${stakesFilter}::text is null or stakes_bucket = ${stakesFilter})
-        and (${positionFilter}::text is null or position_norm = ${positionFilter})
-        and (${streetFilter}::text is null or street = ${streetFilter})
-      order by embedding <=> ${embedding}::vector
-      limit ${isNaN(k) || k <= 0 ? 5 : k};
+      order by embedding <=> ${embeddingVec}::vector
+      limit ${overFetch};
     `;
 
-    // 3) Build context string for the model
-    const contextBlocks = rows.map((r, idx) => {
-      const metaBits: string[] = [];
-      if (r.stakes_bucket) metaBits.push(`stakes=${r.stakes_bucket}`);
-      if (r.position_norm) metaBits.push(`position=${r.position_norm}`);
-      if (r.street) metaBits.push(`street=${r.street}`);
-      if (r.tags && r.tags.length > 0)
-        metaBits.push(`tags=${r.tags.join(',')}`);
-      if (r.source_type) metaBits.push(`source=${r.source_type}`);
+    let chunks = rows;
 
-      const headerMeta =
-        metaBits.length > 0 ? ` [${metaBits.join(' • ')}]` : '';
-
-      return `[#${idx + 1}]${headerMeta}\n${r.content}`.trim();
+    // Filter client-side for now (simpler / less SQL gymnastics)
+    chunks = chunks.filter((c) => {
+      if (stakes && c.stakes_bucket !== stakes) return false;
+      if (position && c.position !== position) return false;
+      if (street && c.street !== street) return false;
+      return true;
     });
 
-    const contextText =
-      contextBlocks.length > 0
-        ? contextBlocks.join('\n\n---\n\n')
-        : 'No matching notes or hands were found for this player. Answer based on solid default GTO and exploitative heuristics for low-stakes online NLHE.';
+    // Keep best k after filtering
+    chunks = chunks
+      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+      .slice(0, k);
 
-    // 4) Call the coach model
-    const systemPrompt = `
-You are a poker strategy coach for 6-max online No-Limit Hold'em cash games.
+    if (chunks.length === 0) {
+      const emptyCoach: CoachResult = {
+        summary:
+          "I couldn't find any matching notes or hands for this query yet. Try uploading more hand histories or adding study notes.",
+        rules: [],
+        drills: [],
+      };
+      return NextResponse.json({
+        ok: true,
+        coach: emptyCoach,
+        chunks: [],
+      });
+    }
 
-You are given:
-- A player question or leak description.
-- Retrieved context from their study notes, GTO outputs, and hand histories.
-Your job:
-1) Summarize what is going on in this spot for this player.
-2) List 3–7 clear rules/heuristics they should follow.
-3) Produce 3–8 drills they can practice. Each drill should have:
-   - question: a concise scenario or quiz-style question.
-   - answer: the correct action or explanation.
-   - explanation: why this is correct, referencing any relevant rules.
+    // 5) Build context string for the model
+    const contextText = chunks
+      .map((c, idx) => {
+        const tagsStr = (c.tags ?? []).join(', ');
+        return [
+          `Chunk ${idx + 1}`,
+          `source: ${c.source ?? 'unknown'}`,
+          `stakes: ${c.stakes_bucket ?? 'unknown'}`,
+          `position: ${c.position ?? 'unknown'}`,
+          `street: ${c.street ?? 'unknown'}`,
+          tagsStr ? `tags: ${tagsStr}` : '',
+          '',
+          c.content,
+        ]
+          .filter(Boolean)
+          .join('\n');
+      })
+      .join('\n\n---\n\n');
 
-Be concise but specific. Assume stakes like 10NL–50NL online; avoid solver jargon that a serious but non-pro reg can’t follow.
-`.trim();
+    // 6) Ask OpenAI to produce JSON: summary + rules + drills
+    const systemPrompt =
+      'You are a professional poker strategy coach. ' +
+      'You analyse the user question and the provided study context (notes, hands, GTO snippets) ' +
+      'and return a JSON object with three keys: "summary", "rules", and "drills". ' +
+      '"summary" is 2–4 sentences. "rules" is an array of concise heuristics. ' +
+      '"drills" is an array of objects: { "id", "question", "answer", "explanation" }. ' +
+      'Focus on practical, NLH cash-game strategy at low/mid stakes. ' +
+      'Return ONLY valid JSON, no prose.';
 
-    const userPrompt = `
-Player question / focus:
-"${q}"
+    const userPrompt = [
+      `User question: ${q}`,
+      '',
+      'Study context:',
+      contextText,
+      '',
+      'Return JSON in this shape (keys required):',
+      '{',
+      '  "summary": "string",',
+      '  "rules": ["rule 1", "rule 2", "..."],',
+      '  "drills": [',
+      '    { "id": "drill-1", "question": "Q?", "answer": "A", "explanation": "why" }',
+      '  ]',
+      '}',
+    ].join('\n');
 
-Filters in UI:
-- Stakes filter: ${stakesFilter ?? 'Any'}
-- Position filter: ${positionFilter ?? 'Any'}
-- Street filter: ${streetFilter ?? 'Any'}
-
-Retrieved context (notes, hands, GTO snippets):
-${contextText}
-
-Now:
-1) Give a 2–4 sentence summary of what's going on for this player.
-2) List key rules as short bullet-point style strings.
-3) Create practical drills focused exactly on this spot.
-`.trim();
-
-    const completion = await openai.chat.completions.create({
+    const chat = await openai.chat.completions.create({
       model: 'gpt-4.1-mini',
+      temperature: 0.4,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'coach_response',
-          schema: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              summary: { type: 'string' },
-              rules: {
-                type: 'array',
-                items: { type: 'string' },
-              },
-              drills: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  additionalProperties: false,
-                  properties: {
-                    question: { type: 'string' },
-                    answer: { type: 'string' },
-                    explanation: { type: 'string' },
-                  },
-                  required: ['question', 'answer', 'explanation'],
-                },
-              },
-            },
-            required: ['summary', 'rules', 'drills'],
-          },
-        },
-      },
-      temperature: 0.5,
     });
 
-    const messageContent = completion.choices[0]?.message?.content;
-    let coach: CoachResponse | null = null;
+    const content = chat.choices[0]?.message?.content ?? '{}';
 
-    if (typeof messageContent === 'string') {
-      try {
-        coach = JSON.parse(messageContent) as CoachResponse;
-      } catch {
-        coach = null;
-      }
-    } else if (typeof messageContent === 'object' && messageContent !== null) {
-      // If the SDK already parsed JSON for us
-      coach = messageContent as unknown as CoachResponse;
+    let coach: CoachResult;
+
+    try {
+      const parsed = JSON.parse(content);
+
+      coach = {
+        summary:
+          typeof parsed.summary === 'string'
+            ? parsed.summary
+            : 'Here is a high-level summary of this spot.',
+        rules: Array.isArray(parsed.rules)
+          ? parsed.rules.map((r: any) => String(r)).filter(Boolean)
+          : [],
+        drills: Array.isArray(parsed.drills)
+          ? parsed.drills.map((d: any, idx: number) => ({
+              id: String(d.id ?? `drill-${idx + 1}`),
+              question: String(d.question ?? ''),
+              answer: String(d.answer ?? ''),
+              explanation:
+                d.explanation != null ? String(d.explanation) : undefined,
+            }))
+          : [],
+      };
+    } catch (e) {
+      // Fallback if JSON parsing fails: treat whole content as a summary-only answer
+      coach = {
+        summary: content || 'Coach answer is unavailable for this query.',
+        rules: [],
+        drills: [],
+      };
     }
 
     return NextResponse.json({
       ok: true,
       coach,
-      chunks: rows,
+      chunks,
     });
   } catch (err: any) {
-    console.error('Error in /api/study/answer:', err);
+    console.error('[/api/study/answer] error', err);
     return NextResponse.json(
-      {
-        error: 'Internal error while answering study question',
-        detail: err?.message ?? String(err),
-      },
+      { ok: false, error: err?.message || 'Internal error' },
       { status: 500 },
     );
   }
