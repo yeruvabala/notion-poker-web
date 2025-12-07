@@ -46,13 +46,15 @@ export async function GET(req: Request) {
   const k = kParam ? Math.min(parseInt(kParam, 10) || 10, 50) : 10;
 
   // 3) Embed the query text
-  let embedding: number[];
+  let embeddingStr: string;
   try {
     const resp = await openai.embeddings.create({
       model: DEFAULT_EMBEDDING_MODEL,
       input: q,
     });
-    embedding = resp.data[0].embedding as unknown as number[];
+    const embedding = resp.data[0].embedding as unknown as number[];
+    // pgvector expects something like '[0.1, 0.2, ...]' which JSON.stringify already gives
+    embeddingStr = JSON.stringify(embedding);
   } catch (err) {
     console.error("Error creating embedding", err);
     return NextResponse.json(
@@ -90,11 +92,9 @@ export async function GET(req: Request) {
         stakes_bucket,
         position_norm,
         street,
-        1 - (embedding <=> ${embedding}::vector) as score
+        1 - (embedding <=> ${embeddingStr}::vector) as score
       from public.study_chunks
       where user_id = ${user.id}
-        -- if stakesFilter is null -> (true OR stakes_bucket = NULL) = true (no filter)
-        -- if stakesFilter has value -> (false OR stakes_bucket = value) = stakes_bucket = value
         and (${stakesFilter === null} or stakes_bucket = ${stakesFilter})
         and (${posFilter === null} or position_norm = ${posFilter})
         and (${streetFilter === null} or street = ${streetFilter})
@@ -102,7 +102,7 @@ export async function GET(req: Request) {
           ${tagFilter === null}
           or ${tagFilter} = ANY(tags)
         )
-      order by embedding <=> ${embedding}::vector
+      order by embedding <=> ${embeddingStr}::vector
       limit ${k};
     `;
 
