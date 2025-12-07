@@ -13,7 +13,7 @@ type StudyDrill = {
 
 type StudyChunk = {
   id: string;
-  source_type?: string | null; // 'note' | 'hand' | 'gto' | ...
+  source_type?: string | null;
   title?: string | null;
   preview?: string | null;
   content: string;
@@ -93,14 +93,16 @@ export default function StudyPage() {
     setErrorMsg(null);
 
     try {
-      // Make sure we have a logged-in user so the API sees the session
+      // 1) Get Supabase session so we can send the access token to the API
       const {
-        data: { user },
-        error: uerr,
-      } = await supabase.auth.getUser();
+        data: { session },
+        error: sErr,
+      } = await supabase.auth.getSession();
 
-      if (uerr) throw new Error(`Supabase error: ${uerr.message}`);
-      if (!user) throw new Error('Please sign in to ask the coach.');
+      if (sErr) throw new Error(`Supabase error: ${sErr.message}`);
+      if (!session) throw new Error('Please sign in to ask the coach.');
+
+      const accessToken = session.access_token;
 
       const body = {
         q: question.trim(),
@@ -112,7 +114,10 @@ export default function StudyPage() {
 
       const res = await fetch('/api/study/answer', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify(body),
       });
 
