@@ -92,7 +92,7 @@ export default function StudyPage() {
     setLoading(true);
     setErrorMsg(null);
 
-    try:
+    try {
       // Make sure we have a logged-in user so the API sees the session
       const {
         data: { user },
@@ -530,8 +530,9 @@ export default function StudyPage() {
 
         {/* Small helper footer */}
         <footer className="mt-2 text-xs text-slate-500">
-          To upload new hand histories, use the <span className="font-medium">My Hands</span>{' '}
-          tab. This Study view reads from your existing notes &amp; hands.
+          To upload new hand histories, use the{' '}
+          <span className="font-medium">My Hands</span> tab. This Study view reads from
+          your existing notes &amp; hands.
         </footer>
       </div>
     </main>
