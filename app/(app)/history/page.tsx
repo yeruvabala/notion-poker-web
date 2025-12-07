@@ -1,3 +1,4 @@
+// app/(app)/history/page.tsx
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -94,6 +95,7 @@ export default function HistoryPage() {
     };
   }, [router, supabase]);
 
+  // --- NEW: upload that both uploads to S3 and enqueues in hand_files ----
   async function handleUploadChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -102,31 +104,72 @@ export default function HistoryPage() {
     setUploadBusy(true);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      // 1) ensure user is logged in
+      const {
+        data: { user },
+        error: uerr,
+      } = await supabase.auth.getUser();
 
-      const res = await fetch('/api/uploads/direct', {
+      if (uerr) throw new Error(`Supabase getUser error: ${uerr.message}`);
+      if (!user) throw new Error('Please sign in.');
+
+      // 2) Direct upload to our API (server will put to S3)
+      const fd = new FormData();
+      fd.append('file', file);
+
+      const upRes = await fetch('/api/uploads/direct', {
         method: 'POST',
-        body: formData,
+        body: fd,
       });
 
-      let data: any = null;
-      try {
-        data = await res.json();
-      } catch {
-        data = null;
+      const upJson = await upRes.json().catch(() => ({}));
+      if (!upRes.ok) {
+        const msg =
+          upJson?.error ||
+          upJson?.message ||
+          `Upload failed with status ${upRes.status}`;
+        throw new Error(msg);
       }
 
-      if (!res.ok) {
+      const { key, contentType } = upJson as {
+        key: string;
+        contentType: string;
+      };
+
+      // 3) Enqueue into hand_files so worker.py can claim it
+      const bucket = process.env.NEXT_PUBLIC_AWS_S3_BUCKET;
+      if (!bucket) {
+        throw new Error(
+          'NEXT_PUBLIC_AWS_S3_BUCKET is not set in the frontend env.'
+        );
+      }
+
+      const s3Path = `s3://${bucket}/${key}`;
+
+      const enqueueRes = await fetch('/api/hand-files/enqueue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storage_path: s3Path,
+          original_filename: file.name,
+          file_size_bytes: file.size,
+          mime_type: contentType || file.type || 'text/plain',
+        }),
+      });
+
+      const enqueueJson = await enqueueRes.json().catch(() => ({}));
+      if (!enqueueRes.ok || !enqueueJson?.ok) {
         const msg =
-          (data && (data.error || data.message)) ||
-          `Upload failed with status ${res.status}`;
+          enqueueJson?.error ||
+          enqueueJson?.message ||
+          `Enqueue failed with status ${enqueueRes.status}`;
         throw new Error(msg);
       }
 
       setUploadMsg(
-        "Upload received. We'll parse these hands in the background over the next few minutes."
+        'Uploaded & queued ✓  The robot will parse it and new hands will show up here soon.'
       );
+
       // allow selecting the same file again
       e.target.value = '';
     } catch (error: any) {
@@ -146,8 +189,8 @@ export default function HistoryPage() {
           <div>
             <h1 className="op-title">My Hands</h1>
             <p className="op-sub">
-              Recent hands you&apos;ve sent to Only Poker. New uploads will appear
-              here after the background parser finishes.
+              Recent hands you&apos;ve sent to Only Poker. New uploads will
+              appear here after the background parser finishes.
             </p>
           </div>
           <Link href="/" className="op-back">
@@ -155,14 +198,14 @@ export default function HistoryPage() {
           </Link>
         </header>
 
-        {/* Upload block moved here from Study tab */}
+        {/* Upload block */}
         <section className="op-card op-upload">
           <div className="op-upload-main">
             <div>
               <div className="op-upload-title">Upload hand history (.txt)</div>
               <div className="op-upload-sub">
-                Choose a hand history file from your poker site. We&apos;ll store it
-                in S3 and queue it for parsing.
+                Choose a hand history file from your poker site. We&apos;ll
+                store it in S3 and queue it for parsing.
               </div>
             </div>
             <div>
