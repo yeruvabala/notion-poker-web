@@ -1,276 +1,230 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { sql } from "@vercel/postgres";
-import OpenAI from "openai";
+// app/api/study/answer/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { sql } from '@vercel/postgres';
+import OpenAI from 'openai';
 
-// Force Node runtime so Supabase + pgvector are happy (not Edge)
-export const runtime = "nodejs";
+export const dynamic = 'force-dynamic';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const DEFAULT_EMBEDDING_MODEL =
-  process.env.EMBEDDING_MODEL || "text-embedding-3-small";
-
-const COACH_MODEL =
-  process.env.STUDY_COACH_MODEL || "gpt-4.1-mini";
-
-// ----------------------------
-// Types we’ll return to the UI
-// ----------------------------
-type DrillItem = {
+type Drill = {
   question: string;
   answer: string;
-  explanation?: string;
+  explanation: string;
 };
 
 type CoachResponse = {
-  summary: string;          // high-level explanation
-  rules: string[];          // bullet-point rules / heuristics
-  drills: DrillItem[];      // quiz cards
-  citations: string[];      // study_chunk ids used
+  summary: string;
+  rules: string[];
+  drills: Drill[];
 };
 
-// ----------------------------
-// Helper: fetch user via Supabase
-// ----------------------------
-async function getCurrentUser() {
-  const supabase = createRouteHandlerClient({ cookies });
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error) {
-    console.error("supabase.getUser error", error);
+function normaliseFilter(value: string | null | undefined) {
+  if (!value) return null;
+  const v = value.toLowerCase();
+  if (v === 'any' || v === 'any street' || v === 'all' || v === 'all stakes') {
+    return null;
   }
-
-  return user;
+  return value;
 }
 
-// ----------------------------
-// Main handler
-// ----------------------------
-
-export async function POST(req: Request) {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  let body: any;
+export async function POST(req: NextRequest) {
   try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json(
-      { error: "Invalid JSON body" },
-      { status: 400 }
-    );
-  }
+    const body = await req.json();
 
-  const rawQ = (body.q || "").trim();
-  if (!rawQ) {
-    return NextResponse.json(
-      { error: "q (question) is required" },
-      { status: 400 }
-    );
-  }
+    const q: string = body.q;
+    const stakes: string | null = body.stakes ?? null;
+    const position: string | null = body.position ?? null;
+    const street: string | null = body.street ?? null;
+    const k: number = Number(body.k ?? 5);
+    const userId: string | null = body.userId ?? null;
 
-  const stakes = body.stakes as string | undefined;   // '10NL'
-  const position = body.position as string | undefined; // 'BTN'
-  const street = body.street as string | undefined;   // 'preflop'
-  const tag = body.tag as string | undefined;         // 'trips_management'
-  const kContext = Math.min(body.k ?? 12, 40);        // how many chunks for context
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Missing userId in request body' },
+        { status: 400 },
+      );
+    }
 
-  // 1) Embed the question
-  let embeddingStr: string;
-  try {
-    const resp = await openai.embeddings.create({
-      model: DEFAULT_EMBEDDING_MODEL,
-      input: rawQ,
+    if (!q || typeof q !== 'string') {
+      return NextResponse.json(
+        { error: 'q (question) is required' },
+        { status: 400 },
+      );
+    }
+
+    const stakesFilter = normaliseFilter(stakes);
+    const positionFilter = normaliseFilter(position);
+    const streetFilter = normaliseFilter(street);
+
+    // 1) Embed the question
+    const embed = await openai.embeddings.create({
+      model: 'text-embedding-3-small',
+      input: q,
     });
-    const embedding = resp.data[0].embedding as unknown as number[];
-    embeddingStr = JSON.stringify(embedding); // pgvector expects "[...]"
-  } catch (err) {
-    console.error("Error creating embedding for question", err);
-    return NextResponse.json(
-      { error: "Failed to create embedding" },
-      { status: 500 }
-    );
-  }
+    const embedding = embed.data[0].embedding;
 
-  const stakesFilter = stakes || null;
-  const posFilter = position || null;
-  const streetFilter = street || null;
-  const tagFilter = tag || null;
-
-  // 2) Retrieve top-K relevant study_chunks for this user
-  type ChunkRow = {
-    id: string;
-    ref_id: string | null;
-    source: string;
-    content: string;
-    tags: string[] | null;
-    stakes_bucket: string | null;
-    position_norm: string | null;
-    street: string | null;
-    score: number;
-  };
-
-  let chunks: ChunkRow[];
-  try {
-    const result = await sql<ChunkRow>`
+    // 2) Vector search over study_chunks
+    const { rows } = await sql<{
+      id: number;
+      user_id: string;
+      content: string;
+      stakes_bucket: string | null;
+      position_norm: string | null;
+      street: string | null;
+      tags: string[] | null;
+      source_type: string | null;
+      source_id: string | null;
+      meta: any;
+      score: number;
+    }>`
       select
         id,
-        ref_id,
-        source,
+        user_id,
         content,
-        tags,
         stakes_bucket,
         position_norm,
         street,
-        1 - (embedding <=> ${embeddingStr}::vector) as score
+        tags,
+        source_type,
+        source_id,
+        meta,
+        1 - (embedding <=> ${embedding}::vector) as score
       from public.study_chunks
-      where user_id = ${user.id}
-        and (${stakesFilter === null} or stakes_bucket = ${stakesFilter})
-        and (${posFilter === null} or position_norm = ${posFilter})
-        and (${streetFilter === null} or street = ${streetFilter})
-        and (
-          ${tagFilter === null}
-          or ${tagFilter} = ANY(tags)
-        )
-      order by embedding <=> ${embeddingStr}::vector
-      limit ${kContext};
+      where user_id = ${userId}
+        and (${stakesFilter}::text is null or stakes_bucket = ${stakesFilter})
+        and (${positionFilter}::text is null or position_norm = ${positionFilter})
+        and (${streetFilter}::text is null or street = ${streetFilter})
+      order by embedding <=> ${embedding}::vector
+      limit ${isNaN(k) || k <= 0 ? 5 : k};
     `;
-    chunks = result.rows;
-  } catch (err) {
-    console.error("Error querying study_chunks in /api/study/answer", err);
-    return NextResponse.json(
-      { error: "Failed to search study_chunks" },
-      { status: 500 }
-    );
-  }
 
-  if (!chunks.length) {
-    return NextResponse.json({
-      coach: {
-        summary:
-          "I couldn't find matching study notes or hands for this spot in your library yet.",
-        rules: [],
-        drills: [],
-        citations: [],
-      } as CoachResponse,
-      chunks: [],
+    // 3) Build context string for the model
+    const contextBlocks = rows.map((r, idx) => {
+      const metaBits: string[] = [];
+      if (r.stakes_bucket) metaBits.push(`stakes=${r.stakes_bucket}`);
+      if (r.position_norm) metaBits.push(`position=${r.position_norm}`);
+      if (r.street) metaBits.push(`street=${r.street}`);
+      if (r.tags && r.tags.length > 0)
+        metaBits.push(`tags=${r.tags.join(',')}`);
+      if (r.source_type) metaBits.push(`source=${r.source_type}`);
+
+      const headerMeta =
+        metaBits.length > 0 ? ` [${metaBits.join(' • ')}]` : '';
+
+      return `[#${idx + 1}]${headerMeta}\n${r.content}`.trim();
     });
-  }
 
-  // 3) Build context string for the LLM
-  const contextBlocks = chunks.map((c, idx) => {
-    const idxLabel = idx + 1;
-    const tagsLabel = c.tags && c.tags.length ? c.tags.join(", ") : "none";
-    const posLabel = c.position_norm || "unknown position";
-    const stakesLabel = c.stakes_bucket || "unknown stakes";
-    const streetLabel = c.street || "unknown street";
+    const contextText =
+      contextBlocks.length > 0
+        ? contextBlocks.join('\n\n---\n\n')
+        : 'No matching notes or hands were found for this player. Answer based on solid default GTO and exploitative heuristics for low-stakes online NLHE.';
 
-    return [
-      `[${idxLabel}] source=${c.source} ref_id=${c.ref_id ?? "n/a"}`,
-      `stakes=${stakesLabel}, position=${posLabel}, street=${streetLabel}`,
-      `tags=${tagsLabel}`,
-      `content:`,
-      c.content,
-    ].join("\n");
-  });
-
-  const contextText = contextBlocks.join("\n\n---\n\n");
-
-  // 4) Ask the coach model to synthesize an answer + drills
-  const systemPrompt = `
-You are a no-limit holdem poker coach.
+    // 4) Call the coach model
+    const systemPrompt = `
+You are a poker strategy coach for 6-max online No-Limit Hold'em cash games.
 
 You are given:
-- A player's question about a situation or leak.
-- A set of context snippets from their own study notes and hand histories.
+- A player question or leak description.
+- Retrieved context from their study notes, GTO outputs, and hand histories.
+Your job:
+1) Summarize what is going on in this spot for this player.
+2) List 3–7 clear rules/heuristics they should follow.
+3) Produce 3–8 drills they can practice. Each drill should have:
+   - question: a concise scenario or quiz-style question.
+   - answer: the correct action or explanation.
+   - explanation: why this is correct, referencing any relevant rules.
 
-Use ONLY that context. If something is not covered, say you don't have enough info.
+Be concise but specific. Assume stakes like 10NL–50NL online; avoid solver jargon that a serious but non-pro reg can’t follow.
+`.trim();
 
-Return JSON with the following TypeScript shape:
+    const userPrompt = `
+Player question / focus:
+"${q}"
 
-{
-  "summary": string,              // 2–4 sentences explaining what's going wrong + key ideas
-  "rules": string[],              // 3–8 bullet-point rules / heuristics in plain language
-  "drills": [                     // 3–6 practice questions
-    {
-      "question": string,         // the scenario/question
-      "answer": string,           // the correct answer in 1–2 sentences
-      "explanation"?: string      // optional deeper explanation
-    }
-  ],
-  "citations": string[]           // list of chunk ids (from the 'id=' field) you used most
-}
+Filters in UI:
+- Stakes filter: ${stakesFilter ?? 'Any'}
+- Position filter: ${positionFilter ?? 'Any'}
+- Street filter: ${streetFilter ?? 'Any'}
 
-Important:
-- The JSON MUST be valid. Do not wrap it in markdown. No extra commentary.
-- Use simple text; avoid LaTeX.
-- When referencing context, think in terms of exploit vs GTO when appropriate, but stay grounded in the snippets.
-`;
-
-  const userPrompt = `
-Player question:
-"${rawQ}"
-
-Context (study_chunks):
+Retrieved context (notes, hands, GTO snippets):
 ${contextText}
-`;
 
-  let coachRaw: string;
-  try {
-    const chat = await openai.chat.completions.create({
-      model: COACH_MODEL,
-      temperature: 0.3,
+Now:
+1) Give a 2–4 sentence summary of what's going on for this player.
+2) List key rules as short bullet-point style strings.
+3) Create practical drills focused exactly on this spot.
+`.trim();
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4.1-mini',
       messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
       ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'coach_response',
+          schema: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              summary: { type: 'string' },
+              rules: {
+                type: 'array',
+                items: { type: 'string' },
+              },
+              drills: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  additionalProperties: false,
+                  properties: {
+                    question: { type: 'string' },
+                    answer: { type: 'string' },
+                    explanation: { type: 'string' },
+                  },
+                  required: ['question', 'answer', 'explanation'],
+                },
+              },
+            },
+            required: ['summary', 'rules', 'drills'],
+          },
+        },
+      },
+      temperature: 0.5,
     });
 
-    coachRaw = chat.choices[0]?.message?.content ?? "";
-  } catch (err) {
-    console.error("Error calling coach model", err);
+    const messageContent = completion.choices[0]?.message?.content;
+    let coach: CoachResponse | null = null;
+
+    if (typeof messageContent === 'string') {
+      try {
+        coach = JSON.parse(messageContent) as CoachResponse;
+      } catch {
+        coach = null;
+      }
+    } else if (typeof messageContent === 'object' && messageContent !== null) {
+      // If the SDK already parsed JSON for us
+      coach = messageContent as unknown as CoachResponse;
+    }
+
+    return NextResponse.json({
+      ok: true,
+      coach,
+      chunks: rows,
+    });
+  } catch (err: any) {
+    console.error('Error in /api/study/answer:', err);
     return NextResponse.json(
-      { error: "Failed to call coach model" },
-      { status: 500 }
+      {
+        error: 'Internal error while answering study question',
+        detail: err?.message ?? String(err),
+      },
+      { status: 500 },
     );
   }
-
-  // 5) Parse JSON; if it fails, fall back to a simple wrapper
-  let coach: CoachResponse;
-  try {
-    coach = JSON.parse(coachRaw) as CoachResponse;
-  } catch (err) {
-    console.warn("Failed to parse coach JSON, returning fallback", err);
-    coach = {
-      summary: coachRaw || "Coach response could not be parsed.",
-      rules: [],
-      drills: [],
-      citations: [],
-    };
-  }
-
-  // 6) Return both coach output + raw chunks (for debug / UI later)
-  return NextResponse.json({
-    coach,
-    chunks: chunks.map((c) => ({
-      id: c.id,
-      ref_id: c.ref_id,
-      source: c.source,
-      content: c.content,
-      tags: c.tags || [],
-      stakes_bucket: c.stakes_bucket,
-      position_norm: c.position_norm,
-      street: c.street,
-      score: c.score,
-    })),
-  });
 }
