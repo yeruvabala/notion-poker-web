@@ -1,20 +1,34 @@
-// app/api/study/answer/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { sql } from '@vercel/postgres';
+import { cookies } from 'next/headers';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import OpenAI from 'openai';
+import { Pool } from 'pg';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// ---------- OpenAI client ----------
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// ---------- PG Pool (Supabase Postgres) ----------
+function getPool() {
+  const g = global as any;
+  if (!g.__onlypoker_pg_pool) {
+    const connectionString =
+      process.env.POSTGRES_URL || process.env.DATABASE_URL;
 
-// --- Types -------------------------------------------------------------------
+    if (!connectionString) {
+      throw new Error(
+        'POSTGRES_URL (or DATABASE_URL) is not set in environment variables'
+      );
+    }
+
+    g.__onlypoker_pg_pool = new Pool({ connectionString });
+  }
+  return g.__onlypoker_pg_pool as Pool;
+}
 
 type Drill = {
   id: string;
@@ -41,72 +55,44 @@ type ChunkRow = {
   score: number;
 };
 
-// --- Handler -----------------------------------------------------------------
-
 export async function POST(req: NextRequest) {
   try {
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
         { ok: false, error: 'OPENAI_API_KEY is not configured' },
-        { status: 500 },
+        { status: 500 }
       );
     }
 
-    if (!supabaseUrl || !supabaseServiceRoleKey) {
-      return NextResponse.json(
-        { ok: false, error: 'Supabase service role key is not configured' },
-        { status: 500 },
-      );
-    }
-
-    // 1) Auth: read Supabase JWT from Authorization header
-    const authHeader = req.headers.get('Authorization') || '';
-    const tokenMatch = authHeader.match(/^Bearer\s+(.+)$/i);
-    const accessToken = tokenMatch?.[1];
-
-    if (!accessToken) {
-      return NextResponse.json(
-        { ok: false, error: 'Missing access token' },
-        { status: 401 },
-      );
-    }
-
-    // Use service-role key on the server to validate the token
-    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    });
-
+    // 1) Auth from Supabase cookies
+    const supabase = createRouteHandlerClient({ cookies });
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser(accessToken);
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      console.error('[/api/study/answer] auth error', authError);
       return NextResponse.json(
         { ok: false, error: 'Unauthorized' },
-        { status: 401 },
+        { status: 401 }
       );
     }
-
     const userId = user.id;
 
     // 2) Parse body
     const body = await req.json().catch(() => ({}));
     const q = (body.q as string | undefined)?.trim() ?? '';
-    const stakes = body.stakes as string | undefined; // e.g. "10NL"
-    const position = body.position as string | undefined; // e.g. "BTN"
-    const street = body.street as string | undefined; // e.g. "river"
+    const range = body.range as string | undefined; // currently not used in SQL
+    const stakes = body.stakes as string | undefined;
+    const position = body.position as string | undefined;
+    const street = body.street as string | undefined;
     const kRaw = Number(body.k ?? 5);
     const k = Number.isFinite(kRaw) && kRaw > 0 ? Math.min(kRaw, 20) : 5;
 
     if (!q) {
       return NextResponse.json(
         { ok: false, error: 'Question (q) is required' },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -115,13 +101,19 @@ export async function POST(req: NextRequest) {
       model: 'text-embedding-3-small',
       input: q,
     });
-    const embedding = embedResp.data[0].embedding;
-    const embeddingVec = embedding as unknown as any; // TS-safe for @vercel/postgres
+
+    const embedding = embedResp.data[0].embedding as number[];
+
+    // node-postgres does not know about `vector`, so we pass it as a string
+    // and cast to vector in SQL:  $1::vector
+    const embeddingStr = `[${embedding.join(',')}]`;
 
     // 4) Vector search in study_chunks for this user
     const overFetch = k * 4;
+    const pool = getPool();
 
-    const { rows } = await sql<ChunkRow>`
+    const { rows } = await pool.query<ChunkRow>(
+      `
       select
         id,
         user_id,
@@ -131,16 +123,18 @@ export async function POST(req: NextRequest) {
         position_norm as position,
         street_reached as street,
         tags,
-        1 - (embedding <=> ${embeddingVec}::vector) as score
+        1 - (embedding <=> $1::vector) as score
       from public.study_chunks
-      where user_id = ${userId}
-      order by embedding <=> ${embeddingVec}::vector
-      limit ${overFetch};
-    `;
+      where user_id = $2
+      order by embedding <=> $1::vector
+      limit $3;
+    `,
+      [embeddingStr, userId, overFetch]
+    );
 
     let chunks = rows;
 
-    // Filter client-side for now
+    // 5) Filter by stakes / position / street in JS for now
     chunks = chunks.filter((c) => {
       if (stakes && c.stakes_bucket !== stakes) return false;
       if (position && c.position !== position) return false;
@@ -148,7 +142,6 @@ export async function POST(req: NextRequest) {
       return true;
     });
 
-    // Keep best k after filtering
     chunks = chunks
       .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
       .slice(0, k);
@@ -167,7 +160,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 5) Build context string for the model
+    // 6) Build context for the model
     const contextText = chunks
       .map((c, idx) => {
         const tagsStr = (c.tags ?? []).join(', ');
@@ -186,7 +179,6 @@ export async function POST(req: NextRequest) {
       })
       .join('\n\n---\n\n');
 
-    // 6) Ask OpenAI to produce JSON: summary + rules + drills
     const systemPrompt =
       'You are a professional poker strategy coach. ' +
       'You analyse the user question and the provided study context (notes, hands, GTO snippets) ' +
@@ -246,8 +238,8 @@ export async function POST(req: NextRequest) {
             }))
           : [],
       };
-    } catch (e) {
-      // Fallback if JSON parsing fails
+    } catch {
+      // Fallback: treat whole content as summary
       coach = {
         summary: content || 'Coach answer is unavailable for this query.',
         rules: [],
@@ -264,7 +256,7 @@ export async function POST(req: NextRequest) {
     console.error('[/api/study/answer] error', err);
     return NextResponse.json(
       { ok: false, error: err?.message || 'Internal error' },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
