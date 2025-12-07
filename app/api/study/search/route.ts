@@ -1,132 +1,105 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { sql } from "@vercel/postgres";
-import OpenAI from "openai";
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
 
-// Force Node runtime so Supabase + pgvector are happy (not Edge)
-export const runtime = "nodejs";
+// Keep this route dynamic – we don't want it statically cached
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Same helper pattern as app/api/hands/route.ts
+function supa() {
+  const cookieStore = cookies();
 
-const DEFAULT_EMBEDDING_MODEL =
-  process.env.EMBEDDING_MODEL || "text-embedding-3-small";
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch {
+            // Ignore – Next.js route handlers don't always allow setting cookies
+          }
+        },
+        remove(name: string, options: any) {
+          try {
+            cookieStore.set({ name, value: '', ...options, maxAge: 0 });
+          } catch {
+            // Ignore
+          }
+        },
+      },
+    }
+  );
+}
 
 export async function GET(req: Request) {
-  // 1) Auth: get current user from Supabase session
-  const supabase = createRouteHandlerClient({ cookies });
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError) {
-    console.error("supabase.getUser error", userError);
-  }
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  // 2) Parse query params
-  const { searchParams } = new URL(req.url);
-  const q = (searchParams.get("q") || "").trim();
-
-  if (!q) {
-    // Empty query -> just return nothing (frontend can handle this)
-    return NextResponse.json({ chunks: [] });
-  }
-
-  const stakes = searchParams.get("stakes"); // e.g. '10NL'
-  const position = searchParams.get("position"); // e.g. 'BTN'
-  const street = searchParams.get("street"); // e.g. 'preflop'
-  const tag = searchParams.get("tag"); // e.g. 'trips_management'
-  const kParam = searchParams.get("k");
-  const k = kParam ? Math.min(parseInt(kParam, 10) || 10, 50) : 10;
-
-  // 3) Embed the query text
-  let embeddingStr: string;
   try {
-    const resp = await openai.embeddings.create({
-      model: DEFAULT_EMBEDDING_MODEL,
-      input: q,
+    const { searchParams } = new URL(req.url);
+
+    const q = (searchParams.get('q') || '').trim();
+    const stakes = searchParams.get('stakes') || null;
+    const position = searchParams.get('position') || null;
+    const street = searchParams.get('street') || null;
+    const kRaw = searchParams.get('k');
+    const k =
+      kRaw != null
+        ? Math.min(Math.max(parseInt(kRaw, 10) || 0, 1), 50)
+        : 10;
+
+    if (!q) {
+      return NextResponse.json(
+        { error: 'Missing q query param' },
+        { status: 400 }
+      );
+    }
+
+    const supabase = supa();
+    const {
+      data: { user },
+      error: userErr,
+    } = await supabase.auth.getUser();
+
+    if (userErr) {
+      console.error('study/search getUser error:', userErr);
+      return NextResponse.json(
+        { error: 'Failed to read user session' },
+        { status: 500 }
+      );
+    }
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // NOTE:
+    // Right now your Study UI uses /api/study/answer for the real RAG
+    // response. This endpoint is mainly for debugging. To keep things
+    // safe and avoid schema mismatches, we just echo what the server sees.
+    // Later we can plug a proper pgvector search in here.
+    return NextResponse.json({
+      ok: true,
+      userId: user.id,
+      q,
+      stakes,
+      position,
+      street,
+      k,
+      note:
+        'This is an authenticated stub for /api/study/search. The main Study UI uses /api/study/answer for coach + drills.',
     });
-    const embedding = resp.data[0].embedding as unknown as number[];
-    // pgvector expects something like '[0.1, 0.2, ...]' which JSON.stringify already gives
-    embeddingStr = JSON.stringify(embedding);
   } catch (err) {
-    console.error("Error creating embedding", err);
+    console.error('study/search error:', err);
     return NextResponse.json(
-      { error: "Failed to create embedding" },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
-
-  // 4) Normalise filters to null-or-value so we can use a simple boolean trick in SQL
-  const stakesFilter = stakes || null;
-  const posFilter = position || null;
-  const streetFilter = street || null;
-  const tagFilter = tag || null;
-
-  // 5) Run pgvector search against study_chunks
-  let rows;
-  try {
-    const result = await sql<{
-      id: string;
-      ref_id: string | null;
-      source: string;
-      content: string;
-      tags: string[] | null;
-      stakes_bucket: string | null;
-      position_norm: string | null;
-      street: string | null;
-      score: number;
-    }>`
-      select
-        id,
-        ref_id,
-        source,
-        content,
-        tags,
-        stakes_bucket,
-        position_norm,
-        street,
-        1 - (embedding <=> ${embeddingStr}::vector) as score
-      from public.study_chunks
-      where user_id = ${user.id}
-        and (${stakesFilter === null} or stakes_bucket = ${stakesFilter})
-        and (${posFilter === null} or position_norm = ${posFilter})
-        and (${streetFilter === null} or street = ${streetFilter})
-        and (
-          ${tagFilter === null}
-          or ${tagFilter} = ANY(tags)
-        )
-      order by embedding <=> ${embeddingStr}::vector
-      limit ${k};
-    `;
-
-    rows = result.rows;
-  } catch (err) {
-    console.error("Error querying study_chunks", err);
-    return NextResponse.json(
-      { error: "Failed to search study_chunks" },
-      { status: 500 }
-    );
-  }
-
-  // 6) Return a stable JSON structure the UI / RAG coach can consume
-  return NextResponse.json({
-    chunks: rows.map((r) => ({
-      id: r.id,
-      ref_id: r.ref_id,
-      source: r.source,
-      content: r.content,
-      tags: r.tags || [],
-      stakes_bucket: r.stakes_bucket,
-      position_norm: r.position_norm,
-      street: r.street,
-      score: r.score,
-    })),
-  });
 }
