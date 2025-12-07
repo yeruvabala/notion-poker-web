@@ -4,6 +4,9 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { sql } from "@vercel/postgres";
 import OpenAI from "openai";
 
+// Force Node runtime so Supabase + pgvector are happy (not Edge)
+export const runtime = "nodejs";
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -58,29 +61,11 @@ export async function GET(req: Request) {
     );
   }
 
-  // 4) Build dynamic SQL filters
-  // We use @vercel/postgres' sql`` helper so we stay safe from injection.
-  const whereParts = [
-    sql`user_id = ${user.id}`, // always scope to this user
-  ];
-
-  if (stakes) {
-    whereParts.push(sql`stakes_bucket = ${stakes}`);
-  }
-  if (position) {
-    whereParts.push(sql`position_norm = ${position}`);
-  }
-  if (street) {
-    whereParts.push(sql`street = ${street}`);
-  }
-  if (tag) {
-    // tag must be present in tags[]
-    whereParts.push(sql`${tag} = ANY(tags)`);
-  }
-
-  // Combine into a single WHERE clause: cond1 AND cond2 AND ...
-  // sql.join joins multiple fragments with a separator.
-  const whereClause = sql`${sql.join(whereParts, sql` AND `)}`;
+  // 4) Normalise filters to null-or-value so we can use a simple boolean trick in SQL
+  const stakesFilter = stakes || null;
+  const posFilter = position || null;
+  const streetFilter = street || null;
+  const tagFilter = tag || null;
 
   // 5) Run pgvector search against study_chunks
   let rows;
@@ -107,7 +92,16 @@ export async function GET(req: Request) {
         street,
         1 - (embedding <=> ${embedding}::vector) as score
       from public.study_chunks
-      where ${whereClause}
+      where user_id = ${user.id}
+        -- if stakesFilter is null -> (true OR stakes_bucket = NULL) = true (no filter)
+        -- if stakesFilter has value -> (false OR stakes_bucket = value) = stakes_bucket = value
+        and (${stakesFilter === null} or stakes_bucket = ${stakesFilter})
+        and (${posFilter === null} or position_norm = ${posFilter})
+        and (${streetFilter === null} or street = ${streetFilter})
+        and (
+          ${tagFilter === null}
+          or ${tagFilter} = ANY(tags)
+        )
       order by embedding <=> ${embedding}::vector
       limit ${k};
     `;
