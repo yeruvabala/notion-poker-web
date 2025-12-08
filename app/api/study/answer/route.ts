@@ -8,6 +8,9 @@ import { Pool } from 'pg';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// 👇 Force Node to accept Supabase's self-signed cert in this route
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -15,7 +18,7 @@ const openai = new OpenAI({
 // Re-use a single PG pool for Supabase
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false },
 });
 
 // --- Types -------------------------------------------------------------------
@@ -52,18 +55,18 @@ export async function POST(req: NextRequest) {
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
         { ok: false, error: 'OPENAI_API_KEY is not configured' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
-    // 1) Try to read Supabase user from cookies (but don’t 401 if it fails)
+    // 1) Try to read Supabase user from cookies (best-effort)
     const supabase = createRouteHandlerClient({ cookies });
     let userId: string | null = null;
 
     try {
       const {
         data: { user },
-        error: authError
+        error: authError,
       } = await supabase.auth.getUser();
 
       if (authError) {
@@ -87,21 +90,20 @@ export async function POST(req: NextRequest) {
     if (!q) {
       return NextResponse.json(
         { ok: false, error: 'Question (q) is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // 3) Embed the question
     const embedResp = await openai.embeddings.create({
       model: 'text-embedding-3-small',
-      input: q
+      input: q,
     });
 
     const embedding = embedResp.data[0].embedding as unknown as number[];
-    // pgvector accepts '[x,y,z]' style literal
     const embeddingLiteral = `[${embedding.join(',')}]`;
 
-    // 4) Vector search in study_chunks for this user (or all users as fallback)
+    // 4) Vector search in study_chunks
     const overFetch = k * 4;
 
     const params: any[] = [embeddingLiteral];
@@ -110,8 +112,6 @@ export async function POST(req: NextRequest) {
       params.push(userId);
       where = `where user_id = $2`;
     }
-
-    // position of the LIMIT placeholder
     const limitParamIndex = params.length + 1;
     params.push(overFetch);
 
@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
 
     let chunks = rows;
 
-    // Extra filter client-side by stakes/position/street
+    // Filter client-side by stakes/position/street
     chunks = chunks.filter((c) => {
       if (stakes && c.stakes_bucket !== stakes) return false;
       if (position && c.position !== position) return false;
@@ -144,7 +144,6 @@ export async function POST(req: NextRequest) {
       return true;
     });
 
-    // Keep best k after filtering
     chunks = chunks
       .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
       .slice(0, k);
@@ -154,12 +153,12 @@ export async function POST(req: NextRequest) {
         summary:
           "I couldn't find any matching notes or hands for this query yet. Try uploading more hand histories or adding study notes.",
         rules: [],
-        drills: []
+        drills: [],
       };
       return NextResponse.json({
         ok: true,
         coach: emptyCoach,
-        chunks: []
+        chunks: [],
       });
     }
 
@@ -175,7 +174,7 @@ export async function POST(req: NextRequest) {
           `street: ${c.street ?? 'unknown'}`,
           tagsStr ? `tags: ${tagsStr}` : '',
           '',
-          c.content
+          c.content,
         ]
           .filter(Boolean)
           .join('\n');
@@ -205,7 +204,7 @@ export async function POST(req: NextRequest) {
       '  "drills": [',
       '    { "id": "drill-1", "question": "Q?", "answer": "A", "explanation": "why" }',
       '  ]',
-      '}'
+      '}',
     ].join('\n');
 
     const chat = await openai.chat.completions.create({
@@ -213,8 +212,8 @@ export async function POST(req: NextRequest) {
       temperature: 0.4,
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ]
+        { role: 'user', content: userPrompt },
+      ],
     });
 
     const content = chat.choices[0]?.message?.content ?? '{}';
@@ -238,29 +237,28 @@ export async function POST(req: NextRequest) {
               question: String(d.question ?? ''),
               answer: String(d.answer ?? ''),
               explanation:
-                d.explanation != null ? String(d.explanation) : undefined
+                d.explanation != null ? String(d.explanation) : undefined,
             }))
-          : []
+          : [],
       };
-    } catch (e) {
-      // Fallback if JSON parsing fails: treat whole content as a summary-only answer
+    } catch {
       coach = {
         summary: content || 'Coach answer is unavailable for this query.',
         rules: [],
-        drills: []
+        drills: [],
       };
     }
 
     return NextResponse.json({
       ok: true,
       coach,
-      chunks
+      chunks,
     });
   } catch (err: any) {
     console.error('[/api/study/answer] error', err);
     return NextResponse.json(
       { ok: false, error: err?.message || 'Internal error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
