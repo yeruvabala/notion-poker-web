@@ -116,21 +116,21 @@ export async function POST(req: NextRequest) {
     params.push(overFetch);
 
     const sqlText = `
-      select
-        id,
-        user_id,
-        content,
-        source,
-        stakes_bucket,
-        position_norm as position,
-        street_reached as street,
-        tags,
-        1 - (embedding <=> $1::vector) as score
-      from public.study_chunks
-      ${where}
-      order by embedding <=> $1::vector
-      limit $${limitParamIndex};
-    `;
+  select
+    id,
+    user_id,
+    content,
+    source,
+    stakes_bucket,
+    position_norm as position,
+    null::text as street,  -- street_reached not present in your table yet
+    tags,
+    1 - (embedding <=> $1::vector) as score
+  from public.study_chunks
+  ${where}
+  order by embedding <=> $1::vector
+  limit $${limitParamIndex};
+`;
 
     const { rows } = await pool.query<ChunkRow>(sqlText, params);
 
