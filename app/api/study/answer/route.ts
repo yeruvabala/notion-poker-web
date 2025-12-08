@@ -2,14 +2,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { sql } from '@vercel/postgres';
 import OpenAI from 'openai';
+import { Pool } from 'pg';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Re-use a single PG pool for Supabase
+const pool = new Pool({
+  connectionString: process.env.POSTGRES_URL,
+  ssl: { rejectUnauthorized: false }
 });
 
 // --- Types -------------------------------------------------------------------
@@ -50,13 +56,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1) Try to read Supabase user from cookies, but DO NOT 401 if it fails
+    // 1) Try to read Supabase user from cookies (but don’t 401 if it fails)
     const supabase = createRouteHandlerClient({ cookies });
     let userId: string | null = null;
+
     try {
       const {
         data: { user },
-        error: authError,
+        error: authError
       } = await supabase.auth.getUser();
 
       if (authError) {
@@ -71,9 +78,9 @@ export async function POST(req: NextRequest) {
     // 2) Parse body
     const body = await req.json().catch(() => ({}));
     const q = (body.q as string | undefined)?.trim() ?? '';
-    const stakes = body.stakes as string | undefined; // e.g. "10NL"
-    const position = body.position as string | undefined; // e.g. "BTN"
-    const street = body.street as string | undefined; // e.g. "river"
+    const stakes = body.stakes as string | undefined;
+    const position = body.position as string | undefined;
+    const street = body.street as string | undefined;
     const kRaw = Number(body.k ?? 5);
     const k = Number.isFinite(kRaw) && kRaw > 0 ? Math.min(kRaw, 20) : 5;
 
@@ -87,59 +94,49 @@ export async function POST(req: NextRequest) {
     // 3) Embed the question
     const embedResp = await openai.embeddings.create({
       model: 'text-embedding-3-small',
-      input: q,
+      input: q
     });
-    const embedding = embedResp.data[0].embedding;
-    const embeddingVec = embedding as unknown as any; // TS-safe for @vercel/postgres
 
-    // 4) Vector search in study_chunks
+    const embedding = embedResp.data[0].embedding as unknown as number[];
+    // pgvector accepts '[x,y,z]' style literal
+    const embeddingLiteral = `[${embedding.join(',')}]`;
+
+    // 4) Vector search in study_chunks for this user (or all users as fallback)
     const overFetch = k * 4;
 
-    let rows: ChunkRow[] = [];
-
+    const params: any[] = [embeddingLiteral];
+    let where = '';
     if (userId) {
-      // Per-user search when we have a user id
-      const res = await sql<ChunkRow>`
-        select
-          id,
-          user_id,
-          content,
-          source,
-          stakes_bucket,
-          position_norm as position,
-          street_reached as street,
-          tags,
-          1 - (embedding <=> ${embeddingVec}::vector) as score
-        from public.study_chunks
-        where user_id = ${userId}
-        order by embedding <=> ${embeddingVec}::vector
-        limit ${overFetch};
-      `;
-      rows = res.rows;
-    } else {
-      // Fallback: search all chunks when we can't see the user
-      console.warn('[/api/study/answer] userId is null, searching all study_chunks');
-      const res = await sql<ChunkRow>`
-        select
-          id,
-          user_id,
-          content,
-          source,
-          stakes_bucket,
-          position_norm as position,
-          street_reached as street,
-          tags,
-          1 - (embedding <=> ${embeddingVec}::vector) as score
-        from public.study_chunks
-        order by embedding <=> ${embeddingVec}::vector
-        limit ${overFetch};
-      `;
-      rows = res.rows;
+      params.push(userId);
+      where = `where user_id = $2`;
     }
+
+    // position of the LIMIT placeholder
+    const limitParamIndex = params.length + 1;
+    params.push(overFetch);
+
+    const sqlText = `
+      select
+        id,
+        user_id,
+        content,
+        source,
+        stakes_bucket,
+        position_norm as position,
+        street_reached as street,
+        tags,
+        1 - (embedding <=> $1::vector) as score
+      from public.study_chunks
+      ${where}
+      order by embedding <=> $1::vector
+      limit $${limitParamIndex};
+    `;
+
+    const { rows } = await pool.query<ChunkRow>(sqlText, params);
 
     let chunks = rows;
 
-    // Filter client-side for now
+    // Extra filter client-side by stakes/position/street
     chunks = chunks.filter((c) => {
       if (stakes && c.stakes_bucket !== stakes) return false;
       if (position && c.position !== position) return false;
@@ -157,12 +154,12 @@ export async function POST(req: NextRequest) {
         summary:
           "I couldn't find any matching notes or hands for this query yet. Try uploading more hand histories or adding study notes.",
         rules: [],
-        drills: [],
+        drills: []
       };
       return NextResponse.json({
         ok: true,
         coach: emptyCoach,
-        chunks: [],
+        chunks: []
       });
     }
 
@@ -178,7 +175,7 @@ export async function POST(req: NextRequest) {
           `street: ${c.street ?? 'unknown'}`,
           tagsStr ? `tags: ${tagsStr}` : '',
           '',
-          c.content,
+          c.content
         ]
           .filter(Boolean)
           .join('\n');
@@ -208,7 +205,7 @@ export async function POST(req: NextRequest) {
       '  "drills": [',
       '    { "id": "drill-1", "question": "Q?", "answer": "A", "explanation": "why" }',
       '  ]',
-      '}',
+      '}'
     ].join('\n');
 
     const chat = await openai.chat.completions.create({
@@ -216,8 +213,8 @@ export async function POST(req: NextRequest) {
       temperature: 0.4,
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
+        { role: 'user', content: userPrompt }
+      ]
     });
 
     const content = chat.choices[0]?.message?.content ?? '{}';
@@ -241,23 +238,23 @@ export async function POST(req: NextRequest) {
               question: String(d.question ?? ''),
               answer: String(d.answer ?? ''),
               explanation:
-                d.explanation != null ? String(d.explanation) : undefined,
+                d.explanation != null ? String(d.explanation) : undefined
             }))
-          : [],
+          : []
       };
     } catch (e) {
       // Fallback if JSON parsing fails: treat whole content as a summary-only answer
       coach = {
         summary: content || 'Coach answer is unavailable for this query.',
         rules: [],
-        drills: [],
+        drills: []
       };
     }
 
     return NextResponse.json({
       ok: true,
       coach,
-      chunks,
+      chunks
     });
   } catch (err: any) {
     console.error('[/api/study/answer] error', err);
