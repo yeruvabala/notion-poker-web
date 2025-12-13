@@ -17,4 +17,4 @@ __pycache__/
 *.py[cod]
 venv/
 env/
-.pytest_cache/
+.pytest_cache/.env.local
