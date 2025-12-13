@@ -1,0 +1,20 @@
+# --- Security (Crucial) ---
+.env
+.env.local
+.env.production
+backend/.env
+*.pem
+
+# --- Next.js / Frontend ---
+node_modules/
+.next/
+out/
+build/
+.DS_Store
+
+# --- Python / Backend ---
+__pycache__/
+*.py[cod]
+venv/
+env/
+.pytest_cache/
