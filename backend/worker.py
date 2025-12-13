@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import os, re, sys, time
+from dotenv import load_dotenv
+load_dotenv()  # <--- This line is CRITICAL
 from datetime import datetime
 
 import boto3

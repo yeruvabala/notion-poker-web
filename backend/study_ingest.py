@@ -36,16 +36,18 @@ def load_env_file(path: Optional[str] = None) -> None:
     """
     Load key=value lines from a .env file into os.environ
     if they are not already set.
-
-    Default location: ~/.env  (same as worker.py)
     """
+    # --- CHANGED SECTION START ---
     if path is None:
-        home = os.path.expanduser("~")
-        path = os.path.join(home, ".env")
+        # Look in the current folder (backend)
+        path = ".env"
+    # --- CHANGED SECTION END ---
 
     if not os.path.exists(path):
         logger.info(".env file not found at %s - skipping .env load", path)
         return
+    
+    # ... (rest of the function stays the same)
 
     logger.info("Loading environment variables from %s", path)
     try:

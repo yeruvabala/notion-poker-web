@@ -18,6 +18,8 @@ cd "$HOME_DIR"
   echo \"[PIPELINE] Starting Coach worker at \$(date)\"
   $PYTHON $HOME_DIR/coach_worker.py >> $HOME_DIR/coach_worker.log 2>&1
 
+  echo \"[PIPELINE] Starting Study Ingest at \$(date)\"
+  $PYTHON $HOME_DIR/study_ingest.py >> $HOME_DIR/study_ingest.log 2>&1
+
   echo \"[PIPELINE] Done pipeline at \$(date)\" >> $HOME_DIR/pipeline.log
 "
-

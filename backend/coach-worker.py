@@ -3,6 +3,7 @@ import time
 import json
 import requests
 import psycopg2
+
 from dotenv import load_dotenv
 
 # Load env from /home/ec2-user/.env  (same as your other worker)
