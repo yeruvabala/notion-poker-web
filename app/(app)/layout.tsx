@@ -8,7 +8,7 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-[#1c1c1c] text-[#E2E8F0]">
       {/* Two-column shell: fixed sidebar + scrollable content */}
       <div className="flex">
         {/* Left column: app nav */}

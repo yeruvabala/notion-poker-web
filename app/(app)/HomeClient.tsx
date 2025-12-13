@@ -20,8 +20,8 @@ type Fields = {
   source_used?: 'SUMMARY' | 'STORY' | null;
 };
 
-type RankSym = 'A'|'K'|'Q'|'J'|'T'|'9'|'8'|'7'|'6'|'5'|'4'|'3'|'2';
-const RANKS: RankSym[] = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+type RankSym = 'A' | 'K' | 'Q' | 'J' | 'T' | '9' | '8' | '7' | '6' | '5' | '4' | '3' | '2';
+const RANKS: RankSym[] = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
 const SUIT_MAP: Record<string, string> = { s: '♠', h: '♥', d: '♦', c: '♣' };
 const SUIT_WORD: Record<string, string> = {
   spade: '♠', spades: '♠', heart: '♥', hearts: '♥',
@@ -74,7 +74,7 @@ function parseStakes(t: string): string {
 
 function parsePosition(t: string): string {
   const up = ` ${t.toUpperCase()} `;
-  const POS = ['SB','BB','BTN','CO','HJ','MP','UTG+2','UTG+1','UTG'];
+  const POS = ['SB', 'BB', 'BTN', 'CO', 'HJ', 'MP', 'UTG+2', 'UTG+1', 'UTG'];
   for (const p of POS) if (up.includes(` ${p} `)) return p.replace('+', '+');
   return '';
 }
@@ -85,7 +85,7 @@ function parseHeroCardsSmart(t: string): string {
   let m = s.match(/\b(?:hero|i|holding|with|have|has)\b[^.\n]{0,30}?([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])/i);
   if (m) return prettyCards(`${m[1]} ${m[2]}`);
 
-  const tokens = Array.from(s.matchAll(/([2-9tjqka][shdc♥♦♣♠])/ig)).map(x => x[0]).slice(0,2);
+  const tokens = Array.from(s.matchAll(/([2-9tjqka][shdc♥♦♣♠])/ig)).map(x => x[0]).slice(0, 2);
   if (tokens.length === 2) return prettyCards(tokens.join(' '));
 
   return '';
@@ -94,7 +94,7 @@ function parseHeroCardsSmart(t: string): string {
 function parseBoardFromStory(t: string) {
   const src = (t || '').toLowerCase();
 
-  const grab = (label: 'flop'|'turn'|'river') => {
+  const grab = (label: 'flop' | 'turn' | 'river') => {
     const rx = new RegExp(`\\b${label}\\b(?:\\s+is)?\\s*:?\\s*([^\\n]*)`, 'i');
     const m = src.match(rx);
     return m ? m[1] : '';
@@ -112,17 +112,17 @@ function parseBoardFromStory(t: string) {
     return cards;
   };
 
-  const flopLine  = grab('flop');
-  const turnLine  = grab('turn');
+  const flopLine = grab('flop');
+  const turnLine = grab('turn');
   const riverLine = grab('river');
 
-  const flopArr  = takeCards(flopLine, 3);
-  const turnArr  = takeCards(turnLine, 1);
+  const flopArr = takeCards(flopLine, 3);
+  const turnArr = takeCards(turnLine, 1);
   const riverArr = takeCards(riverLine, 1);
 
   return {
-    flop:  flopArr.join(' '),
-    turn:  turnArr[0]  || '',
+    flop: flopArr.join(' '),
+    turn: turnArr[0] || '',
     river: riverArr[0] || '',
   };
 }
@@ -133,7 +133,7 @@ function parseActionHint(text: string): string {
   if (!riverLine) return '';
 
   const betMatch = riverLine.match(/(villain|btn|utg|sb|bb).{0,20}\bbet[s]?\b[^0-9%]*(\d{1,3})\s?%/i)
-                || riverLine.match(/(villain|btn|utg|sb|bb).{0,20}\bbet[s]?\b[^a-z0-9]*(?:([1-4])\/([1-4]))\s*pot/i);
+    || riverLine.match(/(villain|btn|utg|sb|bb).{0,20}\bbet[s]?\b[^a-z0-9]*(?:([1-4])\/([1-4]))\s*pot/i);
   if (betMatch) {
     if (betMatch[2] && betMatch[3]) {
       const p = Math.round((Number(betMatch[2]) / Number(betMatch[3])) * 100);
@@ -149,7 +149,7 @@ function parseActionHint(text: string): string {
 
 /* ---------- determine hand class deterministically ---------- */
 
-const PLACEHOLDER_SET = new Set(['J♣','J♠','T♦','4♠','4♣','9♣','9♠','3♣','3♠']);
+const PLACEHOLDER_SET = new Set(['J♣', 'J♠', 'T♦', '4♠', '4♣', '9♣', '9♠', '3♣', '3♠']);
 
 function isPlaceholder(v: string | undefined) {
   const x = (v || '').trim();
@@ -174,7 +174,7 @@ function handClass(heroCards: string, flop: string, turn: string, river: string)
   const counts: Record<string, number> = {};
   for (const c of all) counts[rank(c)] = (counts[rank(c)] || 0) + 1;
 
-  const ranks = Object.values(counts).sort((a,b)=>b-a);
+  const ranks = Object.values(counts).sort((a, b) => b - a);
   const flush = (() => {
     const sCount: Record<string, number> = {};
     for (const c of all) sCount[suit(c)] = (sCount[suit(c)] || 0) + 1;
@@ -182,40 +182,40 @@ function handClass(heroCards: string, flop: string, turn: string, river: string)
   })();
 
   const rankToVal: Record<string, number> = {
-    A:14,K:13,Q:12,J:11,T:10,9:9,8:8,7:7,6:6,5:5,4:4,3:3,2:2
+    A: 14, K: 13, Q: 12, J: 11, T: 10, 9: 9, 8: 8, 7: 7, 6: 6, 5: 5, 4: 4, 3: 3, 2: 2
   };
-  const uniqVals = Array.from(new Set(all.map(rank).map(r=>rankToVal[r]).filter(Boolean))).sort((a,b)=>b-a);
+  const uniqVals = Array.from(new Set(all.map(rank).map(r => rankToVal[r]).filter(Boolean))).sort((a, b) => b - a);
   let straight = false;
   if (uniqVals.length >= 5) {
     let run = 1;
-    for (let i=1;i<uniqVals.length;i++){
-      if (uniqVals[i]===uniqVals[i-1]-1) { run++; if (run>=5) { straight=true; break; } }
-      else if (uniqVals[i]!==uniqVals[i-1]) run=1;
+    for (let i = 1; i < uniqVals.length; i++) {
+      if (uniqVals[i] === uniqVals[i - 1] - 1) { run++; if (run >= 5) { straight = true; break; } }
+      else if (uniqVals[i] !== uniqVals[i - 1]) run = 1;
     }
     if (!straight && uniqVals.includes(14)) {
-      const wheel = [5,4,3,2,1].every(v => uniqVals.includes(v===1?14:v));
+      const wheel = [5, 4, 3, 2, 1].every(v => uniqVals.includes(v === 1 ? 14 : v));
       if (wheel) straight = true;
     }
   }
 
-  if (ranks[0]===4) return 'Quads';
-  if (ranks[0]===3 && ranks[1]===2) return 'Full House';
+  if (ranks[0] === 4) return 'Quads';
+  if (ranks[0] === 3 && ranks[1] === 2) return 'Full House';
   if (flush && straight) return 'Straight Flush';
   if (flush) return 'Flush';
   if (straight) return 'Straight';
-  if (ranks[0]===3) return 'Trips';
-  if (ranks[0]===2 && ranks[1]===2) return 'Two Pair';
-  if (ranks[0]===2) return 'Pair';
+  if (ranks[0] === 3) return 'Trips';
+  if (ranks[0] === 2 && ranks[1] === 2) return 'Two Pair';
+  if (ranks[0] === 2) return 'Pair';
   return 'High Card';
 }
 
 /* ====================== GTO Preview renderer ====================== */
 
 const SECTION_HEADS = new Set([
-  'SITUATION','RANGE SNAPSHOT',
-  'PREFLOP','FLOP','TURN','RIVER',
-  'NEXT CARDS','WHY','COMMON MISTAKES','LEARNING TAGS',
-  'DECISION','PRICE','BOARD CLASS','RECOMMENDATION','MIXED'
+  'SITUATION', 'RANGE SNAPSHOT',
+  'PREFLOP', 'FLOP', 'TURN', 'RIVER',
+  'NEXT CARDS', 'WHY', 'COMMON MISTAKES', 'LEARNING TAGS',
+  'DECISION', 'PRICE', 'BOARD CLASS', 'RECOMMENDATION', 'MIXED'
 ]);
 
 function renderGTO(text: string) {
@@ -296,7 +296,7 @@ export default function HomeClient() {
       try {
         const { data, error } = await supabase.auth.getUser();
         if (!error && !cancelled) setUserEmail(data?.user?.email ?? null);
-      } catch {}
+      } catch { }
     })();
     return () => { cancelled = true; };
   }, [supabase]);
@@ -329,7 +329,7 @@ export default function HomeClient() {
     const turnOK = (!isPlaceholder(tr) && !!suitifyToken(tr));
     const riverOK = (!isPlaceholder(rv) && !!suitifyToken(rv));
     return (heroOK || flopOK || turnOK || riverOK) ? 'SUMMARY' : 'STORY';
-  }, [h1,h2,f1,f2,f3,tr,rv]);
+  }, [h1, h2, f1, f2, f3, tr, rv]);
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
@@ -432,28 +432,41 @@ export default function HomeClient() {
     }
   }
   // *******************************************************************
+  const suitColor = (suit: string) => (isRed(suit) ? '#ef4444' : '#e5e7eb'); // Platinum for black suits
 
   return (
     <div className="op-surface">
       <main className="p">
         <div className="wrap">
-          <h1 className="title">Only Poker</h1>
-
-          {/* ← ADDED: subtle, right-aligned caption showing the signed-in user */}
-          {userEmail && (
-            <div className="small muted" style={{ textAlign: 'right', marginTop: 4, marginBottom: 10 }}>
-              Signed in as {userEmail}
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: 40, marginTop: 20 }}>
+            <h1 className="text-5xl font-extrabold uppercase tracking-wide mb-2 platinum-text-gradient">Only Poker</h1>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, opacity: 0.9 }}>
+              <div style={{ height: 1, width: 80, background: 'linear-gradient(90deg, transparent, #a3a3a3)' }}></div>
+              <div style={{ fontSize: 18, letterSpacing: 6, lineHeight: 1 }}>
+                <span style={{ color: '#e5e7eb', textShadow: '0 0 10px rgba(229,231,235,0.4)' }}>♠️</span>
+                <span style={{ color: '#e5e7eb', textShadow: '0 0 10px rgba(229,231,235,0.4)' }}>♥️</span>
+                <span style={{ color: '#e5e7eb', textShadow: '0 0 10px rgba(229,231,235,0.4)' }}>♣️</span>
+                <span style={{ color: '#e5e7eb', textShadow: '0 0 10px rgba(229,231,235,0.4)' }}>♦️</span>
+              </div>
+              <div style={{ height: 1, width: 80, background: 'linear-gradient(90deg, #a3a3a3, transparent)' }}></div>
             </div>
-          )}
+            {userEmail && (
+              <div className="small muted" style={{ marginTop: 8 }}>
+                Signed in as {userEmail}
+              </div>
+            )}
+          </div>
 
           <div className="grid">
             {/* LEFT column */}
             <div className="col ony-left-bg">
               {/* Story box */}
-              <section className="card ony-card">
-                <div className="cardTitle">Hand Played</div>
+              <section className="card ony-card platinum-container-frame">
+                <div className="cardTitle platinum-text-gradient">Hand Played</div>
                 <textarea
-                  className="textarea input-ony"
+                  className="w-full h-40 p-4 resize-none focus:outline-none platinum-inner-border"
+                  style={{ background: '#262626', color: '#E2E8F0' }}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={`Type your hand like a story — stakes, position, cards, actions…
@@ -465,18 +478,19 @@ Turn K♦ — ...`}
                 />
                 <div className="row gap">
                   <button
-                    className="btn btn-ony"
+                    className="btn btn-platinum-premium"
+                    style={{ flex: 1 }}
                     onClick={analyze}
                     disabled={aiLoading || !input.trim()}
                   >
-                    {aiLoading ? 'Analyzing…' : 'Send'}
+                    {aiLoading ? 'Analyzing…' : 'Analyze Hand'}
                   </button>
                   <button
-                    className="btn btn-ony btn-ony--sm"
+                    className="btn btn-platinum-premium btn-ony--sm"
                     onClick={syncFromStory}
                     title="Copy stakes/position/hero/board from the story preview into the editors"
                   >
-                    Sync from Story
+                    Sync
                   </button>
                   <button
                     className="btn btn-ony btn-ony--sm"
@@ -494,27 +508,27 @@ Turn K♦ — ...`}
               </section>
 
               {/* Situation Summary (editable) */}
-              <section className="card ony-card">
-                <div className="cardTitle">Situation Summary</div>
+              <section className="card ony-card platinum-container-frame">
+                <div className="cardTitle platinum-text-gradient">Situation Summary</div>
 
                 <div className="summaryGrid">
                   <Info label="Mode">
-                    <select className="input input-ony" value={mode} onChange={e=>setMode(e.target.value as any)}>
+                    <select className="input input-ony platinum-inner-border" value={mode} onChange={e => setMode(e.target.value as any)}>
                       <option value="CASH">CASH</option>
                       <option value="MTT">MTT</option>
                     </select>
                   </Info>
 
                   <Info label="Blinds / Stakes">
-                    <input className="input input-ony" value={stakes} onChange={e=>setStakes(e.target.value)} placeholder={preview.stakes || '(unknown)'} />
+                    <input className="input input-ony platinum-inner-border" value={stakes} onChange={e => setStakes(e.target.value)} placeholder={preview.stakes || '(unknown)'} />
                   </Info>
 
                   <Info label="Effective Stack (bb)">
-                    <input className="input input-ony" value={eff} onChange={e=>setEff(e.target.value)} placeholder="(optional)" />
+                    <input className="input input-ony platinum-inner-border" value={eff} onChange={e => setEff(e.target.value)} placeholder="(optional)" />
                   </Info>
 
                   <Info label="Positions">
-                    <input className="input input-ony" value={position} onChange={e=>setPosition(e.target.value.toUpperCase())} placeholder={preview.position || '(unknown)'} />
+                    <input className="input input-ony platinum-inner-border" value={position} onChange={e => setPosition(e.target.value.toUpperCase())} placeholder={preview.position || '(unknown)'} />
                   </Info>
 
                   <Info label="Hero Hand">
@@ -550,17 +564,17 @@ Turn K♦ — ...`}
               </section>
 
               {/* FE & SPR */}
-              <section className="card ony-card">
+              <section className="card ony-card platinum-container-frame">
                 <div className="cardTitle">Fold-Equity Threshold & SPR</div>
 
                 <div className="feSprGrid">
-                  <div className="box">
+                  <div className="box platinum-inner-border">
                     <div className="boxTitle">FE calculator (bb units)</div>
                     <div className="grid2">
                       <label className="lbl">Risk (bb)</label>
-                      <input className="input input-ony" value={risk} onChange={e=>setRisk(e.target.value)} placeholder="e.g., jam = eff BB" />
+                      <input className="input input-ony platinum-inner-border" value={risk} onChange={e => setRisk(e.target.value)} placeholder="e.g., jam = eff BB" />
                       <label className="lbl">Reward (bb)</label>
-                      <input className="input input-ony" value={reward} onChange={e=>setReward(e.target.value)} placeholder="pre-pot + bet size" />
+                      <input className="input input-ony platinum-inner-border" value={reward} onChange={e => setReward(e.target.value)} placeholder="pre-pot + bet size" />
                     </div>
                     <div className="calcLine">
                       FE needed ≈ <b>{feNeeded || '0%'}</b> &nbsp;
@@ -568,13 +582,13 @@ Turn K♦ — ...`}
                     </div>
                   </div>
 
-                  <div className="box">
+                  <div className="box platinum-inner-border">
                     <div className="boxTitle">SPR (flop)</div>
                     <div className="grid2">
                       <label className="lbl">Flop pot (bb)</label>
-                      <input className="input input-ony" value={flopPot} onChange={e=>setFlopPot(e.target.value)} placeholder="e.g., 5.9" />
+                      <input className="input input-ony platinum-inner-border" value={flopPot} onChange={e => setFlopPot(e.target.value)} placeholder="e.g., 5.9" />
                       <label className="lbl">Behind (bb)</label>
-                      <input className="input input-ony" value={behind} onChange={e=>setBehind(e.target.value)} placeholder="effective after prefl" />
+                      <input className="input input-ony platinum-inner-border" value={behind} onChange={e => setBehind(e.target.value)} placeholder="effective after prefl" />
                     </div>
                     <div className="calcLine">SPR ≈ <b>{spr || '0'}</b></div>
                     <div className="sprChips">
@@ -590,16 +604,16 @@ Turn K♦ — ...`}
             {/* RIGHT column */}
             <div className="col">
               {/* top info card */}
-              <section className="card ony-card">
+              <section className="card ony-card platinum-container-frame">
                 <div className="infoGrid">
                   <Info label="Date"><div>{today}</div></Info>
                   <Info label="Position"><div>{(position || preview.position) || <span className="muted">(unknown)</span>}</div></Info>
                   <Info label="Stakes"><div>{(stakes || preview.stakes) || <span className="muted">(unknown)</span>}</div></Info>
                   <Info label="Cards">
                     {heroCardsStr
-                      ? heroCardsStr.split(' ').map((c,i)=>(
-                          <span key={i} style={{marginRight:6}}><CardText c={c} /></span>
-                        ))
+                      ? heroCardsStr.split(' ').map((c, i) => (
+                        <span key={i} style={{ marginRight: 6 }}><CardText c={c} /></span>
+                      ))
                       : <span className="muted">(unknown)</span>
                     }
                   </Info>
@@ -607,9 +621,9 @@ Turn K♦ — ...`}
               </section>
 
               {/* GTO Strategy */}
-              <section className="card ony-card">
+              <section className="card ony-card platinum-container-frame">
                 <div className="cardTitleRow">
-                  <div className="cardTitle">GTO Strategy</div>
+                  <div className="cardTitle platinum-text-gradient">GTO Strategy</div>
                   <span className="chip small">{sourceUsed === 'SUMMARY' ? 'Using: Summary editors' : 'Using: Story parse'}</span>
                   <button
                     className="btn btn-ony btn-ony--sm"
@@ -623,7 +637,7 @@ Turn K♦ — ...`}
                 {gtoEdit ? (
                   <>
                     <textarea
-                      className="textarea input-ony mono"
+                      className="textarea input-ony mono platinum-inner-border"
                       rows={12}
                       placeholder="Edit or add notes…"
                       value={fields?.gto_strategy ?? ''}
@@ -633,24 +647,24 @@ Turn K♦ — ...`}
                   </>
                 ) : (
                   <>
-                    <div className="gtoBox">{renderGTO(fields?.gto_strategy || '')}</div>
+                    <div className="gtoBox platinum-inner-border">{renderGTO(fields?.gto_strategy || '')}</div>
                     <div className="muted small">Preview only. Click “Edit” to change the text.</div>
                   </>
                 )}
               </section>
 
               {/* Exploitative Deviations */}
-              <section className="card ony-card">
-                <div className="cardTitle">Exploitative Deviations</div>
-                <ul className="list">
+              <section className="card ony-card platinum-container-frame">
+                <div className="cardTitle platinum-text-gradient">Exploitative Deviations</div>
+                <ul className="list platinum-inner-border">
                   {(fields?.exploit_deviation || '')
                     .split(/(?<=\.)\s+/)
                     .filter(Boolean)
-                    .map((s,i)=><li key={i}>{s}</li>)}
+                    .map((s, i) => <li key={i}>{s}</li>)}
                 </ul>
 
                 <div className="row end gapTop">
-                  <button className="btn btn-ony" onClick={analyze} disabled={aiLoading}>
+                  <button className="btn btn-platinum-premium" onClick={analyze} disabled={aiLoading}>
                     {aiLoading ? 'Analyzing…' : 'Analyze Again'}
                   </button>
                   <button className="btn btn-ony" onClick={saveToDb} disabled={!fields || saving}>
@@ -666,33 +680,36 @@ Turn K♦ — ...`}
         {/* ===================== Styles ===================== */}
         <style jsx global>{`
           :root{
-            --bg:#f3f4f6; --card:#ffffff; --line:#e5e7eb; --text:#0f172a; --muted:#6b7280;
-            --primary:#2563eb; --primary2:#1d4ed8; --btnText:#f8fbff;
+            --bg:#1c1c1c; --card:#1e1e1e; --line:#525252; --text:#E2E8F0; --muted:#94A3B8;
+            --primary:#e5e7eb; --primary2:#9ca3af; --btnText:#121212;
           }
           *{box-sizing:border-box}
-          html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+          html,body{margin:0;padding:0;background:#1c1c1c !important;color:#E2E8F0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+          h1,h2,h3,h4,h5,h6,p,span,label{color:#E2E8F0}
+          input,textarea,select{color:#E2E8F0 !important}
+          ::placeholder{color:#94A3B8 !important;opacity:1}
           .p{padding:24px}
           .wrap{max-width:1200px;margin:0 auto}
-          .title{margin:0 0 12px;font-size:28px;font-weight:800;text-align:center}
+          .title{margin:0 0 12px;font-size:28px;font-weight:800;text-align:center; color:#E2E8F0;}
           .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
           @media (max-width:980px){.grid{grid-template-columns:1fr}}
 
           .col{display:flex;flex-direction:column;gap:18px}
-          .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
-          .cardTitle{font-size:13px;font-weight:800;color:#111827;margin-bottom:8px}
+          .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+          .cardTitle{font-size:13px;font-weight:800;color:#E2E8F0;margin-bottom:8px}
           .cardTitleRow{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:8px}
-          .textarea{width:100%;min-height:140px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}
+          .textarea{width:100%;min-height:140px;padding:12px 14px;color:#E2E8F0}
           .textarea.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,Monaco,monospace}
           .row{display:flex;align-items:center}
           .end{justify-content:flex-end}
           .gap{gap:10px}
           .gapTop{margin-top:10px}
-          .btn{border:1px solid var(--line);background:#fff;padding:10px 14px;border-radius:12px;cursor:pointer}
+          .btn{border:1px solid var(--line);background:#262626;padding:10px 14px;border-radius:12px;cursor:pointer;color:#E2E8F0;}
           .btn.tiny{padding:6px 10px;border-radius:10px;font-size:12px}
-          .btn.primary{background:linear-gradient(180deg,var(--primary),var(--primary2));color:var(--btnText);border-color:#9db7ff}
+          .btn.primary{background:linear-gradient(135deg,#e5e5e5,#9ca3af);color:#121212;border:none;}
           .btn[disabled]{opacity:.6;cursor:not-allowed}
-          .err{margin-top:10px;color:#b91c1c}
-          .note{margin-top:10px;color:#166534}
+          .err{margin-top:10px;color:#ef4444}
+          .note{margin-top:10px;color:#22c55e}
           .muted{color:var(--muted)}
           .small{font-size:12px}
 
@@ -700,35 +717,35 @@ Turn K♦ — ...`}
           .summaryGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
           @media (max-width:900px){.summaryGrid{grid-template-columns:1fr}}
 
-          .ibox{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;min-height:52px}
-          .lblSmall{font-size:11px;color:#6b7280;margin-bottom:4px}
-          .input{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+          .ibox{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#262626;min-height:52px}
+          .lblSmall{font-size:11px;color:#94A3B8;margin-bottom:4px}
+          .input{width:100%;border:1px solid #a3a3a3;border-radius:10px;padding:8px 10px;background:#262626;color:#E2E8F0}
           .cardsRow{display:flex;gap:8px;align-items:center}
           .boardRow{display:flex;gap:8px;align-items:center;margin-top:6px}
-          .pillLbl{font-size:12px;color:#6b7280;min-width:40px;text-align:right}
+          .pillLbl{font-size:12px;color:#94A3B8;min-width:40px;text-align:right}
 
-          .cardInput{width:64px;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 8px}
-          .cardInput:focus{outline:2px solid #bfdbfe}
+          .cardInput{width:64px;text-align:center;border:1px solid #a3a3a3;border-radius:10px;padding:8px 8px;background:#262626;color:#E2E8F0}
+          .cardInput:focus{outline:2px solid #d4d4d4}
           .cardEcho{margin-left:6px;font-size:14px}
 
-          .hint{margin-top:8px;font-size:12px;color:#6b7280}
-          .chip{border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;background:#f8fafc}
+          .hint{margin-top:8px;font-size:12px;color:#94A3B8}
+          .chip{border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;background:#333}
           .chip.small{padding:4px 8px;font-size:11px}
 
           .feSprGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
           @media (max-width:900px){.feSprGrid{grid-template-columns:1fr}}
           .box{border:1px solid var(--line);border-radius:12px;padding:10px}
-          .boxTitle{font-size:12px;font-weight:700;margin-bottom:6px;color:#374151}
+          .boxTitle{font-size:12px;font-weight:700;margin-bottom:6px;color:#E2E8F0}
           .grid2{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center}
-          .lbl{font-size:12px;color:#6b7280}
+          .lbl{font-size:12px;color:#94A3B8}
           .calcLine{margin-top:8px}
           .sprChips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
           .list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
 
-          .gtoBox{border:1px dashed #cbd5e1;border-radius:12px;background:#f8fafc;padding:12px}
+          .gtoBox{border:1px dashed #525252;border-radius:12px;background:#1e1e1e;padding:12px;color:#CBD5E1}
           .gtoBody{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,Monaco,monospace;font-size:13.5px;line-height:1.45}
           .gtoLine{margin:2px 0}
-          .gtoHead{font-weight:800}
+          .gtoHead{font-weight:800;color:#E2E8F0}
           .gtoBullet{margin:2px 0 2px 12px}
         `}</style>
       </main>
@@ -738,7 +755,7 @@ Turn K♦ — ...`}
 
 function Info({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="ibox">
+    <div className="ibox platinum-inner-border">
       <div className="lblSmall">{label}</div>
       <div>{children}</div>
     </div>
@@ -747,22 +764,22 @@ function Info({ label, children }: { label: string; children: React.ReactNode })
 
 function CardEditor({
   value, onChange, placeholder
-}: { value: string; onChange: (v: string)=>void; placeholder?: string }) {
+}: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   const [local, setLocal] = useState<string>(value || '');
-  useEffect(()=>{ setLocal(value || ''); }, [value]);
+  useEffect(() => { setLocal(value || ''); }, [value]);
 
   const norm = suitifyToken(local);
   const echo = norm
     ? <CardText c={norm} />
-    : <span style={{color:'#9ca3af'}}>{placeholder || ''}</span>;
+    : <span style={{ color: '#9ca3af' }}>{placeholder || ''}</span>;
 
   return (
-    <div style={{display:'flex',alignItems:'center'}}>
+    <div style={{ display: 'flex', alignItems: 'center' }}>
       <input
-        className="cardInput input-ony"
+        className="cardInput input-ony platinum-inner-border"
         value={local}
-        onChange={(e)=>setLocal(e.target.value)}
-        onBlur={()=>onChange(suitifyToken(local))}
+        onChange={(e) => setLocal(e.target.value)}
+        onBlur={() => onChange(suitifyToken(local))}
         placeholder={placeholder || 'A♠'}
       />
       <div className="cardEcho" title="Normalized">{echo}</div>
