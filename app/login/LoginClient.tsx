@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client'; // your browser helper (may return null)
+import "@/styles/onlypoker-theme.css";
+import "@/app/globals.css";
 
 export default function LoginClient() {
   const supabase = createClient();
@@ -113,160 +115,278 @@ export default function LoginClient() {
   }
 
   return (
-    <div className="wrap">
-      <div className="card">
-        {/* Left panel */}
-        <div className="left">
-          <div className="brand">
-            <div className="app">Only Poker</div>
-            <div className="sub">v0.1 · preview</div>
+    <div className="op-surface login-page">
+      {/* Centered Login Card */}
+      <div className="login-card platinum-container-frame">
+        {/* Header with Metallic Gradient - matching home page exactly */}
+        <h1 className="login-title platinum-text-gradient">Only Poker</h1>
+
+        {/* Card Suits with decorative lines - matching home page */}
+        <div className="login-suits-row">
+          <div className="login-line-left"></div>
+          <div className="login-suits">
+            <span className="login-suit">♠</span>
+            <span className="login-suit">♥</span>
+            <span className="login-suit">♣</span>
+            <span className="login-suit">♦</span>
           </div>
+          <div className="login-line-right"></div>
         </div>
 
-        {/* Right panel */}
-        <div className="right">
-          <div className="tabs">
-            <button
-              className={`tab ${tab === 'login' ? 'active' : ''}`}
-              onClick={() => setTab('login')}
-              type="button"
-            >
-              Log in
-            </button>
-            <button
-              className={`tab ${tab === 'signup' ? 'active' : ''}`}
-              onClick={() => setTab('signup')}
-              type="button"
-            >
-              Create account
-            </button>
-          </div>
+        <p className="login-subtitle">v0.1 · preview</p>
 
-          <form className="form" onSubmit={handleSubmit}>
-            <label className="lbl">Email</label>
-            <input
-              className="input"
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-
-            <label className="lbl">Password</label>
-            <input
-              className="input"
-              type="password"
-              autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-
-            <button className="cta" disabled={loading}>
-              {loading ? (tab === 'login' ? 'Signing in…' : 'Creating…') : tab === 'login' ? 'Sign in' : 'Create account'}
-            </button>
-
-            {err && <div className="err">{err}</div>}
-            {msg && <div className="msg">{msg}</div>}
-          </form>
+        {/* Tab Switcher */}
+        <div className="login-tabs">
+          <button
+            className={`login-tab ${tab === 'login' ? 'active' : ''}`}
+            onClick={() => setTab('login')}
+            type="button"
+          >
+            Log in
+          </button>
+          <button
+            className={`login-tab ${tab === 'signup' ? 'active' : ''}`}
+            onClick={() => setTab('signup')}
+            type="button"
+          >
+            Create account
+          </button>
         </div>
+
+        {/* Form */}
+        <form className="login-form" onSubmit={handleSubmit}>
+          <label className="login-label">Email</label>
+          <input
+            className="login-input input-ony platinum-inner-border"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          <label className="login-label">Password</label>
+          <input
+            className="login-input input-ony platinum-inner-border"
+            type="password"
+            autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          <button className="login-cta btn-platinum-premium" disabled={loading}>
+            {loading ? (tab === 'login' ? 'Signing in…' : 'Creating…') : tab === 'login' ? 'Sign in' : 'Create account'}
+          </button>
+
+          {err && <div className="login-err">{err}</div>}
+          {msg && <div className="login-msg">{msg}</div>}
+        </form>
       </div>
 
-      {/* === Styles (unchanged) === */}
+      {/* === Dark Mode Platinum Theme Styles matching home page === */}
       <style jsx global>{`
-        :root{
-          --ink:#0f172a;
-          --ink-2:#111111;
-          --muted:#6b7280;
-          --panel:#ffffff;
-          --panel-2:#f6f7f8;
-          --shade:#f5f5f5;
-          --ring:#111111;
-          --shadow: 0 20px 70px rgba(0,0,0,.08);
+        /* Page Background - matching home page #1c1c1c */
+        .login-page {
+          min-height: 100dvh;
+          display: grid;
+          place-items: center;
+          padding: 28px;
+          background: #1c1c1c !important;
         }
-        html,body{background:#f3f4f6;margin:0;color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-        *{box-sizing:border-box}
 
-        .wrap{min-height:100dvh;display:grid;place-items:center;padding:28px;}
-        .card{
-          width:min(980px, 96vw);
-          background:var(--panel);
-          border-radius:18px;
-          box-shadow:var(--shadow);
-          display:grid;
-          grid-template-columns: 1fr 1fr;
-          overflow:hidden;
-          border:1px solid #e6e6e6;
+        /* Override global body for login */
+        html, body {
+          margin: 0;
+          background: #1c1c1c !important;
+          font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
         }
-        @media (max-width:980px){.card{grid-template-columns:1fr}}
 
-        .left{
-          background: radial-gradient(1200px 400px at -200px -200px, #ffffff 0%, #f7f7f7 35%, #efefef 100%);
-          padding:42px 40px 48px;
-          display:flex;align-items:flex-end;justify-content:flex-start;
+        /* The Centered Card - using platinum-container-frame from globals */
+        .login-card {
+          width: 100%;
+          max-width: 450px;
+          padding: 40px 36px;
         }
-        .brand .app{font-weight:800;font-size:44px;letter-spacing:.2px}
-        .brand .sub{margin-top:6px;color:var(--muted)}
 
-        .right{padding:32px 34px 34px}
-
-        .tabs{display:flex;gap:20px;margin-bottom:18px}
-        .tab{background:transparent;border:none;cursor:pointer;padding:0 0 10px;border-bottom:2.5px solid transparent;color:var(--ink);font-weight:700;font-size:18px;}
-        .tab.active{border-color:#111}
-
-        .form{display:flex;flex-direction:column;gap:12px;max-width:520px}
-        .lbl{font-size:13px;color:var(--muted)}
-
-        .input{
-          width:100%;
-          padding:14px 16px;
-          border:1px solid #e6e6e6;
-          border-radius:12px;
-          background:#fff;
-          color:var(--ink);
-          outline:none;
-          transition:border .15s ease, box-shadow .15s ease, background .15s ease;
+        /* Header - Matching home page style (centered, no italics) */
+        .login-title {
+          text-align: center;
+          font-size: 42px;
+          font-weight: 800;
+          letter-spacing: 1px;
+          margin: 0 0 12px;
+          text-transform: uppercase;
+          /* Override inline-block from platinum-text-gradient to center properly */
+          display: block !important;
+          width: 100%;
         }
-        .input:focus{border-color:var(--ring);box-shadow: 0 0 0 3px rgba(17,17,17,.12);background:#fff;}
-        .input::placeholder{color:#9ca3af}
-        .input:-webkit-autofill,
-        .input:-webkit-autofill:hover,
-        .input:-webkit-autofill:focus{
-          -webkit-text-fill-color: var(--ink);
-          caret-color: var(--ink);
-          box-shadow: 0 0 0px 1000px var(--shade) inset !important;
-          border:1px solid #e6e6e6 !important;
+
+        /* Card suits row with decorative lines */
+        .login-suits-row {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 16px;
+          margin-bottom: 8px;
+          opacity: 0.9;
+        }
+
+        .login-line-left {
+          height: 1px;
+          width: 80px;
+          background: linear-gradient(90deg, transparent, #a3a3a3);
+        }
+
+        .login-line-right {
+          height: 1px;
+          width: 80px;
+          background: linear-gradient(90deg, #a3a3a3, transparent);
+        }
+
+        .login-suits {
+          font-size: 18px;
+          letter-spacing: 6px;
+          line-height: 1;
+        }
+
+        .login-suit {
+          color: #e5e7eb;
+          text-shadow: 0 0 10px rgba(229, 231, 235, 0.4);
+        }
+
+        .login-subtitle {
+          text-align: center;
+          font-size: 14px;
+          margin: 0 0 28px;
+          background: linear-gradient(to right, #6b7280 0%, #94A3B8 40%, #94A3B8 60%, #6b7280 100%) !important;
+          -webkit-background-clip: text !important;
+          background-clip: text !important;
+          color: transparent !important;
+          -webkit-text-fill-color: transparent !important;
+        }
+
+        /* Tab Switcher */
+        .login-tabs {
+          display: flex;
+          gap: 24px;
+          margin-bottom: 24px;
+          justify-content: center;
+        }
+
+        .login-tab {
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          padding: 0 0 8px;
+          border-bottom: 2px solid transparent;
+          font-weight: 600;
+          font-size: 16px;
+          transition: all 0.2s ease;
+          /* Metallic gradient for inactive tabs */
+          background: linear-gradient(to right, #6b7280 0%, #94A3B8 40%, #94A3B8 60%, #6b7280 100%) !important;
+          -webkit-background-clip: text !important;
+          background-clip: text !important;
+          color: transparent !important;
+          -webkit-text-fill-color: transparent !important;
+        }
+
+        .login-tab:hover {
+          background: linear-gradient(to right, #6b7280 0%, #E2E8F0 40%, #E2E8F0 60%, #6b7280 100%) !important;
+          -webkit-background-clip: text !important;
+          background-clip: text !important;
+          color: transparent !important;
+          -webkit-text-fill-color: transparent !important;
+        }
+
+        .login-tab.active {
+          background: linear-gradient(to right, #6b7280 0%, #ffffff 40%, #ffffff 60%, #6b7280 100%) !important;
+          -webkit-background-clip: text !important;
+          background-clip: text !important;
+          color: transparent !important;
+          -webkit-text-fill-color: transparent !important;
+          border-color: #E2E8F0;
+        }
+
+        /* Form */
+        .login-form {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        /* Labels - Metallic gradient matching home page */
+        .login-label {
+          font-size: 13px;
+          font-weight: 500;
+          margin-bottom: -4px;
+          background: linear-gradient(to right, #6b7280 0%, #ffffff 40%, #ffffff 60%, #6b7280 100%) !important;
+          -webkit-background-clip: text !important;
+          background-clip: text !important;
+          color: transparent !important;
+          -webkit-text-fill-color: transparent !important;
+        }
+
+        /* Input Fields - matching home page input-ony style */
+        .login-input {
+          width: 100%;
+          padding: 14px 16px;
+          font-size: 15px;
+          background: #262626 !important;
+          color: #E2E8F0 !important;
+          -webkit-text-fill-color: #E2E8F0 !important;
+        }
+
+        /* Autofill Override - match password box background (#262626) */
+        .login-input:-webkit-autofill,
+        .login-input:-webkit-autofill:hover,
+        .login-input:-webkit-autofill:focus,
+        .login-input:-webkit-autofill:active {
+          -webkit-text-fill-color: #E2E8F0 !important;
+          caret-color: #E2E8F0;
+          -webkit-box-shadow: 0 0 0px 1000px #262626 inset !important;
+          box-shadow: 0 0 0px 1000px #262626 inset !important;
+          background-color: #262626 !important;
+          border-color: #a3a3a3 !important;
           transition: background-color 99999s ease-in-out 0s;
         }
-        .input:-moz-ui-valid{background-color: var(--shade) !important;}
 
-        /* CTA stays visually identical to your current version */
-        .cta{
-          margin-top: 8px;
+        /* CTA Button - using btn-platinum-premium from globals */
+        .login-cta {
+          margin-top: 12px;
           padding: 14px 16px;
           border-radius: 12px;
-          background: var(--shade);
-          color: var(--ink);
-          border: 1px solid #e6e6e6;
-          font-weight: 800;
           font-size: 16px;
           cursor: pointer;
-          transition: background .15s ease, color .15s ease, border-color .15s ease, transform .02s ease-in-out, box-shadow .15s ease;
-          box-shadow: 0 2px 0 rgba(0,0,0,.10);
+          width: 100%;
         }
-        .cta:not(:disabled):hover{
-          background:#0a0a0a;color:#ffffff;border-color:#0a0a0a;
-          transform: translateY(-0.5px); box-shadow: 0 3px 0 rgba(0,0,0,.25);
-        }
-        .cta:not(:disabled):active{transform: translateY(0.5px); box-shadow: 0 1px 0 rgba(0,0,0,.15);}
-        .cta[disabled]{background:#f3f4f6;color:#9ca3af;border-color:#e5e7eb;box-shadow:none;cursor:not-allowed;}
 
-        .err{margin-top:10px;color:#b91c1c;font-size:13px}
-        .msg{margin-top:10px;color:#065f46;font-size:13px}
+        .login-cta[disabled] {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        /* Error & Success Messages */
+        .login-err {
+          margin-top: 10px;
+          color: #ef4444 !important;
+          -webkit-text-fill-color: #ef4444 !important;
+          background: none !important;
+          font-size: 13px;
+          text-align: center;
+        }
+
+        .login-msg {
+          margin-top: 10px;
+          color: #22c55e !important;
+          -webkit-text-fill-color: #22c55e !important;
+          background: none !important;
+          font-size: 13px;
+          text-align: center;
+        }
       `}</style>
     </div>
   );
