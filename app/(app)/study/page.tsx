@@ -1,6 +1,7 @@
 // app/(app)/study/page.tsx
 'use client';
 
+import "@/styles/onlypoker-theme.css";
 import React, { useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -159,28 +160,30 @@ export default function StudyPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6">
+    <main className="min-h-screen px-4 py-8 sm:px-6 op-surface text-[#f3f4f6]">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8">
         {/* Page header */}
-        <header className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold text-slate-900">Study</h1>
-          <p className="text-sm text-slate-600">
-            Ask the coach about leaks or spots. We&apos;ll use your notes and hands to
+        <header className="flex flex-col gap-2">
+          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-b from-white via-gray-200 to-gray-500 text-transparent bg-clip-text drop-shadow-sm">
+            Study
+          </h1>
+          <p className="text-sm text-[#a3a3a3] max-w-2xl leading-relaxed">
+            Ask the coach about leaks or spots. We'll use your notes and hands to
             answer, then turn it into drills you can practice.
           </p>
         </header>
 
         {/* Smart Search Header */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <div className="flex flex-col gap-4">
+        <section className="p-6 platinum-container-frame">
+          <div className="flex flex-col gap-5">
             {/* Question input */}
             <div>
-              <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#737373]">
                 Focus or question
               </label>
               <textarea
                 rows={2}
-                className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none ring-0 transition focus:border-sky-400 focus:bg-white focus:ring-1 focus:ring-sky-400"
+                className="w-full px-4 py-3 text-sm outline-none transition disabled:opacity-50 platinum-inner-border bg-[#262626] text-[#E2E8F0] rounded-lg"
                 placeholder="Ask a question or focus on a leak… e.g. “Why am I losing calling 3bets OOP?”"
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
@@ -188,97 +191,49 @@ export default function StudyPage() {
             </div>
 
             {/* Filters + button row */}
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="flex flex-wrap gap-2 text-xs">
-                {/* Range */}
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                    Range
-                  </span>
-                  <select
-                    className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800"
-                    value={range}
-                    onChange={(e) => setRange(e.target.value)}
-                  >
-                    {RANGE_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Stakes */}
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                    Stakes
-                  </span>
-                  <select
-                    className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800"
-                    value={stakes}
-                    onChange={(e) => setStakes(e.target.value)}
-                  >
-                    {STAKES_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Position */}
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                    Position
-                  </span>
-                  <select
-                    className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800"
-                    value={position}
-                    onChange={(e) => setPosition(e.target.value)}
-                  >
-                    {POSITION_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Street */}
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                    Street
-                  </span>
-                  <select
-                    className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-800"
-                    value={street}
-                    onChange={(e) => setStreet(e.target.value)}
-                  >
-                    {STREET_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: 'Range', val: range, set: setRange, opts: RANGE_OPTIONS },
+                  { label: 'Stakes', val: stakes, set: setStakes, opts: STAKES_OPTIONS },
+                  { label: 'Position', val: position, set: setPosition, opts: POSITION_OPTIONS },
+                  { label: 'Street', val: street, set: setStreet, opts: STREET_OPTIONS },
+                ].map((filter) => (
+                  <div key={filter.label} className="flex items-center gap-2 px-2 py-1.5 shadow-sm platinum-inner-border bg-[#141414] rounded-lg">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#666]">
+                      {filter.label}
+                    </span>
+                    <select
+                      className="bg-transparent text-xs text-[#e5e5e5] font-medium outline-none cursor-pointer hover:text-white transition"
+                      value={filter.val}
+                      onChange={(e) => filter.set(e.target.value)}
+                    >
+                      {filter.opts.map((opt) => (
+                        <option key={opt.value} value={opt.value} className="bg-[#1a1a1a] text-gray-200">
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
               </div>
 
               {/* Right side: status + button */}
-              <div className="flex items-center justify-between gap-3 md:justify-end">
-                <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  Knowledge base: up to date
+              <div className="flex items-center justify-between gap-4 md:justify-end">
+                <div className="hidden md:inline-flex items-center gap-1.5 rounded-full bg-[#1c1c1c] border border-[#333] px-3 py-1 text-[11px] font-medium text-emerald-500 shadow-inner">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
+                  Knowledge base active
                 </div>
 
                 <button
                   type="button"
                   onClick={handleAskCoach}
                   disabled={loading}
-                  className="inline-flex items-center justify-center rounded-full bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-sky-400"
+                  className="btn-platinum-premium px-6 py-2.5 rounded-xl text-sm min-w-[140px]"
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">
-                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-800 border-t-transparent" />
                       Thinking…
                     </span>
                   ) : (
@@ -289,7 +244,9 @@ export default function StudyPage() {
             </div>
 
             {errorMsg && (
-              <p className="text-xs font-medium text-red-600">{errorMsg}</p>
+              <p className="text-xs font-medium text-red-500 bg-red-900/20 border border-red-900/50 p-2 rounded-lg text-center">
+                {errorMsg}
+              </p>
             )}
           </div>
         </section>
@@ -299,21 +256,21 @@ export default function StudyPage() {
           {/* Left column – AI Coach / RAG output */}
           <div className="flex flex-col gap-4">
             {/* Strategy Snapshot */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <h2 className="text-sm font-semibold text-slate-900">
+            <section className="p-6 platinum-container-frame">
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <h2 className="text-sm font-bold platinum-text-gradient">
                   Strategy Snapshot
                 </h2>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                <span className="rounded-full bg-[#262626] border border-[#333] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#737373]">
                   Using: notes + hands
                 </span>
               </div>
               {coach?.summary ? (
-                <p className="text-sm leading-relaxed text-slate-800 whitespace-pre-line">
+                <p className="text-sm leading-relaxed text-[#d4d4d4] whitespace-pre-line">
                   {coach.summary}
                 </p>
               ) : (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-[#737373]">
                   Ask the coach a question to see a summary of what&apos;s going on in
                   this spot.
                 </p>
@@ -321,21 +278,21 @@ export default function StudyPage() {
             </section>
 
             {/* Key Rules */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-              <h3 className="mb-2 text-sm font-semibold text-slate-900">
+            <section className="p-6 platinum-container-frame">
+              <h3 className="mb-4 text-sm font-bold platinum-text-gradient">
                 Key Rules for This Spot
               </h3>
               {coach?.rules && coach.rules.length > 0 ? (
-                <ul className="space-y-1.5 text-sm text-slate-800">
+                <ul className="space-y-3 text-sm text-[#d4d4d4]">
                   {coach.rules.map((rule, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="mt-[5px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-sky-500" />
-                      <span>{rule}</span>
+                    <li key={idx} className="flex items-start gap-3">
+                      <span className="mt-[6px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+                      <span className="leading-relaxed">{rule}</span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-[#737373]">
                   When you ask a question, important heuristics and rules will show up
                   here.
                 </p>
@@ -343,27 +300,27 @@ export default function StudyPage() {
             </section>
 
             {/* Source Context */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-              <h3 className="mb-3 text-sm font-semibold text-slate-900">
+            <section className="p-6 platinum-container-frame">
+              <h3 className="mb-4 text-sm font-bold platinum-text-gradient">
                 Source Context
               </h3>
               {chunks.length === 0 ? (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-[#737373]">
                   The coach will show which notes, hands, and GTO snippets it used as
                   context.
                 </p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {chunks.map((chunk, idx) => {
                     const labelType = (chunk.source_type || '').toLowerCase();
                     const icon =
                       labelType === 'hand'
                         ? '♠️'
                         : labelType === 'note'
-                        ? '📝'
-                        : labelType === 'gto'
-                        ? '📊'
-                        : '📎';
+                          ? '📝'
+                          : labelType === 'gto'
+                            ? '📊'
+                            : '📎';
 
                     const metaParts: string[] = [];
                     if (chunk.stakes_bucket) metaParts.push(chunk.stakes_bucket);
@@ -377,40 +334,40 @@ export default function StudyPage() {
                     return (
                       <details
                         key={chunk.id || `${idx}`}
-                        className="group rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800"
+                        className="group bg-[#141414] rounded-xl px-4 py-3 text-sm text-[#d4d4d4] open:bg-[#1a1a1a] transition-all platinum-inner-border"
                       >
-                        <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-base">{icon}</span>
+                        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 outline-none">
+                          <div className="flex items-center gap-3">
+                            <span className="text-base opacity-70">{icon}</span>
                             <div className="flex flex-col">
-                              <span className="text-xs font-semibold text-slate-900">
+                              <span className="text-xs font-bold text-[#e5e5e5]">
                                 {chunk.title ||
                                   (labelType === 'hand'
                                     ? 'Hand context'
                                     : labelType === 'note'
-                                    ? 'Study note'
-                                    : 'Source snippet')}
+                                      ? 'Study note'
+                                      : 'Source snippet')}
                               </span>
                               {meta && (
-                                <span className="text-[11px] text-slate-500">
+                                <span className="text-[10px] text-[#737373] mt-0.5">
                                   {meta}
                                 </span>
                               )}
                             </div>
                           </div>
-                          <span className="text-[11px] text-slate-400">
+                          <span className="text-[10px] text-[#555] uppercase tracking-wider group-open:text-[#a3a3a3]">
                             View
                           </span>
                         </summary>
-                        <div className="mt-2 border-t border-slate-200 pt-2 text-xs leading-relaxed text-slate-800">
+                        <div className="mt-3 border-t border-[#333] pt-3 text-xs leading-relaxed text-[#a3a3a3]">
                           {chunk.content}
                         </div>
                         {tags.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-1">
+                          <div className="mt-3 flex flex-wrap gap-1.5">
                             {tags.map((t) => (
                               <span
                                 key={t}
-                                className="rounded-full bg-slate-200/70 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-700"
+                                className="rounded-md bg-[#262626] border border-[#333] px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[#888]"
                               >
                                 {t}
                               </span>
@@ -428,58 +385,61 @@ export default function StudyPage() {
           {/* Right column – Drill Engine */}
           <div className="flex flex-col gap-4">
             {/* Recommended drills */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <h2 className="text-sm font-semibold text-slate-900">
+            <section className="p-6 platinum-container-frame">
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <h2 className="text-sm font-bold platinum-text-gradient">
                   Recommended Drills
                   {drills.length > 0 ? ` (${drills.length})` : ''}
                 </h2>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                <span className="rounded-full bg-[#262626] border border-[#333] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#737373]">
                   Drill engine
                 </span>
               </div>
 
               {activeDrill ? (
-                <div className="flex flex-col gap-3">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <div className="flex flex-col gap-4">
+                  <div className="rounded-xl bg-[#0f0f0f] p-5 shadow-inner platinum-inner-border">
+                    <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-[#555]">
                       Scenario {activeDrillIndex + 1}
                     </p>
-                    <p className="text-sm font-medium text-slate-900">
+                    <p className="text-sm font-medium text-[#e5e5e5] leading-relaxed">
                       {activeDrill.question}
                     </p>
                     {activeDrill.answer && (
-                      <details className="mt-3 text-sm text-slate-800">
-                        <summary className="cursor-pointer text-xs font-semibold text-sky-700">
-                          Show answer &amp; explanation
+                      <details className="mt-4 text-sm group">
+                        <summary className="cursor-pointer text-xs font-bold text-blue-400 hover:text-blue-300 transition select-none flex items-center gap-1">
+                          <span>Show Answer</span>
+                          <span className="text-[10px] opacity-50 ml-1">(Click to reveal)</span>
                         </summary>
-                        <div className="mt-1 text-sm text-slate-800">
-                          <p className="font-semibold">Answer: {activeDrill.answer}</p>
+                        <div className="mt-3 p-3 bg-[#1a1a1a] rounded-lg border border-[#333] text-[#d4d4d4]">
+                          <p className="font-semibold text-[#f3f4f6] mb-1">Answer:</p>
+                          <p>{activeDrill.answer}</p>
                           {activeDrill.explanation && (
-                            <p className="mt-1 text-sm text-slate-700">
+                            <div className="mt-2 pt-2 border-t border-[#333] text-xs text-[#a3a3a3]">
+                              <p className="font-bold text-[#737373] mb-1 uppercase tracking-wider">Explanation</p>
                               {activeDrill.explanation}
-                            </p>
+                            </div>
                           )}
                         </div>
                       </details>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center justify-between gap-3">
                     <button
                       type="button"
                       onClick={nextDrill}
-                      className="inline-flex flex-1 items-center justify-center rounded-full bg-sky-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-sky-700"
+                      className="btn-ony flex-1 py-2 text-xs uppercase tracking-wider"
                     >
                       Next Drill
                     </button>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-[#555] font-mono">
                       {activeDrillIndex + 1} / {drills.length}
                     </span>
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-[#737373]">
                   Once the coach answers, you&apos;ll see tailored drills for this spot
                   here.
                 </p>
@@ -487,26 +447,26 @@ export default function StudyPage() {
             </section>
 
             {/* Drill list */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-              <h3 className="mb-2 text-sm font-semibold text-slate-900">
+            <section className="p-6 platinum-container-frame">
+              <h3 className="mb-3 text-sm font-bold platinum-text-gradient">
                 Drill List
               </h3>
               {drills.length === 0 ? (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-[#737373]">
                   No drills yet. Ask a question above to generate a set of exercises.
                 </p>
               ) : (
-                <ul className="space-y-1.5 text-sm text-slate-800">
+                <ul className="space-y-2 text-sm">
                   {drills.map((d, idx) => (
                     <li
                       key={d.id || idx}
-                      className="flex items-start justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2"
+                      className="flex items-start justify-between gap-3 rounded-lg bg-[#141414] px-3 py-2.5 hover:bg-[#1a1a1a] transition platinum-inner-border"
                     >
-                      <div className="flex gap-2">
-                        <span className="mt-[2px] text-xs font-semibold text-slate-500">
-                          Q{idx + 1}.
+                      <div className="flex gap-3">
+                        <span className="mt-[2px] text-xs font-bold text-[#555] font-mono">
+                          {idx + 1 < 10 ? `0${idx + 1}` : idx + 1}
                         </span>
-                        <span>{d.question}</span>
+                        <span className="text-[#d4d4d4] text-xs">{d.question}</span>
                       </div>
                     </li>
                   ))}
@@ -515,17 +475,18 @@ export default function StudyPage() {
             </section>
 
             {/* Add to Plan stub */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-              <h3 className="mb-1 text-sm font-semibold text-slate-900">
+            <section className="p-6 opacity-60 hover:opacity-100 transition platinum-container-frame">
+              <h3 className="mb-2 text-sm font-bold platinum-text-gradient">
                 Add to Study Plan
               </h3>
-              <p className="mb-3 text-sm text-slate-600">
+              <p className="mb-4 text-xs text-[#a3a3a3]">
                 Suggested: focus on your top leak from this query over the next 3 study
-                sessions. Planning &amp; scheduling will live here.
+                sessions.
               </p>
               <button
                 type="button"
-                className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
+                className="w-full btn-ony py-2 text-xs uppercase tracking-wider opacity-70 cursor-not-allowed"
+                disabled
               >
                 Add to Study Plan (coming soon)
               </button>
@@ -534,10 +495,9 @@ export default function StudyPage() {
         </div>
 
         {/* Small helper footer */}
-        <footer className="mt-2 text-xs text-slate-500">
+        <footer className="mt-4 text-xs text-[#555] text-center pb-8">
           To upload new hand histories, use the{' '}
-          <span className="font-medium">My Hands</span> tab. This Study view reads from
-          your existing notes &amp; hands.
+          <span className="font-bold text-[#737373]">My Hands</span> tab.
         </footer>
       </div>
     </main>

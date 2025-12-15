@@ -1,8 +1,11 @@
+
 // app/(app)/history/page.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { Bot, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import "@/styles/onlypoker-theme.css";
@@ -79,15 +82,15 @@ export default function HistoryPage() {
         .from('hands')
         .select(
           `
-          id,
-          created_at,
-          date,
-          stakes,
-          position,
-          cards,
-          gto_strategy,
-          exploit_deviation
-        `
+id,
+  created_at,
+  date,
+  stakes,
+  position,
+  cards,
+  gto_strategy,
+  exploit_deviation
+    `
         )
         .eq('user_id', user.id)
         .order('date', { ascending: false, nullsFirst: false })
@@ -130,7 +133,7 @@ export default function HistoryPage() {
         error: uerr,
       } = await supabase.auth.getUser();
 
-      if (uerr) throw new Error(`Supabase getUser error: ${uerr.message}`);
+      if (uerr) throw new Error(`Supabase getUser error: ${uerr.message} `);
       if (!user) throw new Error('Please sign in.');
 
       // 2) Direct upload to our API (server will put to S3)
@@ -147,7 +150,7 @@ export default function HistoryPage() {
         const msg =
           upJson?.error ||
           upJson?.message ||
-          `Upload failed with status ${upRes.status}`;
+          `Upload failed with status ${upRes.status} `;
         throw new Error(msg);
       }
 
@@ -259,13 +262,20 @@ export default function HistoryPage() {
                   <span>Stakes</span>
                   <span>Position</span>
                   <span>Cards</span>
-                  <span>Coach status</span>
+                  <span className="flex items-center justify-center gap-1">
+                    <Bot className="w-4 h-4 text-[#737373]" />
+                  </span>
+                  <span className="flex items-center justify-center gap-1">
+                    <User className="w-4 h-4 text-[#737373]" />
+                  </span>
                 </div>
                 <div className="history-divider" />
                 <ul className="history-table-body">
                   {hands.map((h) => {
                     const d = h.date || h.created_at?.slice(0, 10);
-                    const coached = h.gto_strategy ? 'Coached' : 'Pending';
+                    const gto = h.gto_strategy;
+                    const exploit = h.exploit_deviation;
+
                     return (
                       <li key={h.id}>
                         <Link href={`/hand/${h.id}`} className="history-row" style={{ textDecoration: 'none' }}>
@@ -273,12 +283,47 @@ export default function HistoryPage() {
                           <span>{h.stakes || '—'}</span>
                           <span>{h.position || '—'}</span>
                           <span>{renderCards(h.cards)}</span>
-                          <span
-                            className={
-                              h.gto_strategy ? 'history-pill-ok' : 'history-pill-pending'
-                            }
-                          >
-                            {coached}
+
+                          {/* GTO / Robot Column */}
+                          <span className="flex items-center justify-center">
+                            {gto ? (
+                              <div className="group relative">
+                                <Bot
+                                  className="w-5 h-5 text-[#737373] transition-all duration-300 hover:text-[#e2e8f0] hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] cursor-help"
+                                />
+                                <div className="absolute right-full top-1/2 -translate-y-1/2 mr-3 w-96 p-5 platinum-container-frame shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[9999]">
+                                  <div className="mb-3 border-b border-[#444] pb-2">
+                                    <span className="font-bold uppercase tracking-wider text-[11px] platinum-text-gradient">GTO Strategy</span>
+                                  </div>
+                                  <div className="text-xs leading-relaxed whitespace-pre-wrap platinum-text-gradient font-medium">
+                                    {gto}
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <Bot className="w-5 h-5 text-[#333] opacity-30" />
+                            )}
+                          </span>
+
+                          {/* Exploit / Human Column */}
+                          <span className="flex items-center justify-center">
+                            {exploit ? (
+                              <div className="group relative">
+                                <User
+                                  className="w-5 h-5 text-[#737373] transition-all duration-300 hover:text-[#e2e8f0] hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] cursor-help"
+                                />
+                                <div className="absolute right-full top-1/2 -translate-y-1/2 mr-3 w-96 p-5 platinum-container-frame shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[9999]">
+                                  <div className="mb-3 border-b border-[#444] pb-2">
+                                    <span className="font-bold uppercase tracking-wider text-[11px] platinum-text-gradient">Exploitative Deviation</span>
+                                  </div>
+                                  <div className="text-xs leading-relaxed whitespace-pre-wrap platinum-text-gradient font-medium">
+                                    {exploit}
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <User className="w-5 h-5 text-[#333] opacity-30" />
+                            )}
                           </span>
                         </Link>
                       </li>
@@ -420,12 +465,12 @@ export default function HistoryPage() {
         /* Table Header - Darker background with bright platinum */
         .history-table-header {
           display: grid;
-          grid-template-columns: 120px 120px 120px 1fr 120px;
+          grid-template-columns: 1.5fr 1.2fr 1fr 2fr 60px 60px;
           font-size: 13px;
           font-weight: 700;
           color: #E2E8F0 !important;
           background: rgba(0, 0, 0, 0.3);
-          padding: 10px 8px;
+          padding: 10px 16px;
           border-radius: 8px;
           margin-bottom: 8px;
           -webkit-text-fill-color: transparent !important;
@@ -456,9 +501,9 @@ export default function HistoryPage() {
         /* Table Rows - Dark transparent with platinum dividers */
         .history-row {
           display: grid;
-          grid-template-columns: 120px 120px 120px 1fr 120px;
+          grid-template-columns: 1.5fr 1.2fr 1fr 2fr 60px 60px;
           font-size: 13px;
-          padding: 10px 8px;
+          padding: 10px 16px;
           border-bottom: 1px solid rgba(226, 232, 240, 0.15);
           color: #E2E8F0 !important;
           background: transparent;
@@ -479,75 +524,6 @@ export default function HistoryPage() {
           cursor: pointer;
         }
         
-        /* Status Pills - Metallic gradient borders */
-        .history-pill-ok,
-        .history-pill-pending {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          padding: 4px 12px;
-          border-radius: 999px;
-          font-size: 12px;
-          font-weight: 600;
-          border: 2px solid transparent;
-        }
-        
-        /* Coached - Metallic Green gradient border */
-        .history-pill-ok {
-          background: 
-            linear-gradient(#1c1c1c, #1c1c1c) padding-box,
-            linear-gradient(135deg, 
-              #155e35 0%, 
-              #22c55e 25%, 
-              #4ade80 50%, 
-              #22c55e 75%, 
-              #155e35 100%
-            ) border-box !important;
-          -webkit-background-clip: padding-box, border-box !important;
-          background-clip: padding-box, border-box !important;
-          color: transparent !important;
-          -webkit-text-fill-color: transparent !important;
-        }
-        .history-pill-ok span,
-        .history-pill-ok {
-          background: 
-            linear-gradient(#1c1c1c, #1c1c1c) padding-box,
-            linear-gradient(135deg, #155e35 0%, #22c55e 25%, #4ade80 50%, #22c55e 75%, #155e35 100%) border-box;
-        }
-        /* Text gradient for Coached */
-        .history-pill-ok::after {
-          content: '';
-        }
-        .history-row .history-pill-ok {
-          background: 
-            linear-gradient(#1c1c1c, #1c1c1c) padding-box,
-            linear-gradient(135deg, #155e35 0%, #22c55e 25%, #4ade80 50%, #22c55e 75%, #155e35 100%) border-box !important;
-          color: #22c55e !important;
-          -webkit-text-fill-color: #22c55e !important;
-        }
-        
-        /* Pending - Metallic Blue gradient border */
-        .history-pill-pending {
-          background: 
-            linear-gradient(#1c1c1c, #1c1c1c) padding-box,
-            linear-gradient(135deg, 
-              #1e40af 0%, 
-              #3b82f6 25%, 
-              #60a5fa 50%, 
-              #3b82f6 75%, 
-              #1e40af 100%
-            ) border-box !important;
-          -webkit-background-clip: padding-box, border-box !important;
-          background-clip: padding-box, border-box !important;
-        }
-        .history-row .history-pill-pending {
-          background: 
-            linear-gradient(#1c1c1c, #1c1c1c) padding-box,
-            linear-gradient(135deg, #1e40af 0%, #3b82f6 25%, #60a5fa 50%, #3b82f6 75%, #1e40af 100%) border-box !important;
-          color: #3b82f6 !important;
-          -webkit-text-fill-color: #3b82f6 !important;
-        }
-
         @media (max-width: 768px) {
           .history-page {
             padding: 18px 12px;
@@ -558,7 +534,7 @@ export default function HistoryPage() {
           }
           .history-table-header,
           .history-row {
-            grid-template-columns: 90px 90px 80px 1fr 90px;
+            grid-template-columns: 90px 90px 70px 1fr 50px 50px;
             font-size: 12px;
           }
         }

@@ -7,8 +7,9 @@ from datetime import datetime
 
 import boto3
 import psycopg2
-from psycopg2.extras import execute_values
+from psycopg2.extras import execute_values, Json
 from dotenv import load_dotenv
+from replayer_parser import parse_for_replayer, extract_date
 
 # ----- Env -------------------------------------------------------------------
 HOME = os.path.expanduser("~")
@@ -134,14 +135,48 @@ def claim_hand_files(limit: int):
         return rows
 
 INSERT_HANDS_SQL = """
-  INSERT INTO public.hands (user_id, source_used, raw_text)
+  INSERT INTO public.hands (user_id, source_used, raw_text, date, stakes, position, cards, replayer_data)
   VALUES %s
 """
+
+def get_position_label(seat_idx):
+    # Map 0-8 logical index to label (0=BTN)
+    labels = ["BTN", "SB", "BB", "UTG", "UTG+1", "UTG+2", "LJ", "HJ", "CO"]
+    if 0 <= seat_idx < len(labels):
+        return labels[seat_idx]
+    return f"Seat {seat_idx}"
 
 def insert_hands(user_id, blocks):
     if not blocks:
         return 0
-    rows = [(user_id, "upload", b) for b in blocks]
+    
+    rows = []
+    for b in blocks:
+        # Parse fully to get metadata
+        try:
+            data = parse_for_replayer(b)
+            date_str = extract_date(b)
+            
+            # Extract fields
+            sb = data.get("sb")
+            bb = data.get("bb")
+            stakes = f"${sb}/${bb}" if sb and bb else None
+            
+            hero = next((p for p in data.get("players", []) if p.get("isHero")), None)
+            position = None
+            cards = None
+            
+            if hero:
+                position = get_position_label(hero.get("seatIndex", -1))
+                if hero.get("cards"):
+                    cards = " ".join(hero["cards"])
+            
+            rows.append((user_id, "upload", b, date_str, stakes, position, cards, Json(data)))
+        except Exception as e:
+            log(f"Warning: Failed to parse hand for metadata: {e}")
+            # Fallback to basic insert
+            rows.append((user_id, "upload", b, None, None, None, None, None))
+
     with pg() as conn, conn.cursor() as cur:
         execute_values(cur, INSERT_HANDS_SQL, rows, page_size=200)
         conn.commit()

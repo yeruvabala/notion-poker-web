@@ -120,6 +120,13 @@ WINNER_RE = re.compile(
     re.IGNORECASE
 )
 
+# Date extraction
+# Matches: "2023/10/25 12:00:00" or "2023-10-25"
+DATE_RE = re.compile(
+    r"(\d{4}[-/]\d{2}[-/]\d{2}\s+\d{2}:\d{2}:\d{2})",
+    re.IGNORECASE
+)
+
 # -----------------------------------------------------------------------------
 # Card Format Conversion
 # -----------------------------------------------------------------------------
@@ -216,6 +223,28 @@ def extract_hero_cards(text: str) -> Optional[List[str]]:
         card1 = convert_card(match.group(1))
         card2 = convert_card(match.group(2))
         return [card1, card2]
+    return None
+
+
+def extract_date(text: str) -> Optional[str]:
+    """Extract and validate date from hand history."""
+    from datetime import datetime
+    match = DATE_RE.search(text)
+    if match:
+        dstr = match.group(1)
+        # Try common formats
+        for fmt in ("%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"):
+            try:
+                dt = datetime.strptime(dstr.replace("-", "/"), fmt.replace("-", "/"))
+                # Return standard ISO format for DB
+                return dt.strftime("%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                pass
+        
+        # If we can't parse it but it matched regex, it might be weird.
+        # Let's try to just return it if it looks plausible, or None if it failed standard parse
+        # But Postgres is strict. If python can't parse it, Postgres probably can't either (or it's invalid like 32:00:00).
+        return None
     return None
 
 
