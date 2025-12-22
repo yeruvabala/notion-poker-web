@@ -65,9 +65,10 @@ STAKES_RE = re.compile(
     r"\$?([0-9]+(?:\.[0-9]+)?)\s*/\s*\$?([0-9]+(?:\.[0-9]+)?)"
 )
 
-# Hero's hole cards
+# Hero's hole cards - captures player name and both cards
+# Matches: "Dealt to KannyThOP [7c Ks]" or "Dealt to Hero [Ah Kh]"
 HERO_CARDS_RE = re.compile(
-    r"Dealt\s+to\s+Hero\s*\[\s*([2-9TJQKA][cdhs])\s+([2-9TJQKA][cdhs])\s*\]",
+    r"Dealt\s+to\s+(\S+)\s*\[\s*([2-9TJQKA][cdhs])\s+([2-9TJQKA][cdhs])\s*\]",
     re.IGNORECASE
 )
 
@@ -168,12 +169,39 @@ def parse_amount(amount_str: Optional[str]) -> Optional[float]:
 def extract_players_with_stacks(text: str) -> List[Dict[str, Any]]:
     """
     Extract all players from seat lines with their initial stacks.
+    Excludes players marked as "sitting out" or who "sits out".
     Returns list of { name, seatIndex, stack, isHero, isActive, cards }
     """
+    # First, find all players who are sitting out
+    # Pattern 1: "Seat X: PlayerName ($Y) is sitting out"
+    # Pattern 2: "PlayerName sits out" on separate line
+    sitting_out_players = set()
+    
+    # Check for "sits out" or "sitting out" patterns
+    sits_out_pattern = re.compile(r'(\w+)\s+sits?\s+out', re.IGNORECASE)
+    for match in sits_out_pattern.finditer(text):
+        player_name = match.group(1).strip()
+        sitting_out_players.add(player_name)
+    
     players = []
     for match in SEAT_STACK_RE.finditer(text):
         seat_num = int(match.group(1))
         name = match.group(2).strip()
+        
+        # Skip players who are sitting out (either pattern)
+        if name in sitting_out_players:
+            continue
+        
+        # Also check the seat line itself for "sitting out"
+        line_start = match.start()
+        line_end = text.find('\n', line_start)
+        if line_end == -1:
+            line_end = len(text)
+        seat_line = text[line_start:line_end]
+        
+        if 'sitting out' in seat_line.lower():
+            continue
+        
         stack_str = match.group(3).replace(",", "")
         try:
             stack = float(stack_str)
@@ -216,14 +244,18 @@ def extract_stakes(text: str) -> Tuple[Optional[float], Optional[float]]:
     return None, None
 
 
-def extract_hero_cards(text: str) -> Optional[List[str]]:
-    """Extract hero's hole cards."""
+def extract_hero_cards(text: str) -> Tuple[Optional[str], Optional[List[str]]]:
+    """
+    Extract hero's name and hole cards from 'Dealt to' line.
+    Returns: (hero_name, [card1, card2]) or (None, None) if not found.
+    """
     match = HERO_CARDS_RE.search(text)
     if match:
-        card1 = convert_card(match.group(1))
-        card2 = convert_card(match.group(2))
-        return [card1, card2]
-    return None
+        hero_name = match.group(1).strip()
+        card1 = convert_card(match.group(2))
+        card2 = convert_card(match.group(3))
+        return hero_name, [card1, card2]
+    return None, None
 
 
 def extract_date(text: str) -> Optional[str]:
@@ -385,6 +417,138 @@ def identify_folded_players(actions: List[Dict[str, Any]], shown_cards: Dict[str
 # -----------------------------------------------------------------------------
 # Main Parser Function
 # -----------------------------------------------------------------------------
+
+def calculate_poker_positions(
+    players: List[Dict[str, Any]], 
+    dealer_seat: Optional[int],
+    actions: List[Dict[str, Any]]
+) -> Dict[str, str]:
+    """
+    Calculate poker position names (BTN, SB, BB, CO, HJ, UTG, etc.) for each player.
+    
+    Args:
+        players: List of player dicts with seatIndex
+        dealer_seat: Button seat number
+        actions: List of actions to find SB/BB posts
+        
+    Returns:
+        Dict mapping player name -> position name (e.g. "CO", "BTN")
+    """
+    if not players:
+        return {}
+    
+    positions = {}
+    num_players = len(players)
+    
+    # Find who posted SB and BB from actions
+    sb_player = None
+    bb_player = None
+    for action in actions:
+        if action.get("action") in ("posts_sb", "posts_small_blind"):
+            sb_player = action.get("player")
+        elif action.get("action") in ("posts_bb", "posts_big_blind"):
+            bb_player = action.get("player")
+    
+    # Sort players by seat index
+    sorted_players = sorted(players, key=lambda p: p["seatIndex"])
+    seat_to_name = {p["seatIndex"]: p["name"] for p in sorted_players}
+    name_to_seat = {p["name"]: p["seatIndex"] for p in sorted_players}
+    
+    # Find button player
+    btn_player = None
+    if dealer_seat is not None and dealer_seat in seat_to_name:
+        btn_player = seat_to_name[dealer_seat]
+    
+    # Create ordered list of players starting from button
+    # If we can't find button, use SB/BB to infer it
+    if not btn_player and sb_player:
+        # Button is before SB in ring order
+        sb_seat = name_to_seat[sb_player]
+        sb_idx = next(i for i, p in enumerate(sorted_players) if p["seatIndex"] == sb_seat)
+        # Button is previous player in ring (wrapping)
+        btn_idx = (sb_idx - 1) % num_players
+        btn_player = sorted_players[btn_idx]["name"]
+    
+    if not btn_player:
+        # Last resort: first player in sorted order is button
+        btn_player = sorted_players[0]["name"]
+    
+    # Build ring order starting from button
+    btn_seat = name_to_seat[btn_player]
+    btn_idx = next(i for i, p in enumerate(sorted_players) if p["seatIndex"] == btn_seat)
+    
+    ring_order = []
+    for i in range(num_players):
+        idx = (btn_idx + i) % num_players
+        ring_order.append(sorted_players[idx]["name"])
+    
+    # Assign position names based on ring order and player count
+    # ring_order[0] is always button
+    # ring_order[1] is SB (or BB in heads-up)
+    # ring_order[2] is BB (if not heads-up)
+    # Rest are positional from right to left of button
+    
+    if num_players == 2:
+        # Heads-up: BTN is also SB, other player is BB
+        positions[ring_order[0]] = "BTN/SB"
+        positions[ring_order[1]] = "BB"
+    elif num_players == 3:
+        positions[ring_order[0]] = "BTN"
+        positions[ring_order[1]] = "SB"
+        positions[ring_order[2]] = "BB"
+    elif num_players == 4:
+        positions[ring_order[0]] = "BTN"
+        positions[ring_order[1]] = "SB"
+        positions[ring_order[2]] = "BB"
+        positions[ring_order[3]] = "CO"
+    elif num_players == 5:
+        positions[ring_order[0]] = "BTN"
+        positions[ring_order[1]] = "SB"
+        positions[ring_order[2]] = "BB"
+        positions[ring_order[3]] = "UTG"
+        positions[ring_order[4]] = "CO"
+    elif num_players == 6:
+        # 6-max
+        positions[ring_order[0]] = "BTN"
+        positions[ring_order[1]] = "SB"
+        positions[ring_order[2]] = "BB"
+        positions[ring_order[3]] = "UTG"
+        positions[ring_order[4]] = "HJ"
+        positions[ring_order[5]] = "CO"
+    elif num_players == 7:
+        positions[ring_order[0]] = "BTN"
+        positions[ring_order[1]] = "SB"
+        positions[ring_order[2]] = "BB"
+        positions[ring_order[3]] = "UTG"
+        positions[ring_order[4]] = "UTG+1"
+        positions[ring_order[5]] = "HJ"
+        positions[ring_order[6]] = "CO"
+    elif num_players == 8:
+        positions[ring_order[0]] = "BTN"
+        positions[ring_order[1]] = "SB"
+        positions[ring_order[2]] = "BB"
+        positions[ring_order[3]] = "UTG"
+        positions[ring_order[4]] = "UTG+1"
+        positions[ring_order[5]] = "LJ"
+        positions[ring_order[6]] = "HJ"
+        positions[ring_order[7]] = "CO"
+    elif num_players >= 9:
+        # 9-max or more
+        positions[ring_order[0]] = "BTN"
+        positions[ring_order[1]] = "SB"
+        positions[ring_order[2]] = "BB"
+        positions[ring_order[3]] = "UTG"
+        positions[ring_order[4]] = "UTG+1"
+        positions[ring_order[5]] = "UTG+2"
+        positions[ring_order[6]] = "LJ"
+        positions[ring_order[7]] = "HJ"
+        positions[ring_order[8]] = "CO"
+        # Any extra players get UTG+3, UTG+4, etc.
+        for i in range(9, num_players):
+            positions[ring_order[i]] = f"UTG+{i-2}"
+    
+    return positions
+
 
 def infer_implicit_folds(
     actions: List[Dict[str, Any]], 
@@ -609,7 +773,7 @@ def parse_for_replayer(raw_text: str) -> Dict[str, Any]:
     players = extract_players_with_stacks(raw_text)
     dealer_seat = extract_dealer_seat(raw_text)
     sb, bb = extract_stakes(raw_text)
-    hero_cards = extract_hero_cards(raw_text)
+    hero_name, hero_cards = extract_hero_cards(raw_text)  # Now returns (name, cards)
     shown_cards = extract_shown_cards(raw_text)
     board = extract_board(raw_text)
     street = detect_street_reached(raw_text)
@@ -619,6 +783,12 @@ def parse_for_replayer(raw_text: str) -> Dict[str, Any]:
     # This inserts "folds" actions for players skipped in the turn order
     if actions and players:
         actions = infer_implicit_folds(actions, players, dealer_seat, sb, bb)
+    
+    # Calculate poker positions (BTN, SB, BB, CO, HJ, UTG, etc.)
+    # CRITICAL: This must happen BEFORE smart seating logic which reassigns seat indices
+    position_map = calculate_poker_positions(players, dealer_seat, actions)
+    for player in players:
+        player["position"] = position_map.get(player["name"], "UNKNOWN")
     
     # Infer missing players AND re-assign seats based on roles (Smart Seating)
     # This fixes issues where arbitrary seat assignment breaks position labels (e.g. Hero BB labeled as HJ)
@@ -719,10 +889,17 @@ def parse_for_replayer(raw_text: str) -> Dict[str, Any]:
             used_seats.add(seat)
             assigned_seats[name] = seat
             
-        is_hero = existing["isHero"] if existing else (name == "Hero" or "_Hero" in name)
+        # isHero check: match by hero_name from 'Dealt to' line, or fallback to name patterns
+        is_hero = (
+            (hero_name and name == hero_name) or
+            (existing["isHero"] if existing else False) or
+            (name == "Hero" or "_Hero" in name)
+        )
         # Stack is None if unknown (will be handled as Infinity/??? in frontend)
         stack = existing["stack"] if existing else None
         cards = existing["cards"] if existing else None
+        # Preserve position from initial calculation (before smart seating)
+        position = existing.get("position") if existing else "UNKNOWN"
         
         final_players.append({
             "name": name,
@@ -730,7 +907,8 @@ def parse_for_replayer(raw_text: str) -> Dict[str, Any]:
             "isHero": is_hero,
             "cards": cards,
             "isActive": True, # Will be updated later
-            "stack": stack
+            "stack": stack,
+            "position": position  # Preserve from initial calculation
         })
         
     players = final_players

@@ -80,11 +80,63 @@ def get_pg_conn():
     return conn
 
 # -----------------------------------------------------------------------------
+# Position Annotation Helper
+# -----------------------------------------------------------------------------
+def annotate_raw_text_with_positions(raw_text: str, replayer_data: Dict[str, Any]) -> str:
+    """
+    Annotate player names in the raw text with their positions.
+    
+    Example:
+      Before: "namesarehard raises $0.62 to $0.62"
+      After:  "namesarehard (HJ) raises $0.62 to $0.62"
+    
+    This prevents LLM hallucinations about player positions.
+    """
+    if not replayer_data or 'players' not in replayer_data:
+        return raw_text
+    
+    # Build name -> position mapping
+    position_map = {}
+    for player in replayer_data.get('players', []):
+        name = player.get('name')
+        position = player.get('position')
+        if name and position:
+            position_map[name] = position
+    
+    if not position_map:
+        return raw_text
+    
+    # Only annotate the action section (after "*** HOLE CARDS ***")
+    if "*** HOLE CARDS ***" not in raw_text:
+        return raw_text
+    
+    parts = raw_text.split("*** HOLE CARDS ***", 1)
+    header = parts[0]
+    action_section = parts[1] if len(parts) > 1 else ""
+    
+    # Annotate each player name in the action section
+    # Sort by length (longest first) to avoid partial matches
+    sorted_names = sorted(position_map.keys(), key=len, reverse=True)
+    
+    annotated_action = action_section
+    for name in sorted_names:
+        position = position_map[name]
+        # Use word boundaries to avoid partial matches
+        # Replace "PlayerName" with "PlayerName (POSITION)"
+        import re
+        pattern = r'\b' + re.escape(name) + r'\b'
+        replacement = f"{name} ({position})"
+        annotated_action = re.sub(pattern, replacement, annotated_action)
+    
+    return header + "*** HOLE CARDS ***" + annotated_action
+
+# -----------------------------------------------------------------------------
 # Coach API call
 # -----------------------------------------------------------------------------
 def call_coach_api(
     hand_id: Any,
     raw_text: str,
+    parsed_data: Optional[Dict[str, Any]] = None,
 ) -> Tuple[Optional[str], Optional[str], Optional[List[str]]]:
     url = os.getenv("COACH_API_URL")
     token = os.getenv("COACH_API_TOKEN")
@@ -93,6 +145,9 @@ def call_coach_api(
         return None, None, None
 
     payload = {"hand_id": str(hand_id), "raw_text": raw_text}
+    # Include pre-parsed data if available (improves accuracy)
+    if parsed_data:
+        payload["parsed"] = parsed_data
     data_bytes = json.dumps(payload).encode("utf-8")
     headers = { "Content-Type": "application/json", "x-app-token": token }
     req = request.Request(url, data=data_bytes, headers=headers, method="POST")
@@ -125,7 +180,7 @@ def call_coach_api(
 
 def fetch_hands_for_coaching(conn, limit: int) -> List[Dict[str, Any]]:
     sql = """
-        SELECT id, user_id, raw_text
+        SELECT id, user_id, raw_text, position, cards, board, stakes, replayer_data
         FROM public.hands
         WHERE gto_strategy IS NULL
           AND raw_text IS NOT NULL
@@ -135,6 +190,72 @@ def fetch_hands_for_coaching(conn, limit: int) -> List[Dict[str, Any]]:
     with conn.cursor() as cur:
         cur.execute(sql, (limit,))
         return cur.fetchall()
+
+def extract_parsed_data(row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """
+    Extract structured data from the row to pass to the coach API.
+    This includes position, cards, board, stakes, and action history from replayer_data.
+    """
+    replayer = row.get("replayer_data") or {}
+    
+    # Build board from replayer_data (stored as array like ["8♥", "8♦", "A♠", "3♥"])
+    board_arr = replayer.get("board", [])
+    if isinstance(board_arr, list):
+        flop_cards = " ".join(board_arr[:3]) if len(board_arr) >= 3 else ""
+        turn_card = board_arr[3] if len(board_arr) >= 4 else ""
+        river_card = board_arr[4] if len(board_arr) >= 5 else ""
+    else:
+        # Fallback for object format {"flop": "...", "turn": "...", "river": "..."}
+        flop_cards = board_arr.get("flop", "") if isinstance(board_arr, dict) else ""
+        turn_card = board_arr.get("turn", "") if isinstance(board_arr, dict) else ""
+        river_card = board_arr.get("river", "") if isinstance(board_arr, dict) else ""
+    
+    # Construct full board string - prefer from row, then from replayer
+    board_str = row.get("board") or ""
+    if not board_str and board_arr:
+        board_str = " ".join(board_arr) if isinstance(board_arr, list) else ""
+    
+    # Extract stakes from replayer_data or row
+    stakes_str = row.get("stakes") or ""
+    if not stakes_str:
+        sb = replayer.get("sb")
+        bb = replayer.get("bb")
+        if sb is not None and bb is not None:
+            stakes_str = f"${sb}/${bb}"
+    
+    # Extract action sequence to detect 3bet/4bet pots
+    actions = replayer.get("actions", [])
+    preflop_raises = 0
+    pot_type = "single_raised"
+    for action in actions:
+        street = action.get("street", "")
+        act = action.get("action", "").lower()
+        if street == "preflop" and act in ["raises", "raise"]:
+            preflop_raises += 1
+    if preflop_raises >= 3:
+        pot_type = "4bet"
+    elif preflop_raises >= 2:
+        pot_type = "3bet"
+    
+    # Build the parsed data object
+    parsed = {
+        "position": row.get("position") or replayer.get("hero_position") or "",
+        "cards": row.get("cards") or replayer.get("hero_cards") or "",
+        "board": board_str,
+        "flop": flop_cards,
+        "turn": turn_card,
+        "river": river_card,
+        "stakes": stakes_str,
+        "pot": replayer.get("pot"),
+        "pot_type": pot_type,
+        "preflop_raises": preflop_raises,
+        "hero": replayer.get("hero"),
+    }
+    
+    # Only return if we have at least position or cards
+    if parsed["position"] or parsed["cards"]:
+        return parsed
+    return None
 
 def update_hand_with_coach(
     conn,
@@ -164,7 +285,19 @@ def coach_new_hands(conn, batch_size: int) -> int:
     for row in rows:
         hand_id = row["id"]
         raw_text = row["raw_text"]
-        gto, dev, lt = call_coach_api(hand_id, raw_text)
+        replayer_data = row.get("replayer_data") or {}
+        
+        # Annotate raw text with player positions to prevent LLM hallucinations
+        annotated_raw_text = annotate_raw_text_with_positions(raw_text, replayer_data)
+        
+        # Extract pre-parsed data for more accurate coaching
+        parsed_data = extract_parsed_data(row)
+        if parsed_data:
+            logger.debug("Passing parsed data to coach: position=%s, cards=%s, pot_type=%s",
+                        parsed_data.get("position"), parsed_data.get("cards"), parsed_data.get("pot_type"))
+        
+        # Send annotated raw text (with positions) instead of original
+        gto, dev, lt = call_coach_api(hand_id, annotated_raw_text, parsed_data)
         if gto is None and dev is None and not lt:
             continue
         update_hand_with_coach(conn, hand_id, gto, dev, lt)

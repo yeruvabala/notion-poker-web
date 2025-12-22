@@ -1,0 +1,4734 @@
+Hand #2609923248 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:29:19 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: CrackedKings ($29.81)
+Seat 2: Hellliga ($28.40)
+Seat 4: KannyThOP ($58.99)
+Seat 5: Arepitarica ($27.10)
+Seat 6: Axel14 ($25.00) is sitting out
+KannyThOP posts the small blind $0.10
+Arepitarica sits out
+CrackedKings posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [7c Ks]
+Hellliga raises $0.75 to $0.75
+KannyThOP folds
+CrackedKings calls $0.50
+*** FLOP *** [8h 8d As]
+Main pot $1.52 | Rake $0.08
+CrackedKings checks
+Hellliga checks
+*** TURN *** [8h 8d As] [3h]
+Main pot $1.52 | Rake $0.08
+CrackedKings bets $0.50
+Hellliga folds
+Uncalled bet ($0.50) returned to CrackedKings
+CrackedKings does not show
+*** SUMMARY ***
+Total pot $1.52 | Rake $0.06 | JP Fee $0.02
+Board [8h 8d As 3h]
+Seat 1: CrackedKings did not show and won $1.52
+Seat 2: Hellliga (button) folded on the Turn
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+
+
+Hand #2609922758 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:28:27 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: CrackedKings ($25.00)
+Seat 2: Hellliga ($28.50)
+Seat 4: KannyThOP ($64.22)
+Seat 5: Arepitarica ($27.10)
+Seat 6: Axel14 ($25.00) is sitting out
+Hellliga posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ac 8h]
+Arepitarica folds
+CrackedKings raises $0.70 to $0.70
+Hellliga folds
+KannyThOP calls $0.45
+*** FLOP *** [7d Qs Ad]
+Main pot $1.43 | Rake $0.07
+KannyThOP checks
+CrackedKings bets $1.07
+KannyThOP calls $1.07
+*** TURN *** [7d Qs Ad] [8d]
+Main pot $3.46 | Rake $0.18
+KannyThOP checks
+CrackedKings bets $3.46
+KannyThOP calls $3.46
+*** RIVER *** [7d Qs Ad 8d] [9s]
+Main pot $10.04 | Rake $0.52
+KannyThOP checks
+CrackedKings checks
+*** SHOW DOWN ***
+Main pot $10.04 | Rake $0.52
+CrackedKings shows [Qd As] (two pair, Aces and Queens [As Ad Qs Qd 9s])
+KannyThOP shows [Ac 8h] (two pair, Aces and Eights [Ad Ac 8h 8d Qs])
+CrackedKings collected $10.04 from main pot
+*** SUMMARY ***
+Total pot $10.04 | Rake $0.36 | JP Fee $0.16
+Board [7d Qs Ad 8d 9s]
+Seat 1: CrackedKings (button) showed [Qd As] and won $10.04 with two pair, Aces and Queens [As Ad Qs Qd 9s]
+Seat 2: Hellliga (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP (big blind) showed [Ac 8h] and lost with two pair, Aces and Eights [Ad Ac 8h 8d Qs]
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+
+
+Hand #2609922495 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:27:58 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: CrackedKings ($25.00)
+Seat 2: Hellliga ($28.75)
+Seat 4: KannyThOP ($64.22)
+Seat 5: Arepitarica ($26.75)
+Seat 6: Axel14 ($25.00) is sitting out
+CrackedKings posts the small blind $0.10
+Hellliga posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ah 5c]
+KannyThOP folds
+Arepitarica raises $0.60 to $0.60
+CrackedKings folds
+Hellliga folds
+Uncalled bet ($0.35) returned to Arepitarica
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: CrackedKings (small blind) folded on the Pre-Flop
+Seat 2: Hellliga (big blind) folded on the Pre-Flop
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica did not show and won $0.60
+
+
+Hand #2609922247 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:27:32 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: CrackedKings ($25.00)
+Seat 2: Hellliga ($28.75)
+Seat 4: KannyThOP ($64.22)
+Seat 5: Arepitarica ($26.50)
+Seat 6: Axel14 ($25.00) is sitting out
+Arepitarica posts the small blind $0.10
+CrackedKings posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Kc 2s]
+Hellliga folds
+KannyThOP folds
+Arepitarica raises $0.50 to $0.60
+CrackedKings folds
+Uncalled bet ($0.35) returned to Arepitarica
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $0.50
+Seat 1: CrackedKings (big blind) folded on the Pre-Flop
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP (button) folded on the Pre-Flop
+Seat 5: Arepitarica did not show and won $0.50
+
+
+Hand #2609921994 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:27:05 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 2: Hellliga ($28.40)
+Seat 4: KannyThOP ($64.32)
+Seat 5: Arepitarica ($26.75)
+Seat 6: Axel14 ($25.00) is sitting out
+KannyThOP posts the small blind $0.10
+Arepitarica posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [3d 2d]
+Hellliga raises $0.75 to $0.75
+KannyThOP folds
+Arepitarica folds
+Uncalled bet ($0.50) returned to Hellliga
+Hellliga does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 2: Hellliga did not show and won $0.60
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Arepitarica (big blind) folded on the Pre-Flop
+
+
+Hand #2609921738 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:26:38 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 2: Hellliga ($28.50)
+Seat 4: KannyThOP ($64.57)
+Seat 5: Arepitarica ($26.40)
+Seat 6: Axel14 ($25.00) is sitting out
+Hellliga posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ks 6d]
+Arepitarica raises $0.60 to $0.60
+Hellliga folds
+KannyThOP folds
+Uncalled bet ($0.35) returned to Arepitarica
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 2: Hellliga (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 5: Arepitarica did not show and won $0.60
+
+
+Hand #2609921427 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:26:06 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 2: Hellliga ($28.75)
+Seat 4: KannyThOP ($65.27)
+Seat 5: Arepitarica ($25.45)
+Seat 6: Axel14 ($25.00) is sitting out
+Arepitarica posts the small blind $0.10
+Hellliga posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [9d Ah]
+KannyThOP raises $0.70 to $0.70
+Arepitarica raises $2.90 to $3.00
+Hellliga folds
+KannyThOP folds
+Uncalled bet ($2.30) returned to Arepitarica
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $1.65
+Seat 2: Hellliga (big blind) folded on the Pre-Flop
+Seat 4: KannyThOP (button) folded on the Pre-Flop
+Seat 5: Arepitarica did not show and won $1.65
+
+
+Hand #2609921057 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:25:28 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($39.90) is sitting out
+Seat 2: Hellliga ($28.75)
+Seat 4: KannyThOP ($65.02)
+Seat 5: Arepitarica ($25.70)
+Seat 6: Axel14 ($25.00) is sitting out
+KannyThOP posts the small blind $0.10
+Arepitarica posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [7c Ac]
+Hellliga folds
+KannyThOP raises $0.65 to $0.75
+Arepitarica folds
+Uncalled bet ($0.50) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $0.50
+Seat 2: Hellliga (button) folded on the Pre-Flop
+Seat 4: KannyThOP did not show and won $0.50
+Seat 5: Arepitarica (big blind) folded on the Pre-Flop
+
+
+Hand #2609920873 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:25:09 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($39.90) is sitting out
+Seat 2: Hellliga ($28.85)
+Seat 4: KannyThOP ($65.27)
+Seat 5: Arepitarica ($25.35)
+Seat 6: Axel14 ($25.00) is sitting out
+Hellliga posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Jc 2s]
+Arepitarica raises $0.60 to $0.60
+Hellliga folds
+KannyThOP folds
+Uncalled bet ($0.35) returned to Arepitarica
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 2: Hellliga (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 5: Arepitarica did not show and won $0.60
+
+
+Hand #2609920667 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:24:48 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($39.90) is sitting out
+Seat 2: Hellliga ($29.10)
+Seat 4: KannyThOP ($65.27)
+Seat 5: Arepitarica ($25.10)
+Seat 6: Axel14 ($25.00) is sitting out
+Arepitarica posts the small blind $0.10
+Hellliga posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [7s Tc]
+KannyThOP folds
+Arepitarica raises $0.65 to $0.75
+Hellliga folds
+Uncalled bet ($0.50) returned to Arepitarica
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $0.50
+Seat 2: Hellliga (big blind) folded on the Pre-Flop
+Seat 4: KannyThOP (button) folded on the Pre-Flop
+Seat 5: Arepitarica did not show and won $0.50
+
+
+Hand #2609920501 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:24:30 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($39.90) is sitting out
+Seat 2: Hellliga ($29.10)
+Seat 4: KannyThOP ($65.37)
+Seat 5: Arepitarica ($25.00)
+Seat 6: Axel14 ($25.00) is sitting out
+KannyThOP posts the small blind $0.10
+Arepitarica posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Tc 5h]
+Hellliga folds
+KannyThOP folds
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 2: Hellliga (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Arepitarica did not show and won $0.35
+
+
+Hand #2609919945 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:23:33 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($39.90) is sitting out
+Seat 2: Hellliga ($29.20)
+Seat 4: KannyThOP ($64.71)
+Seat 5: Arepitarica ($25.00)
+Seat 6: Axel14 ($25.00) is sitting out
+Hellliga posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Jd Qs]
+Arepitarica raises $0.62 to $0.62
+Hellliga folds
+KannyThOP calls $0.37
+*** FLOP *** [Jh 6s As]
+Main pot $1.28 | Rake $0.06
+KannyThOP checks
+Arepitarica checks
+*** TURN *** [Jh 6s As] [4h]
+Main pot $1.28 | Rake $0.06
+KannyThOP bets $0.44
+Arepitarica folds
+Uncalled bet ($0.44) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $1.28 | Rake $0.04 | JP Fee $0.02
+Board [Jh 6s As 4h]
+Seat 2: Hellliga (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP did not show and won $1.28
+Seat 5: Arepitarica (button) folded on the Turn
+
+
+Hand #2609919743 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:23:13 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($39.90) is sitting out
+Seat 2: Hellliga ($29.10)
+Seat 4: KannyThOP ($64.71)
+Seat 5: Arepitarica ($25.00)
+Seat 6: Axel14 ($25.00)
+Arepitarica posts the small blind $0.10
+Axel14 sits out
+Hellliga posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [7s 2h]
+KannyThOP folds
+Arepitarica folds
+Hellliga does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 2: Hellliga did not show and won $0.35
+Seat 4: KannyThOP (button) folded on the Pre-Flop
+Seat 5: Arepitarica (small blind) folded on the Pre-Flop
+
+
+Hand #2609918963 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:21:51 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($39.90) is sitting out
+Seat 2: Hellliga ($25.00)
+Seat 4: KannyThOP ($64.81)
+Seat 5: Arepitarica ($25.70)
+Seat 6: Axel14 ($25.00)
+KannyThOP posts the small blind $0.10
+Arepitarica posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [9s 7h]
+Axel14 folds
+Hellliga raises $0.50 to $0.50
+KannyThOP folds
+Arepitarica raises $2.10 to $2.35
+Hellliga raises $3.70 to $4.20
+Arepitarica calls $1.85
+*** FLOP *** [7d Qh Ac]
+Main pot $8.08 | Rake $0.42
+Arepitarica checks
+Hellliga bets $0.25
+Arepitarica calls $0.25
+*** TURN *** [7d Qh Ac] [5d]
+Main pot $8.55 | Rake $0.45
+Arepitarica checks
+Hellliga bets $6.41
+Arepitarica folds
+Uncalled bet ($6.41) returned to Hellliga
+Hellliga does not show
+*** SUMMARY ***
+Total pot $8.55 | Rake $0.31 | JP Fee $0.14
+Board [7d Qh Ac 5d]
+Seat 2: Hellliga did not show and won $8.55
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Arepitarica (big blind) folded on the Turn
+Seat 6: Axel14 folded on the Pre-Flop and did not bet
+
+
+Hand #2609918590 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:21:12 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($39.90) is sitting out
+Seat 2: Hellliga ($25.10)
+Seat 4: KannyThOP ($65.06)
+Seat 5: Arepitarica ($25.35)
+Seat 6: Axel14 ($25.00)
+Hellliga posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [4c Js]
+Arepitarica raises $0.60 to $0.60
+Axel14 folds
+Hellliga folds
+KannyThOP folds
+Uncalled bet ($0.35) returned to Arepitarica
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 2: Hellliga (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 5: Arepitarica did not show and won $0.60
+Seat 6: Axel14 (button) folded on the Pre-Flop
+
+
+Hand #2609918270 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:20:38 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($39.90) is sitting out
+Seat 2: Hellliga ($25.00)
+Seat 4: KannyThOP ($65.06)
+Seat 5: Arepitarica ($25.35)
+Seat 6: Axel14 ($25.00)
+Axel14 posts the small blind $0.10
+Hellliga posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ad 2c]
+KannyThOP folds
+Arepitarica folds
+Axel14 folds
+Hellliga does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 2: Hellliga did not show and won $0.35
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica (button) folded on the Pre-Flop
+Seat 6: Axel14 (small blind) folded on the Pre-Flop
+
+
+Hand #2609917709 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:19:41 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($39.90) is sitting out
+Seat 2: Hellliga ($25.00)
+Seat 3: huggins ($66.27) is sitting out
+Seat 4: KannyThOP ($64.02)
+Seat 5: Arepitarica ($25.45)
+Seat 6: Axel14 ($25.00)
+Arepitarica posts the small blind $0.10
+Axel14 posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ts Kd]
+Hellliga folds
+KannyThOP raises $0.70 to $0.70
+Arepitarica folds
+Axel14 calls $0.45
+*** FLOP *** [3s 4d Qc]
+Main pot $1.43 | Rake $0.07
+Axel14 checks
+KannyThOP bets $0.35
+Axel14 calls $0.35
+*** TURN *** [3s 4d Qc] [9c]
+Main pot $2.09 | Rake $0.11
+Axel14 checks
+KannyThOP bets $1.66
+Axel14 folds
+Uncalled bet ($1.66) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $2.09 | Rake $0.09 | JP Fee $0.02
+Board [3s 4d Qc 9c]
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP did not show and won $2.09
+Seat 5: Arepitarica (small blind) folded on the Pre-Flop
+Seat 6: Axel14 (big blind) folded on the Turn
+
+
+Hand #2609917540 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:19:23 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($39.90) is sitting out
+Seat 2: Hellliga ($25.00)
+Seat 3: huggins ($66.27) is sitting out
+Seat 4: KannyThOP ($64.12)
+Seat 5: Arepitarica ($25.35)
+Seat 6: Axel14 ($25.00)
+KannyThOP posts the small blind $0.10
+Arepitarica posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [6s 9h]
+Axel14 folds
+Hellliga folds
+KannyThOP folds
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 2: Hellliga (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Arepitarica did not show and won $0.35
+Seat 6: Axel14 folded on the Pre-Flop and did not bet
+
+
+Hand #2609917033 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:18:32 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($39.90) is sitting out
+Seat 2: Hellliga ($25.00)
+Seat 3: huggins ($66.27)
+Seat 4: KannyThOP ($63.10)
+Seat 5: Arepitarica ($25.35)
+Seat 6: Axel14 ($25.00)
+Hellliga posts the small blind $0.10
+huggins sits out
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [8s Ks]
+Arepitarica folds
+Axel14 raises $0.60 to $0.60
+Hellliga folds
+KannyThOP calls $0.35
+*** FLOP *** [2s 2c 5s]
+Main pot $1.24 | Rake $0.06
+KannyThOP checks
+Axel14 bets $0.42
+KannyThOP raises $1.46 to $1.46
+Axel14 folds
+Uncalled bet ($1.04) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $2.04 | Rake $0.08 | JP Fee $0.02
+Board [2s 2c 5s]
+Seat 2: Hellliga (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP did not show and won $2.04
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: Axel14 (button) folded on the Flop
+
+
+Hand #2609916731 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:18:00 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($39.90)
+Seat 2: Hellliga ($25.00)
+Seat 3: huggins ($66.27)
+Seat 4: KannyThOP ($63.10)
+Seat 5: Arepitarica ($25.00)
+Seat 6: Axel14 ($25.00)
+Axel14 posts the small blind $0.10
+namesarehard sits out
+Hellliga posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [9s Jh]
+huggins folds
+KannyThOP folds
+Arepitarica raises $0.60 to $0.60
+Axel14 folds
+Hellliga folds
+Uncalled bet ($0.35) returned to Arepitarica
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 2: Hellliga (big blind) folded on the Pre-Flop
+Seat 3: huggins folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica did not show and won $0.60
+Seat 6: Axel14 (small blind) folded on the Pre-Flop
+
+
+Hand #2609916435 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:17:28 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($39.90)
+Seat 2: Hellliga ($25.00)
+Seat 3: huggins ($66.27)
+Seat 4: KannyThOP ($62.00)
+Seat 5: Arepitarica ($25.00)
+Seat 6: Axel14 ($25.00)
+Arepitarica posts the small blind $0.10
+Axel14 posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ac Ks]
+namesarehard folds
+Hellliga raises $0.75 to $0.75
+huggins folds
+KannyThOP raises $2.23 to $2.23
+Arepitarica folds
+Axel14 folds
+Hellliga folds
+Uncalled bet ($1.48) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $1.85
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: huggins folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP did not show and won $1.85
+Seat 5: Arepitarica (small blind) folded on the Pre-Flop
+Seat 6: Axel14 (big blind) folded on the Pre-Flop
+
+
+Hand #2609916065 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:16:49 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($39.90)
+Seat 2: Hellliga ($25.00)
+Seat 3: huggins ($66.89)
+Seat 4: KannyThOP ($61.13)
+Seat 5: Arepitarica ($25.00)
+Seat 6: Axel14 ($25.00)
+KannyThOP posts the small blind $0.10
+Arepitarica posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Qd Qc]
+Axel14 folds
+namesarehard folds
+Hellliga folds
+huggins raises $0.62 to $0.62
+KannyThOP raises $2.81 to $2.91
+Arepitarica folds
+huggins folds
+Uncalled bet ($2.29) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $1.49
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: huggins (button) folded on the Pre-Flop
+Seat 4: KannyThOP did not show and won $1.49
+Seat 5: Arepitarica (big blind) folded on the Pre-Flop
+Seat 6: Axel14 folded on the Pre-Flop and did not bet
+
+
+Hand #2609915669 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:16:08 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($39.90)
+Seat 2: Hellliga ($25.00)
+Seat 3: huggins ($66.64)
+Seat 4: KannyThOP ($61.38)
+Seat 5: Arepitarica ($25.00)
+Seat 6: Axel14 ($25.00)
+huggins posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Jd 3h]
+Arepitarica folds
+Axel14 folds
+namesarehard folds
+Hellliga folds
+huggins raises $0.65 to $0.75
+KannyThOP folds
+Uncalled bet ($0.50) returned to huggins
+huggins does not show
+*** SUMMARY ***
+Total pot $0.50
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga (button) folded on the Pre-Flop
+Seat 3: huggins did not show and won $0.50
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: Axel14 folded on the Pre-Flop and did not bet
+
+
+Hand #2609914875 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:14:41 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($39.90)
+Seat 2: Hellliga ($25.00)
+Seat 3: huggins ($62.25)
+Seat 4: KannyThOP ($61.38)
+Seat 5: Arepitarica ($25.00)
+Seat 6: Axel14 ($25.00)
+Hellliga posts the small blind $0.10
+huggins posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [5s Js]
+KannyThOP folds
+Arepitarica folds
+Axel14 folds
+namesarehard folds
+Hellliga raises $0.65 to $0.75
+huggins raises $2.25 to $2.50
+Hellliga calls $1.75
+*** FLOP *** [5d 3h Qh]
+Main pot $4.75 | Rake $0.25
+Hellliga checks
+huggins checks
+*** TURN *** [5d 3h Qh] [4h]
+Main pot $4.75 | Rake $0.25
+Hellliga bets $2.37
+huggins calls $2.37
+*** RIVER *** [5d 3h Qh 4h] [6d]
+Main pot $9.26 | Rake $0.48
+Hellliga checks
+huggins checks
+*** SHOW DOWN ***
+Main pot $9.26 | Rake $0.48
+Hellliga shows [8c 8h] (a pair of Eights [8h 8c Qh 6d 5d])
+huggins shows [Jc Jd] (a pair of Jacks [Jd Jc Qh 6d 5d])
+huggins collected $9.26 from main pot
+*** SUMMARY ***
+Total pot $9.26 | Rake $0.32 | JP Fee $0.16
+Board [5d 3h Qh 4h 6d]
+Seat 1: namesarehard (button) folded on the Pre-Flop
+Seat 2: Hellliga (small blind) showed [8c 8h] and lost with a pair of Eights [8h 8c Qh 6d 5d]
+Seat 3: huggins (big blind) showed [Jc Jd] and won $9.26 with a pair of Jacks [Jd Jc Qh 6d 5d]
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: Axel14 folded on the Pre-Flop and did not bet
+
+
+Hand #2609913992 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:13:01 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($40.00)
+Seat 2: Hellliga ($25.00)
+Seat 3: huggins ($39.41)
+Seat 4: KannyThOP ($61.38)
+Seat 5: Arepitarica ($25.00)
+Seat 6: Axel14 ($25.00)
+namesarehard posts the small blind $0.10
+Hellliga posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [8h Jd]
+huggins raises $0.50 to $0.50
+KannyThOP folds
+Arepitarica folds
+Axel14 raises $2.12 to $2.12
+namesarehard folds
+Hellliga folds
+huggins raises $5.50 to $6.00
+Axel14 calls $3.88
+*** FLOP *** [6h 2h 9h]
+Main pot $11.74 | Rake $0.61
+huggins bets $1.23
+Axel14 raises $19.00 to $19.00 and is all-in
+huggins calls $17.77
+*** TURN *** [6h 2h 9h] [3h]
+Main pot $47.84 | Rake $2.51
+*** RIVER *** [6h 2h 9h 3h] [Qs]
+Main pot $47.84 | Rake $2.51
+*** SHOW DOWN ***
+Main pot $47.84 | Rake $2.51
+huggins shows [Qd Qc] (three of a kind, Set of Queens [Qs Qd Qc 9h 6h])
+Axel14 shows [As Ad] (a pair of Aces [As Ad Qs 9h 6h])
+huggins collected $47.84 from main pot
+*** SUMMARY ***
+Total pot $47.84 | Rake $2.27 | JP Fee $0.24
+Board [6h 2h 9h 3h Qs]
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 2: Hellliga (big blind) folded on the Pre-Flop
+Seat 3: huggins showed [Qd Qc] and won $47.84 with three of a kind, Set of Queens [Qs Qd Qc 9h 6h]
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: Axel14 (button) showed [As Ad] and lost with a pair of Aces [As Ad Qs 9h 6h]
+
+
+Hand #2609912979 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:11:11 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($39.05)
+Seat 2: Hellliga ($25.00)
+Seat 3: huggins ($40.35)
+Seat 4: KannyThOP ($61.38)
+Seat 5: Arepitarica ($25.00)
+Seat 6: Axel14 ($25.00)
+Axel14 posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [5s 2d]
+Hellliga folds
+huggins raises $0.55 to $0.55
+KannyThOP folds
+Arepitarica folds
+Axel14 folds
+namesarehard calls $0.30
+*** FLOP *** [9d Qc Qd]
+Main pot $1.14 | Rake $0.06
+namesarehard checks
+huggins bets $0.39
+namesarehard calls $0.39
+*** TURN *** [9d Qc Qd] [Js]
+Main pot $1.89 | Rake $0.09
+namesarehard checks
+huggins checks
+*** RIVER *** [9d Qc Qd Js] [5c]
+Main pot $1.89 | Rake $0.09
+namesarehard bets $2.57
+huggins folds
+Uncalled bet ($2.57) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $1.89 | Rake $0.07 | JP Fee $0.02
+Board [9d Qc Qd Js 5c]
+Seat 1: namesarehard did not show and won $1.89
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: huggins folded on the River
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica (button) folded on the Pre-Flop
+Seat 6: Axel14 (small blind) folded on the Pre-Flop
+
+
+Hand #2609912076 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:09:31 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($39.05)
+Seat 2: Hellliga ($25.00)
+Seat 3: huggins ($40.35)
+Seat 4: KannyThOP ($56.13)
+Seat 5: Arepitarica ($25.11)
+Seat 6: Axel14 ($25.00)
+Arepitarica posts the small blind $0.10
+Axel14 posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [As Jh]
+namesarehard folds
+Hellliga folds
+huggins folds
+KannyThOP raises $0.70 to $0.70
+Arepitarica raises $2.90 to $3.00
+Axel14 folds
+KannyThOP calls $2.30
+*** FLOP *** [Tc 5s Js]
+Main pot $5.94 | Rake $0.31
+Arepitarica bets $2.56
+KannyThOP calls $2.56
+*** TURN *** [Tc 5s Js] [Ah]
+Main pot $10.81 | Rake $0.56
+Arepitarica checks
+KannyThOP bets $7.40
+Arepitarica folds
+Uncalled bet ($7.40) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $10.81 | Rake $0.38 | JP Fee $0.18
+Board [Tc 5s Js Ah]
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: huggins folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP did not show and won $10.81
+Seat 5: Arepitarica (small blind) folded on the Turn
+Seat 6: Axel14 (big blind) folded on the Pre-Flop
+
+
+Hand #2609911896 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:09:10 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($39.05)
+Seat 2: Hellliga ($25.00)
+Seat 3: huggins ($40.35)
+Seat 4: KannyThOP ($56.23)
+Seat 5: Arepitarica ($25.01)
+Seat 6: Axel14 ($25.00)
+KannyThOP posts the small blind $0.10
+Arepitarica posts the big blind $0.25
+Axel14 waits for big blind
+*** HOLE CARDS ***
+Dealt to KannyThOP [3d Qh]
+namesarehard folds
+Hellliga folds
+huggins folds
+KannyThOP folds
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: huggins (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Arepitarica did not show and won $0.35
+
+
+Hand #2609911454 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:08:20 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($39.05)
+Seat 2: Hellliga ($25.00)
+Seat 3: huggins ($39.55)
+Seat 4: KannyThOP ($56.48)
+Seat 5: Arepitarica ($25.56)
+Seat 6: Axel14 ($25.00)
+huggins posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+Axel14 waits for big blind
+*** HOLE CARDS ***
+Dealt to KannyThOP [4h 3c]
+Arepitarica raises $0.55 to $0.55
+namesarehard folds
+Hellliga folds
+huggins raises $2.55 to $2.65
+KannyThOP folds
+Arepitarica folds
+Uncalled bet ($2.10) returned to huggins
+huggins does not show
+*** SUMMARY ***
+Total pot $1.35
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga (button) folded on the Pre-Flop
+Seat 3: huggins did not show and won $1.35
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+
+
+Hand #2609910236 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:05:58 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($39.05)
+Seat 2: Hellliga ($30.05)
+Seat 3: huggins ($31.49)
+Seat 4: KannyThOP ($56.48)
+Seat 5: Arepitarica ($25.56)
+Seat 6: Axel14 ($25.00)
+Hellliga posts the small blind $0.10
+huggins posts the big blind $0.25
+Axel14 waits for big blind
+*** HOLE CARDS ***
+Dealt to KannyThOP [2s Ts]
+KannyThOP folds
+Arepitarica folds
+namesarehard folds
+Hellliga raises $0.65 to $0.75
+huggins calls $0.50
+*** FLOP *** [5s 4d 7h]
+Main pot $1.43 | Rake $0.07
+Hellliga checks
+huggins bets $0.75
+Hellliga raises $2.94 to $2.94
+huggins calls $2.19
+*** TURN *** [5s 4d 7h] [5c]
+Main pot $7.02 | Rake $0.36
+Hellliga bets $5.26
+huggins calls $5.26
+*** RIVER *** [5s 4d 7h 5c] [8d]
+Main pot $17.01 | Rake $0.89
+Hellliga checks
+huggins bets $17.90
+Hellliga folds
+Uncalled bet ($17.90) returned to huggins
+huggins does not show
+*** SUMMARY ***
+Total pot $17.01 | Rake $0.65 | JP Fee $0.24
+Board [5s 4d 7h 5c 8d]
+Seat 1: namesarehard (button) folded on the Pre-Flop
+Seat 2: Hellliga (small blind) folded on the River
+Seat 3: huggins did not show and won $17.01
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+
+
+Hand #2609910070 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:05:36 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($39.15)
+Seat 2: Hellliga ($29.95)
+Seat 3: huggins ($31.49)
+Seat 4: KannyThOP ($56.48)
+Seat 5: Arepitarica ($25.56)
+Seat 6: Axel14 will be allowed to play after the button
+namesarehard posts the small blind $0.10
+Hellliga posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ad 4h]
+huggins folds
+KannyThOP folds
+Arepitarica folds
+namesarehard folds
+Hellliga does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 2: Hellliga did not show and won $0.35
+Seat 3: huggins folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+
+
+Hand #2609909505 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:04:33 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($39.70)
+Seat 2: Hellliga ($29.95)
+Seat 3: huggins ($30.90)
+Seat 4: KannyThOP ($56.48)
+Seat 5: Arepitarica ($25.56)
+Seat 6: HEXJacstickler ($43.27)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [7h 4h]
+Hellliga folds
+huggins raises $0.55 to $0.55
+KannyThOP folds
+Arepitarica folds
+HEXJacstickler folds
+namesarehard calls $0.30
+*** FLOP *** [Jc 8d 4s]
+Main pot $1.14 | Rake $0.06
+namesarehard checks
+huggins bets $0.48
+namesarehard folds
+Uncalled bet ($0.48) returned to huggins
+huggins does not show
+*** SUMMARY ***
+Total pot $1.14 | Rake $0.04 | JP Fee $0.02
+Board [Jc 8d 4s]
+Seat 1: namesarehard (big blind) folded on the Flop
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: huggins did not show and won $1.14
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica (button) folded on the Pre-Flop
+Seat 6: HEXJacstickler (small blind) folded on the Pre-Flop
+
+
+Hand #2609908385 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:02:09 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($39.70)
+Seat 2: Hellliga ($29.95)
+Seat 3: huggins ($25.00)
+Seat 4: KannyThOP ($56.48)
+Seat 5: Arepitarica ($25.66)
+Seat 6: HEXJacstickler ($49.71)
+Arepitarica posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [8d 5s]
+namesarehard folds
+Hellliga folds
+huggins raises $0.55 to $0.55
+KannyThOP folds
+Arepitarica folds
+HEXJacstickler calls $0.30
+*** FLOP *** [Tc 5d Ts]
+Main pot $1.14 | Rake $0.06
+HEXJacstickler checks
+huggins bets $0.48
+HEXJacstickler raises $1.26 to $1.26
+huggins calls $0.78
+*** TURN *** [Tc 5d Ts] [Jd]
+Main pot $3.54 | Rake $0.18
+HEXJacstickler bets $1.75
+huggins raises $4.63 to $4.63
+HEXJacstickler calls $2.88
+*** RIVER *** [Tc 5d Ts Jd] [6h]
+Main pot $12.34 | Rake $0.64
+HEXJacstickler checks
+huggins bets $18.56 and is all-in
+HEXJacstickler folds
+Uncalled bet ($18.56) returned to huggins
+huggins does not show
+*** SUMMARY ***
+Total pot $12.34 | Rake $0.44 | JP Fee $0.20
+Board [Tc 5d Ts Jd 6h]
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: huggins did not show and won $12.34
+Seat 4: KannyThOP (button) folded on the Pre-Flop
+Seat 5: Arepitarica (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler (big blind) folded on the River
+
+
+Hand #2609908132 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:01:36 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($39.70)
+Seat 2: Hellliga ($29.60)
+Seat 3: huggins ($25.00)
+Seat 4: KannyThOP ($56.58)
+Seat 5: Arepitarica ($25.91)
+Seat 6: HEXJacstickler ($49.71)
+KannyThOP posts the small blind $0.10
+Arepitarica posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [7d Qd]
+HEXJacstickler folds
+namesarehard folds
+Hellliga raises $0.75 to $0.75
+huggins folds
+KannyThOP folds
+Arepitarica folds
+Uncalled bet ($0.50) returned to Hellliga
+Hellliga does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga did not show and won $0.60
+Seat 3: huggins (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Arepitarica (big blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609907826 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 17:00:53 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($39.70)
+Seat 2: Hellliga ($29.60)
+Seat 3: huggins ($25.00)
+Seat 4: KannyThOP ($57.33)
+Seat 5: Arepitarica ($25.91)
+Seat 6: HEXJacstickler ($48.94)
+huggins posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [8s Js]
+Arepitarica folds
+HEXJacstickler raises $0.75 to $0.75
+namesarehard folds
+Hellliga folds
+huggins folds
+KannyThOP calls $0.50
+*** FLOP *** [3d 4h 3c]
+Main pot $1.52 | Rake $0.08
+KannyThOP checks
+HEXJacstickler bets $0.80
+KannyThOP folds
+Uncalled bet ($0.80) returned to HEXJacstickler
+HEXJacstickler does not show
+*** SUMMARY ***
+Total pot $1.52 | Rake $0.06 | JP Fee $0.02
+Board [3d 4h 3c]
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga (button) folded on the Pre-Flop
+Seat 3: huggins (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP (big blind) folded on the Flop
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler did not show and won $1.52
+
+
+Hand #2609907557 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:59:53 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($39.70)
+Seat 2: Hellliga ($28.68)
+Seat 3: huggins ($25.00)
+Seat 4: KannyThOP ($57.33)
+Seat 5: Arepitarica ($25.91)
+Seat 6: HEXJacstickler ($49.69)
+Hellliga posts the small blind $0.10
+huggins posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [3s 6s]
+KannyThOP folds
+Arepitarica folds
+HEXJacstickler raises $0.75 to $0.75
+namesarehard folds
+Hellliga calls $0.65
+huggins folds
+*** FLOP *** [2d 5s 8c]
+Main pot $1.67 | Rake $0.08
+Hellliga bets $0.83
+HEXJacstickler folds
+Uncalled bet ($0.83) returned to Hellliga
+Hellliga does not show
+*** SUMMARY ***
+Total pot $1.67 | Rake $0.06 | JP Fee $0.02
+Board [2d 5s 8c]
+Seat 1: namesarehard (button) folded on the Pre-Flop
+Seat 2: Hellliga did not show and won $1.67
+Seat 3: huggins (big blind) folded on the Pre-Flop
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Flop
+
+
+Hand #2609907446 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:59:16 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($38.75)
+Seat 2: Hellliga ($28.93)
+Seat 3: huggins ($25.00)
+Seat 4: KannyThOP ($57.33)
+Seat 5: Arepitarica ($25.91)
+Seat 6: HEXJacstickler ($50.39)
+namesarehard posts the small blind $0.10
+Hellliga posts the big blind $0.25
+huggins waits for big blind
+*** HOLE CARDS ***
+Dealt to KannyThOP [8d 3s]
+KannyThOP folds
+Arepitarica folds
+HEXJacstickler raises $0.70 to $0.70
+namesarehard raises $2.90 to $3.00
+Hellliga folds
+HEXJacstickler folds
+Uncalled bet ($2.30) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $1.65
+Seat 1: namesarehard did not show and won $1.65
+Seat 2: Hellliga (big blind) folded on the Pre-Flop
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler (button) folded on the Pre-Flop
+
+
+Hand #2609907227 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:57:58 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($39.37)
+Seat 2: Hellliga ($28.93)
+Seat 4: KannyThOP ($57.33)
+Seat 5: Arepitarica ($25.25)
+Seat 6: HEXJacstickler ($50.49)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [2s 9c]
+Hellliga folds
+KannyThOP folds
+Arepitarica raises $0.62 to $0.62
+HEXJacstickler folds
+namesarehard calls $0.37
+*** FLOP *** [Kd Jd 9s]
+Main pot $1.28 | Rake $0.06
+namesarehard checks
+Arepitarica checks
+*** TURN *** [Kd Jd 9s] [7c]
+Main pot $1.28 | Rake $0.06
+namesarehard checks
+Arepitarica bets $0.69
+namesarehard folds
+Uncalled bet ($0.69) returned to Arepitarica
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $1.28 | Rake $0.04 | JP Fee $0.02
+Board [Kd Jd 9s 7c]
+Seat 1: namesarehard (big blind) folded on the Turn
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica did not show and won $1.28
+Seat 6: HEXJacstickler (small blind) folded on the Pre-Flop
+
+
+Hand #2609907125 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:57:23 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($39.37)
+Seat 2: Hellliga ($28.93)
+Seat 4: KannyThOP ($56.98)
+Seat 5: Arepitarica ($25.35)
+Seat 6: HEXJacstickler ($50.74)
+Arepitarica posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ks Jd]
+namesarehard folds
+Hellliga folds
+KannyThOP raises $0.70 to $0.70
+Arepitarica folds
+HEXJacstickler folds
+Uncalled bet ($0.45) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP did not show and won $0.60
+Seat 5: Arepitarica (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler (big blind) folded on the Pre-Flop
+
+
+Hand #2609907054 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:57:02 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($39.37)
+Seat 2: Hellliga ($28.93)
+Seat 4: KannyThOP ($57.08)
+Seat 5: Arepitarica ($25.25)
+Seat 6: HEXJacstickler ($50.74)
+KannyThOP posts the small blind $0.10
+Arepitarica posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [6c 7s]
+HEXJacstickler folds
+namesarehard folds
+Hellliga folds
+KannyThOP folds
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Arepitarica did not show and won $0.35
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609906961 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:56:26 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($39.02)
+Seat 2: Hellliga ($29.03)
+Seat 4: KannyThOP ($57.33)
+Seat 5: Arepitarica ($25.25)
+Seat 6: HEXJacstickler ($50.74)
+Hellliga posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [4s 7c]
+Arepitarica folds
+HEXJacstickler folds
+namesarehard raises $0.62 to $0.62
+Hellliga folds
+KannyThOP folds
+Uncalled bet ($0.37) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard did not show and won $0.60
+Seat 2: Hellliga (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609906909 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:56:11 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($39.12)
+Seat 2: Hellliga ($28.93)
+Seat 4: KannyThOP ($57.33)
+Seat 5: Arepitarica ($25.25)
+Seat 6: HEXJacstickler ($50.74)
+namesarehard posts the small blind $0.10
+Hellliga posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Js Td]
+KannyThOP folds
+Arepitarica folds
+HEXJacstickler folds
+namesarehard folds
+Hellliga does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 2: Hellliga did not show and won $0.35
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler (button) folded on the Pre-Flop
+
+
+Hand #2609906766 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:55:16 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($39.37)
+Seat 2: Hellliga ($28.93)
+Seat 4: KannyThOP ($56.98)
+Seat 5: Arepitarica ($25.25)
+Seat 6: HEXJacstickler ($50.84)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Kd Ac]
+Hellliga folds
+KannyThOP raises $0.70 to $0.70
+Arepitarica folds
+HEXJacstickler folds
+namesarehard folds
+Uncalled bet ($0.45) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (big blind) folded on the Pre-Flop
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP did not show and won $0.60
+Seat 5: Arepitarica (button) folded on the Pre-Flop
+Seat 6: HEXJacstickler (small blind) folded on the Pre-Flop
+
+
+Hand #2609906612 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:54:47 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($39.37)
+Seat 2: Hellliga ($28.93)
+Seat 4: KannyThOP ($56.98)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($51.09)
+Arepitarica posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Th Qd]
+namesarehard folds
+Hellliga folds
+KannyThOP folds
+Arepitarica raises $0.65 to $0.75
+HEXJacstickler folds
+Uncalled bet ($0.50) returned to Arepitarica
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $0.50
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP (button) folded on the Pre-Flop
+Seat 5: Arepitarica did not show and won $0.50
+Seat 6: HEXJacstickler (big blind) folded on the Pre-Flop
+
+
+Hand #2609906017 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:53:29 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($39.37)
+Seat 2: Hellliga ($28.93)
+Seat 3: Jerm1413 ($21.58)
+Seat 4: KannyThOP ($37.32)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($51.09)
+KannyThOP posts the small blind $0.10
+Arepitarica posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ah Ad]
+HEXJacstickler folds
+namesarehard folds
+Hellliga folds
+Jerm1413 raises $0.62 to $0.62
+KannyThOP raises $2.61 to $2.71
+Arepitarica folds
+Jerm1413 calls $2.09
+*** FLOP *** [8s 7c 7s]
+Main pot $5.39 | Rake $0.28
+KannyThOP bets $1.64
+Jerm1413 calls $1.64
+*** TURN *** [8s 7c 7s] [Td]
+Main pot $8.51 | Rake $0.44
+KannyThOP bets $3.95
+Jerm1413 calls $3.95
+*** RIVER *** [8s 7c 7s Td] [4d]
+Main pot $16.01 | Rake $0.84
+KannyThOP bets $16.01
+Jerm1413 calls $13.28 and is all-in
+Uncalled bet ($2.73) returned to KannyThOP
+*** SHOW DOWN ***
+Main pot $41.24 | Rake $2.17
+Jerm1413 shows [6h 6s] (two pair, Sevens and Sixs [7s 7c 6s 6h Td])
+KannyThOP shows [Ah Ad] (two pair, Aces and Sevens [Ah Ad 7s 7c Td])
+KannyThOP collected $41.24 from main pot
+*** SUMMARY ***
+Total pot $41.24 | Rake $1.93 | JP Fee $0.24
+Board [8s 7c 7s Td 4d]
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: Jerm1413 (button) showed [6h 6s] and lost with two pair, Sevens and Sixs [7s 7c 6s 6h Td]
+Seat 4: KannyThOP (small blind) showed [Ah Ad] and won $41.24 with two pair, Aces and Sevens [Ah Ad 7s 7c Td]
+Seat 5: Arepitarica (big blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609905783 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:52:58 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($39.37)
+Seat 2: Hellliga ($28.58)
+Seat 3: Jerm1413 ($21.68)
+Seat 4: KannyThOP ($37.57)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($51.09)
+Jerm1413 posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [2c 5h]
+Arepitarica folds
+HEXJacstickler folds
+namesarehard folds
+Hellliga raises $0.75 to $0.75
+Jerm1413 folds
+KannyThOP folds
+Uncalled bet ($0.50) returned to Hellliga
+Hellliga does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga did not show and won $0.60
+Seat 3: Jerm1413 (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609904831 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:50:53 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($39.37)
+Seat 2: Hellliga ($28.68)
+Seat 3: Jerm1413 ($21.93)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($64.68)
+Hellliga posts the small blind $0.10
+Jerm1413 posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Th Kh]
+KannyThOP raises $0.70 to $0.70
+Arepitarica folds
+HEXJacstickler calls $0.70
+namesarehard folds
+Hellliga folds
+Jerm1413 folds
+*** FLOP *** [7s 4c Ks]
+Main pot $1.67 | Rake $0.08
+KannyThOP bets $0.83
+HEXJacstickler calls $0.83
+*** TURN *** [7s 4c Ks] [Td]
+Main pot $3.24 | Rake $0.17
+KannyThOP bets $2.43
+HEXJacstickler calls $2.43
+*** RIVER *** [7s 4c Ks Td] [Ac]
+Main pot $7.86 | Rake $0.41
+KannyThOP checks
+HEXJacstickler bets $2.50
+KannyThOP raises $9.63 to $9.63
+HEXJacstickler calls $7.13
+*** SHOW DOWN ***
+Main pot $26.16 | Rake $1.37
+KannyThOP shows [Th Kh] (two pair, Kings and Tens [Ks Kh Th Td Ac])
+HEXJacstickler shows [Kd 3d] (a pair of Kings [Ks Kd Ac Td 7s])
+KannyThOP collected $26.16 from main pot
+*** SUMMARY ***
+Total pot $26.16 | Rake $1.13 | JP Fee $0.24
+Board [7s 4c Ks Td Ac]
+Seat 1: namesarehard (button) folded on the Pre-Flop
+Seat 2: Hellliga (small blind) folded on the Pre-Flop
+Seat 3: Jerm1413 (big blind) folded on the Pre-Flop
+Seat 4: KannyThOP showed [Th Kh] and won $26.16 with two pair, Kings and Tens [Ks Kh Th Td Ac]
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler showed [Kd 3d] and lost with a pair of Kings [Ks Kd Ac Td 7s]
+
+
+Hand #2609904160 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:49:33 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($36.43)
+Seat 2: Hellliga ($28.93)
+Seat 3: Jerm1413 ($21.93)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($64.68)
+namesarehard posts the small blind $0.10
+Hellliga posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [7h 9h]
+Jerm1413 folds
+KannyThOP raises $0.70 to $0.70
+Arepitarica folds
+HEXJacstickler folds
+namesarehard raises $2.90 to $3.00
+Hellliga folds
+KannyThOP calls $2.30
+*** FLOP *** [Qd 7d 4h]
+Main pot $5.94 | Rake $0.31
+namesarehard checks
+KannyThOP checks
+*** TURN *** [Qd 7d 4h] [2d]
+Main pot $5.94 | Rake $0.31
+namesarehard checks
+KannyThOP checks
+*** RIVER *** [Qd 7d 4h 2d] [Jh]
+Main pot $5.94 | Rake $0.31
+namesarehard bets $2.06
+KannyThOP folds
+Uncalled bet ($2.06) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $5.94 | Rake $0.21 | JP Fee $0.10
+Board [Qd 7d 4h 2d Jh]
+Seat 1: namesarehard did not show and won $5.94
+Seat 2: Hellliga (big blind) folded on the Pre-Flop
+Seat 3: Jerm1413 folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the River
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler (button) folded on the Pre-Flop
+
+
+Hand #2609903981 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:49:11 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($36.68)
+Seat 2: Hellliga ($28.93)
+Seat 3: Jerm1413 ($21.93)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($64.43)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [3h 9c]
+Hellliga folds
+Jerm1413 folds
+KannyThOP folds
+Arepitarica folds
+HEXJacstickler raises $0.70 to $0.80
+namesarehard folds
+Uncalled bet ($0.55) returned to HEXJacstickler
+HEXJacstickler does not show
+*** SUMMARY ***
+Total pot $0.50
+Seat 1: namesarehard (big blind) folded on the Pre-Flop
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: Jerm1413 folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica (button) folded on the Pre-Flop
+Seat 6: HEXJacstickler did not show and won $0.50
+
+
+Hand #2609903476 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:48:10 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($36.68)
+Seat 2: Hellliga ($31.79)
+Seat 3: Jerm1413 ($19.02)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($64.68)
+Arepitarica posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [8c 7h]
+namesarehard folds
+Hellliga raises $0.75 to $0.75
+Jerm1413 raises $1.85 to $1.85
+KannyThOP folds
+Arepitarica folds
+HEXJacstickler folds
+Hellliga calls $1.10
+*** FLOP *** [5h 8s 3s]
+Main pot $3.85 | Rake $0.20
+Hellliga checks
+Jerm1413 bets $1.01
+Hellliga calls $1.01
+*** TURN *** [5h 8s 3s] [2c]
+Main pot $5.77 | Rake $0.30
+Hellliga checks
+Jerm1413 bets $8.61
+Hellliga folds
+Uncalled bet ($8.61) returned to Jerm1413
+Jerm1413 does not show
+*** SUMMARY ***
+Total pot $5.77 | Rake $0.20 | JP Fee $0.10
+Board [5h 8s 3s 2c]
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga folded on the Turn
+Seat 3: Jerm1413 did not show and won $5.77
+Seat 4: KannyThOP (button) folded on the Pre-Flop
+Seat 5: Arepitarica (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler (big blind) folded on the Pre-Flop
+
+
+Hand #2609903244 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:47:42 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($36.68)
+Seat 2: Hellliga ($31.79)
+Seat 3: Jerm1413 ($19.02)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($64.33)
+KannyThOP posts the small blind $0.10
+Arepitarica posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [9c 7h]
+HEXJacstickler raises $0.70 to $0.70
+namesarehard folds
+Hellliga folds
+Jerm1413 folds
+KannyThOP folds
+Arepitarica folds
+Uncalled bet ($0.45) returned to HEXJacstickler
+HEXJacstickler does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: Jerm1413 (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Arepitarica (big blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler did not show and won $0.60
+
+
+Hand #2609902870 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:47:00 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($36.68)
+Seat 2: Hellliga ($31.44)
+Seat 3: Jerm1413 ($19.12)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($64.33)
+Jerm1413 posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [3c Tc]
+Arepitarica folds
+HEXJacstickler folds
+namesarehard folds
+Hellliga raises $0.75 to $0.75
+Jerm1413 folds
+KannyThOP folds
+Uncalled bet ($0.50) returned to Hellliga
+Hellliga does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga did not show and won $0.60
+Seat 3: Jerm1413 (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609901795 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:44:57 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($28.16)
+Seat 2: Hellliga ($31.54)
+Seat 3: Jerm1413 ($19.37)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($73.42)
+Hellliga posts the small blind $0.10
+Jerm1413 posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [5d 2h]
+KannyThOP folds
+Arepitarica folds
+HEXJacstickler raises $0.75 to $0.75
+namesarehard raises $2.37 to $2.37
+Hellliga folds
+Jerm1413 folds
+HEXJacstickler calls $1.62
+*** FLOP *** [Jd Ac 9d]
+Main pot $4.84 | Rake $0.25
+HEXJacstickler checks
+namesarehard bets $1.67
+HEXJacstickler calls $1.67
+*** TURN *** [Jd Ac 9d] [Ts]
+Main pot $8.01 | Rake $0.42
+HEXJacstickler checks
+namesarehard bets $5.05
+HEXJacstickler calls $5.05
+*** RIVER *** [Jd Ac 9d Ts] [8d]
+Main pot $17.61 | Rake $0.92
+HEXJacstickler checks
+namesarehard checks
+*** SHOW DOWN ***
+Main pot $17.61 | Rake $0.92
+namesarehard shows [Qh Qs] (a straight, Queen high [Qs Jd Ts 9d 8d])
+HEXJacstickler shows [Ah 3h] (a pair of Aces [Ah Ac Jd Ts 9d])
+namesarehard collected $17.61 from main pot
+*** SUMMARY ***
+Total pot $17.61 | Rake $0.68 | JP Fee $0.24
+Board [Jd Ac 9d Ts 8d]
+Seat 1: namesarehard (button) showed [Qh Qs] and won $17.61 with a straight, Queen high [Qs Jd Ts 9d 8d]
+Seat 2: Hellliga (small blind) folded on the Pre-Flop
+Seat 3: Jerm1413 (big blind) folded on the Pre-Flop
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler showed [Ah 3h] and lost with a pair of Aces [Ah Ac Jd Ts 9d]
+
+
+Hand #2609899248 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:40:32 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($25.55)
+Seat 2: Hellliga ($31.44)
+Seat 3: Jerm1413 ($19.12)
+Seat 4: KannyThOP ($28.23)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($72.75)
+Jerm1413 posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Qd 4h]
+Arepitarica folds
+HEXJacstickler folds
+namesarehard raises $0.62 to $0.62
+Hellliga folds
+Jerm1413 folds
+KannyThOP calls $0.37
+*** FLOP *** [9d Qc 3c]
+Main pot $1.28 | Rake $0.06
+KannyThOP checks
+namesarehard checks
+*** TURN *** [9d Qc 3c] [Ts]
+Main pot $1.28 | Rake $0.06
+KannyThOP bets $0.74
+namesarehard calls $0.74
+*** RIVER *** [9d Qc 3c Ts] [8c]
+Main pot $2.68 | Rake $0.14
+KannyThOP checks
+namesarehard bets $1.69
+KannyThOP calls $1.69
+*** SHOW DOWN ***
+Main pot $5.89 | Rake $0.31
+namesarehard shows [Kc 9c] (a flush, King high [Kc Qc 9c 8c 3c])
+KannyThOP shows [Qd 4h] (a pair of Queens [Qd Qc Ts 9d 8c])
+namesarehard collected $5.89 from main pot
+*** SUMMARY ***
+Total pot $5.89 | Rake $0.21 | JP Fee $0.10
+Board [9d Qc 3c Ts 8c]
+Seat 1: namesarehard showed [Kc 9c] and won $5.89 with a flush, King high [Kc Qc 9c 8c 3c]
+Seat 2: Hellliga (button) folded on the Pre-Flop
+Seat 3: Jerm1413 (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP (big blind) showed [Qd 4h] and lost with a pair of Queens [Qd Qc Ts 9d 8c]
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609899030 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:40:01 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($25.20)
+Seat 2: Hellliga ($31.54)
+Seat 3: Jerm1413 ($19.37)
+Seat 4: KannyThOP ($28.23)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($72.75)
+Hellliga posts the small blind $0.10
+Jerm1413 posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [7d Js]
+KannyThOP folds
+Arepitarica folds
+HEXJacstickler folds
+namesarehard raises $0.62 to $0.62
+Hellliga folds
+Jerm1413 folds
+Uncalled bet ($0.37) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard did not show and won $0.60
+Seat 2: Hellliga (small blind) folded on the Pre-Flop
+Seat 3: Jerm1413 (big blind) folded on the Pre-Flop
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609898678 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:39:16 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($25.30)
+Seat 2: Hellliga ($31.79)
+Seat 3: Jerm1413 ($19.37)
+Seat 4: KannyThOP ($28.23)
+Seat 5: Arepitarica ($25.35)
+Seat 6: HEXJacstickler ($71.78)
+namesarehard posts the small blind $0.10
+Hellliga posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Kd 2c]
+Jerm1413 folds
+KannyThOP folds
+Arepitarica raises $0.62 to $0.62
+HEXJacstickler raises $1.85 to $1.85
+namesarehard folds
+Hellliga folds
+Arepitarica folds
+Uncalled bet ($1.23) returned to HEXJacstickler
+HEXJacstickler does not show
+*** SUMMARY ***
+Total pot $1.59
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 2: Hellliga (big blind) folded on the Pre-Flop
+Seat 3: Jerm1413 folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler did not show and won $1.59
+
+
+Hand #2609898476 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:38:50 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($25.55)
+Seat 2: Hellliga ($31.79)
+Seat 3: Jerm1413 ($19.37)
+Seat 4: KannyThOP ($28.23)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($71.88)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [6c Jd]
+Hellliga folds
+Jerm1413 folds
+KannyThOP folds
+Arepitarica raises $0.62 to $0.62
+HEXJacstickler folds
+namesarehard folds
+Uncalled bet ($0.37) returned to Arepitarica
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (big blind) folded on the Pre-Flop
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: Jerm1413 folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica did not show and won $0.60
+Seat 6: HEXJacstickler (small blind) folded on the Pre-Flop
+
+
+Hand #2609897885 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:37:28 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($25.55)
+Seat 2: Hellliga ($31.79)
+Seat 3: Jerm1413 ($19.37)
+Seat 4: KannyThOP ($25.24)
+Seat 5: Arepitarica ($25.10)
+Seat 6: HEXJacstickler ($75.09)
+Arepitarica posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ks 9d]
+namesarehard folds
+Hellliga folds
+Jerm1413 folds
+KannyThOP raises $0.75 to $0.75
+Arepitarica folds
+HEXJacstickler calls $0.50
+*** FLOP *** [4h 8s 7s]
+Main pot $1.52 | Rake $0.08
+HEXJacstickler checks
+KannyThOP checks
+*** TURN *** [4h 8s 7s] [9c]
+Main pot $1.52 | Rake $0.08
+HEXJacstickler bets $0.80
+KannyThOP raises $2.46 to $2.46
+HEXJacstickler calls $1.66
+*** RIVER *** [4h 8s 7s 9c] [3d]
+Main pot $6.20 | Rake $0.32
+HEXJacstickler checks
+KannyThOP checks
+*** SHOW DOWN ***
+Main pot $6.20 | Rake $0.32
+KannyThOP shows [Ks 9d] (a pair of Nines [9d 9c Ks 8s 7s])
+HEXJacstickler shows [7c Tc] (a pair of Sevens [7s 7c Tc 9c 8s])
+KannyThOP collected $6.20 from main pot
+*** SUMMARY ***
+Total pot $6.20 | Rake $0.22 | JP Fee $0.10
+Board [4h 8s 7s 9c 3d]
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: Jerm1413 folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP (button) showed [Ks 9d] and won $6.20 with a pair of Nines [9d 9c Ks 8s 7s]
+Seat 5: Arepitarica (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler (big blind) showed [7c Tc] and lost with a pair of Sevens [7s 7c Tc 9c 8s]
+
+
+Hand #2609897749 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:37:09 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($25.55)
+Seat 2: Hellliga ($31.79)
+Seat 3: Jerm1413 ($19.37)
+Seat 4: KannyThOP ($25.34)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($75.09)
+KannyThOP posts the small blind $0.10
+Arepitarica posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [9c Kh]
+HEXJacstickler folds
+namesarehard folds
+Hellliga folds
+Jerm1413 folds
+KannyThOP folds
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: Jerm1413 (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Arepitarica did not show and won $0.35
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609897134 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:35:52 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($25.55)
+Seat 2: Hellliga ($31.79)
+Seat 3: Jerm1413 ($19.47)
+Seat 4: KannyThOP ($26.89)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($73.60)
+Jerm1413 posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [6d 3d]
+Arepitarica folds
+HEXJacstickler raises $0.75 to $0.75
+namesarehard folds
+Hellliga folds
+Jerm1413 folds
+KannyThOP calls $0.50
+*** FLOP *** [Td Qc 2d]
+Main pot $1.52 | Rake $0.08
+KannyThOP checks
+HEXJacstickler bets $0.80
+KannyThOP calls $0.80
+*** TURN *** [Td Qc 2d] [8c]
+Main pot $3.04 | Rake $0.16
+KannyThOP checks
+HEXJacstickler checks
+*** RIVER *** [Td Qc 2d 8c] [4h]
+Main pot $3.04 | Rake $0.16
+KannyThOP checks
+HEXJacstickler checks
+*** SHOW DOWN ***
+Main pot $3.04 | Rake $0.16
+KannyThOP shows [6d 3d] (a high card, Queen high [Qc Td 8c 6d 4h])
+HEXJacstickler shows [Kh Jh] (a high card, King high [Kh Qc Jh Td 8c])
+HEXJacstickler collected $3.04 from main pot
+*** SUMMARY ***
+Total pot $3.04 | Rake $0.12 | JP Fee $0.04
+Board [Td Qc 2d 8c 4h]
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga (button) folded on the Pre-Flop
+Seat 3: Jerm1413 (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP (big blind) showed [6d 3d] and lost with a high card, Queen high [Qc Td 8c 6d 4h]
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler showed [Kh Jh] and won $3.04 with a high card, King high [Kh Qc Jh Td 8c]
+
+
+Hand #2609896982 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:35:34 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($25.55)
+Seat 2: Hellliga ($31.89)
+Seat 3: Jerm1413 ($19.37)
+Seat 4: KannyThOP ($26.89)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($73.60)
+Hellliga posts the small blind $0.10
+Jerm1413 posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Tc 4d]
+KannyThOP folds
+Arepitarica folds
+HEXJacstickler folds
+namesarehard folds
+Hellliga folds
+Jerm1413 does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard (button) folded on the Pre-Flop
+Seat 2: Hellliga (small blind) folded on the Pre-Flop
+Seat 3: Jerm1413 did not show and won $0.35
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609896742 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:35:04 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($25.65)
+Seat 2: Hellliga ($31.79)
+Seat 3: Jerm1413 ($19.37)
+Seat 4: KannyThOP ($26.89)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($73.60)
+namesarehard posts the small blind $0.10
+Hellliga posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Kd Jh]
+Jerm1413 folds
+KannyThOP folds
+Arepitarica folds
+HEXJacstickler folds
+namesarehard folds
+Hellliga does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 2: Hellliga did not show and won $0.35
+Seat 3: Jerm1413 folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler (button) folded on the Pre-Flop
+
+
+Hand #2609896497 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:34:33 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($25.90)
+Seat 2: Hellliga ($31.79)
+Seat 3: Jerm1413 ($19.37)
+Seat 4: KannyThOP ($26.54)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($73.70)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ad 2d]
+Hellliga folds
+Jerm1413 folds
+KannyThOP raises $0.70 to $0.70
+Arepitarica folds
+HEXJacstickler folds
+namesarehard folds
+Uncalled bet ($0.45) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (big blind) folded on the Pre-Flop
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: Jerm1413 folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP did not show and won $0.60
+Seat 5: Arepitarica (button) folded on the Pre-Flop
+Seat 6: HEXJacstickler (small blind) folded on the Pre-Flop
+
+
+Hand #2609896202 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:33:58 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($25.90)
+Seat 2: Hellliga ($31.79)
+Seat 3: Jerm1413 ($19.37)
+Seat 4: KannyThOP ($26.54)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($72.95)
+Arepitarica posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Qh 6c]
+namesarehard folds
+Hellliga folds
+Jerm1413 folds
+KannyThOP folds
+Arepitarica raises $0.65 to $0.75
+HEXJacstickler raises $2.00 to $2.25
+Arepitarica folds
+Uncalled bet ($1.50) returned to HEXJacstickler
+HEXJacstickler does not show
+*** SUMMARY ***
+Total pot $1.50
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: Jerm1413 folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP (button) folded on the Pre-Flop
+Seat 5: Arepitarica (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler did not show and won $1.50
+
+
+Hand #2609895983 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:33:33 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($25.55)
+Seat 2: Hellliga ($31.79)
+Seat 3: Jerm1413 ($19.37)
+Seat 4: KannyThOP ($26.64)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($72.95)
+KannyThOP posts the small blind $0.10
+Arepitarica posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Tc 3h]
+HEXJacstickler folds
+namesarehard raises $0.62 to $0.62
+Hellliga folds
+Jerm1413 folds
+KannyThOP folds
+Arepitarica folds
+Uncalled bet ($0.37) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard did not show and won $0.60
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: Jerm1413 (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Arepitarica (big blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609895659 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:32:53 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($25.55)
+Seat 2: Hellliga ($31.79)
+Seat 3: Jerm1413 ($19.12)
+Seat 4: KannyThOP ($26.89)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($72.95)
+Jerm1413 posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Kc 3s]
+Arepitarica folds
+HEXJacstickler folds
+namesarehard folds
+Hellliga folds
+Jerm1413 raises $0.65 to $0.75
+KannyThOP folds
+Uncalled bet ($0.50) returned to Jerm1413
+Jerm1413 does not show
+*** SUMMARY ***
+Total pot $0.50
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga (button) folded on the Pre-Flop
+Seat 3: Jerm1413 did not show and won $0.50
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609894976 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:31:34 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($25.55)
+Seat 2: Hellliga ($31.89)
+Seat 3: Jerm1413 ($17.72)
+Seat 4: KannyThOP ($26.89)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($74.40)
+Hellliga posts the small blind $0.10
+Jerm1413 posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [2s Ts]
+KannyThOP folds
+Arepitarica folds
+HEXJacstickler raises $0.70 to $0.70
+namesarehard folds
+Hellliga folds
+Jerm1413 calls $0.45
+*** FLOP *** [3c 2d 6h]
+Main pot $1.43 | Rake $0.07
+Jerm1413 checks
+HEXJacstickler bets $0.75
+Jerm1413 calls $0.75
+*** TURN *** [3c 2d 6h] [Td]
+Main pot $2.85 | Rake $0.15
+Jerm1413 checks
+HEXJacstickler checks
+*** RIVER *** [3c 2d 6h Td] [Th]
+Main pot $2.85 | Rake $0.15
+Jerm1413 checks
+HEXJacstickler checks
+*** SHOW DOWN ***
+Main pot $2.85 | Rake $0.15
+Jerm1413 shows [3h 3d] (a full house, Threes full of Tens [3h 3d 3c Th Td])
+HEXJacstickler shows [5c 7c] (a pair of Tens [Th Td 7c 6h 5c])
+Jerm1413 collected $2.85 from main pot
+*** SUMMARY ***
+Total pot $2.85 | Rake $0.11 | JP Fee $0.04
+Board [3c 2d 6h Td Th]
+Seat 1: namesarehard (button) folded on the Pre-Flop
+Seat 2: Hellliga (small blind) folded on the Pre-Flop
+Seat 3: Jerm1413 (big blind) showed [3h 3d] and won $2.85 with a full house, Threes full of Tens [3h 3d 3c Th Td]
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler showed [5c 7c] and lost with a pair of Tens [Th Td 7c 6h 5c]
+
+
+Hand #2609894651 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:30:55 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($25.65)
+Seat 2: Hellliga ($32.14)
+Seat 3: Jerm1413 ($17.37)
+Seat 4: KannyThOP ($26.89)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($74.40)
+namesarehard posts the small blind $0.10
+Hellliga posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Jc 2h]
+Jerm1413 raises $0.55 to $0.55
+KannyThOP folds
+Arepitarica folds
+HEXJacstickler folds
+namesarehard folds
+Hellliga folds
+Uncalled bet ($0.30) returned to Jerm1413
+Jerm1413 does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 2: Hellliga (big blind) folded on the Pre-Flop
+Seat 3: Jerm1413 did not show and won $0.60
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler (button) folded on the Pre-Flop
+
+
+Hand #2609894375 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:30:25 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($25.90)
+Seat 2: Hellliga ($32.14)
+Seat 3: Jerm1413 ($17.02)
+Seat 4: KannyThOP ($26.89)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($74.50)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [9d 2h]
+Hellliga folds
+Jerm1413 raises $0.55 to $0.55
+KannyThOP folds
+Arepitarica folds
+HEXJacstickler folds
+namesarehard folds
+Uncalled bet ($0.30) returned to Jerm1413
+Jerm1413 does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (big blind) folded on the Pre-Flop
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: Jerm1413 did not show and won $0.60
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica (button) folded on the Pre-Flop
+Seat 6: HEXJacstickler (small blind) folded on the Pre-Flop
+
+
+Hand #2609894175 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:30:00 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($25.55)
+Seat 2: Hellliga ($32.14)
+Seat 3: Jerm1413 ($17.02)
+Seat 4: KannyThOP ($26.89)
+Seat 5: Arepitarica ($25.10)
+Seat 6: HEXJacstickler ($74.75)
+Arepitarica posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Kc 4c]
+namesarehard raises $0.62 to $0.62
+Hellliga folds
+Jerm1413 folds
+KannyThOP folds
+Arepitarica folds
+HEXJacstickler folds
+Uncalled bet ($0.37) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard did not show and won $0.60
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: Jerm1413 folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP (button) folded on the Pre-Flop
+Seat 5: Arepitarica (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler (big blind) folded on the Pre-Flop
+
+
+Hand #2609893959 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:29:37 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($25.55)
+Seat 2: Hellliga ($32.14)
+Seat 3: Jerm1413 ($17.02)
+Seat 4: KannyThOP ($26.99)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($74.75)
+KannyThOP posts the small blind $0.10
+Arepitarica posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Qh 3c]
+HEXJacstickler folds
+namesarehard folds
+Hellliga folds
+Jerm1413 folds
+KannyThOP folds
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: Jerm1413 (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Arepitarica did not show and won $0.35
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609893613 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:28:58 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($26.17)
+Seat 2: Hellliga ($32.14)
+Seat 3: Jerm1413 ($16.15)
+Seat 4: KannyThOP ($27.24)
+Seat 5: Arepitarica ($22.11)
+Seat 6: HEXJacstickler ($74.75)
+Jerm1413 posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [9s 2c]
+Arepitarica folds
+HEXJacstickler folds
+namesarehard raises $0.62 to $0.62
+Hellliga folds
+Jerm1413 raises $2.39 to $2.49
+KannyThOP folds
+namesarehard folds
+Uncalled bet ($1.87) returned to Jerm1413
+Jerm1413 does not show
+*** SUMMARY ***
+Total pot $1.49
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga (button) folded on the Pre-Flop
+Seat 3: Jerm1413 did not show and won $1.49
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609893015 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:27:54 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($25.51)
+Seat 2: Hellliga ($32.24)
+Seat 3: Jerm1413 ($16.77)
+Seat 4: KannyThOP ($27.24)
+Seat 5: Arepitarica ($22.11)
+Seat 6: HEXJacstickler ($74.75)
+Hellliga posts the small blind $0.10
+Jerm1413 posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Kh 5s]
+KannyThOP folds
+Arepitarica folds
+HEXJacstickler folds
+namesarehard raises $0.62 to $0.62
+Hellliga folds
+Jerm1413 calls $0.37
+*** FLOP *** [Qs Jd Ks]
+Main pot $1.28 | Rake $0.06
+Jerm1413 checks
+namesarehard checks
+*** TURN *** [Qs Jd Ks] [Jc]
+Main pot $1.28 | Rake $0.06
+Jerm1413 checks
+namesarehard checks
+*** RIVER *** [Qs Jd Ks Jc] [Ad]
+Main pot $1.28 | Rake $0.06
+Jerm1413 checks
+namesarehard checks
+*** SHOW DOWN ***
+Main pot $1.28 | Rake $0.06
+namesarehard shows [Ah 5d] (two pair, Aces and Jacks [Ah Ad Jd Jc Ks])
+Jerm1413 shows [Qd 9h] (two pair, Queens and Jacks [Qs Qd Jd Jc Ad])
+namesarehard collected $1.28 from main pot
+*** SUMMARY ***
+Total pot $1.28 | Rake $0.04 | JP Fee $0.02
+Board [Qs Jd Ks Jc Ad]
+Seat 1: namesarehard (button) showed [Ah 5d] and won $1.28 with two pair, Aces and Jacks [Ah Ad Jd Jc Ks]
+Seat 2: Hellliga (small blind) folded on the Pre-Flop
+Seat 3: Jerm1413 (big blind) showed [Qd 9h] and lost with two pair, Queens and Jacks [Qs Qd Jd Jc Ad]
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609892677 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:27:21 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($25.61)
+Seat 2: Hellliga ($32.49)
+Seat 3: Jerm1413 ($16.77)
+Seat 4: KannyThOP ($27.24)
+Seat 5: Arepitarica ($21.76)
+Seat 6: HEXJacstickler ($74.75)
+namesarehard posts the small blind $0.10
+Hellliga posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ts Qd]
+Jerm1413 folds
+KannyThOP folds
+Arepitarica raises $0.60 to $0.60
+HEXJacstickler folds
+namesarehard folds
+Hellliga folds
+Uncalled bet ($0.35) returned to Arepitarica
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 2: Hellliga (big blind) folded on the Pre-Flop
+Seat 3: Jerm1413 folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica did not show and won $0.60
+Seat 6: HEXJacstickler (button) folded on the Pre-Flop
+
+
+Hand #2609891765 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:25:55 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($26.61)
+Seat 2: Hellliga ($32.49)
+Seat 3: Jerm1413 ($16.77)
+Seat 4: KannyThOP ($27.24)
+Seat 5: Arepitarica ($21.76)
+Seat 6: HEXJacstickler ($73.85)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ts 6h]
+Hellliga folds
+Jerm1413 folds
+KannyThOP folds
+Arepitarica folds
+HEXJacstickler calls $0.15
+namesarehard checks
+*** FLOP *** [2c Qh Js]
+Main pot $0.48 | Rake $0.02
+HEXJacstickler checks
+namesarehard checks
+*** TURN *** [2c Qh Js] [Qd]
+Main pot $0.48 | Rake $0.02
+HEXJacstickler bets $0.75
+namesarehard calls $0.75
+*** RIVER *** [2c Qh Js Qd] [6c]
+Main pot $1.90 | Rake $0.10
+HEXJacstickler bets $3.75
+namesarehard folds
+Uncalled bet ($3.75) returned to HEXJacstickler
+HEXJacstickler does not show
+*** SUMMARY ***
+Total pot $1.90 | Rake $0.08 | JP Fee $0.02
+Board [2c Qh Js Qd 6c]
+Seat 1: namesarehard (big blind) folded on the River
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: Jerm1413 folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica (button) folded on the Pre-Flop
+Seat 6: HEXJacstickler did not show and won $1.90
+
+
+Hand #2609891158 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:25:01 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($26.61)
+Seat 2: Hellliga ($32.49)
+Seat 3: Jerm1413 ($17.79)
+Seat 4: KannyThOP ($25.98)
+Seat 5: Arepitarica ($21.86)
+Seat 6: HEXJacstickler ($74.10)
+Arepitarica posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [9h Qh]
+namesarehard folds
+Hellliga folds
+Jerm1413 raises $0.55 to $0.55
+KannyThOP calls $0.55
+Arepitarica folds
+HEXJacstickler folds
+*** FLOP *** [6h 4c 3h]
+Main pot $1.38 | Rake $0.07
+Jerm1413 bets $0.47
+KannyThOP raises $1.43 to $1.43
+Jerm1413 folds
+Uncalled bet ($0.96) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $2.28 | Rake $0.09 | JP Fee $0.02
+Board [6h 4c 3h]
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: Jerm1413 folded on the Flop
+Seat 4: KannyThOP did not show and won $2.28
+Seat 5: Arepitarica (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler (big blind) folded on the Pre-Flop
+
+
+Hand #2609889863 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:23:19 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($26.61)
+Seat 2: Hellliga ($32.49)
+Seat 3: Jerm1413 ($15.40)
+Seat 4: KannyThOP ($26.08)
+Seat 5: Arepitarica ($24.40)
+Seat 6: HEXJacstickler ($74.10) is sitting out
+KannyThOP posts the small blind $0.10
+Arepitarica posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [4h Qs]
+namesarehard folds
+Hellliga folds
+Jerm1413 raises $0.62 to $0.62
+KannyThOP folds
+Arepitarica calls $0.37
+*** FLOP *** [Td Jc Qh]
+Main pot $1.28 | Rake $0.06
+Arepitarica checks
+Jerm1413 bets $0.44
+Arepitarica calls $0.44
+*** TURN *** [Td Jc Qh] [3d]
+Main pot $2.11 | Rake $0.11
+Arepitarica checks
+Jerm1413 bets $1.48
+Arepitarica calls $1.48
+*** RIVER *** [Td Jc Qh 3d] [2s]
+Main pot $4.93 | Rake $0.25
+Arepitarica checks
+Jerm1413 bets $12.86 and is all-in
+Arepitarica folds
+Uncalled bet ($12.86) returned to Jerm1413
+Jerm1413 does not show
+*** SUMMARY ***
+Total pot $4.93 | Rake $0.17 | JP Fee $0.08
+Board [Td Jc Qh 3d 2s]
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: Jerm1413 did not show and won $4.93
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Arepitarica (big blind) folded on the River
+
+
+Hand #2609889491 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:22:53 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($26.61)
+Seat 2: Hellliga ($32.49)
+Seat 3: Jerm1413 ($15.50)
+Seat 4: KannyThOP ($26.33)
+Seat 5: Arepitarica ($24.05)
+Seat 6: HEXJacstickler ($74.10) is sitting out
+Jerm1413 posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [4c Qc]
+Arepitarica raises $0.55 to $0.55
+namesarehard folds
+Hellliga folds
+Jerm1413 folds
+KannyThOP folds
+Uncalled bet ($0.30) returned to Arepitarica
+Arepitarica does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga (button) folded on the Pre-Flop
+Seat 3: Jerm1413 (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 5: Arepitarica did not show and won $0.60
+
+
+Hand #2609888567 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:21:50 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($26.61)
+Seat 2: Hellliga ($25.00)
+Seat 3: Jerm1413 ($23.82)
+Seat 4: KannyThOP ($26.33)
+Seat 5: Arepitarica ($24.05)
+Seat 6: HEXJacstickler ($74.10) is sitting out
+Hellliga posts the small blind $0.10
+Jerm1413 posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [8c Ad]
+KannyThOP folds
+Arepitarica folds
+namesarehard folds
+Hellliga raises $0.90 to $1.00
+Jerm1413 calls $0.75
+*** FLOP *** [3h 7h 3s]
+Main pot $1.90 | Rake $0.10
+Hellliga bets $1.42
+Jerm1413 calls $1.42
+*** TURN *** [3h 7h 3s] [2s]
+Main pot $4.60 | Rake $0.24
+Hellliga bets $2.30
+Jerm1413 raises $5.90 to $5.90
+Hellliga raises $20.28 to $22.58 and is all-in
+Jerm1413 folds
+Uncalled bet ($16.68) returned to Hellliga
+Hellliga does not show
+*** SUMMARY ***
+Total pot $15.81 | Rake $0.59 | JP Fee $0.24
+Board [3h 7h 3s 2s]
+Seat 1: namesarehard (button) folded on the Pre-Flop
+Seat 2: Hellliga did not show and won $15.81
+Seat 3: Jerm1413 (big blind) folded on the Turn
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica folded on the Pre-Flop and did not bet
+
+
+Hand #2609888071 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:21:19 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($25.76)
+Seat 2: Hellliga ($25.00)
+Seat 3: Jerm1413 ($23.82)
+Seat 4: KannyThOP ($26.33)
+Seat 5: Arepitarica ($24.65)
+Seat 6: HEXJacstickler ($74.10) is sitting out
+namesarehard posts the small blind $0.10
+Hellliga posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [9s Qh]
+Jerm1413 folds
+KannyThOP folds
+Arepitarica raises $0.60 to $0.60
+namesarehard raises $2.65 to $2.75
+Hellliga folds
+Arepitarica folds
+Uncalled bet ($2.15) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $1.45
+Seat 1: namesarehard did not show and won $1.45
+Seat 2: Hellliga (big blind) folded on the Pre-Flop
+Seat 3: Jerm1413 folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Arepitarica (button) folded on the Pre-Flop
+
+
+Hand #2609887790 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:21:00 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($26.01)
+Seat 2: Hellliga ($25.00)
+Seat 3: Jerm1413 ($23.47)
+Seat 4: KannyThOP ($26.33)
+Seat 5: Arepitarica ($24.75)
+Seat 6: HEXJacstickler ($74.10) is sitting out
+Arepitarica posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Js 5c]
+Hellliga folds
+Jerm1413 raises $0.70 to $0.70
+KannyThOP folds
+Arepitarica folds
+namesarehard folds
+Uncalled bet ($0.45) returned to Jerm1413
+Jerm1413 does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (big blind) folded on the Pre-Flop
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: Jerm1413 did not show and won $0.60
+Seat 4: KannyThOP (button) folded on the Pre-Flop
+Seat 5: Arepitarica (small blind) folded on the Pre-Flop
+
+
+Hand #2609887529 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:20:38 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($25.66)
+Seat 2: Hellliga ($25.00)
+Seat 3: Jerm1413 ($23.47)
+Seat 4: KannyThOP ($26.43)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($74.10) is sitting out
+KannyThOP posts the small blind $0.10
+Arepitarica posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [3d 2s]
+namesarehard raises $0.62 to $0.62
+Hellliga folds
+Jerm1413 folds
+KannyThOP folds
+Arepitarica folds
+Uncalled bet ($0.37) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard did not show and won $0.60
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 3: Jerm1413 (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Arepitarica (big blind) folded on the Pre-Flop
+
+
+Hand #2609886820 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:19:45 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($25.00)
+Seat 2: Hellliga ($25.00)
+Seat 3: Jerm1413 ($23.57)
+Seat 4: KannyThOP ($27.05)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($74.10)
+Jerm1413 posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+Arepitarica waits for big blind
+*** HOLE CARDS ***
+Dealt to KannyThOP [Qd Jd]
+HEXJacstickler folds
+namesarehard raises $0.62 to $0.62
+Hellliga folds
+Jerm1413 folds
+KannyThOP calls $0.37
+*** FLOP *** [8s 3h 7h]
+Main pot $1.28 | Rake $0.06
+KannyThOP checks
+namesarehard bets $1.07
+KannyThOP folds
+Uncalled bet ($1.07) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $1.28 | Rake $0.04 | JP Fee $0.02
+Board [8s 3h 7h]
+Seat 1: namesarehard did not show and won $1.28
+Seat 2: Hellliga (button) folded on the Pre-Flop
+Seat 3: Jerm1413 (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP (big blind) folded on the Flop
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609886491 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:19:09 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($25.00)
+Seat 2: Hellliga ($25.00)
+Seat 3: Jerm1413 ($24.17)
+Seat 4: KannyThOP ($26.41)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($74.10)
+Hellliga posts the small blind $0.10
+Jerm1413 posts the big blind $0.25
+Arepitarica waits for big blind
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ad Jh]
+KannyThOP raises $0.60 to $0.60
+HEXJacstickler folds
+namesarehard folds
+Hellliga folds
+Jerm1413 calls $0.35
+*** FLOP *** [Ac Kc 4h]
+Main pot $1.24 | Rake $0.06
+Jerm1413 checks
+KannyThOP bets $0.51
+Jerm1413 folds
+Uncalled bet ($0.51) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $1.24 | Rake $0.04 | JP Fee $0.02
+Board [Ac Kc 4h]
+Seat 1: namesarehard (button) folded on the Pre-Flop
+Seat 2: Hellliga (small blind) folded on the Pre-Flop
+Seat 3: Jerm1413 (big blind) folded on the Flop
+Seat 4: KannyThOP did not show and won $1.24
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609886249 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:18:42 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($25.00)
+Seat 2: Hellliga ($25.00)
+Seat 3: Jerm1413 ($24.17)
+Seat 4: KannyThOP ($26.41)
+Seat 5: Arepitarica ($25.00)
+Seat 6: HEXJacstickler ($73.75)
+namesarehard posts the small blind $0.10
+Hellliga posts the big blind $0.25
+Arepitarica waits for big blind
+*** HOLE CARDS ***
+Dealt to KannyThOP [Jd 9s]
+Jerm1413 folds
+KannyThOP folds
+HEXJacstickler raises $0.70 to $0.70
+namesarehard folds
+Hellliga folds
+Uncalled bet ($0.45) returned to HEXJacstickler
+HEXJacstickler does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 2: Hellliga (big blind) folded on the Pre-Flop
+Seat 3: Jerm1413 folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler did not show and won $0.60
+
+
+Hand #2609886065 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:18:23 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($25.00)
+Seat 2: Hellliga ($25.00)
+Seat 3: Jerm1413 ($24.17)
+Seat 4: KannyThOP ($26.06)
+Seat 5: Arepitarica will be allowed to play after the button
+Seat 6: HEXJacstickler ($73.85)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+Hellliga waits for big blind
+*** HOLE CARDS ***
+Dealt to KannyThOP [Jh Kc]
+Jerm1413 folds
+KannyThOP raises $0.70 to $0.70
+HEXJacstickler folds
+namesarehard folds
+Uncalled bet ($0.45) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (big blind) folded on the Pre-Flop
+Seat 3: Jerm1413 folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP did not show and won $0.60
+Seat 6: HEXJacstickler (small blind) folded on the Pre-Flop
+
+
+Hand #2609885146 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:16:51 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($34.75)
+Seat 2: Hellliga ($25.00)
+Seat 3: Jerm1413 ($24.17)
+Seat 4: KannyThOP ($26.16)
+Seat 6: HEXJacstickler ($41.00)
+KannyThOP posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+Hellliga waits for big blind
+*** HOLE CARDS ***
+Dealt to KannyThOP [8c 2d]
+namesarehard raises $0.62 to $0.62
+Jerm1413 folds
+KannyThOP folds
+HEXJacstickler raises $1.60 to $1.85
+namesarehard raises $4.23 to $4.85
+HEXJacstickler raises $9.40 to $11.25
+namesarehard raises $29.90 to $34.75 and is all-in
+HEXJacstickler calls $23.50
+*** FLOP *** [5c 4s Ts]
+Main pot $67.60 | Rake $2.00
+*** TURN *** [5c 4s Ts] [9c]
+Main pot $67.60 | Rake $2.00
+*** RIVER *** [5c 4s Ts 9c] [3d]
+Main pot $67.60 | Rake $2.00
+*** SHOW DOWN ***
+Main pot $67.60 | Rake $2.00
+namesarehard shows [Ks Kd] (a pair of Kings [Ks Kd Ts 9c 5c])
+HEXJacstickler shows [Ad Ac] (a pair of Aces [Ad Ac Ts 9c 5c])
+HEXJacstickler collected $67.60 from main pot
+*** SUMMARY ***
+Total pot $67.60 | Rake $1.76 | JP Fee $0.24
+Board [5c 4s Ts 9c 3d]
+Seat 1: namesarehard showed [Ks Kd] and lost with a pair of Kings [Ks Kd Ts 9c 5c]
+Seat 3: Jerm1413 (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler (big blind) showed [Ad Ac] and won $67.60 with a pair of Aces [Ad Ac Ts 9c 5c]
+
+
+Hand #2609884957 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:16:33 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($34.75)
+Seat 2: Hellliga ($25.00) is sitting out
+Seat 3: Jerm1413 ($23.92)
+Seat 4: KannyThOP ($26.41)
+Seat 6: HEXJacstickler ($41.00)
+Jerm1413 posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [5c 2d]
+HEXJacstickler folds
+namesarehard folds
+Jerm1413 raises $0.65 to $0.75
+KannyThOP folds
+Uncalled bet ($0.50) returned to Jerm1413
+Jerm1413 does not show
+*** SUMMARY ***
+Total pot $0.50
+Seat 1: namesarehard (button) folded on the Pre-Flop
+Seat 3: Jerm1413 did not show and won $0.50
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609884561 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:15:50 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($34.85)
+Seat 2: Hellliga ($25.00)
+Seat 3: Jerm1413 ($24.67)
+Seat 4: KannyThOP ($26.41)
+Seat 6: HEXJacstickler ($40.23)
+namesarehard posts the small blind $0.10
+Hellliga sits out
+Jerm1413 posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Jh 2h]
+KannyThOP folds
+HEXJacstickler raises $0.75 to $0.75
+namesarehard folds
+Jerm1413 calls $0.50
+*** FLOP *** [Ts 4h 5c]
+Main pot $1.52 | Rake $0.08
+Jerm1413 checks
+HEXJacstickler bets $0.80
+Jerm1413 folds
+Uncalled bet ($0.80) returned to HEXJacstickler
+HEXJacstickler does not show
+*** SUMMARY ***
+Total pot $1.52 | Rake $0.06 | JP Fee $0.02
+Board [Ts 4h 5c]
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 3: Jerm1413 (big blind) folded on the Flop
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler did not show and won $1.52
+
+
+Hand #2609884243 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:15:21 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($35.10)
+Seat 2: Hellliga ($25.00)
+Seat 3: Jerm1413 ($24.67)
+Seat 4: KannyThOP ($26.06)
+Seat 6: HEXJacstickler ($40.33)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+Jerm1413 waits for big blind
+*** HOLE CARDS ***
+Dealt to KannyThOP [7d 8h]
+Hellliga folds
+KannyThOP raises $0.70 to $0.70
+HEXJacstickler folds
+namesarehard folds
+Uncalled bet ($0.45) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (big blind) folded on the Pre-Flop
+Seat 2: Hellliga folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP did not show and won $0.60
+Seat 6: HEXJacstickler (small blind) folded on the Pre-Flop
+
+
+Hand #2609884112 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:14:58 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($35.10)
+Seat 2: Hellliga ($25.00)
+Seat 3: Jerm1413 will be allowed to play after the button
+Seat 4: KannyThOP ($26.16)
+Seat 5: Endbringer ($25.11)
+Seat 6: HEXJacstickler ($40.23)
+KannyThOP posts the small blind $0.10
+Endbringer sits out
+HEXJacstickler posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ah 8c]
+namesarehard folds
+Hellliga folds
+KannyThOP folds
+HEXJacstickler does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: Hellliga (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler did not show and won $0.35
+
+
+Hand #2609883623 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:13:36 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($35.10)
+Seat 2: Hellliga ($25.00)
+Seat 3: BaronsCoach ($33.06)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($26.29)
+Seat 6: HEXJacstickler ($40.23)
+Hellliga posts the small blind $0.10
+BaronsCoach sits out
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Kh Th]
+Endbringer raises $0.50 to $0.50
+HEXJacstickler folds
+namesarehard folds
+Hellliga folds
+KannyThOP calls $0.25
+*** FLOP *** [5s 7h 8h]
+Main pot $1.05 | Rake $0.05
+KannyThOP checks
+Endbringer checks
+*** TURN *** [5s 7h 8h] [Tc]
+Main pot $1.05 | Rake $0.05
+KannyThOP bets $0.68
+Endbringer calls $0.68
+*** RIVER *** [5s 7h 8h Tc] [8c]
+Main pot $2.34 | Rake $0.12
+KannyThOP bets $1.25
+Endbringer folds
+Uncalled bet ($1.25) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $2.34 | Rake $0.08 | JP Fee $0.04
+Board [5s 7h 8h Tc 8c]
+Seat 1: namesarehard (button) folded on the Pre-Flop
+Seat 2: Hellliga (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP did not show and won $2.34
+Seat 5: Endbringer folded on the River
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609883354 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:12:51 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($35.20)
+Seat 2: Hellliga ($25.00)
+Seat 3: BaronsCoach ($33.06)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($26.84)
+Seat 6: HEXJacstickler ($39.33)
+namesarehard posts the small blind $0.10
+Hellliga posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [2h Tc]
+BaronsCoach folds
+KannyThOP folds
+Endbringer raises $0.55 to $0.55
+HEXJacstickler raises $1.65 to $1.65
+namesarehard folds
+Hellliga folds
+Endbringer folds
+Uncalled bet ($1.10) returned to HEXJacstickler
+HEXJacstickler does not show
+*** SUMMARY ***
+Total pot $1.45
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 2: Hellliga (big blind) folded on the Pre-Flop
+Seat 3: BaronsCoach folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler did not show and won $1.45
+
+
+Hand #2609883172 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:12:19 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($35.45)
+Seat 2: Hellliga ($25.00)
+Seat 3: BaronsCoach ($33.06)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($26.49)
+Seat 6: HEXJacstickler ($39.43)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+Hellliga waits for big blind
+*** HOLE CARDS ***
+Dealt to KannyThOP [7c 8h]
+BaronsCoach folds
+KannyThOP folds
+Endbringer raises $0.60 to $0.60
+HEXJacstickler folds
+namesarehard folds
+Uncalled bet ($0.35) returned to Endbringer
+Endbringer does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (big blind) folded on the Pre-Flop
+Seat 3: BaronsCoach folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer did not show and won $0.60
+Seat 6: HEXJacstickler (small blind) folded on the Pre-Flop
+
+
+Hand #2609882838 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:11:25 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($34.79)
+Seat 2: Hellliga ($25.00)
+Seat 3: BaronsCoach ($33.06)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($26.59)
+Seat 6: HEXJacstickler ($40.05)
+Endbringer posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+Hellliga waits for big blind
+*** HOLE CARDS ***
+Dealt to KannyThOP [8h Qc]
+namesarehard raises $0.62 to $0.62
+BaronsCoach folds
+KannyThOP folds
+Endbringer folds
+HEXJacstickler calls $0.37
+*** FLOP *** [Jd 4s Tc]
+Main pot $1.28 | Rake $0.06
+HEXJacstickler checks
+namesarehard bets $1.07
+HEXJacstickler folds
+Uncalled bet ($1.07) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $1.28 | Rake $0.04 | JP Fee $0.02
+Board [Jd 4s Tc]
+Seat 1: namesarehard did not show and won $1.28
+Seat 3: BaronsCoach folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP (button) folded on the Pre-Flop
+Seat 5: Endbringer (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler (big blind) folded on the Flop
+
+
+Hand #2609882496 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:10:25 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($34.79)
+Seat 3: BaronsCoach ($32.29)
+Seat 4: KannyThOP ($25.10)
+Seat 5: Endbringer ($27.34)
+Seat 6: HEXJacstickler ($40.05)
+KannyThOP posts the small blind $0.10
+Endbringer posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [8h Kc]
+HEXJacstickler folds
+namesarehard folds
+BaronsCoach raises $0.75 to $0.75
+KannyThOP folds
+Endbringer calls $0.50
+*** FLOP *** [7d Jh 3c]
+Main pot $1.52 | Rake $0.08
+Endbringer checks
+BaronsCoach bets $0.52
+Endbringer folds
+Uncalled bet ($0.52) returned to BaronsCoach
+BaronsCoach does not show
+*** SUMMARY ***
+Total pot $1.52 | Rake $0.06 | JP Fee $0.02
+Board [7d Jh 3c]
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 3: BaronsCoach did not show and won $1.52
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Endbringer (big blind) folded on the Flop
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609882295 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:09:51 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($34.79)
+Seat 3: BaronsCoach ($32.04)
+Seat 4: KannyThOP ($25.35)
+Seat 5: Endbringer ($27.34)
+Seat 6: HEXJacstickler ($40.05)
+BaronsCoach posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [7s Qd]
+Endbringer folds
+HEXJacstickler folds
+namesarehard folds
+BaronsCoach raises $0.65 to $0.75
+KannyThOP folds
+Uncalled bet ($0.50) returned to BaronsCoach
+BaronsCoach does not show
+*** SUMMARY ***
+Total pot $0.50
+Seat 1: namesarehard (button) folded on the Pre-Flop
+Seat 3: BaronsCoach did not show and won $0.50
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609882198 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:09:37 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($34.89)
+Seat 3: BaronsCoach ($32.29)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($27.34)
+Seat 6: HEXJacstickler ($40.05)
+namesarehard posts the small blind $0.10
+BaronsCoach posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [5h 5c]
+KannyThOP raises $0.70 to $0.70
+Endbringer folds
+HEXJacstickler folds
+namesarehard folds
+BaronsCoach folds
+Uncalled bet ($0.45) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 3: BaronsCoach (big blind) folded on the Pre-Flop
+Seat 4: KannyThOP did not show and won $0.60
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler (button) folded on the Pre-Flop
+
+
+Hand #2609882032 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:09:09 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($34.79)
+Seat 2: DONBASSUA ($25.35)
+Seat 3: BaronsCoach ($32.29)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($27.34)
+Seat 6: HEXJacstickler ($40.15)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Jh 8s]
+DONBASSUA folds
+BaronsCoach folds
+KannyThOP folds
+Endbringer folds
+HEXJacstickler folds
+namesarehard does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard did not show and won $0.35
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: BaronsCoach folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer (button) folded on the Pre-Flop
+Seat 6: HEXJacstickler (small blind) folded on the Pre-Flop
+
+
+Hand #2609881825 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:08:35 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($34.79)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: BaronsCoach ($32.29)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($27.44)
+Seat 6: HEXJacstickler ($40.40)
+Endbringer posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [2d Jc]
+namesarehard folds
+DONBASSUA raises $0.62 to $0.62
+BaronsCoach folds
+KannyThOP folds
+Endbringer folds
+HEXJacstickler folds
+Uncalled bet ($0.37) returned to DONBASSUA
+DONBASSUA does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA did not show and won $0.60
+Seat 3: BaronsCoach folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP (button) folded on the Pre-Flop
+Seat 5: Endbringer (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler (big blind) folded on the Pre-Flop
+
+
+Hand #2609881686 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:08:11 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($34.79)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: BaronsCoach ($32.29)
+Seat 4: KannyThOP ($25.10)
+Seat 5: Endbringer ($27.34)
+Seat 6: HEXJacstickler ($40.40)
+KannyThOP posts the small blind $0.10
+Endbringer posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [6c 7d]
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA folds
+BaronsCoach folds
+KannyThOP folds
+Endbringer does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: BaronsCoach (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Endbringer did not show and won $0.35
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609881601 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:07:58 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($34.79)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: BaronsCoach ($32.39)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($27.34)
+Seat 6: HEXJacstickler ($40.40)
+BaronsCoach posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [3c 4h]
+Endbringer folds
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA folds
+BaronsCoach folds
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA (button) folded on the Pre-Flop
+Seat 3: BaronsCoach (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP did not show and won $0.35
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609881408 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:07:26 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($34.79)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: BaronsCoach ($32.29)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($27.34)
+Seat 6: HEXJacstickler ($40.40)
+DONBASSUA posts the small blind $0.10
+BaronsCoach posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Qs 3h]
+KannyThOP folds
+Endbringer folds
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA folds
+BaronsCoach does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard (button) folded on the Pre-Flop
+Seat 2: DONBASSUA (small blind) folded on the Pre-Flop
+Seat 3: BaronsCoach did not show and won $0.35
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609881190 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:06:52 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($34.89)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: BaronsCoach ($32.29)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($27.34)
+Seat 6: HEXJacstickler ($40.05)
+namesarehard posts the small blind $0.10
+DONBASSUA posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [2d Jh]
+BaronsCoach folds
+KannyThOP folds
+Endbringer folds
+HEXJacstickler raises $0.75 to $0.75
+namesarehard folds
+DONBASSUA folds
+Uncalled bet ($0.50) returned to HEXJacstickler
+HEXJacstickler does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 2: DONBASSUA (big blind) folded on the Pre-Flop
+Seat 3: BaronsCoach folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler did not show and won $0.60
+
+
+Hand #2609880977 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:06:17 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($35.14)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: BaronsCoach ($32.29)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($26.99)
+Seat 6: HEXJacstickler ($40.15)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [3h 6c]
+DONBASSUA folds
+BaronsCoach folds
+KannyThOP folds
+Endbringer raises $0.70 to $0.70
+HEXJacstickler folds
+namesarehard folds
+Uncalled bet ($0.45) returned to Endbringer
+Endbringer does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (big blind) folded on the Pre-Flop
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: BaronsCoach folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer did not show and won $0.60
+Seat 6: HEXJacstickler (small blind) folded on the Pre-Flop
+
+
+Hand #2609880384 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:04:45 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($35.14)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: BaronsCoach ($25.00)
+Seat 4: KannyThOP ($27.57)
+Seat 5: Endbringer ($27.09)
+Seat 6: HEXJacstickler ($40.40)
+Endbringer posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [8h 8s]
+namesarehard folds
+DONBASSUA folds
+BaronsCoach raises $0.55 to $0.55
+KannyThOP raises $1.73 to $1.73
+Endbringer folds
+HEXJacstickler folds
+BaronsCoach raises $4.55 to $5.10
+KannyThOP calls $3.37
+*** FLOP *** [Jh Kc 9s]
+Main pot $10.03 | Rake $0.52
+BaronsCoach bets $2.63
+KannyThOP calls $2.63
+*** TURN *** [Jh Kc 9s] [Qs]
+Main pot $15.02 | Rake $0.79
+BaronsCoach checks
+KannyThOP checks
+*** RIVER *** [Jh Kc 9s Qs] [3c]
+Main pot $15.02 | Rake $0.79
+BaronsCoach checks
+KannyThOP checks
+*** SHOW DOWN ***
+Main pot $15.02 | Rake $0.79
+BaronsCoach shows [Ad Qh] (a pair of Queens [Qs Qh Ad Kc Jh])
+KannyThOP shows [8h 8s] (a pair of Eights [8s 8h Kc Qs Jh])
+BaronsCoach collected $15.02 from main pot
+*** SUMMARY ***
+Total pot $15.02 | Rake $0.55 | JP Fee $0.24
+Board [Jh Kc 9s Qs 3c]
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: BaronsCoach showed [Ad Qh] and won $15.02 with a pair of Queens [Qs Qh Ad Kc Jh]
+Seat 4: KannyThOP (button) showed [8h 8s] and lost with a pair of Eights [8s 8h Kc Qs Jh]
+Seat 5: Endbringer (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler (big blind) folded on the Pre-Flop
+
+
+Hand #2609880124 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:04:06 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($35.14)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: BaronsCoach ($25.00)
+Seat 4: KannyThOP ($26.70)
+Seat 5: Endbringer ($27.34)
+Seat 6: HEXJacstickler ($40.40)
+KannyThOP posts the small blind $0.10
+Endbringer posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ah Jc]
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA raises $0.62 to $0.62
+BaronsCoach folds
+KannyThOP raises $2.81 to $2.91
+Endbringer folds
+DONBASSUA folds
+Uncalled bet ($2.29) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $1.49
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: BaronsCoach (button) folded on the Pre-Flop
+Seat 4: KannyThOP did not show and won $1.49
+Seat 5: Endbringer (big blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609879989 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:03:42 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($34.79)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: BaronsCoach ($25.00)
+Seat 4: KannyThOP ($26.95)
+Seat 5: Endbringer ($27.34)
+Seat 6: HEXJacstickler ($40.40)
+BaronsCoach posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [9s 2d]
+Endbringer folds
+HEXJacstickler folds
+namesarehard raises $0.62 to $0.62
+DONBASSUA folds
+BaronsCoach folds
+KannyThOP folds
+Uncalled bet ($0.37) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard did not show and won $0.60
+Seat 2: DONBASSUA (button) folded on the Pre-Flop
+Seat 3: BaronsCoach (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609879790 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:03:09 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($34.79)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: BaronsCoach ($25.00)
+Seat 4: KannyThOP ($26.95)
+Seat 5: Endbringer ($27.34)
+Seat 6: HEXJacstickler ($40.05)
+DONBASSUA posts the small blind $0.10
+BaronsCoach posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [5d 8h]
+KannyThOP folds
+Endbringer folds
+HEXJacstickler raises $0.75 to $0.75
+namesarehard folds
+DONBASSUA folds
+BaronsCoach folds
+Uncalled bet ($0.50) returned to HEXJacstickler
+HEXJacstickler does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (button) folded on the Pre-Flop
+Seat 2: DONBASSUA (small blind) folded on the Pre-Flop
+Seat 3: BaronsCoach (big blind) folded on the Pre-Flop
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler did not show and won $0.60
+
+
+Hand #2609879684 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:02:50 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($34.89)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: BaronsCoach ($25.00)
+Seat 4: KannyThOP ($26.60)
+Seat 5: Endbringer ($27.34)
+Seat 6: HEXJacstickler ($40.05)
+namesarehard posts the small blind $0.10
+DONBASSUA posts the big blind $0.25
+BaronsCoach waits for big blind
+*** HOLE CARDS ***
+Dealt to KannyThOP [8c 5c]
+KannyThOP raises $0.60 to $0.60
+Endbringer folds
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA folds
+Uncalled bet ($0.35) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 2: DONBASSUA (big blind) folded on the Pre-Flop
+Seat 4: KannyThOP did not show and won $0.60
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler (button) folded on the Pre-Flop
+
+
+Hand #2609879161 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:01:18 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($33.80)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: Badpandat ($25.00)
+Seat 4: KannyThOP ($26.60)
+Seat 5: Endbringer ($27.34)
+Seat 6: HEXJacstickler ($41.26)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [7s Th]
+DONBASSUA folds
+Badpandat folds
+KannyThOP folds
+Endbringer folds
+HEXJacstickler calls $0.15
+namesarehard checks
+*** FLOP *** [5c Ac 4h]
+Main pot $0.48 | Rake $0.02
+HEXJacstickler checks
+namesarehard bets $0.30
+HEXJacstickler calls $0.30
+*** TURN *** [5c Ac 4h] [Qs]
+Main pot $1.05 | Rake $0.05
+HEXJacstickler checks
+namesarehard checks
+*** RIVER *** [5c Ac 4h Qs] [As]
+Main pot $1.05 | Rake $0.05
+HEXJacstickler checks
+namesarehard bets $0.66
+HEXJacstickler calls $0.66
+*** SHOW DOWN ***
+Main pot $2.30 | Rake $0.12
+namesarehard shows [Kd 5s] (two pair, Aces and Fives [As Ac 5s 5c Kd])
+HEXJacstickler shows [4s 8s] (two pair, Aces and Fours [As Ac 4s 4h Qs])
+namesarehard collected $2.30 from main pot
+*** SUMMARY ***
+Total pot $2.30 | Rake $0.08 | JP Fee $0.04
+Board [5c Ac 4h Qs As]
+Seat 1: namesarehard (big blind) showed [Kd 5s] and won $2.30 with two pair, Aces and Fives [As Ac 5s 5c Kd]
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: Badpandat folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer (button) folded on the Pre-Flop
+Seat 6: HEXJacstickler (small blind) showed [4s 8s] and lost with two pair, Aces and Fours [As Ac 4s 4h Qs]
+
+
+Hand #2609878891 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 16:00:29 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($33.14)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: Badpandat ($25.00)
+Seat 4: KannyThOP ($26.60)
+Seat 5: Endbringer ($27.44)
+Seat 6: HEXJacstickler ($41.88)
+Endbringer posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [3c 7h]
+namesarehard raises $0.62 to $0.62
+DONBASSUA folds
+Badpandat folds
+KannyThOP folds
+Endbringer folds
+HEXJacstickler calls $0.37
+*** FLOP *** [Qh 9s 2c]
+Main pot $1.28 | Rake $0.06
+HEXJacstickler checks
+namesarehard bets $1.07
+HEXJacstickler folds
+Uncalled bet ($1.07) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $1.28 | Rake $0.04 | JP Fee $0.02
+Board [Qh 9s 2c]
+Seat 1: namesarehard did not show and won $1.28
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: Badpandat folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP (button) folded on the Pre-Flop
+Seat 5: Endbringer (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler (big blind) folded on the Flop
+
+
+Hand #2609878474 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:58:07 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($33.14)
+Seat 2: DONBASSUA ($27.60)
+Seat 3: Badpandat ($25.00)
+Seat 4: KannyThOP ($26.70)
+Seat 5: Endbringer ($25.00)
+Seat 6: HEXJacstickler ($41.88)
+KannyThOP posts the small blind $0.10
+Endbringer posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Qd 7h]
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA raises $0.62 to $0.62
+Badpandat folds
+KannyThOP folds
+Endbringer calls $0.37
+*** FLOP *** [7d Js 3h]
+Main pot $1.28 | Rake $0.06
+Endbringer checks
+DONBASSUA bets $0.42
+Endbringer calls $0.42
+*** TURN *** [7d Js 3h] [4s]
+Main pot $2.08 | Rake $0.10
+Endbringer checks
+DONBASSUA checks
+*** RIVER *** [7d Js 3h 4s] [Kd]
+Main pot $2.08 | Rake $0.10
+Endbringer checks
+DONBASSUA bets $1.56
+Endbringer raises $6.86 to $6.86
+DONBASSUA folds
+Uncalled bet ($5.30) returned to Endbringer
+Endbringer does not show
+*** SUMMARY ***
+Total pot $5.04 | Rake $0.18 | JP Fee $0.08
+Board [7d Js 3h 4s Kd]
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA folded on the River
+Seat 3: Badpandat (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Endbringer did not show and won $5.04
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609878409 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:57:44 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($33.14)
+Seat 2: DONBASSUA ($27.60)
+Seat 3: Badpandat ($25.00)
+Seat 4: KannyThOP ($26.95)
+Seat 5: Endbringer ($25.00)
+Seat 6: HEXJacstickler ($41.53)
+Badpandat posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [4d Qs]
+Endbringer folds
+HEXJacstickler raises $0.75 to $0.75
+namesarehard folds
+DONBASSUA folds
+Badpandat folds
+KannyThOP folds
+Uncalled bet ($0.50) returned to HEXJacstickler
+HEXJacstickler does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA (button) folded on the Pre-Flop
+Seat 3: Badpandat (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler did not show and won $0.60
+
+
+Hand #2609878328 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:57:14 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($33.14)
+Seat 2: DONBASSUA ($27.70)
+Seat 3: Badpandat ($25.00)
+Seat 4: KannyThOP ($26.95)
+Seat 5: Endbringer ($25.00)
+Seat 6: HEXJacstickler ($41.18)
+DONBASSUA posts the small blind $0.10
+Badpandat posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Jh Qc]
+KannyThOP folds
+Endbringer folds
+HEXJacstickler raises $0.75 to $0.75
+namesarehard folds
+DONBASSUA folds
+Badpandat folds
+Uncalled bet ($0.50) returned to HEXJacstickler
+HEXJacstickler does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (button) folded on the Pre-Flop
+Seat 2: DONBASSUA (small blind) folded on the Pre-Flop
+Seat 3: Badpandat (big blind) folded on the Pre-Flop
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler did not show and won $0.60
+
+
+Hand #2609878115 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:55:59 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($33.24)
+Seat 2: DONBASSUA ($27.95)
+Seat 3: Badpandat ($25.00)
+Seat 4: KannyThOP ($26.95)
+Seat 5: Endbringer ($26.79)
+Seat 6: HEXJacstickler ($38.40)
+namesarehard posts the small blind $0.10
+DONBASSUA posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [4h Qc]
+Badpandat folds
+KannyThOP folds
+Endbringer raises $0.55 to $0.55
+HEXJacstickler calls $0.55
+namesarehard folds
+DONBASSUA folds
+*** FLOP *** [4d 2d Ts]
+Main pot $1.38 | Rake $0.07
+Endbringer checks
+HEXJacstickler checks
+*** TURN *** [4d 2d Ts] [Jh]
+Main pot $1.38 | Rake $0.07
+Endbringer checks
+HEXJacstickler bets $0.72
+Endbringer calls $0.72
+*** RIVER *** [4d 2d Ts Jh] [8h]
+Main pot $2.75 | Rake $0.14
+Endbringer checks
+HEXJacstickler bets $1.44
+Endbringer calls $1.44
+*** SHOW DOWN ***
+Main pot $5.49 | Rake $0.28
+Endbringer shows [Tc As] (a pair of Tens [Ts Tc As Jh 8h])
+HEXJacstickler shows [Jc Kd] (a pair of Jacks [Jh Jc Kd Ts 8h])
+HEXJacstickler collected $5.49 from main pot
+*** SUMMARY ***
+Total pot $5.49 | Rake $0.20 | JP Fee $0.08
+Board [4d 2d Ts Jh 8h]
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 2: DONBASSUA (big blind) folded on the Pre-Flop
+Seat 3: Badpandat folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer showed [Tc As] and lost with a pair of Tens [Ts Tc As Jh 8h]
+Seat 6: HEXJacstickler (button) showed [Jc Kd] and won $5.49 with a pair of Jacks [Jh Jc Kd Ts 8h]
+
+
+Hand #2609878023 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:55:24 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($32.59)
+Seat 2: DONBASSUA ($27.95)
+Seat 3: Badpandat ($25.00)
+Seat 4: KannyThOP ($26.95)
+Seat 5: Endbringer ($26.79)
+Seat 6: HEXJacstickler ($38.50)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [9c 5h]
+DONBASSUA folds
+Badpandat raises $0.55 to $0.55
+KannyThOP folds
+Endbringer folds
+HEXJacstickler folds
+namesarehard raises $2.75 to $3.00
+Badpandat folds
+Uncalled bet ($2.45) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $1.20
+Seat 1: namesarehard did not show and won $1.20
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: Badpandat folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer (button) folded on the Pre-Flop
+Seat 6: HEXJacstickler (small blind) folded on the Pre-Flop
+
+
+Hand #2609877954 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:55:01 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($32.59)
+Seat 2: DONBASSUA ($27.95)
+Seat 3: Badpandat ($25.00)
+Seat 4: KannyThOP ($26.95)
+Seat 5: Endbringer ($26.89)
+Seat 6: HEXJacstickler ($38.40)
+Endbringer posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [6h 3c]
+namesarehard folds
+DONBASSUA folds
+Badpandat folds
+KannyThOP folds
+Endbringer folds
+HEXJacstickler does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: Badpandat folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP (button) folded on the Pre-Flop
+Seat 5: Endbringer (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler did not show and won $0.35
+
+
+Hand #2609877813 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:54:39 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($32.59)
+Seat 2: DONBASSUA ($27.95)
+Seat 3: Badpandat ($25.00)
+Seat 4: KannyThOP ($27.05)
+Seat 5: Endbringer ($26.79)
+Seat 6: HEXJacstickler ($38.40)
+KannyThOP posts the small blind $0.10
+Endbringer posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [2d 5c]
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA folds
+Badpandat folds
+KannyThOP folds
+Endbringer does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: Badpandat (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Endbringer did not show and won $0.35
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609877422 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:53:38 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($32.59)
+Seat 2: DONBASSUA ($27.95)
+Seat 3: Badpandat ($25.03)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($26.79)
+Seat 6: HEXJacstickler ($38.40)
+Badpandat posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Kd Jd]
+Endbringer folds
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA folds
+Badpandat raises $0.65 to $0.75
+KannyThOP raises $2.02 to $2.27
+Badpandat calls $1.52
+*** FLOP *** [Ac Jh Qs]
+Main pot $4.32 | Rake $0.22
+Badpandat checks
+KannyThOP bets $2.16
+Badpandat folds
+Uncalled bet ($2.16) returned to KannyThOP
+KannyThOP does not show
+*** SUMMARY ***
+Total pot $4.32 | Rake $0.16 | JP Fee $0.06
+Board [Ac Jh Qs]
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA (button) folded on the Pre-Flop
+Seat 3: Badpandat (small blind) folded on the Flop
+Seat 4: KannyThOP did not show and won $4.32
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609877166 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:52:59 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($32.59)
+Seat 2: DONBASSUA ($27.70)
+Seat 3: Badpandat ($25.28)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($26.79)
+Seat 6: HEXJacstickler ($38.40)
+DONBASSUA posts the small blind $0.10
+Badpandat posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [5c 7d]
+KannyThOP folds
+Endbringer folds
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA raises $0.65 to $0.75
+Badpandat folds
+Uncalled bet ($0.50) returned to DONBASSUA
+DONBASSUA does not show
+*** SUMMARY ***
+Total pot $0.50
+Seat 1: namesarehard (button) folded on the Pre-Flop
+Seat 2: DONBASSUA did not show and won $0.50
+Seat 3: Badpandat (big blind) folded on the Pre-Flop
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609876632 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:51:42 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($32.69)
+Seat 2: DONBASSUA ($27.95)
+Seat 3: Badpandat ($25.28)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($30.87)
+Seat 6: HEXJacstickler ($34.39)
+namesarehard posts the small blind $0.10
+DONBASSUA posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Qd Js]
+Badpandat folds
+KannyThOP folds
+Endbringer raises $0.55 to $0.55
+HEXJacstickler raises $1.65 to $1.65
+namesarehard folds
+DONBASSUA folds
+Endbringer calls $1.10
+*** FLOP *** [7d 5d 9s]
+Main pot $3.47 | Rake $0.18
+Endbringer checks
+HEXJacstickler checks
+*** TURN *** [7d 5d 9s] [Jh]
+Main pot $3.47 | Rake $0.18
+Endbringer checks
+HEXJacstickler checks
+*** RIVER *** [7d 5d 9s Jh] [2c]
+Main pot $3.47 | Rake $0.18
+Endbringer bets $2.43
+HEXJacstickler calls $2.43
+*** SHOW DOWN ***
+Main pot $8.09 | Rake $0.42
+Endbringer shows [Ac 3c] (a high card, Ace high [Ac Jh 9s 7d 5d])
+HEXJacstickler shows [Ad Kh] (a high card, Ace high [Ad Kh Jh 9s 7d])
+HEXJacstickler collected $8.09 from main pot
+*** SUMMARY ***
+Total pot $8.09 | Rake $0.28 | JP Fee $0.14
+Board [7d 5d 9s Jh 2c]
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 2: DONBASSUA (big blind) folded on the Pre-Flop
+Seat 3: Badpandat folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer showed [Ac 3c] and lost with a high card, Ace high [Ac Jh 9s 7d 5d]
+Seat 6: HEXJacstickler (button) showed [Ad Kh] and won $8.09 with a high card, Ace high [Ad Kh Jh 9s 7d] with the kicker King
+
+
+Hand #2609876082 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:50:22 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($32.10)
+Seat 2: DONBASSUA ($27.95)
+Seat 3: Badpandat ($25.83)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($30.87)
+Seat 6: HEXJacstickler ($34.49)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [6h Jc]
+DONBASSUA folds
+Badpandat raises $0.55 to $0.55
+KannyThOP folds
+Endbringer folds
+HEXJacstickler folds
+namesarehard calls $0.30
+*** FLOP *** [Tc 3c 7c]
+Main pot $1.14 | Rake $0.06
+namesarehard checks
+Badpandat checks
+*** TURN *** [Tc 3c 7c] [5s]
+Main pot $1.14 | Rake $0.06
+namesarehard checks
+Badpandat checks
+*** RIVER *** [Tc 3c 7c 5s] [Ts]
+Main pot $1.14 | Rake $0.06
+namesarehard bets $0.39
+Badpandat folds
+Uncalled bet ($0.39) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $1.14 | Rake $0.04 | JP Fee $0.02
+Board [Tc 3c 7c 5s Ts]
+Seat 1: namesarehard did not show and won $1.14
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: Badpandat folded on the River
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer (button) folded on the Pre-Flop
+Seat 6: HEXJacstickler (small blind) folded on the Pre-Flop
+
+
+Hand #2609875974 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:50:04 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($32.10)
+Seat 2: DONBASSUA ($27.95)
+Seat 3: Badpandat ($25.83)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($30.97)
+Seat 6: HEXJacstickler ($34.39)
+Endbringer posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Th 5c]
+namesarehard folds
+DONBASSUA folds
+Badpandat folds
+KannyThOP folds
+Endbringer folds
+HEXJacstickler does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: Badpandat folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP (button) folded on the Pre-Flop
+Seat 5: Endbringer (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler did not show and won $0.35
+
+
+Hand #2609875825 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:49:43 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($32.10)
+Seat 2: DONBASSUA ($27.60)
+Seat 3: Badpandat ($25.83)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($31.22)
+Seat 6: HEXJacstickler ($34.39)
+KannyThOP posts the small blind $0.10
+Endbringer posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Qs Jc]
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA raises $0.62 to $0.62
+Badpandat folds
+KannyThOP folds
+Endbringer folds
+Uncalled bet ($0.37) returned to DONBASSUA
+DONBASSUA does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA did not show and won $0.60
+Seat 3: Badpandat (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Endbringer (big blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609875494 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:48:57 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($32.10)
+Seat 2: DONBASSUA ($27.60)
+Seat 3: Badpandat ($25.58)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($31.22)
+Seat 6: HEXJacstickler ($34.39)
+Badpandat posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [5h 2h]
+Endbringer folds
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA folds
+Badpandat raises $0.65 to $0.75
+KannyThOP folds
+Uncalled bet ($0.50) returned to Badpandat
+Badpandat does not show
+*** SUMMARY ***
+Total pot $0.50
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA (button) folded on the Pre-Flop
+Seat 3: Badpandat did not show and won $0.50
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609875155 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:48:12 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($31.00)
+Seat 2: DONBASSUA ($27.70)
+Seat 3: Badpandat ($25.83)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($31.22)
+Seat 6: HEXJacstickler ($35.14)
+DONBASSUA posts the small blind $0.10
+Badpandat posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [2h Ad]
+KannyThOP folds
+Endbringer folds
+HEXJacstickler raises $0.75 to $0.75
+namesarehard raises $2.50 to $2.50
+DONBASSUA folds
+Badpandat folds
+HEXJacstickler folds
+Uncalled bet ($1.75) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $1.85
+Seat 1: namesarehard did not show and won $1.85
+Seat 2: DONBASSUA (small blind) folded on the Pre-Flop
+Seat 3: Badpandat (big blind) folded on the Pre-Flop
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609874838 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:47:32 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($31.10)
+Seat 2: DONBASSUA ($26.85)
+Seat 3: Badpandat ($25.83)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($31.22)
+Seat 6: HEXJacstickler ($35.89)
+namesarehard posts the small blind $0.10
+DONBASSUA posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Td 3h]
+Badpandat folds
+KannyThOP folds
+Endbringer folds
+HEXJacstickler raises $0.75 to $0.75
+namesarehard folds
+DONBASSUA raises $3.00 to $3.25
+HEXJacstickler folds
+Uncalled bet ($2.50) returned to DONBASSUA
+DONBASSUA does not show
+*** SUMMARY ***
+Total pot $1.60
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 2: DONBASSUA did not show and won $1.60
+Seat 3: Badpandat folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler (button) folded on the Pre-Flop
+
+
+Hand #2609874602 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:47:02 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($31.35)
+Seat 2: DONBASSUA ($26.85)
+Seat 3: Badpandat ($25.83)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($31.82)
+Seat 6: HEXJacstickler ($35.04)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [2h Qd]
+DONBASSUA folds
+Badpandat folds
+KannyThOP folds
+Endbringer raises $0.60 to $0.60
+HEXJacstickler raises $1.70 to $1.80
+namesarehard folds
+Endbringer folds
+Uncalled bet ($1.20) returned to HEXJacstickler
+HEXJacstickler does not show
+*** SUMMARY ***
+Total pot $1.45
+Seat 1: namesarehard (big blind) folded on the Pre-Flop
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: Badpandat folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer (button) folded on the Pre-Flop
+Seat 6: HEXJacstickler did not show and won $1.45
+
+
+Hand #2609874474 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:46:45 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($31.35)
+Seat 2: DONBASSUA ($26.50)
+Seat 3: Badpandat ($25.83)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($31.92)
+Seat 6: HEXJacstickler ($35.29)
+Endbringer posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [7h Qd]
+namesarehard folds
+DONBASSUA raises $0.62 to $0.62
+Badpandat folds
+KannyThOP folds
+Endbringer folds
+HEXJacstickler folds
+Uncalled bet ($0.37) returned to DONBASSUA
+DONBASSUA does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA did not show and won $0.60
+Seat 3: Badpandat folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP (button) folded on the Pre-Flop
+Seat 5: Endbringer (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler (big blind) folded on the Pre-Flop
+
+
+Hand #2609874244 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:46:17 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($31.35)
+Seat 2: DONBASSUA ($26.50)
+Seat 3: Badpandat ($25.83)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($31.82)
+Seat 6: HEXJacstickler ($35.29)
+KannyThOP posts the small blind $0.10
+Endbringer posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Jd 4s]
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA folds
+Badpandat folds
+KannyThOP folds
+Endbringer does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: Badpandat (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Endbringer did not show and won $0.35
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609874013 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:45:48 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($31.35)
+Seat 2: DONBASSUA ($26.15)
+Seat 3: Badpandat ($25.93)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($31.82)
+Seat 6: HEXJacstickler ($35.29)
+Badpandat posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ts 2h]
+Endbringer folds
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA raises $0.62 to $0.62
+Badpandat folds
+KannyThOP folds
+Uncalled bet ($0.37) returned to DONBASSUA
+DONBASSUA does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA did not show and won $0.60
+Seat 3: Badpandat (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609873713 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:45:13 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($31.35)
+Seat 2: DONBASSUA ($26.25)
+Seat 3: Badpandat ($26.18)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($31.47)
+Seat 6: HEXJacstickler ($35.29)
+DONBASSUA posts the small blind $0.10
+Badpandat posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [7c 2h]
+KannyThOP folds
+Endbringer raises $0.50 to $0.50
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA folds
+Badpandat folds
+Uncalled bet ($0.25) returned to Endbringer
+Endbringer does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (button) folded on the Pre-Flop
+Seat 2: DONBASSUA (small blind) folded on the Pre-Flop
+Seat 3: Badpandat (big blind) folded on the Pre-Flop
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer did not show and won $0.60
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609873192 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:44:12 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($31.45)
+Seat 2: DONBASSUA ($26.80)
+Seat 3: Badpandat ($26.18)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($30.88)
+Seat 6: HEXJacstickler ($35.29)
+namesarehard posts the small blind $0.10
+DONBASSUA posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [5s Td]
+Badpandat folds
+KannyThOP folds
+Endbringer raises $0.55 to $0.55
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA calls $0.30
+*** FLOP *** [6c 7s 2s]
+Main pot $1.14 | Rake $0.06
+DONBASSUA checks
+Endbringer checks
+*** TURN *** [6c 7s 2s] [Kd]
+Main pot $1.14 | Rake $0.06
+DONBASSUA checks
+Endbringer checks
+*** RIVER *** [6c 7s 2s Kd] [4c]
+Main pot $1.14 | Rake $0.06
+DONBASSUA checks
+Endbringer checks
+*** SHOW DOWN ***
+Main pot $1.14 | Rake $0.06
+DONBASSUA shows [8d 9d] (a high card, King high [Kd 9d 8d 7s 6c])
+Endbringer shows [As Qh] (a high card, Ace high [As Kd Qh 7s 6c])
+Endbringer collected $1.14 from main pot
+*** SUMMARY ***
+Total pot $1.14 | Rake $0.04 | JP Fee $0.02
+Board [6c 7s 2s Kd 4c]
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 2: DONBASSUA (big blind) showed [8d 9d] and lost with a high card, King high [Kd 9d 8d 7s 6c]
+Seat 3: Badpandat folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer showed [As Qh] and won $1.14 with a high card, Ace high [As Kd Qh 7s 6c]
+Seat 6: HEXJacstickler (button) folded on the Pre-Flop
+
+
+Hand #2609872607 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:43:09 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($31.70)
+Seat 2: DONBASSUA ($26.80)
+Seat 3: Badpandat ($25.35)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($31.43)
+Seat 6: HEXJacstickler ($35.39)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ah 8s]
+DONBASSUA folds
+Badpandat raises $0.55 to $0.55
+KannyThOP folds
+Endbringer calls $0.55
+HEXJacstickler folds
+namesarehard folds
+*** FLOP *** [Ks Jh 8h]
+Main pot $1.38 | Rake $0.07
+Badpandat checks
+Endbringer checks
+*** TURN *** [Ks Jh 8h] [4h]
+Main pot $1.38 | Rake $0.07
+Badpandat bets $1.08
+Endbringer folds
+Uncalled bet ($1.08) returned to Badpandat
+Badpandat does not show
+*** SUMMARY ***
+Total pot $1.38 | Rake $0.05 | JP Fee $0.02
+Board [Ks Jh 8h 4h]
+Seat 1: namesarehard (big blind) folded on the Pre-Flop
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: Badpandat did not show and won $1.38
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer (button) folded on the Turn
+Seat 6: HEXJacstickler (small blind) folded on the Pre-Flop
+
+
+Hand #2609872385 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:42:45 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($31.70)
+Seat 2: DONBASSUA ($26.80)
+Seat 3: Badpandat ($25.00)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($31.53)
+Seat 6: HEXJacstickler ($35.64)
+Endbringer posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [2c Qh]
+namesarehard folds
+DONBASSUA folds
+Badpandat raises $0.62 to $0.62
+KannyThOP folds
+Endbringer folds
+HEXJacstickler folds
+Uncalled bet ($0.37) returned to Badpandat
+Badpandat does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: Badpandat did not show and won $0.60
+Seat 4: KannyThOP (button) folded on the Pre-Flop
+Seat 5: Endbringer (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler (big blind) folded on the Pre-Flop
+
+
+Hand #2609872130 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:42:18 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($31.70)
+Seat 2: DONBASSUA ($25.70)
+Seat 3: Badpandat ($25.00)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($31.78)
+Seat 6: HEXJacstickler ($36.39)
+KannyThOP posts the small blind $0.10
+Endbringer posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ts 4d]
+HEXJacstickler raises $0.75 to $0.75
+namesarehard folds
+DONBASSUA raises $2.25 to $2.25
+Badpandat folds
+KannyThOP folds
+Endbringer folds
+HEXJacstickler folds
+Uncalled bet ($1.50) returned to DONBASSUA
+DONBASSUA does not show
+*** SUMMARY ***
+Total pot $1.85
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA did not show and won $1.85
+Seat 3: Badpandat (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Endbringer (big blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609871203 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:40:39 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($27.45)
+Seat 2: DONBASSUA ($25.70)
+Seat 3: Badpandat ($25.00)
+Seat 4: KannyThOP ($26.43)
+Seat 5: Endbringer ($31.78)
+Seat 6: HEXJacstickler ($36.39)
+Badpandat posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Kd Ad]
+Endbringer folds
+HEXJacstickler folds
+namesarehard raises $0.62 to $0.62
+DONBASSUA folds
+Badpandat folds
+KannyThOP raises $2.51 to $2.76
+namesarehard calls $2.14
+*** FLOP *** [4s 7s 3c]
+Main pot $5.34 | Rake $0.28
+KannyThOP checks
+namesarehard bets $1.85
+KannyThOP calls $1.85
+*** TURN *** [4s 7s 3c] [8d]
+Main pot $8.86 | Rake $0.46
+KannyThOP checks
+namesarehard bets $4.45
+KannyThOP folds
+Uncalled bet ($4.45) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $8.86 | Rake $0.32 | JP Fee $0.14
+Board [4s 7s 3c 8d]
+Seat 1: namesarehard did not show and won $8.86
+Seat 2: DONBASSUA (button) folded on the Pre-Flop
+Seat 3: Badpandat (small blind) folded on the Pre-Flop
+Seat 4: KannyThOP (big blind) folded on the Turn
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609870903 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:40:11 UTC
+Belle Rive 6-max Seat #1 is the button
+Seat 1: namesarehard ($27.45)
+Seat 2: DONBASSUA ($25.80)
+Seat 3: Badpandat ($25.25)
+Seat 4: KannyThOP ($26.43)
+Seat 5: Endbringer ($31.43)
+Seat 6: HEXJacstickler ($36.39)
+DONBASSUA posts the small blind $0.10
+Badpandat posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ks Jh]
+KannyThOP folds
+Endbringer raises $0.50 to $0.50
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA folds
+Badpandat folds
+Uncalled bet ($0.25) returned to Endbringer
+Endbringer does not show
+*** SUMMARY ***
+Total pot $0.60
+Seat 1: namesarehard (button) folded on the Pre-Flop
+Seat 2: DONBASSUA (small blind) folded on the Pre-Flop
+Seat 3: Badpandat (big blind) folded on the Pre-Flop
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer did not show and won $0.60
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609870625 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:39:26 UTC
+Belle Rive 6-max Seat #6 is the button
+Seat 1: namesarehard ($27.55)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: Badpandat ($25.25)
+Seat 4: KannyThOP ($27.13)
+Seat 5: Endbringer ($31.43)
+Seat 6: HEXJacstickler ($36.39)
+namesarehard posts the small blind $0.10
+DONBASSUA posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [Ks Qc]
+Badpandat folds
+KannyThOP raises $0.70 to $0.70
+Endbringer folds
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA raises $2.75 to $3.00
+KannyThOP folds
+Uncalled bet ($2.30) returned to DONBASSUA
+DONBASSUA does not show
+*** SUMMARY ***
+Total pot $1.50
+Seat 1: namesarehard (small blind) folded on the Pre-Flop
+Seat 2: DONBASSUA did not show and won $1.50
+Seat 3: Badpandat folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler (button) folded on the Pre-Flop
+
+
+Hand #2609869979 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:37:40 UTC
+Belle Rive 6-max Seat #5 is the button
+Seat 1: namesarehard ($26.05)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: Badpandat ($25.25)
+Seat 4: KannyThOP ($27.13)
+Seat 5: Endbringer ($31.43)
+Seat 6: HEXJacstickler ($38.05)
+HEXJacstickler posts the small blind $0.10
+namesarehard posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [9h Jd]
+DONBASSUA folds
+Badpandat folds
+KannyThOP folds
+Endbringer folds
+HEXJacstickler calls $0.15
+namesarehard raises $0.75 to $1.00
+HEXJacstickler calls $0.75
+*** FLOP *** [Kh Ks 6s]
+Main pot $1.90 | Rake $0.10
+HEXJacstickler checks
+namesarehard bets $0.66
+HEXJacstickler calls $0.66
+*** TURN *** [Kh Ks 6s] [4h]
+Main pot $3.16 | Rake $0.16
+HEXJacstickler checks
+namesarehard bets $2.65
+HEXJacstickler folds
+Uncalled bet ($2.65) returned to namesarehard
+namesarehard does not show
+*** SUMMARY ***
+Total pot $3.16 | Rake $0.12 | JP Fee $0.04
+Board [Kh Ks 6s 4h]
+Seat 1: namesarehard did not show and won $3.16
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: Badpandat folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP folded on the Pre-Flop and did not bet
+Seat 5: Endbringer (button) folded on the Pre-Flop
+Seat 6: HEXJacstickler (small blind) folded on the Turn
+
+
+Hand #2609869493 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:36:23 UTC
+Belle Rive 6-max Seat #4 is the button
+Seat 1: namesarehard ($26.67)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: Badpandat ($25.25)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($31.53)
+Seat 6: HEXJacstickler ($39.65)
+Endbringer posts the small blind $0.10
+HEXJacstickler posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [4h 3h]
+namesarehard raises $0.62 to $0.62
+DONBASSUA folds
+Badpandat folds
+KannyThOP calls $0.62
+Endbringer folds
+HEXJacstickler calls $0.37
+*** FLOP *** [6h Jc 4c]
+Main pot $1.87 | Rake $0.09
+HEXJacstickler checks
+namesarehard checks
+KannyThOP checks
+*** TURN *** [6h Jc 4c] [Kc]
+Main pot $1.87 | Rake $0.09
+HEXJacstickler bets $0.98
+namesarehard folds
+KannyThOP calls $0.98
+*** RIVER *** [6h Jc 4c Kc] [8h]
+Main pot $3.73 | Rake $0.19
+HEXJacstickler checks
+KannyThOP checks
+*** SHOW DOWN ***
+Main pot $3.73 | Rake $0.19
+KannyThOP shows [4h 3h] (a pair of Fours [4h 4c Kc Jc 8h])
+HEXJacstickler shows [Ac Th] (a high card, Ace high [Ac Kc Jc Th 8h])
+KannyThOP collected $3.73 from main pot
+*** SUMMARY ***
+Total pot $3.73 | Rake $0.13 | JP Fee $0.06
+Board [6h Jc 4c Kc 8h]
+Seat 1: namesarehard folded on the Turn
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: Badpandat folded on the Pre-Flop and did not bet
+Seat 4: KannyThOP (button) showed [4h 3h] and won $3.73 with a pair of Fours [4h 4c Kc Jc 8h]
+Seat 5: Endbringer (small blind) folded on the Pre-Flop
+Seat 6: HEXJacstickler (big blind) showed [Ac Th] and lost with a high card, Ace high [Ac Kc Jc Th 8h]
+
+
+Hand #2609869344 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:36:00 UTC
+Belle Rive 6-max Seat #3 is the button
+Seat 1: namesarehard ($26.67)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: Badpandat ($25.25)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($31.43)
+Seat 6: HEXJacstickler ($39.65)
+KannyThOP posts the small blind $0.10
+Endbringer posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [9c 3s]
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA folds
+Badpandat folds
+KannyThOP folds
+Endbringer does not show
+*** SUMMARY ***
+Total pot $0.35
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA folded on the Pre-Flop and did not bet
+Seat 3: Badpandat (button) folded on the Pre-Flop
+Seat 4: KannyThOP (small blind) folded on the Pre-Flop
+Seat 5: Endbringer did not show and won $0.35
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+
+Hand #2609869162 - Holdem (No Limit) - $0.10/$0.25 - 2025/11/29 15:35:26 UTC
+Belle Rive 6-max Seat #2 is the button
+Seat 1: namesarehard ($26.67)
+Seat 2: DONBASSUA ($25.00)
+Seat 3: Badpandat ($25.00)
+Seat 4: KannyThOP ($25.00)
+Seat 5: Endbringer ($31.43)
+Seat 6: HEXJacstickler ($39.65)
+Badpandat posts the small blind $0.10
+KannyThOP posts the big blind $0.25
+*** HOLE CARDS ***
+Dealt to KannyThOP [7d 5c]
+Endbringer folds
+HEXJacstickler folds
+namesarehard folds
+DONBASSUA folds
+Badpandat raises $0.65 to $0.75
+KannyThOP folds
+Uncalled bet ($0.50) returned to Badpandat
+Badpandat does not show
+*** SUMMARY ***
+Total pot $0.50
+Seat 1: namesarehard folded on the Pre-Flop and did not bet
+Seat 2: DONBASSUA (button) folded on the Pre-Flop
+Seat 3: Badpandat did not show and won $0.50
+Seat 4: KannyThOP (big blind) folded on the Pre-Flop
+Seat 5: Endbringer folded on the Pre-Flop and did not bet
+Seat 6: HEXJacstickler folded on the Pre-Flop and did not bet
+
+

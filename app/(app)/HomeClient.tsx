@@ -73,18 +73,112 @@ function parseStakes(t: string): string {
 }
 
 function parsePosition(t: string): string {
-  const up = ` ${t.toUpperCase()} `;
-  const POS = ['SB', 'BB', 'BTN', 'CO', 'HJ', 'MP', 'UTG+2', 'UTG+1', 'UTG'];
-  for (const p of POS) if (up.includes(` ${p} `)) return p.replace('+', '+');
+  // FIRST: Check for identity + position patterns BEFORE normalization
+  // This catches "I... on the Button" even when far apart
+  const identityPosMatch = t.match(/\b(I|hero|my|me)\b[^.!?]{0,100}\b(on\s+the\s+button|button|BTN|SB|BB|CO|HJ|MP|UTG)/i);
+  if (identityPosMatch) {
+    const pos = identityPosMatch[2].toLowerCase();
+    if (/button|btn/i.test(pos)) return 'BTN';
+    if (/\bbb\b/i.test(pos)) return 'BB';
+    if (/\bsb\b/i.test(pos)) return 'SB';
+    if (/\bco\b/i.test(pos)) return 'CO';
+    if (/\bhj\b/i.test(pos)) return 'HJ';
+    if (/\bmp\b/i.test(pos)) return 'MP';
+    if (/\butg/i.test(pos)) return 'UTG';
+  }
+
+  // Normalize: fix typos and slang first
+  let text = t;
+  text = text.replace(/\b(otb|button|on the button)\b/gi, 'BTN');
+  text = text.replace(/\bUnder the gun\b/gi, 'UTG');
+  text = text.replace(/\bCutoff\b/gi, 'CO');
+  text = text.replace(/\bHijack\b/gi, 'HJ');
+  text = text.replace(/\bSmall blind\b/gi, 'SB');
+  text = text.replace(/\bBig blind\b/gi, 'BB');
+
+  // Identity-aware: extract hero's position
+  // Pattern: "I/hero/my" followed by position or action from position
+  const heroMatch = text.match(/\b(I|hero|my|me)\s+(?:am\s+)?(?:on\s+)?(?:the\s+)?(BTN|SB|BB|CO|HJ|MP|UTG)/i);
+  if (heroMatch) return heroMatch[2].toUpperCase();
+
+  // Pattern: "hero (BTN)" or "I (button)"
+  const parenMatch = text.match(/\b(I|hero|my)\s*\(([^)]*(?:BTN|button|BB|SB|CO|HJ|MP|UTG)[^)]*)\)/i);
+  if (parenMatch) {
+    const pos = parenMatch[2];
+    if (/BTN|button/i.test(pos)) return 'BTN';
+    if (/BB/i.test(pos)) return 'BB';
+    if (/SB/i.test(pos)) return 'SB';
+    if (/CO/i.test(pos)) return 'CO';
+    if (/HJ/i.test(pos)) return 'HJ';
+    if (/MP/i.test(pos)) return 'MP';
+    if (/UTG/i.test(pos)) return 'UTG';
+  }
+
+  // Fallback: search for standalone positions (case-insensitive)
+  const up = ` ${text.toUpperCase()} `;
+  const POS = ['BTN', 'BB', 'SB', 'CO', 'HJ', 'MP', 'UTG+2', 'UTG+1', 'UTG'];
+  for (const p of POS) {
+    if (up.includes(` ${p} `)) return p.replace('+', '+');
+  }
+
   return '';
 }
 
 function parseHeroCardsSmart(t: string): string {
   const s = (t || '').toLowerCase();
 
-  let m = s.match(/\b(?:hero|i|holding|with|have|has)\b[^.\n]{0,30}?([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])/i);
+  // Pattern 1: Cards with suits already attached (e.g., "with Ad Kd", "i got KK")
+  let m = s.match(/\b(?:hero|i|holding|with|have|has|got)\b[^.\n]{0,30}?([2-9tjqka][shdc♥♦♣♠])\s+([2-9tjqka][shdc♥♦♣♠])/i);
   if (m) return prettyCards(`${m[1]} ${m[2]}`);
 
+  // Pattern 2: Rank words (e.g., "Ace King suited" or "pocket aces")
+  const rankWords: Record<string, string> = {
+    'ace': 'A', 'king': 'K', 'queen': 'Q', 'jack': 'J', 'ten': 'T',
+    'nine': '9', 'eight': '8', 'seven': '7', 'six': '6', 'five': '5',
+    'four': '4', 'three': '3', 'two': '2', 'deuce': '2'
+  };
+
+  const wordPattern = Object.keys(rankWords).join('|');
+  const rankWordMatch = s.match(new RegExp(`\\b(${wordPattern})\\s+(${wordPattern})`, 'i'));
+  if (rankWordMatch) {
+    const r1 = rankWords[rankWordMatch[1].toLowerCase()];
+    const r2 = rankWords[rankWordMatch[2].toLowerCase()];
+
+    // Check for suited/offsuit indicators
+    const afterCards = s.slice(rankWordMatch.index! + rankWordMatch[0].length);
+    let suit = 's'; // default spades
+    if (/suited|ss|dd|hh|cc|diamonds?/i.test(afterCards.slice(0, 20))) {
+      suit = /diamonds?|dd/i.test(afterCards.slice(0, 20)) ? 'd' : 's';
+    }
+    return prettyCards(`${r1}${suit} ${r2}${suit}`);
+  }
+
+  // Pattern 3: Rank abbreviations with context (e.g., "i got KK", "with AK")
+  // CRITICAL: Require context words to avoid matching blinds like "1k-2k-2k"
+  const abbrMatch = s.match(/\b(?:hero|i|holding|with|have|has|got)\b[^.\n]{0,30}?([akqjt2-9]{2})\b/i);
+  if (abbrMatch) {
+    const ranks = abbrMatch[1].toUpperCase();
+    const afterRanks = s.slice(abbrMatch.index! + abbrMatch[0].length);
+
+    // FIXED: Default to OFFSUIT (different suits) instead of suited
+    let suit1 = 's', suit2 = 'd';
+
+    // Check for specific suit indicators immediately after ranks (using anchor ^)
+    if (/^\s*(dd|diamonds?)/i.test(afterRanks)) {
+      suit1 = suit2 = 'd'; // Both diamonds
+    } else if (/^\s*(hh|hearts?)/i.test(afterRanks)) {
+      suit1 = suit2 = 'h'; // Both hearts
+    } else if (/^\s*(cc|clubs?)/i.test(afterRanks)) {
+      suit1 = suit2 = 'c'; // Both clubs
+    } else if (/^\s*(suited|ss|spades?)/i.test(afterRanks)) {
+      suit1 = suit2 = 's'; // Both spades
+    }
+    // else: keep default offsuit (s, d)
+
+    return prettyCards(`${ranks[0]}${suit1} ${ranks[1]}${suit2}`);
+  }
+
+  // Pattern 4: Any two cards with suits (fallback)
   const tokens = Array.from(s.matchAll(/([2-9tjqka][shdc♥♦♣♠])/ig)).map(x => x[0]).slice(0, 2);
   if (tokens.length === 2) return prettyCards(tokens.join(' '));
 
@@ -221,6 +315,21 @@ const SECTION_HEADS = new Set([
 function renderGTO(text: string) {
   const lines = (text || '').split(/\r?\n/).filter(l => l.trim().length);
   if (!lines.length) return <div className="muted">No strategy yet. Click Analyze or Edit.</div>;
+
+  const highlightConcepts = (text: string) => {
+    const concepts = [
+      'Range Advantage', 'Nut Advantage', 'Blockers', 'Pot Odds', 'MDF',
+      'Polarized', 'Condensed', 'Value vs Showdown', 'Minimum Defense Frequency',
+      'Showdown Value', 'Three Streets of Value'
+    ];
+    let result = text;
+    concepts.forEach(concept => {
+      const regex = new RegExp(`\\b(${concept})\\b`, 'gi');
+      result = result.replace(regex, '**$1**');
+    });
+    return result;
+  };
+
   return (
     <div className="gtoBody">
       {lines.map((raw, i) => {
@@ -235,10 +344,36 @@ function renderGTO(text: string) {
           );
         }
         if (/^[-•]/.test(line)) return <div key={i} className="gtoBullet">{line.replace(/^\s*/, '')}</div>;
+
+        const highlighted = highlightConcepts(line);
+        if (highlighted.includes('**')) {
+          const parts = highlighted.split(/\*\*/);
+          return (
+            <div key={i} className="gtoLine">
+              {parts.map((part, j) =>
+                j % 2 === 1 ? <strong key={j} className="concept-highlight">{part}</strong> : part
+              )}
+            </div>
+          );
+        }
+
         return <div key={i} className="gtoLine">{line}</div>;
       })}
     </div>
   );
+}
+
+/* ====================== Tag Color Helper ====================== */
+
+function getTagClass(tag: string): string {
+  const t = tag.toLowerCase().replace('#', '');
+  if (t.includes('range')) return 'tag-blue';
+  if (t.includes('nut')) return 'tag-purple';
+  if (t.includes('blocker')) return 'tag-orange';
+  if (t.includes('value') || t.includes('thin')) return 'tag-green';
+  if (t.includes('bluff') || t.includes('fold')) return 'tag-red';
+  if (t.includes('mdf') || t.includes('pot')) return 'tag-yellow';
+  return 'tag-gray';
 }
 
 /* ====================== Page ====================== */
@@ -301,6 +436,71 @@ export default function HomeClient() {
     return () => { cancelled = true; };
   }, [supabase]);
 
+  // AUTO-PARSING: Call LLM parser on input change (with debounce)
+  const [parsing, setParsing] = useState(false);
+  useEffect(() => {
+    // Skip auto-parsing if currently analyzing (prevents interference)
+    if (aiLoading) return;
+
+    const timer = setTimeout(async () => {
+      if (!input.trim() || input.length < 10) return; // Skip very short inputs
+
+      setParsing(true);
+      try {
+        const res = await fetch('/api/parse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ input }),
+        });
+
+        if (res.ok) {
+          const parsed = await res.json();
+
+          // Auto-populate fields ONLY if they're currently empty
+          if (parsed.stakes && !stakes) setStakes(parsed.stakes);
+          if (parsed.position && !position) setPosition(parsed.position);
+
+          // Parse hero cards
+          if (parsed.cards) {
+            const cards = parsed.cards.split(' ').filter(Boolean);
+            if (cards.length >= 2 && !h1 && !h2) {
+              setH1(cards[0]);
+              setH2(cards[1]);
+            }
+          }
+
+          // Parse board cards (look for "Flop:", "Turn:", "River:")
+          if (parsed.board) {
+            const flopMatch = parsed.board.match(/Flop:\s*([^,\n]+)/i);
+            const turnMatch = parsed.board.match(/Turn:\s*([^,\n]+)/i);
+            const riverMatch = parsed.board.match(/River:\s*([^,\n]+)/i);
+
+            if (flopMatch && !f1 && !f2 && !f3) {
+              const flopCards = flopMatch[1].trim().split(/\s+/).filter(Boolean);
+              if (flopCards[0]) setF1(flopCards[0]);
+              if (flopCards[1]) setF2(flopCards[1]);
+              if (flopCards[2]) setF3(flopCards[2]);
+            }
+            if (turnMatch && !tr) {
+              const turnCard = turnMatch[1].trim().split(/\s+/)[0];
+              if (turnCard) setTr(turnCard);
+            }
+            if (riverMatch && !rv) {
+              const riverCard = riverMatch[1].trim().split(/\s+/)[0];
+              if (riverCard) setRv(riverCard);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Auto-parse error:', err);
+      } finally {
+        setParsing(false);
+      }
+    }, 1500); // 1.5 second debounce
+
+    return () => clearTimeout(timer);
+  }, [input]); // Only re-run when input changes
+
   // parsed preview from story
   const preview = useMemo(() => ({
     stakes: parseStakes(input),
@@ -357,29 +557,58 @@ export default function HomeClient() {
   const derivedHandClass = useMemo(() => handClass(heroCardsStr, flopStr, turnStr, riverStr), [heroCardsStr, flopStr, turnStr, riverStr]);
 
   async function analyze() {
+    // ══════════════════════════════════════════════════
+    // STEP 0: CAPTURE DATA BEFORE CLEARING
+    // ══════════════════════════════════════════════════
+    // CRITICAL: Capture ALL data BEFORE clearing fields
+    // Otherwise sourceUsed changes and we lose the data!
+    const capturedBoard = [
+      preview.board.flop && `Flop: ${preview.board.flop}`,
+      preview.board.turn && `Turn: ${preview.board.turn}`,
+      preview.board.river && `River: ${preview.board.river}`,
+    ].filter(Boolean).join('  |  ');
+
+    const capturedHeroCards = preview.heroCards || '';
+    const capturedPosition = (preview.position || '').toUpperCase() || '';
+    const capturedStakes = preview.stakes || '';
+    const currentInput = input || '';
+    const capturedActionHint = preview.action_hint || '';
+    const capturedHandClass = derivedHandClass || '';
+
+    // ══════════════════════════════════════════════════
+    // STEP 1: IMMEDIATE CLEAR - Reset all previous data
+    // ══════════════════════════════════════════════════
+    setFields(null);  // Clear all old hand data INSTANTLY
     setError(null);
     setStatus(null);
-    setAiLoading(true);
-    try {
-      const board = [
-        flopStr && `Flop: ${flopStr}`,
-        turnStr && `Turn: ${turnStr}`,
-        riverStr && `River: ${riverStr}`,
-      ].filter(Boolean).join('  |  ');
 
+    // Clear manual input fields to prevent state persistence
+    setPosition('');
+    setStakes('');
+    setH1(''); setH2('');
+    setF1(''); setF2(''); setF3('');
+    setTr(''); setRv('');
+
+    // ══════════════════════════════════════════════════
+    // STEP 2: LOADING STATE - Show user something is happening
+    // ══════════════════════════════════════════════════
+    setAiLoading(true);
+
+    try {
+      // Use CAPTURED data from preview (parsed from input text)
       const payload = {
         date: today,
-        stakes: stakes || preview.stakes || undefined,
-        position: (position || preview.position || '').toUpperCase() || undefined,
-        cards: heroCardsStr || undefined,
-        board: board || undefined,
-        notes: input || undefined,
-        rawText: input || undefined,
+        stakes: capturedStakes || undefined,
+        position: capturedPosition || undefined,
+        cards: capturedHeroCards || undefined,
+        board: capturedBoard || undefined,
+        notes: currentInput || undefined,
+        rawText: currentInput || undefined,
         fe_hint: feNeeded || undefined,
         spr_hint: spr || undefined,
-        action_hint: actionHint || undefined,
-        hand_class: derivedHandClass || undefined,
-        source_used: sourceUsed
+        action_hint: capturedActionHint || undefined,
+        hand_class: undefined, // Recalculated by API
+        source_used: 'PREVIEW' // Using preview parse, not manual fields
       };
 
       const r = await fetch('/api/analyze-hand', {
@@ -391,20 +620,23 @@ export default function HomeClient() {
         const e = await r.json().catch(() => ({}));
         throw new Error(e?.error || `Analyze failed (${r.status})`);
       }
+
+      // ══════════════════════════════════════════════════
+      // STEP 3: UPDATE - Set new data from API response
+      // ══════════════════════════════════════════════════
       const data = await r.json();
-      setFields(prev => ({
-        ...(prev ?? {}),
+      setFields({
         gto_strategy: (data?.gto_strategy ?? '') || '',
         exploit_deviation: (data?.exploit_deviation ?? '') || '',
         learning_tag: Array.isArray(data?.learning_tag) ? data.learning_tag : [],
         date: today,
         stakes: payload.stakes || '',
         position: payload.position || '',
-        cards: heroCardsStr,
-        board,
-        hand_class: derivedHandClass,
-        source_used: sourceUsed
-      }));
+        cards: capturedHeroCards, // Use CAPTURED value
+        board: capturedBoard, // Fix: use captured board
+        hand_class: undefined, // Let API calculate
+        source_used: 'STORY' // Using preview which parses from story
+      });
     } catch (e: any) {
       setError(e?.message || 'Analyze error');
     } finally {
@@ -620,6 +852,22 @@ Turn K♦ — ...`}
                 </div>
               </section>
 
+
+              {/* Learning Tags */}
+              {fields?.learning_tag && fields.learning_tag.length > 0 && (
+                <section className="card ony-card platinum-container-frame">
+                  <div className="cardTitle platinum-text-gradient">Key Concepts</div>
+                  <div className="learning-tags-container">
+                    {fields.learning_tag.map((tag, i) => (
+                      <span key={i} className={`learning-tag ${getTagClass(tag)}`}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="muted small" style={{ marginTop: 8 }}>Tags identify the strategic concepts in this hand</div>
+                </section>
+              )}
+
               {/* GTO Strategy */}
               <section className="card ony-card platinum-container-frame">
                 <div className="cardTitleRow">
@@ -747,6 +995,18 @@ Turn K♦ — ...`}
           .gtoLine{margin:2px 0}
           .gtoHead{font-weight:800;color:#E2E8F0}
           .gtoBullet{margin:2px 0 2px 12px}
+          .concept-highlight{color:#60a5fa;font-weight:700}
+          
+          .learning-tags-container{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+          .learning-tag{display:inline-block;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600;border:2px solid;cursor:pointer;transition:all 0.2s}
+          .learning-tag:hover{transform:translateY(-2px);filter:brightness(1.2)}
+          .tag-blue{background:#1e3a8a;border-color:#3b82f6;color:#93c5fd}
+          .tag-purple{background:#581c87;border-color:#a855f7;color:#d8b4fe}
+          .tag-orange{background:#7c2d12;border-color:#f97316;color:#fdba74}
+          .tag-green{background:#14532d;border-color:#22c55e;color:#86efac}
+          .tag-red{background:#7f1d1d;border-color:#ef4444;color:#fca5a5}
+          .tag-yellow{background:#713f12;border-color:#eab308;color:#fde047}
+          .tag-gray{background:#374151;border-color:#9ca3af;color:#d1d5db}
         `}</style>
       </main>
     </div>

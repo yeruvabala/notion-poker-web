@@ -135,7 +135,7 @@ def claim_hand_files(limit: int):
         return rows
 
 INSERT_HANDS_SQL = """
-  INSERT INTO public.hands (user_id, source_used, raw_text, date, stakes, position, cards, replayer_data)
+  INSERT INTO public.hands (user_id, source_used, raw_text, date, stakes, position, cards, board, replayer_data)
   VALUES %s
 """
 
@@ -165,17 +165,24 @@ def insert_hands(user_id, blocks):
             hero = next((p for p in data.get("players", []) if p.get("isHero")), None)
             position = None
             cards = None
+            board = None
             
             if hero:
-                position = get_position_label(hero.get("seatIndex", -1))
+                # Use position name from parser (BTN, SB, BB, CO, HJ, UTG, etc.)
+                position = hero.get("position")
                 if hero.get("cards"):
                     cards = " ".join(hero["cards"])
             
-            rows.append((user_id, "upload", b, date_str, stakes, position, cards, Json(data)))
+            # Extract board from replayer_data (stored as array like ['4♥', '8♠', '7♠', '9♣', '3♦'])
+            board_arr = data.get("board", [])
+            if board_arr and len(board_arr) > 0:
+                board = " ".join(board_arr)
+            
+            rows.append((user_id, "upload", b, date_str, stakes, position, cards, board, Json(data)))
         except Exception as e:
             log(f"Warning: Failed to parse hand for metadata: {e}")
             # Fallback to basic insert
-            rows.append((user_id, "upload", b, None, None, None, None, None))
+            rows.append((user_id, "upload", b, None, None, None, None, None, None))
 
     with pg() as conn, conn.cursor() as cur:
         execute_values(cur, INSERT_HANDS_SQL, rows, page_size=200)

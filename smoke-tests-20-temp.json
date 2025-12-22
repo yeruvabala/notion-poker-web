@@ -1,0 +1,21 @@
+{
+  "tests": [
+    {
+      "id": "T01_river_thin_value",
+      "stakes": "Cash 6-max 100bb",
+      "rawText": "Cash 6-max 100bb. UTG opens 2.5x, BTN (Hero) K♥ T♥ calls, blinds fold.\nFlop K♦ 5♥ 2♠ — UTG bets 1/3 pot, Hero calls.\nTurn Q♠ — UTG bets 2/3 pot, Hero calls.\nRiver 7♦ — UTG checks. Raise or check?",
+      "question": "River vs check: should Hero bet for value or check?",
+      "expected": {
+        "verdict": "BET",
+        "size_like": "33%"
+      }
+    },
+    {
+      "id": "T02_river_bluffcatch",
+      "stakes": "Cash 6-max 100bb",
+      "rawText": "Cash 6-max 100bb. UTG opens 2.5x, BTN (Hero) K♥ T♥ calls, blinds fold.\nFlop K♦ 5♥ 2♠ — UTG 1/3, Hero calls.\nTurn Q♠ — UTG 2/3, Hero calls.\nRiver 7♦ — UTG bets 2/3 pot. Call or fold?",
+      "question": "Facing 2/3 river bet: call or fold with K♥T♥?",
+      "expected": {
+        "verdict": "CALL"
+      }
+]}
