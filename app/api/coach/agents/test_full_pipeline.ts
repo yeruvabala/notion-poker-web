@@ -161,7 +161,9 @@ async function runFullPipelineTest() {
             equity,
             advantages,
             spr,
-            heroHand: testInput.cards
+            heroHand: testInput.cards,
+            positions: testInput.positions,
+            actions: testInput.actions
         };
 
         // Log the formatted context for Agent 5
@@ -189,7 +191,8 @@ async function runFullPipelineTest() {
             advantages,
             spr,
             gtoStrategy,
-            heroActions: testInput.heroActions
+            heroActions: testInput.heroActions,
+            positions: testInput.positions
         });
         console.log('✅ Mistakes:', JSON.stringify(mistakes, null, 2));
 
@@ -210,7 +213,7 @@ async function runFullPipelineTest() {
         console.log(`   Pot odds needed: ${(equity.pot_odds.equity_needed * 100).toFixed(1)}%`);
         console.log(`   Range advantage: ${advantages.flop?.range_advantage?.leader || 'N/A'}`);
         console.log(`   SPR on river: ${spr.river_spr?.toFixed(1) || 'N/A'}`);
-        console.log(`   GTO river action: ${gtoStrategy.river?.action || 'N/A'}`);
+        console.log(`   GTO river action: ${gtoStrategy.river?.initial_action?.primary?.action || 'N/A'}`);
         console.log(`   Mistakes found: ${mistakes.mistakes?.length || 0}`);
         console.log(`   Total EV lost: $${mistakes.total_ev_lost?.toFixed(2) || '0.00'}`);
 
