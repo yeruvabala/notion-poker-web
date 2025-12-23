@@ -1,3 +1,5 @@
+import { ActionType, Street, Action } from '../types/agentContracts';
+
 /**
  * Map replayer action names to our ActionType
  */
