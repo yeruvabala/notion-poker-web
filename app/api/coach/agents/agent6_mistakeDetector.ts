@@ -127,9 +127,9 @@ function buildComparisonPrompt(
             const villainChecked = ['check', 'bet'].includes(action);
 
             if (villainChecked) {
-                formatGtoRec(gtoStrategy.flop.if_villain_checks, "GTO (vs Check)");
+                formatGtoRec(gtoStrategy.flop.if_villain_checks_to_hero, "GTO (vs Check)");
             } else {
-                formatGtoRec(gtoStrategy.flop.if_villain_bets, "GTO (vs Bet)");
+                formatGtoRec(gtoStrategy.flop.if_villain_bets_into_hero, "GTO (vs Bet)");
             }
 
             // Second action (Hero Bets -> Villain Raises -> Hero Respond)
