@@ -21,7 +21,8 @@ import {
     HeroStreetActions,
     Street,
     ActionType,
-    PlayQuality
+    PlayQuality,
+    Position
 } from '../types/agentContracts';
 
 const openai = new OpenAI({
