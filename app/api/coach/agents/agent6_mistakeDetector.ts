@@ -135,7 +135,7 @@ function buildComparisonPrompt(
             // Second action (Hero Bets -> Villain Raises -> Hero Respond)
             if (heroActions.flop.second) {
                 lines.push(`  Hero second action: ${heroActions.flop.second.action}`);
-                formatGtoRec(gtoStrategy.flop.if_hero_bets_and_villain_raises, "GTO (vs Raise)");
+                formatGtoRec(gtoStrategy.flop.if_bet_and_villain_raises, "GTO (vs Raise)");
             }
 
         } else {
