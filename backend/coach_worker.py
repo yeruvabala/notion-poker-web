@@ -137,6 +137,7 @@ def call_coach_api(
     hand_id: Any,
     raw_text: str,
     parsed_data: Optional[Dict[str, Any]] = None,
+    replayer_data: Optional[Dict[str, Any]] = None,
 ) -> Tuple[Optional[str], Optional[str], Optional[List[str]]]:
     url = os.getenv("COACH_API_URL")
     token = os.getenv("COACH_API_TOKEN")
@@ -148,12 +149,15 @@ def call_coach_api(
     # Include pre-parsed data if available (improves accuracy)
     if parsed_data:
         payload["parsed"] = parsed_data
+    # Include replayer_data (full parsed hand with actions, board, etc)
+    if replayer_data:
+        payload["replayer_data"] = replayer_data
     data_bytes = json.dumps(payload).encode("utf-8")
     headers = { "Content-Type": "application/json", "x-app-token": token }
     req = request.Request(url, data=data_bytes, headers=headers, method="POST")
 
     try:
-        with request.urlopen(req, timeout=60) as resp:
+        with request.urlopen(req, timeout=180) as resp:
             body = resp.read()
         resp_json = json.loads(body.decode("utf-8"))
 
@@ -297,7 +301,7 @@ def coach_new_hands(conn, batch_size: int) -> int:
                         parsed_data.get("position"), parsed_data.get("cards"), parsed_data.get("pot_type"))
         
         # Send annotated raw text (with positions) instead of original
-        gto, dev, lt = call_coach_api(hand_id, annotated_raw_text, parsed_data)
+        gto, dev, lt = call_coach_api(hand_id, annotated_raw_text, parsed_data, replayer_data)
         if gto is None and dev is None and not lt:
             continue
         update_hand_with_coach(conn, hand_id, gto, dev, lt)
@@ -313,7 +317,7 @@ STAKES_STRICT = re.compile(r"-\s*\$?(\d+(?:\.\d+)?)\s*/\s*\$?(\d+(?:\.\d+)?)\s*-
 STAKES_LOOSE  = re.compile(r"\$?\s*(\d+(?:\.\d+)?)\s*/\s*\$?\s*(\d+(?:\.\d+)?)")
 
 # Cards / board (from raw text)
-HERO_CARDS = re.compile(r"Dealt to\s+Hero\s*\[([2-9TJQKA][cdhs])\s+([2-9TJQKA][cdhs])\]", re.IGNORECASE)
+HERO_CARDS = re.compile(r"Dealt to\s+\S+\s*\[([2-9TJQKA][cdhs])\s+([2-9TJQKA][cdhs])\]", re.IGNORECASE)
 FLOP_RE    = re.compile(r"\*\*\*\s*FLOP\s*\*\*\*\s*\[([2-9TJQKA][cdhs])\s+([2-9TJQKA][cdhs])\s+([2-9TJQKA][cdhs])\]", re.IGNORECASE)
 TURN_RE    = re.compile(r"\*\*\*\s*TURN\s*\*\*\*.*?\[([2-9TJQKA][cdhs])\]", re.IGNORECASE)
 RIVER_RE   = re.compile(r"\*\*\*\s*RIVER\s*\*\*\*.*?\[([2-9TJQKA][cdhs])\]", re.IGNORECASE)
