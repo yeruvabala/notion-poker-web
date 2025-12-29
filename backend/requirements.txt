@@ -1,0 +1,13 @@
+# Backend Python Dependencies for OnlyPoker
+
+# Database
+psycopg2-binary>=2.9.0
+
+# AWS S3
+boto3>=1.26.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# OpenAI (for embeddings in study_ingest.py)
+openai>=1.0.0
