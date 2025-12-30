@@ -21,7 +21,7 @@ REGION = os.getenv("AWS_REGION", "us-east-1")
 BUCKET = os.getenv("AWS_S3_BUCKET")
 AWS_KEY = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SEC = os.getenv("AWS_SECRET_ACCESS_KEY")
-BATCH  = int(os.getenv("HAND_FILES_BATCH", "5"))
+BATCH  = int(os.getenv("HAND_FILES_BATCH", "20"))
 
 if not DB_URL or "sslmode=require" not in (DB_URL or ""):
     print("ERROR: DATABASE_URL missing or not enforcing TLS (?sslmode=require).", file=sys.stderr)

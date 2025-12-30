@@ -967,7 +967,7 @@ def run_once(batch_size: int = 5) -> None:
 # -----------------------------------------------------------------------------
 if __name__ == "__main__":
     try:
-        batch_size = int(os.getenv("COACH_BATCH_SIZE", "5"))
+        batch_size = int(os.getenv("COACH_BATCH_SIZE", "30"))
     except ValueError:
         batch_size = 5
     run_once(batch_size=batch_size)

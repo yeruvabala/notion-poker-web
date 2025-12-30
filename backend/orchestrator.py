@@ -106,29 +106,83 @@ def run_stage(name, script_name, loop_until_empty=False, max_loops=50):
         logger.info(f"Stage {name} completed. Total items processed: {total_processed}")
         return True
 
-def main():
-    logger.info("Pipeline execution started.")
-    
+def run_pipeline_once():
+    """Run one complete pipeline cycle."""
     # 1. Ingestion (Bronze Layer)
     # Fetches new files from S3 and puts them in 'hands' table
     if not run_stage("Ingestion", "worker.py"):
-        logger.error("Ingestion failed. Aborting pipeline.")
-        sys.exit(1)
+        logger.error("Ingestion failed.")
+        return False
         
     # 2. Enrichment/Analysis (Gold Layer)
     # Loops coach_worker to process all pending hands with Multi-Agent Model
     if not run_stage("Analysis", "coach_worker.py", loop_until_empty=True):
-        logger.error("Analysis failed. Aborting pipeline.")
-        sys.exit(1)
+        logger.error("Analysis failed.")
+        return False
         
     # 3. Indexing (Study Layer)
     # Updates embeddings for the Chat/Study feature
-    # We loop this too, just in case there are many new hands
     if not run_stage("Indexing", "study_ingest.py", loop_until_empty=True, max_loops=10):
-        logger.error("Indexing failed. Aborting pipeline.")
-        sys.exit(1)
+        logger.error("Indexing failed.")
+        return False
+    
+    return True
+
+
+def main():
+    """Main entry point - runs pipeline in continuous loop."""
+    import signal
+    
+    # Graceful shutdown flag
+    shutdown_requested = False
+    
+    def signal_handler(signum, frame):
+        nonlocal shutdown_requested
+        logger.info("Shutdown signal received. Finishing current cycle...")
+        shutdown_requested = True
+    
+    # Register signal handlers for graceful shutdown
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    # Check if running in continuous mode (default) or single mode
+    single_run = os.getenv("SINGLE_RUN", "false").lower() == "true"
+    sleep_interval = int(os.getenv("PIPELINE_INTERVAL", "30"))  # seconds between cycles
+    
+    if single_run:
+        logger.info("Pipeline running in SINGLE mode.")
+        run_pipeline_once()
+        logger.info("Pipeline execution FINISHED.")
+        return
+    
+    logger.info(f"Pipeline running in CONTINUOUS mode (interval: {sleep_interval}s)")
+    logger.info("Press Ctrl+C to stop gracefully.")
+    
+    cycle = 0
+    while not shutdown_requested:
+        cycle += 1
+        logger.info(f"=== Pipeline Cycle {cycle} ===")
         
-    logger.info("Pipeline execution FINISHED successfully.")
+        try:
+            success = run_pipeline_once()
+            if success:
+                logger.info(f"Cycle {cycle} completed successfully.")
+            else:
+                logger.warning(f"Cycle {cycle} had errors. Retrying in {sleep_interval * 2}s...")
+                time.sleep(sleep_interval * 2)
+                continue
+        except Exception as e:
+            logger.error(f"Cycle {cycle} crashed: {e}")
+            time.sleep(sleep_interval * 2)
+            continue
+        
+        if not shutdown_requested:
+            logger.info(f"Sleeping {sleep_interval}s before next cycle...")
+            time.sleep(sleep_interval)
+    
+    logger.info("Pipeline shutdown complete.")
+
 
 if __name__ == "__main__":
     main()
+

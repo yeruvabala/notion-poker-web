@@ -1,0 +1,17 @@
+[Unit]
+Description=OnlyPoker Hand Analysis Pipeline
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/home/ec2-user/notion-poker-web/backend
+ExecStart=/home/ec2-user/notion-poker-web/backend/venv/bin/python orchestrator.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/poker-pipeline.log
+StandardError=append:/var/log/poker-pipeline.log
+Environment=PIPELINE_INTERVAL=30
+
+[Install]
+WantedBy=multi-user.target
