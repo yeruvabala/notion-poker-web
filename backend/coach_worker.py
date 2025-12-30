@@ -96,12 +96,20 @@ def annotate_raw_text_with_positions(raw_text: str, replayer_data: Dict[str, Any
         return raw_text
     
     # Build name -> position mapping
+    # Prefer dynamic inference to fix stale replayer data
     position_map = {}
-    for player in replayer_data.get('players', []):
-        name = player.get('name')
-        position = player.get('position')
-        if name and position:
-            position_map[name] = position
+    try:
+        position_map = infer_positions_from_text(raw_text)
+    except:
+        pass
+        
+    # Fallback to replayer data if inference empty
+    if not position_map and replayer_data and 'players' in replayer_data:
+        for player in replayer_data.get('players', []):
+            name = player.get('name')
+            position = player.get('position')
+            if name and position:
+                position_map[name] = position
     
     if not position_map:
         return raw_text
@@ -138,7 +146,7 @@ def call_coach_api(
     raw_text: str,
     parsed_data: Optional[Dict[str, Any]] = None,
     replayer_data: Optional[Dict[str, Any]] = None,
-) -> Tuple[Optional[str], Optional[str], Optional[List[str]]]:
+) -> Optional[Dict[str, Any]]:
     url = os.getenv("COACH_API_URL")
     token = os.getenv("COACH_API_TOKEN")
     if not url or not token:
@@ -152,6 +160,11 @@ def call_coach_api(
     # Include replayer_data (full parsed hand with actions, board, etc)
     if replayer_data:
         payload["replayer_data"] = replayer_data
+    
+    # DEBUG: Log the payload
+    # logging.info(f"DEBUG_PAYLOAD: position={payload.get('parsed', {}).get('position')} payload_pos={payload.get('position')}")
+    print(f"DEBUG_PAYLOAD: position={payload.get('parsed', {}).get('position')} payload_pos={payload.get('position')}")
+
     data_bytes = json.dumps(payload).encode("utf-8")
     headers = { "Content-Type": "application/json", "x-app-token": token }
     req = request.Request(url, data=data_bytes, headers=headers, method="POST")
@@ -161,16 +174,21 @@ def call_coach_api(
             body = resp.read()
         resp_json = json.loads(body.decode("utf-8"))
 
+        # Return full response dict instead of unpacking
+        # This allows accessing hero_position and other fields
         gto = resp_json.get("gto_strategy")
         dev = resp_json.get("exploit_deviation")
         lt  = resp_json.get("learning_tag")
+        hero_pos = resp_json.get("hero_position")
+        
         if lt is None:
             lt_list: Optional[List[str]] = []
         elif isinstance(lt, list):
             lt_list = [str(x) for x in lt if str(x).strip()]
         else:
             lt_list = [str(lt)]
-        return gto, dev, lt_list
+        
+        return {"gto_strategy": gto, "exploit_deviation": dev, "learning_tag": lt_list, "hero_position": hero_pos}
 
     except error.HTTPError as e:
         try: err_body = e.read().decode("utf-8")
@@ -180,7 +198,7 @@ def call_coach_api(
         logger.error("Coach API URL error for hand %s: %s", hand_id, e)
     except Exception as e:
         logger.error("Coach API unexpected error for hand %s: %s", hand_id, e)
-    return None, None, None
+    return None
 
 def fetch_hands_for_coaching(conn, limit: int) -> List[Dict[str, Any]]:
     sql = """
@@ -242,8 +260,23 @@ def extract_parsed_data(row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         pot_type = "3bet"
     
     # Build the parsed data object
+    inferred_pos = ""
+    # Try dynamic inference first (most robust for fixed edge cases)
+    try:
+        inferred_map = infer_positions_from_text(row.get("raw_text") or "")
+        # Look for Hero by name
+        hero_name_match = re.search(r"^Dealt\s+to\s+(\S+)", row.get("raw_text") or "", re.MULTILINE)
+        if hero_name_match:
+            hname = hero_name_match.group(1).strip()
+            if hname in inferred_map:
+                inferred_pos = inferred_map[hname]
+        if not inferred_pos and "Hero" in inferred_map:
+            inferred_pos = inferred_map["Hero"]
+    except Exception as e:
+        logger.warning("Failed to infer position dynamically in extract_parsed_data: %s", e)
+
     parsed = {
-        "position": row.get("position") or replayer.get("hero_position") or "",
+        "position": inferred_pos or row.get("position") or replayer.get("hero_position") or "",
         "cards": row.get("cards") or replayer.get("hero_cards") or "",
         "board": board_str,
         "flop": flop_cards,
@@ -267,6 +300,7 @@ def update_hand_with_coach(
     gto_strategy: Optional[str],
     exploit_deviation: Optional[str],
     learning_tag: Optional[List[str]],
+    position: Optional[str] = None,
 ) -> None:
     if gto_strategy is None and exploit_deviation is None and not learning_tag:
         return
@@ -274,11 +308,12 @@ def update_hand_with_coach(
         UPDATE public.hands
         SET gto_strategy = %s,
             exploit_deviation = %s,
-            learning_tag = %s
+            learning_tag = %s,
+            position = COALESCE(%s, position)
         WHERE id = %s;
     """
     with conn.cursor() as cur:
-        cur.execute(sql, (gto_strategy, exploit_deviation, learning_tag, hand_id))
+        cur.execute(sql, (gto_strategy, exploit_deviation, learning_tag, position, hand_id))
 
 def coach_new_hands(conn, batch_size: int) -> int:
     rows = fetch_hands_for_coaching(conn, batch_size)
@@ -301,10 +336,18 @@ def coach_new_hands(conn, batch_size: int) -> int:
                         parsed_data.get("position"), parsed_data.get("cards"), parsed_data.get("pot_type"))
         
         # Send annotated raw text (with positions) instead of original
-        gto, dev, lt = call_coach_api(hand_id, annotated_raw_text, parsed_data, replayer_data)
+        response = call_coach_api(hand_id, annotated_raw_text, parsed_data, replayer_data)
+        if response is None:
+            continue
+        
+        gto = response.get('gto_strategy')
+        dev = response.get('exploit_deviation')
+        lt = response.get('learning_tag')
+        hero_pos = response.get('hero_position')
+        
         if gto is None and dev is None and not lt:
             continue
-        update_hand_with_coach(conn, hand_id, gto, dev, lt)
+        update_hand_with_coach(conn, hand_id, gto, dev, lt, hero_pos)
         coached += 1
     logger.info("Coached %d hands this run.", coached)
     return coached
@@ -382,6 +425,11 @@ def labels_around_button(num_players: int) -> List[str]:
 def infer_positions_from_text(text: str) -> Dict[str, str]:
     if not text:
         return {}
+        
+    # CRITICAL: Srip Summary section to avoid duplicate seat matches
+    if "*** SUMMARY ***" in text:
+        text = text.split("*** SUMMARY ***")[0]
+        
     m_btn = BUTTON_LINE.search(text)
     if not m_btn:
         return {}
@@ -391,23 +439,84 @@ def infer_positions_from_text(text: str) -> Dict[str, str]:
         return {}
 
     seats: List[Tuple[int, str]] = []
+
+    # Check for inactive players (sitting out, waits for BB, etc.)
+    inactive_players = set()
+    inactive_patterns = [
+        re.compile(r'(\w+)\s+sits?\s+out', re.IGNORECASE),
+        re.compile(r'(\w+)\s+waits\s+for\s+big\s+blind', re.IGNORECASE),
+        re.compile(r'(\w+)\s+will\s+be\s+allowed\s+to\s+play', re.IGNORECASE)
+    ]
+    for pattern in inactive_patterns:
+        for m_status in pattern.finditer(text):
+            found_name = m_status.group(1).strip()
+            # logging.info(f"DEBUG: Found inactive player: {found_name}")
+            print(f"DEBUG: Found inactive player: {found_name}")
+            inactive_players.add(found_name)
+
     for m in SEAT_LINE.finditer(text):
         try:
             seat_num = int(m.group(1))
             name = m.group(2).strip()
+            
+            # Skip if inactive
+            if name in inactive_players:
+                # logging.info(f"DEBUG: Skipping inactive seat {seat_num}: {name}")
+                print(f"DEBUG: Skipping inactive seat {seat_num}: {name}")
+                continue
+
+            # Also check the seat line itself for "sitting out"
+            line_start = m.start()
+            line_end = text.find('\n', line_start)
+            if line_end == -1: line_end = len(text)
+            seat_line = text[line_start:line_end]
+            if 'sitting out' in seat_line.lower():
+                print(f"DEBUG: Skipping sitting out line seat {seat_num}: {name}")
+                continue
+
             if name:
                 seats.append((seat_num, name))
         except:
             continue
+    
+    print(f"DEBUG: Final Occupied Seats: {sorted(seats)}")
     if not seats:
         return {}
 
     occupied = sorted(s for s, _ in seats)
     seat_to_name = {s: n for s, n in seats}
-    if btn_seat not in occupied:
+    name_to_seat = {n: s for s, n in seats}
+
+    # Identify Button Seat or Fallback to SB Logic
+    actual_btn_seat = None
+
+    if btn_seat in occupied:
+        actual_btn_seat = btn_seat
+    else:
+        # Fallback: Dead Button Scenario
+        # Find player who posted SB
+        sb_name = None
+        # Relaxed regex: handle optional colon AND optional 'the'
+        sb_regex = re.compile(r"^(\S+?)(?:\s*:\s*|\s+)posts\s+(?:the\s+)?small\s+blind", re.IGNORECASE | re.MULTILINE)
+        m_sb = sb_regex.search(text)
+        if m_sb:
+            sb_name = m_sb.group(1).strip()
+            
+        if sb_name and sb_name in name_to_seat:
+            sb_seat = name_to_seat[sb_name]
+            # Button is the ACTIVE player immediately preceding SB
+            try:
+                sb_idx = occupied.index(sb_seat)
+                btn_idx = (sb_idx - 1) % len(occupied)
+                actual_btn_seat = occupied[btn_idx]
+            except ValueError:
+                pass
+
+    if actual_btn_seat is None:
+        # Final fallback: Assume first valid seat is BTN (rare/bad)
         return {}
 
-    start_idx = occupied.index(btn_seat)
+    start_idx = occupied.index(actual_btn_seat)
     clockwise = occupied[start_idx:] + occupied[:start_idx]  # BTN first
     n = len(clockwise)
     labels = labels_around_button(n)
@@ -753,8 +862,21 @@ def build_silver_payload(raw_row: Dict[str, Any]) -> Dict[str, Any]:
     position_norm = normalize_position(position_raw)
 
     # Position inference from seats + button (set hero_position & also as position_norm fallback)
+    # Position inference from seats + button (set hero_position & also as position_norm fallback)
     inferred = infer_positions_from_text(raw_text or "")
-    hero_pos = inferred.get("Hero")
+    
+    # Extract Hero Name to lookup in inferred dict
+    hero_name = None
+    m_hero = re.search(r"^Dealt\s+to\s+(\S+)", raw_text or "", re.MULTILINE)
+    if m_hero:
+        hero_name = m_hero.group(1).strip()
+        
+    hero_pos = None
+    if hero_name and hero_name in inferred:
+        hero_pos = inferred[hero_name]
+    elif "Hero" in inferred:
+        hero_pos = inferred["Hero"]
+
     if hero_pos:
         position_raw = hero_pos
         position_norm = hero_pos

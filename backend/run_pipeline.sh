@@ -1,25 +1,23 @@
 #!/bin/bash
 
+# run_pipeline.sh
+# Entry point for the scheduled data pipeline cron job.
+# Delegates to the Python Orchestrator for intelligent execution.
+
 PYTHON=/usr/bin/python3
 HOME_DIR=/home/ec2-user
 
 cd "$HOME_DIR"
 
+# Prevent multiple pipelines from running at the same time
 /usr/bin/flock -n /tmp/onlypoker_pipeline.lock bash -c "
-  echo \"[PIPELINE] Starting Bronze worker at \$(date)\"
-  $PYTHON $HOME_DIR/worker.py >> $HOME_DIR/worker.log 2>&1
-  BRONZE_STATUS=\$?
+  echo \"[WRAPPER] Starting Pipeline Orchestrator at \$(date)\" >> $HOME_DIR/pipeline.log
+  
+  # Run the Python Orchestrator
+  # This script handles worker -> coach (loop) -> study
+  $PYTHON $HOME_DIR/orchestrator.py >> $HOME_DIR/pipeline.log 2>&1
+  EXIT_CODE=\$?
 
-  if [ \$BRONZE_STATUS -ne 0 ]; then
-    echo \"[PIPELINE] Bronze worker failed with status \$BRONZE_STATUS, skipping coach\" >> $HOME_DIR/pipeline.log
-    exit \$BRONZE_STATUS
-  fi
-
-  echo \"[PIPELINE] Starting Coach worker at \$(date)\"
-  $PYTHON $HOME_DIR/coach_worker.py >> $HOME_DIR/coach_worker.log 2>&1
-
-  echo \"[PIPELINE] Starting Study Ingest at \$(date)\"
-  $PYTHON $HOME_DIR/study_ingest.py >> $HOME_DIR/study_ingest.log 2>&1
-
-  echo \"[PIPELINE] Done pipeline at \$(date)\" >> $HOME_DIR/pipeline.log
+  echo \"[WRAPPER] Pipeline finished with code \$EXIT_CODE at \$(date)\" >> $HOME_DIR/pipeline.log
+  exit \$EXIT_CODE
 "

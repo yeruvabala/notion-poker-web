@@ -172,16 +172,24 @@ def extract_players_with_stacks(text: str) -> List[Dict[str, Any]]:
     Excludes players marked as "sitting out" or who "sits out".
     Returns list of { name, seatIndex, stack, isHero, isActive, cards }
     """
-    # First, find all players who are sitting out
+    # First, find all players who are sitting out or waiting
     # Pattern 1: "Seat X: PlayerName ($Y) is sitting out"
     # Pattern 2: "PlayerName sits out" on separate line
+    # Pattern 3: "PlayerName waits for big blind"
+    # Pattern 4: "PlayerName will be allowed to play after the button"
     sitting_out_players = set()
     
-    # Check for "sits out" or "sitting out" patterns
-    sits_out_pattern = re.compile(r'(\w+)\s+sits?\s+out', re.IGNORECASE)
-    for match in sits_out_pattern.finditer(text):
-        player_name = match.group(1).strip()
-        sitting_out_players.add(player_name)
+    # Check for "sits out", "sitting out", "waits for", "allowed to play" patterns
+    inactive_patterns = [
+        re.compile(r'(\w+)\s+sits?\s+out', re.IGNORECASE),
+        re.compile(r'(\w+)\s+waits\s+for\s+big\s+blind', re.IGNORECASE),
+        re.compile(r'(\w+)\s+will\s+be\s+allowed\s+to\s+play', re.IGNORECASE)
+    ]
+
+    for pattern in inactive_patterns:
+        for match in pattern.finditer(text):
+            player_name = match.group(1).strip()
+            sitting_out_players.add(player_name)
     
     players = []
     for match in SEAT_STACK_RE.finditer(text):
