@@ -1,3 +1,4 @@
+
 /**
  * Pipeline Orchestrator
  * 
@@ -35,6 +36,7 @@ import { agent3_advantageAnalyzer } from '../agents/agent3_advantageAnalyzer';
 import { agent4_sprCalculator } from '../agents/agent4_sprCalculator';
 import { agent5_gtoStrategy } from '../agents/agent5_gtoStrategy';
 import { agent6_mistakeDetector } from '../agents/agent6_mistakeDetector';
+// NOTE: classifyHand now called within Agent 1 (Phase 12)
 
 import {
     HandInput,
@@ -118,22 +120,165 @@ function convertCardsToDisplay(cards: string): string {
  */
 function extractVillainPosition(rawText: string, heroPosition: string): string {
     const positions = ['UTG', 'UTG+1', 'UTG+2', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
-    const text = rawText.toUpperCase();
 
-    // Find positions that appear in the text (excluding hero)
+    // CRITICAL: Only analyze the action section, skip summary entirely
+    // Split on "*** SUMMARY ***" and only use the part before it
+    const actionText = rawText.split('***SUMMARY***')[0].split('*** SUMMARY ***')[0];
+
+    // Priority 1: Find players who put money in (VPIP)
+    // Match pattern like: "PlayerName (POS) calls" or "(POS) raises"
     for (const pos of positions) {
-        if (pos !== heroPosition.toUpperCase() && text.includes(pos)) {
-            // Check if this position has actions (not just sitting out)
-            const posRegex = new RegExp(`${pos}[:\\s]*(calls?|raises?|bets?|folds?|checks?)`, 'i');
-            if (posRegex.test(rawText)) {
-                return pos;
-            }
+        if (pos === heroPosition.toUpperCase()) continue;
+
+        // Look for active actions: calls, raises, bets
+        // Use word boundary to ensure we match "calls" but not "recalls"
+        const activePattern = new RegExp(`\\(${pos}\\)[^\\n]*\\b(calls?|raises?|bets?)\\b`, 'i');
+        if (activePattern.test(actionText)) {
+            return pos;
         }
     }
 
-    // Default to BTN if we can't find villain
-    return heroPosition === 'BTN' ? 'BB' : 'BTN';
+    // Priority 2: Find anyone who checked  
+    for (const pos of positions) {
+        if (pos === heroPosition.toUpperCase()) continue;
+        const checkPattern = new RegExp(`\\(${pos}\\)[^\\n]*\\b(checks?)\\b`, 'i');
+        if (checkPattern.test(actionText)) {
+            return pos;
+        }
+    }
+
+    // Priority 3: Position-based defaults
+    // SB vs BB is the most common heads-up scenario when everyone folds
+    if (heroPosition.toUpperCase() === 'SB') return 'BB';
+    if (heroPosition.toUpperCase() === 'BTN') return 'BB';
+    if (heroPosition.toUpperCase() === 'BB') return 'SB';
+
+    // Absolute fallback
+    return 'BB';
 }
+
+/**
+ * Determine villain context based on action order
+ * Option B: Use replayer_data.actions to check if Hero faced action BEFORE their decision
+ * 
+ * Returns:
+ * - { type: 'opening', villain: null } - Hero is first to act (no villain at decision time)
+ * - { type: 'sb_vs_bb', villain: 'BB' } - Hero in SB, always plays vs BB
+ * - { type: 'facing_action', villain: position } - Hero faced a raise before their action
+ */
+interface VillainContext {
+    type: 'opening' | 'sb_vs_bb' | 'facing_action';
+    villain: string | null;
+    villainName?: string;
+}
+
+function determineVillainContext(
+    replayerData: any,
+    heroPosition: string,
+    heroName: string,
+    rawText: string
+): VillainContext {
+    const actions = replayerData?.actions || [];
+
+    console.error(`[VillainContext] Checking for heroName: "${heroName}", heroPosition: "${heroPosition}"`);
+    console.error(`[VillainContext] Actions count: ${actions.length}`);
+
+    // Find Hero's first preflop action
+    const heroAction = actions.find((a: any) =>
+        a.street === 'preflop' &&
+        (a.player === heroName || a.isHero === true)
+    );
+    const heroActionIndex = actions.findIndex((a: any) =>
+        a.street === 'preflop' &&
+        (a.player === heroName || a.isHero === true)
+    );
+
+    console.error(`[VillainContext] Hero action index: ${heroActionIndex}, action: ${heroAction?.action}`);
+
+    if (heroActionIndex === -1) {
+        // Hero didn't act in preflop - use fallback
+        console.error('[VillainContext] Hero action not found, using fallback');
+        return {
+            type: 'facing_action',
+            villain: extractVillainPosition(rawText, heroPosition)
+        };
+    }
+
+    // Check if any raise/bet happened BEFORE Hero's action
+    const priorActions = actions.slice(0, heroActionIndex);
+    const priorRaise = priorActions.find((a: any) =>
+        a.street === 'preflop' &&
+        ['raises', 'raise', 'raiseTo', 'raiseto', 'bets', 'bet'].includes(a.action?.toLowerCase?.() || a.action)
+    );
+
+    if (priorRaise) {
+        // Hero faced action - find the raiser's position
+        const raiserName = priorRaise.player;
+        const players = replayerData?.players || [];
+        const raiserInfo = players.find((p: any) => p.name === raiserName);
+        const villainPos = raiserInfo?.position || extractVillainPosition(rawText, heroPosition);
+
+        console.error(`[VillainContext] Hero faced raise from ${raiserName} (${villainPos})`);
+        return {
+            type: 'facing_action',
+            villain: villainPos,
+            villainName: raiserName
+        };
+    }
+
+    // Special case: SB always plays vs BB 
+    if (heroPosition.toUpperCase() === 'SB') {
+        console.error('[VillainContext] Hero is SB - vs BB');
+        return { type: 'sb_vs_bb', villain: 'BB' };
+    }
+
+    // Hero was first to act - now check if they FOLDED or RAISED
+    const heroActionType = (heroAction?.action || '').toLowerCase();
+    const heroFolded = heroActionType === 'folds' || heroActionType === 'fold';
+
+    // Check if hand went to postflop (has flop/turn/river actions)
+    const hasPostflopActions = actions.some((a: any) =>
+        ['flop', 'turn', 'river'].includes(a.street)
+    );
+
+    console.error(`[VillainContext] Hero action: ${heroActionType}, folded: ${heroFolded}, hasPostflop: ${hasPostflopActions}`);
+
+    if (heroFolded) {
+        // Hero folded first - pure opening range analysis (no villain needed)
+        console.error(`[VillainContext] Hero folded first at ${heroPosition} - opening scenario`);
+        return { type: 'opening', villain: null };
+    }
+
+    if (hasPostflopActions) {
+        // Hero raised AND hand went to flop - find who called/3-bet
+        const postHeroActions = actions.slice(heroActionIndex + 1);
+
+        // Find the caller or 3-bettor
+        const callerAction = postHeroActions.find((a: any) =>
+            a.street === 'preflop' &&
+            a.player !== heroName &&
+            ['calls', 'call', 'raises', 'raise', 'raiseTo', 'raiseto'].includes(a.action?.toLowerCase?.() || a.action)
+        );
+
+        if (callerAction) {
+            const players = replayerData?.players || [];
+            const callerInfo = players.find((p: any) => p.name === callerAction.player);
+            const villainPos = callerInfo?.position || extractVillainPosition(rawText, heroPosition);
+
+            console.error(`[VillainContext] Hero raised, ${callerAction.player} (${villainPos}) called/3-bet - facing action for postflop`);
+            return {
+                type: 'facing_action',
+                villain: villainPos,
+                villainName: callerAction.player
+            };
+        }
+    }
+
+    // Hero raised but hand didn't go to flop (everyone folded) - still opening analysis
+    console.error(`[VillainContext] Hero raised first, no postflop - opening scenario`);
+    return { type: 'opening', villain: null };
+}
+
 
 /**
  * Parse actions from raw hand text
@@ -151,7 +296,7 @@ function parseActionsFromRaw(rawText: string): Action[] {
         return []; // Return empty instead of fake defaults
     }
 
-    console.log(`[parseActions] Hero identified as: ${heroName}`);
+    console.error(`[parseActions] Hero identified as: ${heroName}`);
 
     // Helper to detect street sections
     const streetPatterns: Record<Street, RegExp> = {
@@ -198,11 +343,11 @@ function parseActionsFromRaw(rawText: string): Action[] {
                 amount
             });
 
-            console.log(`[parseActions] ${currentStreet}: ${isHero ? 'HERO' : 'villain'} ${action}${amount ? ` $${amount}` : ''}`);
+            console.error(`[parseActions] ${currentStreet}: ${isHero ? 'HERO' : 'villain'} ${action}${amount ? ` $${amount}` : ''}`);
         }
     }
 
-    console.log(`[parseActions] Parsed ${actions.length} total actions`);
+    console.error(`[parseActions] Parsed ${actions.length} total actions`);
     return actions;
 }
 
@@ -334,6 +479,12 @@ export function transformToAgentInput(body: any): HandInput {
         throw new Error('Could not identify hero in players array');
     }
 
+    // FIX: Allow body.parsed.position (dynamic fix) to override stale replayer_data position
+    if (body.parsed?.position) {
+        console.error(`[transformToAgentInput] Overriding hero position ${hero.position} with parsed position ${body.parsed.position}`);
+        hero.position = body.parsed.position;
+    }
+
     // Get villain (the preflop raiser, or first non-hero with actions)
     let villainName = replayerData.actions.find((a: any) =>
         a.player !== hero.name &&
@@ -358,13 +509,53 @@ export function transformToAgentInput(body: any): HandInput {
     // Calculate pot sizes from actions
     const potSizes = estimatePotSizes(actions);
 
-    // Get last bet amount
-    const lastBet = replayerData.actions[replayerData.actions.length - 1]?.amount || 0;
+    // Calculate accurate "to call" amount
+    // Logic: Find max committed by any villain - max committed by hero
+    const currentStreet = actions[actions.length - 1]?.street || 'preflop';
+    const streetActions = actions.filter(a => a.street === currentStreet);
 
-    console.log(`[transformToAgentInput] ✅ Using replayer_data`);
-    console.log(`[transformToAgentInput] Hero: ${hero.name} (${hero.position}) with ${hero.cards?.join('') || 'unknown'}`);
-    console.log(`[transformToAgentInput] Board: ${board || 'None'}`);
-    console.log(`[transformToAgentInput] Actions: ${actions.length} parsed`);
+    let maxVillainCommit = 0;
+    let maxHeroCommit = 0;
+
+    for (const action of streetActions) {
+        if (action.amount) {
+            if (action.player === 'hero') {
+                maxHeroCommit = Math.max(maxHeroCommit, action.amount);
+            } else {
+                maxVillainCommit = Math.max(maxVillainCommit, action.amount);
+            }
+        }
+    }
+
+    // If hero folded, we want to know what they faced BEFORE folding
+    // The loop above naturally captures the high water mark of bets
+    const toCall = Math.max(0, maxVillainCommit - maxHeroCommit);
+
+    console.error(`[transformToAgentInput] Pot Odds Calc: Vil=$${maxVillainCommit}, Hero=$${maxHeroCommit} => ToCall=$${toCall}`);
+
+    // Map to lastBet for compatibility
+    const lastBet = toCall;
+
+    console.error(`[transformToAgentInput] ✅ Using replayer_data`);
+    console.error(`[transformToAgentInput] Hero: ${hero.name} (${hero.position}) with ${hero.cards?.join('') || 'unknown'}`);
+    console.error(`[transformToAgentInput] Board: ${board || 'None'}`);
+    console.error(`[transformToAgentInput] Actions: ${actions.length} parsed`);
+
+    // Calculate table size (number of players in replayer data)
+    // Calculate table size for agent inferences  
+    const tableSize = replayerData.players?.length || 6;
+
+    // Determine villain context based on action order (Option B)
+    // This checks if Hero faced action BEFORE their decision
+    const villainContext = determineVillainContext(
+        replayerData,
+        hero.position || 'BTN',
+        hero.name || 'Hero',
+        body.raw_text || ''
+    );
+
+    // Use extracted villain position, fallback to old method if no context
+    const villainPosition = villainContext.villain || extractVillainPosition(body.raw_text || '', hero.position || 'BTN');
 
     return {
         handId: body.hand_id || body.id || 'unknown',
@@ -372,7 +563,7 @@ export function transformToAgentInput(body: any): HandInput {
         board,
         positions: {
             hero: hero.position || 'BTN',
-            villain: villain?.position || 'BB'
+            villain: villainPosition  // Use extracted position (now respects action order)
         },
         actions,
         heroActions,
@@ -381,7 +572,12 @@ export function transformToAgentInput(body: any): HandInput {
             villain: villain?.stack || 100
         },
         potSizes,
-        lastBet
+        lastBet,
+        tableSize,
+        villainContext: {  // Expose context type to agents
+            type: villainContext.type,
+            villainName: villainContext.villainName
+        }
     };
 }
 
@@ -397,27 +593,27 @@ export function transformToAgentInput(body: any): HandInput {
  */
 export async function runMultiAgentPipeline(input: HandInput): Promise<CoachOutput> {
     const startTime = Date.now();
-    console.log('[Pipeline] Starting multi-agent analysis...');
-    console.log(`[Pipeline] Hand: ${input.cards} on ${input.board}`);
+    console.error('[Pipeline] Starting multi-agent analysis...');
+    console.error(`[Pipeline] Hand: ${input.cards} on ${input.board}`);
 
     try {
         // ═══════════════════════════════════════════════════════════
         // STREET FILTERING: Determine which streets Hero actually saw
         // ═══════════════════════════════════════════════════════════
         const streetsPlayed = determineStreetsPlayed(input.heroActions);
-        console.log('[Pipeline] 🔍 DEBUG - Hero Actions:', JSON.stringify(input.heroActions, null, 2));
-        console.log('[Pipeline] 🔍 DEBUG - Streets Played:', JSON.stringify(streetsPlayed, null, 2));
+        console.error('[Pipeline] 🔍 DEBUG - Hero Actions:', JSON.stringify(input.heroActions, null, 2));
+        console.error('[Pipeline] 🔍 DEBUG - Streets Played:', JSON.stringify(streetsPlayed, null, 2));
 
         // ═══════════════════════════════════════════════════════════
         // TIER 1: Board Analysis (Foundation)
         // ═══════════════════════════════════════════════════════════
-        console.log('[Pipeline] Tier 1: Board Analyzer...');
+        console.error('[Pipeline] Tier 1: Board Analyzer...');
 
         let boardAnalysis;
 
         // CRITICAL FIX: Only analyze board if Hero saw postflop
         if (!streetsPlayed.flop) {
-            console.log('[Pipeline] Hero did not see flop - skipping board analysis');
+            console.error('[Pipeline] Hero did not see flop - skipping board analysis');
             boardAnalysis = {
                 summary: {
                     is_paired: false,
@@ -432,15 +628,21 @@ export async function runMultiAgentPipeline(input: HandInput): Promise<CoachOutp
             });
         }
 
+
         // ═══════════════════════════════════════════════════════════
         // TIER 2: Ranges + SPR (Parallel Execution!)
         // ═══════════════════════════════════════════════════════════
-        console.log('[Pipeline] Tier 2: Range Builder + SPR (parallel)...');
-        const [ranges, spr] = await Promise.all([
+        // ═══════════════════════════════════════════════════════════
+        console.error('[Pipeline] Tier 2: Range Builder + SPR (parallel)...');
+
+        // Phase 12: Agent 1 now returns {ranges, heroClassification}
+        const [agent1Output, spr] = await Promise.all([
             agent1_rangeBuilder({
                 boardAnalysis,
                 positions: input.positions,
-                actions: input.actions
+                actions: input.actions,
+                tableSize: input.tableSize,
+                stacks: input.stacks   // NEW: Pass stacks for Phase 8 range filtering
             }),
             Promise.resolve(agent4_sprCalculator({
                 potSizes: input.potSizes,
@@ -448,10 +650,15 @@ export async function runMultiAgentPipeline(input: HandInput): Promise<CoachOutp
             }))
         ]);
 
+        // Extract ranges and heroClassification from Agent 1's unified output
+        const ranges = agent1Output.ranges;
+        const heroClassification = agent1Output.heroClassification;
+        console.error(`[Pipeline] Hero Classification: ${heroClassification.bucket2D} (${heroClassification.tier}) - ${heroClassification.description}`);
+
         // ═══════════════════════════════════════════════════════════
         // TIER 3: Equity + Advantages (Parallel Execution!)
         // ═══════════════════════════════════════════════════════════
-        console.log('[Pipeline] Tier 3: Equity + Advantages (parallel)...');
+        console.error('[Pipeline] Tier 3: Equity + Advantages (parallel)...');
 
         // Get villain range for equity calculation
         const villainRange =
@@ -482,7 +689,7 @@ export async function runMultiAgentPipeline(input: HandInput): Promise<CoachOutp
         // ═══════════════════════════════════════════════════════════
         // TIER 4: GTO Strategy (Needs all context)
         // ═══════════════════════════════════════════════════════════
-        console.log('[Pipeline] Tier 4: GTO Strategy...');
+        console.error('[Pipeline] Tier 4: GTO Strategy...');
         const gtoStrategy = await agent5_gtoStrategy({
             boardAnalysis,
             ranges,
@@ -492,13 +699,15 @@ export async function runMultiAgentPipeline(input: HandInput): Promise<CoachOutp
             heroHand: input.cards,
             positions: input.positions,   // ADD: Pass positions
             actions: input.actions,        // ADD: Pass action history
-            streetsPlayed                  // NEW: Pass which streets Hero saw
+            streetsPlayed,                 // NEW: Pass which streets Hero saw
+            villainContext: input.villainContext,  // NEW: Pass villain context (opening vs facing action)
+            heroClassification             // Phase 12: Unified classification from Agent 1
         });
 
         // ═══════════════════════════════════════════════════════════
         // TIER 5: Mistake Detection (Needs ALL context + hero actions)
         // ═══════════════════════════════════════════════════════════
-        console.log('[Pipeline] Tier 5: Mistake Detector...');
+        console.error('[Pipeline] Tier 5: Mistake Detector...');
         const mistakes = await agent6_mistakeDetector({
             boardAnalysis,
             ranges,
@@ -507,14 +716,17 @@ export async function runMultiAgentPipeline(input: HandInput): Promise<CoachOutp
             spr,
             gtoStrategy,
             heroActions: input.heroActions,
-            positions: input.positions     // ADD: Pass positions
+            positions: input.positions,
+            heroClassification             // Phase 14: Pass hero classification for context
         });
+
+
 
         // ═══════════════════════════════════════════════════════════
         // FORMAT OUTPUT
         // ═══════════════════════════════════════════════════════════
         const duration = Date.now() - startTime;
-        console.log(`[Pipeline] Complete in ${(duration / 1000).toFixed(1)}s`);
+        console.error(`[Pipeline] Complete in ${(duration / 1000).toFixed(1)}s`);
 
         return formatOutput({
             gtoStrategy,
@@ -523,8 +735,12 @@ export async function runMultiAgentPipeline(input: HandInput): Promise<CoachOutp
             equity,
             advantages,
             boardAnalysis,
-            rawBoard: input.board,         // ADD: Pass raw board as fallback
-            positions: input.positions     // ADD: Pass positions
+            spr,                           // Phase 13/13.5: SPR analysis
+            heroClassification,            // Phase 12: Hero classification
+            rawBoard: input.board,
+            positions: input.positions,
+            actions: input.actions,
+            villainContext: input.villainContext
         });
 
     } catch (error) {
@@ -540,20 +756,137 @@ export async function runMultiAgentPipeline(input: HandInput): Promise<CoachOutp
 interface FormatInput {
     gtoStrategy: any;
     mistakes: any;
+
     ranges: any;
     equity: any;
     advantages: any;
     boardAnalysis: any;
-    rawBoard?: string;        // ADD: Fallback board string
-    positions?: any;          // ADD: Hero/villain positions
+    spr?: any;                    // Phase 13/13.5
+    heroClassification?: any;     // Phase 12
+    rawBoard?: string;
+    positions?: any;              // Position type
+    actions?: any[];
+    villainContext?: {
+        type: 'opening' | 'sb_vs_bb' | 'facing_action';
+        villainName?: string;
+    };
 }
+
+/**
+ * Helper: Detect if a 3-bet or 4-bet actually occurred in the hand
+ * Returns { has3Bet: boolean, has4Bet: boolean }
+ */
+function detectBettingAction(actions: Action[]): { has3Bet: boolean; has4Bet: boolean } {
+    // Count preflop raises to determine 3-bet/4-bet
+    const preflopActions = actions.filter(a => a.street === 'preflop');
+    const raises = preflopActions.filter(a => a.action === 'raise');
+
+    // 1st raise = open, 2nd raise = 3-bet, 3rd raise = 4-bet
+    const has3Bet = raises.length >= 2;
+    const has4Bet = raises.length >= 3;
+
+    return { has3Bet, has4Bet };
+}
+
+/**
+ * Determine position advantage based on hero/villain positions
+ * Returns descriptive text for factual accuracy
+ */
+function determinePositionAdvantage(heroPos: string, villainPos: string): string {
+    const hero = heroPos.toUpperCase();
+    const villain = villainPos.toUpperCase();
+    const blinds = ['SB', 'BB'];
+
+    if (blinds.includes(hero) && !blinds.includes(villain)) {
+        return 'out of position (blind vs non-blind)';
+    } else if (!blinds.includes(hero) && blinds.includes(villain)) {
+        return 'in position (non-blind vs blind)';
+    } else if (hero === 'BTN') {
+        return 'in position (button has positional advantage)';
+    } else if (villain === 'BTN') {
+        return 'out of position (vs button)';
+    }
+    return 'with relative position';
+}
+
+/**
+ * Post-process filter: Remove contradictory position phrases
+ * Ensures LLM cannot hallucinate incorrect position statements
+ */
+function correctPositionHallucinations(
+    text: string,
+    heroPos: string,
+    villainPos: string,
+    villainContext?: { type: 'opening' | 'sb_vs_bb' | 'facing_action'; villainName?: string }
+): string {
+    // For OPENING scenarios from late position, Hero is IN POSITION against blinds
+    if (villainContext?.type === 'opening') {
+        const latePositions = ['BTN', 'CO', 'HJ'];
+        if (latePositions.includes(heroPos.toUpperCase())) {
+            // Hero is ALWAYS in position against blinds when opening from late position
+            // Remove incorrect "out of position" reasoning - it makes sentences illogical
+
+            // Pattern: "to avoid playing a weak hand out of position" → remove the OOP reasoning
+            text = text.replace(/\bto avoid playing a weak hand out of position\b/gi,
+                'despite having positional advantage');
+
+            // Pattern: "out of position against the blinds" → fix entire phrase
+            text = text.replace(/\bout of position against the blinds\b/gi,
+                'from this position (despite positional advantage over blinds)');
+
+            // Pattern: "especially when out of position..." → remove entirely  
+            text = text.replace(/,?\s*especially when out of position[^.]*\./gi, '.');
+
+            // Pattern: "being out of position" → remove entire phrase (avoids "being makes it worse")
+            text = text.replace(/\bbeing out of position\b/gi, 'having limited hand strength');
+
+            // Pattern: "positional disadvantage" → flip to advantage
+            text = text.replace(/\bpositional disadvantage\b/gi, 'positional advantage');
+
+            // Pattern: "OOP" → "IP"
+            text = text.replace(/\bOOP\b/g, 'IP');
+
+            // Generic "out of position" as last resort → remove phrase
+            text = text.replace(/\bout of position\b/gi, 'in position');
+
+            // Clean up double spaces and awkward punctuation
+            text = text.replace(/\s{2,}/g, ' ');
+            text = text.replace(/\s+\./g, '.');
+            text = text.replace(/\s+,/g, ',');
+        }
+        return text;
+    }
+
+    // For non-opening scenarios, use determinePositionAdvantage as before
+    const correctAdvantage = determinePositionAdvantage(heroPos, villainPos);
+    const isInPosition = correctAdvantage.includes('in position');
+
+    // List of phrases to replace
+    if (isInPosition) {
+        // Hero IS in position - remove "out of position" phrases
+        text = text.replace(/\bout of position\b/gi, 'in position');
+        text = text.replace(/\bpositional disadvantage\b/gi, 'positional advantage');
+        text = text.replace(/\bOOP\b/g, 'IP');
+    } else if (correctAdvantage.includes('out of position')) {
+        // Hero IS out of position - remove "in position" phrases  
+        text = text.replace(/\bin position\b/gi, 'out of position');
+        text = text.replace(/\bpositional advantage\b/gi, 'positional disadvantage');
+        text = text.replace(/\bIP\b/g, 'OOP');
+    }
+
+    return text;
+}
+
 
 /**
  * Format all agent outputs into the final CoachOutput
  * Now handles MixedActionRecommendation with primary/alternative
  */
 function formatOutput(data: FormatInput): CoachOutput {
-    const { gtoStrategy, mistakes, ranges, equity, advantages, boardAnalysis, rawBoard, positions } = data;
+    const { gtoStrategy, mistakes, ranges, equity, advantages, boardAnalysis, rawBoard, positions, actions } = data;
+
+    // Detect if 3-bet/4-bet actually occurred
+    const { has3Bet, has4Bet } = detectBettingAction(actions || []);
 
     // Helper to format a mixed action recommendation
     const formatMixedAction = (rec: any): string => {
@@ -580,11 +913,21 @@ function formatOutput(data: FormatInput): CoachOutput {
     };
 
     // Build GTO Strategy text with mixed strategy format
-    let gtoText = '**GTO ANALYSIS (Mixed Strategy):**\n\n';
+    let gtoText = '';
 
-    // ADD: Situation header with positions
+    // ADD: Situation header with positions - respects villainContext (Option B)
     if (positions) {
-        gtoText += `**SITUATION:** Hero (${positions.hero}) vs Villain (${positions.villain})\n\n`;
+        const villainContext = data.villainContext;
+        if (villainContext?.type === 'opening') {
+            // Hero was first to act - opening range analysis
+            gtoText += `**SITUATION:** Hero (${positions.hero}) - Opening Range Analysis\n\n`;
+        } else if (villainContext?.type === 'sb_vs_bb') {
+            // SB vs BB scenario
+            gtoText += `**SITUATION:** Hero (${positions.hero}) vs Villain (BB) - Blind vs Blind\n\n`;
+        } else {
+            // Hero faced action - use villain as normal
+            gtoText += `**SITUATION:** Hero (${positions.hero}) vs Villain (${positions.villain})\n\n`;
+        }
     }
 
     // Parse rawBoard into flop/turn/river if needed
@@ -594,10 +937,26 @@ function formatOutput(data: FormatInput): CoachOutput {
     const riverCard = boardCards[4] || '';
 
     // Preflop (simple ActionRecommendation)
+    // Preflop (Decision Tree)
     if (gtoStrategy.preflop) {
-        gtoText += `**PREFLOP:** ${gtoStrategy.preflop.action}`;
-        if (gtoStrategy.preflop.sizing) gtoText += ` (${gtoStrategy.preflop.sizing})`;
-        gtoText += `\n${gtoStrategy.preflop.reasoning || ''}\n\n`;
+        // Initial Action
+        if (gtoStrategy.preflop.initial_action) {
+            gtoText += `**PREFLOP (Initial):** ${formatMixedAction(gtoStrategy.preflop.initial_action)}`;
+            gtoText += `\n└─ ${formatMixedReasoning(gtoStrategy.preflop.initial_action)}\n`;
+        }
+
+        // Response to 3-bet (only show if 3-bet actually occurred)
+        if (gtoStrategy.preflop.response_to_3bet && has3Bet) {
+            gtoText += `**PREFLOP (vs 3-bet):** ${formatMixedAction(gtoStrategy.preflop.response_to_3bet)}`;
+            gtoText += `\n└─ ${formatMixedReasoning(gtoStrategy.preflop.response_to_3bet)}\n`;
+        }
+
+        // Response to 4-bet (only show if 4-bet actually occurred)
+        if (gtoStrategy.preflop.response_to_4bet && has4Bet) {
+            gtoText += `**PREFLOP (vs 4-bet):** ${formatMixedAction(gtoStrategy.preflop.response_to_4bet)}`;
+            gtoText += `\n└─ ${formatMixedReasoning(gtoStrategy.preflop.response_to_4bet)}\n`;
+        }
+        gtoText += '\n';
     }
 
     // Flop - Position-aware formatting
@@ -709,9 +1068,15 @@ function formatOutput(data: FormatInput): CoachOutput {
         gtoText += '\n';
     }
 
-    // Add equity info
-    gtoText += `**EQUITY:** ${(equity.equity_vs_range * 100).toFixed(1)}% vs villain's range\n`;
-    gtoText += `**POT ODDS:** ${(equity.pot_odds.equity_needed * 100).toFixed(1)}% needed\n`;
+    // Add equity info ONLY when relevant (facing action, not opening)
+    // Equity/Pot Odds matter for CALLING decisions, not opening/folding first
+    const villainContext = data.villainContext;
+    const isFacingAction = villainContext?.type === 'facing_action' || villainContext?.type === 'sb_vs_bb';
+
+    if (isFacingAction) {
+        gtoText += `**EQUITY:** ${(equity.equity_vs_range * 100).toFixed(1)}% vs villain's range\n`;
+        gtoText += `**POT ODDS:** ${(equity.pot_odds.equity_needed * 100).toFixed(1)}% needed\n`;
+    }
 
     // Build Play Classification text (replaces deviation text)
     let classificationText = '';
@@ -761,16 +1126,24 @@ function formatOutput(data: FormatInput): CoachOutput {
         learningTags.push('range_advantage');
     }
 
+    // Apply post-process filter to correct any position hallucinations
+    const correctedGtoText = positions ? correctPositionHallucinations(gtoText, positions.hero, positions.villain, data.villainContext) : gtoText;
+
     return {
-        gto_strategy: gtoText,
+        gto_strategy: correctedGtoText,
         exploit_deviation: classificationText,
+        // exploit_signals: null, // Removed as per new structure
         learning_tag: learningTags,
         structured_data: {
             mistakes: mistakes.mistakes || [],
             ranges,
             equity,
             advantages
-        }
+        },
+        // Phase 12-14.5: Enhanced coaching data
+        heroClassification: ranges?.heroClassification || null,
+        spr: data.spr || null, // Assuming spr is directly on data object
+        mistakes: mistakes.mistakes || null // Top-level mistakes array
     };
 }
 

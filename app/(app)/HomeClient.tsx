@@ -15,6 +15,7 @@ type Fields = {
   board?: string | null; // "Flop: … | Turn: … | River: …"
   gto_strategy?: string | null;
   exploit_deviation?: string | null;
+  exploit_signals?: any;  // NEW: Agent 7 exploit signals
   learning_tag?: string[];
   hand_class?: string | null;
   source_used?: 'SUMMARY' | 'STORY' | null;
@@ -628,6 +629,7 @@ export default function HomeClient() {
       setFields({
         gto_strategy: (data?.gto_strategy ?? '') || '',
         exploit_deviation: (data?.exploit_deviation ?? '') || '',
+        exploit_signals: data?.exploit_signals || null,  // NEW: Agent 7
         learning_tag: Array.isArray(data?.learning_tag) ? data.learning_tag : [],
         date: today,
         stakes: payload.stakes || '',
@@ -901,9 +903,47 @@ Turn K♦ — ...`}
                 )}
               </section>
 
-              {/* Exploitative Deviations */}
+              {/* Exploit Signals - NEW! */}
+              {fields?.exploit_signals && fields.exploit_signals.length > 0 && (
+                <section className="card ony-card platinum-container-frame">
+                  <div className="cardTitle platinum-text-gradient">🎯 Exploit Signals</div>
+                  <div className="muted small" style={{ marginBottom: 12 }}>
+                    Hover over each player type to see adjusted strategy
+                  </div>
+                  <div className="exploit-icons">
+                    {fields.exploit_signals.map((archetype: any) => (
+                      <div key={archetype.id} className="exploit-icon-wrapper">
+                        <div className="exploit-icon" title={archetype.description}>
+                          <span className="exploit-emoji">{archetype.icon}</span>
+                          <span className="exploit-name">{archetype.name}</span>
+                        </div>
+                        <div className="exploit-popup">
+                          <div className="exploit-popup-title">
+                            vs {archetype.icon} {archetype.name.toUpperCase()}
+                          </div>
+                          <div className="exploit-popup-desc">{archetype.description}</div>
+                          {archetype.streets && archetype.streets.map((street: any, idx: number) => (
+                            <div key={idx} className="exploit-street">
+                              <strong>{street.street}:</strong>{' '}
+                              {street.adjustedAction} {street.adjustedFreq}%
+                              <span className="exploit-gto"> (GTO: {street.gtoFreq}%)</span>
+                              <span className={`exploit-arrow ${street.direction}`}>
+                                {street.direction === 'increase' ? ' ↑' : street.direction === 'decrease' ? ' ↓' : ' →'}
+                              </span>
+                              <div className="exploit-reason">{street.reason}</div>
+                            </div>
+                          ))}
+                          <div className="exploit-advice">💡 {archetype.overallAdvice}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Play Review (formerly Exploitative Deviations) */}
               <section className="card ony-card platinum-container-frame">
-                <div className="cardTitle platinum-text-gradient">Exploitative Deviations</div>
+                <div className="cardTitle platinum-text-gradient">📊 Play Review</div>
                 <ul className="list platinum-inner-border">
                   {(fields?.exploit_deviation || '')
                     .split(/(?<=\.)\s+/)
@@ -1007,6 +1047,26 @@ Turn K♦ — ...`}
           .tag-red{background:#7f1d1d;border-color:#ef4444;color:#fca5a5}
           .tag-yellow{background:#713f12;border-color:#eab308;color:#fde047}
           .tag-gray{background:#374151;border-color:#9ca3af;color:#d1d5db}
+
+          /* Exploit Signals Styles */
+          .exploit-icons{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+          .exploit-icon-wrapper{position:relative}
+          .exploit-icon{display:flex;flex-direction:column;align-items:center;padding:12px 20px;border:1px solid var(--line);border-radius:12px;background:#262626;cursor:pointer;transition:all 0.2s}
+          .exploit-icon:hover{background:#333;transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.3)}
+          .exploit-emoji{font-size:28px;margin-bottom:4px}
+          .exploit-name{font-size:12px;color:#E2E8F0;font-weight:600}
+          .exploit-popup{position:absolute;top:100%;left:50%;transform:translateX(-50%);width:280px;background:#1e1e1e;border:1px solid var(--line);border-radius:12px;padding:12px;opacity:0;visibility:hidden;transition:all 0.2s;z-index:100;margin-top:8px;box-shadow:0 8px 24px rgba(0,0,0,0.5)}
+          .exploit-icon-wrapper:hover .exploit-popup{opacity:1;visibility:visible}
+          .exploit-popup-title{font-size:14px;font-weight:700;color:#E2E8F0;margin-bottom:8px}
+          .exploit-popup-desc{font-size:11px;color:#94A3B8;margin-bottom:12px}
+          .exploit-street{font-size:12px;color:#E2E8F0;margin-bottom:8px;padding-left:8px;border-left:2px solid #525252}
+          .exploit-gto{color:#94A3B8}
+          .exploit-arrow{font-weight:700}
+          .exploit-arrow.increase{color:#22c55e}
+          .exploit-arrow.decrease{color:#ef4444}
+          .exploit-arrow.same{color:#94A3B8}
+          .exploit-reason{font-size:11px;color:#60a5fa;margin-top:2px}
+          .exploit-advice{font-size:11px;color:#fde047;margin-top:12px;padding-top:8px;border-top:1px solid #525252}
         `}</style>
       </main>
     </div>

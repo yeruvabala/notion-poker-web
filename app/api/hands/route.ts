@@ -77,6 +77,7 @@ export async function POST(req: Request) {
     source_used: body?.source_used ?? null,
     gto_strategy: body?.gto_strategy ?? null,
     exploit_deviation: body?.exploit_deviation ?? null,
+    exploit_signals: body?.exploit_signals ?? null,  // NEW: Agent 7 data
     learning_tag: Array.isArray(body?.learning_tag) ? body.learning_tag : null,
     notes: body?.notes ?? null,
   };

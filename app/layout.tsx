@@ -1,7 +1,14 @@
 import './globals.css';
 import AuthSync from '@/components/AuthSync';
 
-export const metadata = { title: 'Only Poker' };
+export const metadata = {
+  title: 'Only Poker',
+  icons: {
+    icon: '/static/favicon.png',
+    shortcut: '/static/favicon.png',
+    apple: '/static/favicon.png',
+  }
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

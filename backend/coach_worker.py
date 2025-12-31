@@ -180,6 +180,7 @@ def call_coach_api(
         dev = resp_json.get("exploit_deviation")
         lt  = resp_json.get("learning_tag")
         hero_pos = resp_json.get("hero_position")
+        exploit_sigs = resp_json.get("exploit_signals")  # NEW: Agent 7 data
         
         if lt is None:
             lt_list: Optional[List[str]] = []
@@ -188,7 +189,7 @@ def call_coach_api(
         else:
             lt_list = [str(lt)]
         
-        return {"gto_strategy": gto, "exploit_deviation": dev, "learning_tag": lt_list, "hero_position": hero_pos}
+        return {"gto_strategy": gto, "exploit_deviation": dev, "learning_tag": lt_list, "hero_position": hero_pos, "exploit_signals": exploit_sigs}
 
     except error.HTTPError as e:
         try: err_body = e.read().decode("utf-8")
@@ -300,6 +301,7 @@ def update_hand_with_coach(
     gto_strategy: Optional[str],
     exploit_deviation: Optional[str],
     learning_tag: Optional[List[str]],
+    exploit_signals: Optional[Any] = None,  # NEW: Agent 7 data
     position: Optional[str] = None,
 ) -> None:
     if gto_strategy is None and exploit_deviation is None and not learning_tag:
@@ -309,11 +311,14 @@ def update_hand_with_coach(
         SET gto_strategy = %s,
             exploit_deviation = %s,
             learning_tag = %s,
+            exploit_signals = %s,
             position = COALESCE(%s, position)
         WHERE id = %s;
     """
     with conn.cursor() as cur:
-        cur.execute(sql, (gto_strategy, exploit_deviation, learning_tag, position, hand_id))
+        # Use Json wrapper for JSONB column
+        from psycopg2.extras import Json
+        cur.execute(sql, (gto_strategy, exploit_deviation, learning_tag, Json(exploit_signals) if exploit_signals else None, position, hand_id))
 
 def coach_new_hands(conn, batch_size: int) -> int:
     rows = fetch_hands_for_coaching(conn, batch_size)
@@ -343,11 +348,12 @@ def coach_new_hands(conn, batch_size: int) -> int:
         gto = response.get('gto_strategy')
         dev = response.get('exploit_deviation')
         lt = response.get('learning_tag')
+        exploit_signals = response.get('exploit_signals')  # NEW: Agent 7 data
         hero_pos = response.get('hero_position')
         
         if gto is None and dev is None and not lt:
             continue
-        update_hand_with_coach(conn, hand_id, gto, dev, lt, hero_pos)
+        update_hand_with_coach(conn, hand_id, gto, dev, lt, exploit_signals, hero_pos)
         coached += 1
     logger.info("Coached %d hands this run.", coached)
     return coached

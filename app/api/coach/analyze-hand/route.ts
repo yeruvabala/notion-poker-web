@@ -257,11 +257,17 @@ export async function POST(req: Request) {
 
     console.log('[route.ts] ✅ Pipeline completed successfully');
 
+    // Phase 12-14.5: Return enhanced coaching data for UI
     return NextResponse.json({
       gto_strategy: pipelineResult.gto_strategy,
       exploit_deviation: pipelineResult.exploit_deviation,
       learning_tag: pipelineResult.learning_tag,
-      structured_data: pipelineResult.structured_data  // Extra data for analysis tab
+      hero_position: pipelineInput.positions?.hero || null,
+      structured_data: pipelineResult.structured_data,
+      // Phase 12-14.5: Enhanced data for rich UI tooltips
+      hero_classification: pipelineResult.heroClassification || null,
+      spr_analysis: pipelineResult.spr || null,
+      mistake_analysis: pipelineResult.mistakes || null
     });
 
   } catch (e: any) {

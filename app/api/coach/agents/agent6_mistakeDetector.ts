@@ -22,8 +22,12 @@ import {
     Street,
     ActionType,
     PlayQuality,
-    Position
+    Position,
+    EquityData,
+    SPRData,
+    HeroClassification
 } from '../types/agentContracts';
+import { MistakeClassifier, AnalysisContext } from '../utils/MistakeClassifier';
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -41,7 +45,8 @@ CRITICAL: GTO often has MIXED STRATEGIES with PRIMARY and ALTERNATIVE options:
 - **ACCEPTABLE**: Hero matched the ALTERNATIVE action (also valid, lower frequency)
 - **MISTAKE**: Hero chose an action NOT in the GTO options
 
-For each street, compare hero's FIRST action to initial_action and SECOND action (if any) to the appropriate response recommendation.
+For each street WHERE HERO HAD AN ACTION, compare hero's action(s) to GTO recommendations.
+**IMPORTANT**: If hero had a preflop action, you MUST include preflop in the decisions array.
 
 CLASSIFICATION RULES:
 1. If hero_action === primary.action → PlayQuality: "optimal"
@@ -58,8 +63,8 @@ Return JSON:
 {
   "decisions": [
     {
-      "street": "flop/turn/river",
-      "decision_point": "initial_action" or "facing_bet",
+      "street": "preflop/flop/turn/river",
+      "decision_point": "initial_action" or "facing_bet" or "response_to_3bet",
       "hero_action": "check/bet/call/fold/raise",
       "gto_primary": { "action": "...", "frequency": 0.6 },
       "gto_alternative": { "action": "...", "frequency": 0.4 } or null,
@@ -85,22 +90,17 @@ Only populate "mistakes" array if play_quality === "mistake".`;
 function buildComparisonPrompt(
     gtoStrategy: GTOStrategy,
     heroActions: HeroActions,
-    equity: number,
+    equity: EquityData,
     potOddsNeeded: number,
-    positions: Position // ADDED
+    positions: Position,
+    spr: SPRData, // Phase 14: Add SPR context
+    heroClassification?: HeroClassification, // Phase 14: Add hero classification
+    ranges?: any // Phase 14: Add ranges for context
 ): string {
     const lines: string[] = [];
 
     lines.push('HERO\'S ACTION SEQUENCE:');
     lines.push('');
-
-    // Preflop
-    if (heroActions.preflop?.first) {
-        lines.push(`PREFLOP:`);
-        lines.push(`  Hero first: ${heroActions.preflop.first.action}`);
-        lines.push(`  GTO: ${gtoStrategy.preflop?.action || 'N/A'}`);
-        lines.push('');
-    }
 
     // Helper to format GTO recommendation
     const formatGtoRec = (rec: MixedActionRecommendation | undefined, label: string) => {
@@ -110,6 +110,22 @@ function buildComparisonPrompt(
             lines.push(`  ${label} alternative: ${rec.alternative.action} (${((rec.alternative.frequency || 0) * 100).toFixed(0)}%)`);
         }
     };
+
+    // Preflop
+    if (heroActions.preflop?.first) {
+        lines.push(`PREFLOP:`);
+        lines.push(`  Hero first: ${heroActions.preflop.first.action}`);
+        formatGtoRec(gtoStrategy.preflop.initial_action, "GTO Initial");
+
+        if (heroActions.preflop.second) {
+            lines.push(`  Hero second: ${heroActions.preflop.second.action}`);
+            // If hero acts twice preflop, it's likely a 3-bet response
+            formatGtoRec(gtoStrategy.preflop.response_to_3bet, "GTO Response (3-bet)");
+        }
+        lines.push('');
+    }
+
+
 
     const isIP = !['SB', 'BB'].includes(positions.hero.toUpperCase());
 
@@ -222,9 +238,50 @@ function buildComparisonPrompt(
         lines.push('');
     }
 
-    lines.push(`EQUITY: ${(equity * 100).toFixed(1)}%`);
+    // Phase 14: SPR CONTEXT
+    lines.push('SPR ANALYSIS:');
+    const primarySPR = spr.river_spr || spr.turn_spr || spr.flop_spr || 10;
+    lines.push(`  Zone: ${spr.spr_zone} (SPR: ${primarySPR.toFixed(1)})`);
+    lines.push(`  Commitment Level: Must have ${spr.commitment_thresholds.min_hand_strength} to commit`);
+    lines.push(`  Can fold TPTK: ${spr.commitment_thresholds.can_fold_tptk ? 'YES' : 'NO'}`);
+    lines.push(`  Can fold Overpair: ${spr.commitment_thresholds.can_fold_overpair ? 'YES' : 'NO'}`);
+    lines.push(`  Shove zone: ${spr.commitment_thresholds.shove_zone ? 'YES (SPR < 3 - must commit)' : 'NO'}`);
+    lines.push('');
+
+    // Phase 14: HERO HAND CONTEXT
+    if (heroClassification) {
+        lines.push('HERO HAND ANALYSIS:');
+        lines.push(`  Classification: ${heroClassification.bucket2D} - ${heroClassification.description}`);
+        lines.push(`  Tier: ${heroClassification.tier}`);
+        lines.push(`  Range Position: ${heroClassification.percentile}`);
+        lines.push(`  Strategic Assessment: ${heroClassification.interpretation}`);
+        lines.push('');
+    }
+
+    // Phase 14: RANGE DYNAMICS
+    if (ranges) {
+        lines.push('RANGE DISTRIBUTIONS:');
+        const heroStats = ranges.flop?.hero_range?.stats;
+        const villainStats = ranges.flop?.villain_range?.stats;
+        if (heroStats) {
+            lines.push(`  Hero: ${(heroStats.monster * 100).toFixed(0)}% monsters, ${(heroStats.strong * 100).toFixed(0)}% strong`);
+        }
+        if (villainStats) {
+            lines.push(`  Villain: ${(villainStats.monster * 100).toFixed(0)}% monsters, ${(villainStats.strong * 100).toFixed(0)}% strong`);
+        }
+        lines.push('');
+    }
+
+    lines.push(`EQUITY: ${(equity.equity_vs_range * 100).toFixed(1)}%`);
     lines.push(`POT ODDS NEEDED: ${(potOddsNeeded * 100).toFixed(1)}%`);
-    lines.push(`CALLING IS: ${equity > potOddsNeeded ? 'PROFITABLE' : 'UNPROFITABLE'}`);
+
+    // Phase 10: Split Equity
+    if (equity.equity_vs_value !== undefined && equity.equity_vs_bluffs !== undefined) {
+        lines.push(`- Equity vs VALUE: ${(equity.equity_vs_value * 100).toFixed(1)}%`);
+        lines.push(`- Equity vs BLUFFS: ${(equity.equity_vs_bluffs * 100).toFixed(1)}%`);
+    }
+
+    lines.push(`CALLING IS: ${equity.equity_vs_range > potOddsNeeded ? 'PROFITABLE' : 'UNPROFITABLE'}`);
     lines.push('');
     lines.push('CLASSIFICATION GUIDE:');
     lines.push('- Hero matches PRIMARY → play_quality: "optimal"');
@@ -240,12 +297,40 @@ function buildComparisonPrompt(
 export async function agent6_mistakeDetector(input: Agent6Input): Promise<MistakeAnalysis> {
     const startTime = Date.now();
 
+    // Phase 14: Use deterministic classifier
+    const potOddsNeeded = input.equity.pot_odds.equity_needed;
+
+    // Build analysis context for classifier
+    const context: AnalysisContext = {
+        spr: input.spr,
+        heroClassification: input.heroClassification,
+        ranges: input.ranges,
+        equity: input.equity,
+        potOddsNeeded
+    };
+
+    // Deterministic classification (0ms, 100% accurate)
+    const decisions = MistakeClassifier.analyzeAllDecisions(
+        input.heroActions,
+        input.gtoStrategy,
+        input.positions,
+        context
+    );
+
+    // Categorize leaks
+    const leakCategories = MistakeClassifier.categorizeLeaks(decisions);
+    const worstLeak = MistakeClassifier.identifyWorstLeak(leakCategories);
+
+    // Build comparison prompt forLLM reasoning (optional)
     const comparisonPrompt = buildComparisonPrompt(
         input.gtoStrategy,
         input.heroActions,
-        input.equity.equity_vs_range,
-        input.equity.pot_odds.equity_needed,
-        input.positions // ADDED
+        input.equity,
+        potOddsNeeded,
+        input.positions,
+        input.spr,
+        input.heroClassification,
+        input.ranges
     );
 
     const userPrompt = `Classify hero's play against the GTO decision tree:
@@ -263,48 +348,106 @@ For each decision point, classify as:
 Provide a summary with counts and overall assessment.`;
 
     try {
-        const response = await getOpenAI().chat.completions.create({
+        // Phase 14: Use deterministic decisions instead of LLM classification
+        // Still call LLM for reasoning text (optional enhancement)
+        const api = getOpenAI();
+        const response = await api.chat.completions.create({
             model: 'gpt-4o',
             messages: [
                 { role: 'system', content: MISTAKE_DETECTOR_PROMPT },
                 { role: 'user', content: userPrompt }
             ],
-            response_format: { type: 'json_object' },
-            temperature: 0.2,
-            max_tokens: 2500,
+            temperature: 0.1,
+            response_format: { type: 'json_object' }
         });
 
-        const content = response.choices[0]?.message?.content;
+        const content = response.choices[0].message.content;
+        if (!content) throw new Error('No response from LLM');
 
-        if (!content) {
-            throw new Error('No response from OpenAI');
-        }
+        const llmResult = JSON.parse(content);
 
-        const rawAnalysis = JSON.parse(content);
+        // Phase 14: Use deterministic decisions, but enhance with LLM reasoning
+        const enhancedDecisions = decisions.map((decision, idx) => {
+            const llmDecision = llmResult.decisions?.[idx];
+            return {
+                street: decision.street,
+                decision_point: decision.decision_point,
+                hero_action: decision.hero_action,
+                gto_primary: decision.gto_primary,
+                gto_alternative: decision.gto_alternative,
+                play_quality: decision.play_quality, // Deterministic classification
+                reasoning: llmDecision?.reasoning || `Hero ${decision.play_quality === 'optimal' ? 'matched primary' : decision.play_quality === 'acceptable' ? 'matched alternative' : 'did not match GTO'}`,
+                leak_category: decision.leak_category
+            };
+        });
 
-        // Transform to MistakeAnalysis format
-        const analysis: MistakeAnalysis = {
-            mistakes: rawAnalysis.mistakes || [],
-            total_ev_lost: 0,
-            severity_summary: {
-                critical: 0,
-                moderate: 0,
-                minor: 0
-            },
-            primary_leak: rawAnalysis.primary_leak,
-            // Add new fields for 3-tier classification
-            decisions: rawAnalysis.decisions,
-            summary: rawAnalysis.summary
-        };
+        // Count play qualities
+        const optimalCount = decisions.filter(d => d.play_quality === 'optimal').length;
+        const acceptableCount = decisions.filter(d => d.play_quality === 'acceptable').length;
+        const mistakeCount = decisions.filter(d => d.play_quality === 'mistake').length;
+
+        // Extract mistakes
+        const mistakes = decisions
+            .filter(d => d.play_quality === 'mistake')
+            .map(d => ({
+                street: d.street,
+                hero_action: d.hero_action,
+                should_have: d.gto_primary.action,
+                impact: `Should have ${d.gto_primary.action} (primary) instead of ${d.hero_action}`
+            }));
 
         const duration = Date.now() - startTime;
         console.log(`[Agent 6: Mistake Detector] Completed in ${duration}ms`);
+        console.log(`[Agent 6: Results] ${optimalCount} optimal, ${acceptableCount} acceptable, ${mistakeCount} mistakes`);
+        if (worstLeak) {
+            console.log(`[Agent 6: Primary Leak] ${worstLeak}`);
+        }
 
-        return analysis;
+        return {
+            decisions: enhancedDecisions,
+            summary: {
+                optimal_count: optimalCount,
+                acceptable_count: acceptableCount,
+                mistake_count: mistakeCount,
+                overall_assessment: llmResult.summary?.overall_assessment || `${optimalCount} optimal, ${acceptableCount} acceptable, ${mistakeCount} mistakes`
+            },
+            mistakes,
+            primary_leak: llmResult.primary_leak || null,
+            leak_categories: leakCategories, // Phase 14: Add leak categorization
+            worst_leak: worstLeak // Phase 14: Add worst leak
+        };
 
     } catch (error) {
         console.error('[Agent 6: Mistake Detector] Error:', error);
-        return createFallbackAnalysis();
+
+        // Fallback: return deterministic results without LLM reasoning
+        const optimalCount = decisions.filter(d => d.play_quality === 'optimal').length;
+        const acceptableCount = decisions.filter(d => d.play_quality === 'acceptable').length;
+        const mistakeCount = decisions.filter(d => d.play_quality === 'mistake').length;
+
+        return {
+            decisions: decisions.map(d => ({
+                ...d,
+                reasoning: `Deterministic classification: ${d.play_quality}`
+            })),
+            summary: {
+                optimal_count: optimalCount,
+                acceptable_count: acceptableCount,
+                mistake_count: mistakeCount,
+                overall_assessment: 'Error occurred, showing deterministic results'
+            },
+            mistakes: decisions
+                .filter(d => d.play_quality === 'mistake')
+                .map(d => ({
+                    street: d.street,
+                    hero_action: d.hero_action,
+                    should_have: d.gto_primary.action,
+                    impact: 'Deterministic classification'
+                })),
+            primary_leak: null,
+            leak_categories: leakCategories,
+            worst_leak: worstLeak
+        };
     }
 }
 

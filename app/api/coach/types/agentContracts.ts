@@ -52,6 +52,11 @@ export interface HandInput {
     potSizes: PotSizes;
     heroActions: HeroActions;   // What hero actually did
     lastBet?: number;           // Last bet to call (for pot odds)
+    tableSize?: number;         // Number of players (e.g. 6, 9)
+    villainContext?: {          // Context about how villain was determined
+        type: 'opening' | 'sb_vs_bb' | 'facing_action';
+        villainName?: string;
+    };
 }
 
 export interface HeroActionDetail {
@@ -115,17 +120,25 @@ export interface Agent1Input {
     boardAnalysis: BoardAnalysis;
     positions: Position;
     actions: Action[];
+    tableSize?: number;
+    stacks: Stacks;      // NEW: For Phase 8 (Stack Depth)
 }
 
 export interface RangeInfo {
     description: string;            // "22+, ATs+, KQs, AJo+"
     combos: number;                 // 156
     spectrum: string;               // "Top 12% of hands"
+    allCombos?: string[];           // NEW: Exact list of combos ["AhKs", "7h7d", ...] -- Phase 5
+    stats?: {                       // NEW: Detailed stats for Agent 3 -- Phase 6
+        distribution: Record<string, number>; // e.g. { "monster": 12, "air": 30 }
+        totalCombos: number;
+        topHands: string[];
+    };
 }
 
 export interface StreetRange {
-    hero_range: string;
-    villain_range: string;
+    hero_range: string | RangeInfo;
+    villain_range: string | RangeInfo;
     range_notes?: string;           // "Villain range polarized after turn raise"
 }
 
@@ -140,12 +153,29 @@ export interface RangeData {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// Phase 12: Unified Hero Classification
+// ═══════════════════════════════════════════════════════════════
+
+export interface HeroClassification {
+    bucket2D: string;           // "(3,2)" from HandClassifier
+    tier: string;               // "MONSTER", "STRONG", "MARGINAL", "DRAW_STRONG", "DRAW_WEAK", "AIR"
+    percentile: string;         // "Top 30%"
+    description: string;        // "Top pair strong kicker + Flush draw"
+    interpretation: string;     // "Strong spot - can apply pressure"
+}
+
+export interface Agent1Output {
+    ranges: RangeData;
+    heroClassification: HeroClassification;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // AGENT 2: Equity Calculator
 // ═══════════════════════════════════════════════════════════════
 
 export interface Agent2Input {
     heroHand: string;
-    villainRange: string;           // From Agent 1
+    villainRange: string | RangeInfo;           // From Agent 1 (text or structured)
     board: string;
     potSize: number;
     betSize: number;
@@ -160,6 +190,8 @@ export interface EquityData {
         equity_needed: number;        // 0.244 (24.4%)
     };
     decision: string;               // "CALL - equity exceeds pot odds"
+    equity_vs_value?: number;       // NEW: Phase 10 (Split Equity)
+    equity_vs_bluffs?: number;      // NEW: Phase 10 (Split Equity)
     breakdown?: {
         beats: string[];              // ["Kx weak kicker", "missed draws"]
         loses_to: string[];           // ["AK", "two pair+", "sets"]
@@ -212,15 +244,71 @@ export interface Agent4Input {
     stacks: Stacks;
 }
 
+// Phase 13: Enhanced SPR Types
+export type SPRZone = 'POT_COMMITTED' | 'COMMITTED' | 'MEDIUM' | 'DEEP' | 'VERY_DEEP';
+
+export interface CommitmentThresholds {
+    min_hand_strength: string;      // "Top pair+" or "Sets+"
+    can_fold_tptk: boolean;         // true if SPR > 8
+    can_fold_overpair: boolean;     // true if SPR > 13
+    shove_zone: boolean;            // true if SPR < 3
+}
+
+export interface PotOddsData {
+    current: number;                // 0.33 (need 33% equity to call)
+    after_call?: number;            // 0.28 (pot odds if we call)
+    implied_multiplier?: number;    // 1.5 (need 1.5x pot on later streets)
+}
+
+export interface StackCommitmentData {
+    percent_invested: number;       // 0.35 (35% of stack in pot)
+    remaining_bb: number;           // 75 BB remaining
+    pot_bb: number;                 // 25 BB in pot
+}
+
+export interface OptimalSizing {
+    value_bet: string;              // "50-66% pot"
+    bluff_bet: string;              // "33-50% pot"
+    all_in_threshold: number;       // 3.0 (SPR threshold to shove)
+}
+
+export interface FutureSPR {
+    after_half_pot_bet?: number;    // SPR after 0.5x pot bet
+    after_pot_bet?: number;         // SPR after 1x pot bet
+    streets_remaining: number;      // 2 (turn + river)
+}
+
 export interface SPRData {
-    effective_stack: number;        // 100 (min of hero, villain)
-    flop_spr?: number;              // 10.0
-    turn_spr?: number;              // 5.0
-    river_spr?: number;             // 2.2
+    // Core metrics (existing)
+    effective_stack: number;
+    flop_spr?: number;
+    turn_spr?: number;
+    river_spr?: number;
+
+    // SPR zone classification (NEW)
+    spr_zone: SPRZone;
+    zone_description: string;       // "Pot committed - shove/fold territory"
+
+    // Strategic thresholds (NEW)
+    commitment_thresholds: CommitmentThresholds;
+
+    // Pot odds & geometry (NEW)
+    pot_odds?: PotOddsData;
+
+    // Stack commitment (NEW)
+    stack_commitment: StackCommitmentData;
+
+    // Bet sizing guidance (NEW)
+    optimal_sizing: OptimalSizing;
+
+    // Future SPR projection (NEW)
+    future_spr: FutureSPR;
+
+    // Legacy (keep for compatibility)
     commitment_analysis: {
-        flop?: string;                // "Can fold top pair"
-        turn?: string;                // "Getting committed with top pair"
-        river?: string;               // "Pot committed - must call most bets"
+        flop?: string;
+        turn?: string;
+        river?: string;
     };
 }
 
@@ -243,6 +331,11 @@ export interface Agent5Input {
         turn: boolean;
         river: boolean;
     };
+    villainContext?: {          // NEW: Context about how villain was determined
+        type: 'opening' | 'sb_vs_bb' | 'facing_action';
+        villainName?: string;
+    };
+    heroClassification?: HeroClassification;  // Phase 12: Unified classification from Agent 1
 }
 
 export interface SingleAction {
@@ -301,8 +394,18 @@ export interface StreetDecisionTree {
     if_villain_bets_into_hero?: MixedActionRecommendation;
 }
 
+/**
+ * Decision Tree for Preflop
+ * Handles the sequence: Open -> Response to 3bet -> Response to 4bet
+ */
+export interface PreflopDecisionTree {
+    initial_action: MixedActionRecommendation;        // RFI, Limp, Fold, or Response to Open
+    response_to_3bet?: MixedActionRecommendation;     // If Hero Opened and faces 3-bet
+    response_to_4bet?: MixedActionRecommendation;     // If Hero 3-bet and faces 4-bet
+}
+
 export interface GTOStrategy {
-    preflop: ActionRecommendation;  // Preflop is simpler
+    preflop: PreflopDecisionTree;   // UPDATED: Now a tree like postflop
     flop?: StreetDecisionTree;
     turn?: StreetDecisionTree;
     river?: StreetDecisionTree;
@@ -311,6 +414,27 @@ export interface GTOStrategy {
 // ═══════════════════════════════════════════════════════════════
 // AGENT 6: Mistake Detector
 // ═══════════════════════════════════════════════════════════════
+
+// Phase 14: Strategic leak categories
+export type LeakCategory =
+    // Core leaks (detectable from single hand)
+    | 'spr_awareness'           // Folding in shove zone
+    | 'equity_miscalculation'   // Folding with correct pot odds
+    | 'range_awareness'         // Folding top of range
+    | 'postflop_value'          // Missing value bets (checking with strong hands)
+    | 'postflop_bluff'          // Bad bluffs (betting with weak hands)
+
+    // Street-specific fallbacks (Phase 14.5)
+    | 'preflop_mistake'         // Preflop deviation from GTO
+    | 'flop_mistake'            // Flop strategy issue
+    | 'turn_mistake'            // Turn strategy issue
+    | 'river_mistake';          // River strategy issue
+
+export interface StrategicLeakCategory {
+    category: LeakCategory;
+    count: number;
+    examples: string[];
+}
 
 export interface Agent6Input {
     boardAnalysis: BoardAnalysis;
@@ -321,6 +445,7 @@ export interface Agent6Input {
     gtoStrategy: GTOStrategy;
     heroActions: HeroActions;
     positions: Position;        // ADD: Hero and villain positions
+    heroClassification?: HeroClassification; // Phase 14: Add hero classification context
 }
 
 export interface MistakeContext {
@@ -400,7 +525,8 @@ export interface MistakeAnalysis {
 
 export interface CoachOutput {
     gto_strategy: string;           // Formatted strategy text
-    exploit_deviation: string;      // Formatted deviation text
+    exploit_deviation: string;      // Formatted deviation text (renamed: Play Review)
+    exploit_signals?: any;          // NEW: Agent 7 exploit signals per villain type
     learning_tag: string[];         // ["river value bet", "pot odds"]
 
     // Structured data for analysis tab

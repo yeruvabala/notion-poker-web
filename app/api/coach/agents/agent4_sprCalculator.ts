@@ -19,6 +19,7 @@
  */
 
 import { Agent4Input, SPRData, PotSizes, Stacks } from '../types/agentContracts';
+import { SPRStrategyEngine } from '../utils/SPRStrategyEngine';
 
 /**
  * Agent 4: Calculate SPR
@@ -34,25 +35,79 @@ export function agent4_sprCalculator(input: Agent4Input): SPRData {
 
     const { potSizes, stacks } = input;
 
-    // Calculate effective stack (minimum of hero and villain)
-    const effectiveStack = Math.min(stacks.hero, stacks.villain);
+    // Starting effective stack (minimum of hero and villain at hand start)
+    const startingEffectiveStack = Math.min(stacks.hero, stacks.villain);
 
-    // Calculate SPR for each street where we have pot info
-    const flopSPR = potSizes.flop ? effectiveStack / potSizes.flop : undefined;
-    const turnSPR = potSizes.turn ? effectiveStack / potSizes.turn : undefined;
-    const riverSPR = potSizes.river ? effectiveStack / potSizes.river : undefined;
+    // Phase 13.5: Calculate REMAINING stack at each street
+    // SPR = remaining stack / current pot
+    // Money invested by each player = (current pot - previous pot) / 2 (heads-up)
 
-    // Generate commitment analysis
+    // Flop: Subtract preflop investment (blinds/antes)
+    const flopPot = potSizes.flop || 0;
+    const preflopPot = potSizes.preflop || 0;
+    const moneyInvestedPreflop = (flopPot - preflopPot) / 2; // What each player added to get from preflop to flop pot
+    const stackAtFlop = startingEffectiveStack - moneyInvestedPreflop;
+    const flopSPR = flopPot > 0 ? stackAtFlop / flopPot : undefined;
+
+    // Turn: Subtract money invested on flop
+    const turnPot = potSizes.turn || 0;
+    const moneyInvestedOnFlop = (turnPot - flopPot) / 2;
+    const stackAtTurn = stackAtFlop - moneyInvestedOnFlop;
+    const turnSPR = turnPot > 0 ? stackAtTurn / turnPot : undefined;
+
+    // River: Subtract money invested on turn
+    const riverPot = potSizes.river || 0;
+    const moneyInvestedOnTurn = (riverPot - turnPot) / 2;
+    const stackAtRiver = stackAtTurn - moneyInvestedOnTurn;
+    const riverSPR = riverPot > 0 ? stackAtRiver / riverPot : undefined;
+
+    // Determine primary SPR (use most recent street available)
+    const primarySPR = riverSPR || turnSPR || flopSPR || (preflopPot > 0 ? startingEffectiveStack / preflopPot : 10);
+    const currentPot = riverPot || turnPot || flopPot || preflopPot || 0;
+    const currentStack = riverSPR ? stackAtRiver : turnSPR ? stackAtTurn : flopSPR ? stackAtFlop : startingEffectiveStack;
+
+    // Phase 13: Enhanced SPR calculations using SPRStrategyEngine
+    const { zone, description } = SPRStrategyEngine.getSPRZone(primarySPR);
+    const commitmentThresholds = SPRStrategyEngine.getCommitmentThresholds(primarySPR);
+    const optimalSizing = SPRStrategyEngine.getOptimalSizing(primarySPR);
+
+    // Calculate stack commitment
+    const totalInvested = startingEffectiveStack - currentStack;
+    const stackCommitment = SPRStrategyEngine.calculateStackCommitment(
+        totalInvested,
+        startingEffectiveStack,
+        currentPot
+    );
+
+    // Determine streets remaining
+    const streetsRemaining = !potSizes.flop ? 3 : !potSizes.turn ? 2 : !potSizes.river ? 1 : 0;
+
+    // Project future SPR
+    const futureSPR = SPRStrategyEngine.projectFutureSPR(
+        primarySPR,
+        currentPot,
+        currentStack, // Use CURRENT remaining stack, not starting
+        streetsRemaining
+    );
+
+    // Generate legacy commitment analysis (for backward compatibility)
     const commitmentAnalysis = analyzeCommitment(flopSPR, turnSPR, riverSPR);
 
     const duration = Date.now() - startTime;
-    console.log(`[Agent 4: SPR Calculator] Completed in ${duration}ms`);
+    console.log(`[Agent 4: SPR Calculator] Completed in ${duration}ms - Zone: ${zone}`);
+    console.log(`[Agent 4: SPR Debug] Stacks: Start=${startingEffectiveStack.toFixed(0)}, Flop=${stackAtFlop.toFixed(0)}, Turn=${stackAtTurn.toFixed(0)}, River=${stackAtRiver.toFixed(0)}`);
 
     return {
-        effective_stack: effectiveStack,
+        effective_stack: currentStack, // Return CURRENT remaining stack
         flop_spr: flopSPR,
         turn_spr: turnSPR,
         river_spr: riverSPR,
+        spr_zone: zone,
+        zone_description: description,
+        commitment_thresholds: commitmentThresholds,
+        stack_commitment: stackCommitment,
+        optimal_sizing: optimalSizing,
+        future_spr: futureSPR,
         commitment_analysis: commitmentAnalysis
     };
 }

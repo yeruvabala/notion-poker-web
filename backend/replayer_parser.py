@@ -105,7 +105,7 @@ STREET_MARKERS = {
 # Matches: "PlayerName: folds", "Hero: raises $10 to $15", "Villain: calls $5"
 # NOTE: "raises to" must come BEFORE "raises" in alternation to match correctly
 ACTION_RE = re.compile(
-    r"^(\S+)(?::)?\s*(folds|checks|calls|bets|raises\s+to|raises|all-in|posts\s+small\s+blind|posts\s+big\s+blind)\s*\$?([0-9,]+(?:\.[0-9]+)?)?(?:\s+to\s+\$?([0-9,]+(?:\.[0-9]+)?))?",
+    r"^([^\s:]+)(?::)?\s*(folds|checks|calls|bets|raises\s+to|raises|all-in|posts\s+small\s+blind|posts\s+big\s+blind)\s*\$?([0-9,]+(?:\.[0-9]+)?)?(?:\s+to\s+\$?([0-9,]+(?:\.[0-9]+)?))?",
     re.IGNORECASE | re.MULTILINE
 )
 

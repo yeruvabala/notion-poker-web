@@ -1,0 +1,226 @@
+══════════════════════════════════════════════════════════════════════
+  PIPELINE VALIDATION: Hand #2609912076
+══════════════════════════════════════════════════════════════════════
+
+📋 Hand: As Jh (BTN) vs SB
+Board: Tc 5s Js Ah
+Action: Preflop Raise/Call, Flop Bet/Call, Turn Bet/Fold
+
+🚀 Starting Pipeline...
+
+[1] Agent 0: Board Analyzer
+[Agent 0: Board Analyzer] Code classification completed in 0ms - Type: high_dry
+   Texture: Ace-high rainbow, dry board
+   Turn Impact: Ace on turn
+
+[Phase 4] Hand Classification (Bucketing)
+   Bucket: (4,0)
+   Description: Two pair (both cards)
+
+[2] Agent 1 & 4: Ranges & SPR
+[Agent 4: SPR Calculator] Completed in 0ms
+(node:44789) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[Agent 1: Range Builder] Completed in 4177ms
+   Hero Range: 22+, A2s+, K2s+, Q4s+, J7s+, T7s+, 97s+, 87s, 76s, 65s, A2o+, K7o+, Q9o+, JTo
+   SPR Flop: 2.21
+
+[3] Agent 2 & 3: Equity & Advantages
+[Agent 2] Poker-odds library failed: Error: Invalid hand: As  s Ah Js Tc 5s 2s
+    at rankHand (/Users/ash/Desktop/onlypoker/notion-poker-web/node_modules/poker-odds/lib/rank.js:78:11)
+    at /Users/ash/Desktop/onlypoker/notion-poker-web/node_modules/poker-odds/lib/calculate.js:98:31
+    at Array.map (<anonymous>)
+    at analyse (/Users/ash/Desktop/onlypoker/notion-poker-web/node_modules/poker-odds/lib/calculate.js:85:23)
+    at Object.calculateEquity (/Users/ash/Desktop/onlypoker/notion-poker-web/node_modules/poker-odds/lib/calculate.js:41:19)
+    at agent2_equityCalculator (/Users/ash/Desktop/onlypoker/notion-poker-web/app/api/coach/agents/agent2_equityCalculator.ts:220:46)
+    at async Promise.all (index 0)
+    at runValidationHand (/Users/ash/Desktop/onlypoker/notion-poker-web/app/api/coach/agents/test_multi_agent_phase4.ts:169:34)
+[Agent 2: Equity Calculator] Completed in 1354ms
+[Agent 3: Advantage Analyzer] Completed in 4760ms
+   Equity: 63.0%
+   Nut Advantage (Flop): villain
+
+[5] Agent 5: GTO Strategy
+[Agent 5: GTO Strategy] Completed in 5686ms
+🔍 PREFLOP STRATEGY DEBUG:
+{
+  "initial_action": {
+    "primary": {
+      "action": "raise",
+      "frequency": 1,
+      "reasoning": "In position with a strong hand like A♠ J♥, raising is optimal to build the pot and capitalize on positional advantage."
+    }
+  },
+  "response_to_3bet": {
+    "primary": {
+      "action": "call",
+      "frequency": 1,
+      "reasoning": "A♠ J♥ has good equity against Villain's 3-bet range, and calling allows Hero to play in position postflop."
+    }
+  }
+}
+🔍 HAS 3-BET? Raises: 2 -> true
+
+🎯 GTO STRATEGY OUTPUT:
+{
+  "preflop": {
+    "initial_action": {
+      "primary": {
+        "action": "raise",
+        "frequency": 1,
+        "reasoning": "In position with a strong hand like A♠ J♥, raising is optimal to build the pot and capitalize on positional advantage."
+      }
+    },
+    "response_to_3bet": {
+      "primary": {
+        "action": "call",
+        "frequency": 1,
+        "reasoning": "A♠ J♥ has good equity against Villain's 3-bet range, and calling allows Hero to play in position postflop."
+      }
+    }
+  },
+  "flop": {
+    "if_villain_checks": {
+      "primary": {
+        "action": "bet",
+        "sizing": "50% pot",
+        "frequency": 0.7,
+        "reasoning": "With top pair and a strong kicker, betting for value and protection against overcards is optimal."
+      },
+      "alternative": {
+        "action": "check",
+        "frequency": 0.3,
+        "reasoning": "Checking can be used to control the pot size and induce bluffs from Villain on later streets."
+      }
+    },
+    "if_villain_bets": {
+      "primary": {
+        "action": "call",
+        "frequency": 0.8,
+        "reasoning": "Hero's hand is strong enough to call a bet, given the equity of 63% against Villain's range."
+      },
+      "alternative": {
+        "action": "raise",
+        "frequency": 0.2,
+        "reasoning": "Raising can be used occasionally to apply pressure and protect against draws, though it's less frequent due to the dry board."
+      }
+    },
+    "if_hero_bets_and_villain_raises": {
+      "primary": {
+        "action": "call",
+        "frequency": 0.8,
+        "reasoning": "Hero's top pair with a strong kicker justifies a call against a raise, maintaining position and pot control."
+      },
+      "alternative": {
+        "action": "fold",
+        "frequency": 0.2,
+        "reasoning": "Folding can be considered if Villain's raise size indicates a very strong hand, though it's less frequent."
+      }
+    }
+  },
+  "turn": {
+    "if_villain_checks": {
+      "primary": {
+        "action": "bet",
+        "sizing": "75% pot",
+        "frequency": 0.9,
+        "reasoning": "With two pair, betting for value and protection is optimal, especially as the Ace improves Hero's range."
+      }
+    },
+    "if_villain_bets": {
+      "primary": {
+        "action": "call",
+        "frequency": 0.9,
+        "reasoning": "Hero's two pair has significant equity against Villain's betting range, justifying a call."
+      }
+    },
+    "if_hero_bets_and_villain_raises": {
+      "primary": {
+        "action": "call",
+        "frequency": 0.7,
+        "reasoning": "Hero's two pair is strong enough to call a raise, given the improved equity with the Ace on the turn."
+      },
+      "alternative": {
+        "action": "fold",
+        "frequency": 0.3,
+        "reasoning": "Folding can be considered if Villain's raise indicates a very strong hand, but it's less frequent due to Hero's hand strength."
+      }
+    }
+  }
+}
+
+[6] Agent 6: Mistake Detector
+[Agent 6: Mistake Detector] Completed in 3854ms
+
+❌ MISTAKE ANALYSIS:
+{
+  "mistakes": [],
+  "total_ev_lost": 0,
+  "severity_summary": {
+    "critical": 0,
+    "moderate": 0,
+    "minor": 0
+  },
+  "primary_leak": null,
+  "decisions": [
+    {
+      "street": "preflop",
+      "decision_point": "initial_action",
+      "hero_action": "raise",
+      "gto_primary": {
+        "action": "raise",
+        "frequency": 1
+      },
+      "gto_alternative": null,
+      "play_quality": "optimal",
+      "reasoning": "Hero's action of raising matches the GTO primary action with 100% frequency, which is optimal for building the pot and utilizing positional advantage."
+    },
+    {
+      "street": "preflop",
+      "decision_point": "response_to_3bet",
+      "hero_action": "call",
+      "gto_primary": {
+        "action": "call",
+        "frequency": 1
+      },
+      "gto_alternative": null,
+      "play_quality": "optimal",
+      "reasoning": "Hero's action of calling matches the GTO primary action with 100% frequency, which is optimal given the hand's equity against Villain's 3-bet range."
+    },
+    {
+      "street": "flop",
+      "decision_point": "facing_bet",
+      "hero_action": "call",
+      "gto_primary": {
+        "action": "call",
+        "frequency": 0.8
+      },
+      "gto_alternative": {
+        "action": "raise",
+        "frequency": 0.2
+      },
+      "play_quality": "optimal",
+      "reasoning": "Hero's action of calling matches the GTO primary action with 80% frequency, which is optimal given the hand's strength and equity."
+    },
+    {
+      "street": "turn",
+      "decision_point": "initial_action",
+      "hero_action": "bet",
+      "gto_primary": {
+        "action": "bet",
+        "frequency": 0.9
+      },
+      "gto_alternative": null,
+      "play_quality": "optimal",
+      "reasoning": "Hero's action of betting matches the GTO primary action with 90% frequency, which is optimal for value and protection with two pair."
+    }
+  ],
+  "summary": {
+    "optimal_count": 4,
+    "acceptable_count": 0,
+    "mistake_count": 0,
+    "overall_assessment": "Excellent play! All actions were optimal according to GTO recommendations."
+  }
+}
+
+✅ Validation Complete in 18.48s

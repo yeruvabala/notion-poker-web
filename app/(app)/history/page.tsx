@@ -5,9 +5,10 @@
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { Bot, User } from 'lucide-react';
+import { Bot, User, Target } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { EnhancedGTOTooltip } from './components/EnhancedGTOTooltip';
 import "@/styles/onlypoker-theme.css";
 import "@/app/globals.css";
 
@@ -20,6 +21,11 @@ type Hand = {
   cards: string | null;
   gto_strategy: string | null;
   exploit_deviation: string | null;
+  exploit_signals: any;
+  // Phase 12-14.5: Enhanced coaching data
+  hero_classification?: any;
+  spr_analysis?: any;
+  mistake_analysis?: any;
 };
 
 // Helper to render cards with proper suit colors
@@ -37,6 +43,22 @@ function renderCards(cards: string | null) {
         {card}
       </span>
     );
+  });
+}
+
+// Helper to render simple markdown (bolding)
+function renderMarkdown(text: string | null) {
+  if (!text) return '—';
+
+  // Split by ** delimiters
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      // Remove asterisks and render bold
+      return <strong key={i} className="text-white font-bold">{part.slice(2, -2)}</strong>;
+    }
+    return <span key={i}>{part}</span>;
   });
 }
 
@@ -78,20 +100,11 @@ export default function HistoryPage() {
         return;
       }
 
+      // Fetch hands with backward compatibility
+      // Phase 12-14.5 columns are optional (might not exist yet)
       const { data, error } = await supabase
         .from('hands')
-        .select(
-          `
-id,
-  created_at,
-  date,
-  stakes,
-  position,
-  cards,
-  gto_strategy,
-  exploit_deviation
-    `
-        )
+        .select('*')  // Select all columns (handles missing columns gracefully)
         .eq('user_id', user.id)
         .order('date', { ascending: false, nullsFirst: false })
         .limit(200);
@@ -266,6 +279,9 @@ id,
                     <Bot className="w-4 h-4 text-[#737373]" />
                   </span>
                   <span className="flex items-center justify-center gap-1">
+                    <Target className="w-4 h-4 text-[#737373]" />
+                  </span>
+                  <span className="flex items-center justify-center gap-1">
                     <User className="w-4 h-4 text-[#737373]" />
                   </span>
                 </div>
@@ -287,21 +303,51 @@ id,
                           {/* GTO / Robot Column */}
                           <span className="flex items-center justify-center">
                             {gto ? (
+                              <EnhancedGTOTooltip
+                                gtoStrategy={gto}
+                                heroClassification={h.hero_classification}
+                                spr={h.spr_analysis}
+                                mistakes={h.mistake_analysis}
+                              />
+                            ) : (
+                              <Bot className="w-5 h-5 text-[#333] opacity-30" />
+                            )}
+                          </span>
+
+                          {/* Exploit Signals Column - NEW! */}
+                          <span className="flex items-center justify-center">
+                            {h.exploit_signals && h.exploit_signals.length > 0 ? (
                               <div className="group relative">
-                                <Bot
-                                  className="w-5 h-5 text-[#737373] transition-all duration-300 hover:text-[#e2e8f0] hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] cursor-help"
+                                <Target
+                                  className="w-5 h-5 text-[#737373] transition-all duration-300 hover:text-[#fde047] hover:drop-shadow-[0_0_8px_rgba(253,224,71,0.5)] cursor-help"
                                 />
-                                <div className="absolute right-full top-1/2 -translate-y-1/2 mr-3 w-96 p-5 platinum-container-frame shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[9999]">
+                                <div className="absolute right-full top-1/2 -translate-y-1/2 mr-3 w-80 p-5 platinum-container-frame shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[9999]">
                                   <div className="mb-3 border-b border-[#444] pb-2">
-                                    <span className="font-bold uppercase tracking-wider text-[11px] platinum-text-gradient">GTO Strategy</span>
+                                    <span className="font-bold uppercase tracking-wider text-[11px] platinum-text-gradient">🎯 Exploit Signals</span>
                                   </div>
-                                  <div className="text-xs leading-relaxed whitespace-pre-wrap platinum-text-gradient font-medium">
-                                    {gto}
+                                  <div className="flex gap-2 mb-3">
+                                    {h.exploit_signals.map((arch: any) => (
+                                      <span key={arch.id} className="text-lg" title={arch.name}>{arch.icon}</span>
+                                    ))}
                                   </div>
+                                  {h.exploit_signals.map((arch: any) => (
+                                    <div key={arch.id} className="mb-3 text-xs">
+                                      <div className="font-bold text-[#e2e8f0] mb-1">{arch.icon} vs {arch.name}</div>
+                                      {arch.streets?.slice(0, 2).map((st: any, i: number) => (
+                                        <div key={i} className="text-[#94a3b8]">
+                                          <strong>{st.street}:</strong> {st.adjustedAction} {st.adjustedFreq}%
+                                          <span className={st.direction === 'increase' ? ' text-green-400' : st.direction === 'decrease' ? ' text-red-400' : ''}>
+                                            {st.direction === 'increase' ? ' ↑' : st.direction === 'decrease' ? ' ↓' : ' →'}
+                                          </span>
+                                        </div>
+                                      ))}
+                                      <div className="text-[#fde047] mt-1">💡 {arch.overallAdvice}</div>
+                                    </div>
+                                  ))}
                                 </div>
                               </div>
                             ) : (
-                              <Bot className="w-5 h-5 text-[#333] opacity-30" />
+                              <Target className="w-5 h-5 text-[#333] opacity-30" />
                             )}
                           </span>
 
@@ -314,10 +360,10 @@ id,
                                 />
                                 <div className="absolute right-full top-1/2 -translate-y-1/2 mr-3 w-96 p-5 platinum-container-frame shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[9999]">
                                   <div className="mb-3 border-b border-[#444] pb-2">
-                                    <span className="font-bold uppercase tracking-wider text-[11px] platinum-text-gradient">Exploitative Deviation</span>
+                                    <span className="font-bold uppercase tracking-wider text-[11px] platinum-text-gradient">Play Review</span>
                                   </div>
                                   <div className="text-xs leading-relaxed whitespace-pre-wrap platinum-text-gradient font-medium">
-                                    {exploit}
+                                    {renderMarkdown(exploit)}
                                   </div>
                                 </div>
                               </div>
@@ -465,7 +511,7 @@ id,
         /* Table Header - Darker background with bright platinum */
         .history-table-header {
           display: grid;
-          grid-template-columns: 1.5fr 1.2fr 1fr 2fr 60px 60px;
+          grid-template-columns: 1.5fr 1.2fr 1fr 2fr 60px 60px 60px;
           font-size: 13px;
           font-weight: 700;
           color: #E2E8F0 !important;
@@ -501,7 +547,7 @@ id,
         /* Table Rows - Dark transparent with platinum dividers */
         .history-row {
           display: grid;
-          grid-template-columns: 1.5fr 1.2fr 1fr 2fr 60px 60px;
+          grid-template-columns: 1.5fr 1.2fr 1fr 2fr 60px 60px 60px;
           font-size: 13px;
           padding: 10px 16px;
           border-bottom: 1px solid rgba(226, 232, 240, 0.15);
@@ -534,7 +580,7 @@ id,
           }
           .history-table-header,
           .history-row {
-            grid-template-columns: 90px 90px 70px 1fr 50px 50px;
+            grid-template-columns: 90px 90px 70px 1fr 50px 50px 50px;
             font-size: 12px;
           }
         }

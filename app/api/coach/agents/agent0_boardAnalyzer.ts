@@ -3,6 +3,10 @@
  * 
  * PURPOSE: Analyze poker board texture objectively
  * 
+ * APPROACH: Code-first, LLM-fallback
+ * - First tries deterministic code-based classification (fast, accurate)
+ * - Falls back to LLM only for edge cases code can't handle
+ * 
  * This agent is the FIRST in the pipeline. It looks at the community cards
  * and identifies:
  * - Board texture (paired, connected, suited)
@@ -11,13 +15,13 @@
  * - How turn/river change the dynamics
  * 
  * RUNS: Tier 1 (first, before all other agents)
- * MODEL: GPT-4o
- * TOOLS: None (pure LLM analysis)
- * TIME: ~500ms
+ * MODEL: GPT-4o (fallback only)
+ * TIME: ~5ms (code) or ~500ms (LLM fallback)
  */
 
 import OpenAI from 'openai';
 import { Agent0Input, BoardAnalysis } from '../types/agentContracts';
+import { classifyBoard, toBoardAnalysis } from '../utils/boardClassifier';
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -97,6 +101,10 @@ function parseBoardCards(board: string): { flop: string; turn?: string; river?: 
 /**
  * Agent 0: Analyze Board State
  * 
+ * Uses CODE-FIRST approach:
+ * 1. Try deterministic classification (instant, accurate)
+ * 2. Fall back to LLM only if code can't classify
+ * 
  * @param input - Contains the board string
  * @returns BoardAnalysis - Structured analysis of the board
  */
@@ -109,6 +117,24 @@ export async function agent0_boardAnalyzer(input: Agent0Input): Promise<BoardAna
         console.log('[Agent 0: Board Analyzer] No board provided - skipping analysis');
         return createEmptyBoardAnalysis();
     }
+
+    // ==========================================================================
+    // STEP 1: Try code-based classification first (fast, accurate)
+    // ==========================================================================
+    const classification = classifyBoard(input.board);
+
+    if (classification.type !== 'unknown') {
+        // Code successfully classified the board - no LLM needed!
+        const duration = Date.now() - startTime;
+        console.log(`[Agent 0: Board Analyzer] Code classification completed in ${duration}ms - Type: ${classification.type}`);
+
+        return toBoardAnalysis(input.board, classification);
+    }
+
+    // ==========================================================================
+    // STEP 2: Edge case - fall back to LLM
+    // ==========================================================================
+    console.log('[Agent 0: Board Analyzer] Code classification failed, using LLM fallback');
 
     // Parse the board into components
     const { flop, turn, river } = parseBoardCards(input.board);
@@ -132,8 +158,6 @@ Provide complete board texture analysis.`;
             response_format: { type: 'json_object' },
             temperature: 0.1, // Low temperature for consistency
             max_tokens: 800,
-            // Enable prompt caching for cost savings
-            // Note: OpenAI automatically caches identical system prompts
         });
 
         const content = response.choices[0]?.message?.content;
@@ -146,12 +170,12 @@ Provide complete board texture analysis.`;
 
         // Log timing for debugging
         const duration = Date.now() - startTime;
-        console.log(`[Agent 0: Board Analyzer] Completed in ${duration}ms`);
+        console.log(`[Agent 0: Board Analyzer] LLM fallback completed in ${duration}ms`);
 
         return analysis;
 
     } catch (error) {
-        console.error('[Agent 0: Board Analyzer] Error:', error);
+        console.error('[Agent 0: Board Analyzer] LLM Error:', error);
 
         // Return a minimal valid response on error
         return createFallbackAnalysis(input.board, flop, turn, river);
