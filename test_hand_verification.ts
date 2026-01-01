@@ -31,7 +31,33 @@ async function runTest() {
         },
         spr: {
             effective_stack: 25.00,
-            flop_spr: 4.0 // approx
+            flop_spr: 4.0, // approx
+            spr_zone: "MEDIUM",
+            zone_description: "Standard play",
+            commitment_thresholds: {
+                min_hand_strength: "Top Pair",
+                can_fold_tptk: true,
+                can_fold_overpair: true,
+                shove_zone: false
+            },
+            stack_commitment: {
+                percent_invested: 0.15,
+                remaining_bb: 50,
+                pot_bb: 12
+            },
+            future_spr: {
+                after_half_pot_bet: 2.5,
+                after_pot_bet: 1.5,
+                streets_remaining: 2
+            },
+            optimal_sizing: {
+                value_bet: "50-66%",
+                bluff_bet: "33%",
+                all_in_threshold: 1.5
+            },
+            commitment_analysis: {
+                flop: "Not committed"
+            }
         },
         actions: [
             { street: "preflop", player: "hero", action: "raise", amount: 0.70 },
