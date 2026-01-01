@@ -150,15 +150,17 @@ async function runValidationHand() {
     // PHASE 2: Ranges & SPR
     // ═══════════════════════════════════════════════════════════════
     console.log('\n[2] Agent 1 & 4: Ranges & SPR');
-    const [ranges, spr] = await Promise.all([
+    const [agent1Result, spr] = await Promise.all([
         agent1_rangeBuilder({
             boardAnalysis,
             positions,
             actions,
-            tableSize: 6
+            tableSize: 6,
+            stacks
         }),
         Promise.resolve(agent4_sprCalculator({ potSizes, stacks }))
     ]);
+    const { ranges } = agent1Result;
     console.log(`   Hero Range: ${ranges.preflop.hero_range.description}`);
     console.log(`   SPR Flop: ${spr.flop_spr?.toFixed(2)}`);
 

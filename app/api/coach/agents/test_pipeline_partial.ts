@@ -77,11 +77,13 @@ async function testPartialPipeline() {
         console.log('📊 AGENT 1: Range Builder');
         console.log('─'.repeat(60));
 
-        const ranges = await agent1_rangeBuilder({
+        const agent1Result = await agent1_rangeBuilder({
             boardAnalysis: boardAnalysis,
             positions: testInput.positions,
-            actions: testInput.actions
+            actions: testInput.actions,
+            stacks: { hero: 100, villain: 100 } // Dummy stacks for testing
         });
+        const { ranges } = agent1Result;
 
         console.log('\n✅ Ranges:');
         console.log(JSON.stringify(ranges, null, 2));
