@@ -99,12 +99,13 @@ async function runFullPipelineTest() {
         console.log('📊 AGENT 1: Range Builder');
         console.log('─'.repeat(70));
 
-        const ranges = await agent1_rangeBuilder({
+        const agent1Result = await agent1_rangeBuilder({
             boardAnalysis,
             positions: testInput.positions,
             actions: testInput.actions,
             stacks: testInput.stacks
         });
+        const { ranges } = agent1Result;
         console.log('✅ Ranges:', JSON.stringify(ranges, null, 2));
 
         console.log('\n' + '─'.repeat(70));
