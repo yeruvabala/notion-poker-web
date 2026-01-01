@@ -478,9 +478,11 @@ export interface MistakeRecord {
 /**
  * 3-Tier Classification for a single decision point
  */
+export type DecisionPoint = 'initial_action' | 'facing_bet' | 'facing_raise';
+
 export interface DecisionClassification {
     street: Street;
-    decision_point: 'initial_action' | 'facing_bet' | 'facing_raise';
+    decision_point: DecisionPoint;
     hero_action: ActionType;
     gto_primary: {
         action: ActionType;

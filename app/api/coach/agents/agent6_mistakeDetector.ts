@@ -28,7 +28,8 @@ import {
     Position,
     EquityData,
     SPRData,
-    HeroClassification
+    HeroClassification,
+    DecisionPoint
 } from '../types/agentContracts';
 import { MistakeClassifier, AnalysisContext } from '../utils/MistakeClassifier';
 
@@ -374,7 +375,7 @@ Provide a summary with counts and overall assessment.`;
             const llmDecision = llmResult.decisions?.[idx];
             return {
                 street: decision.street as Street, // Explicit cast to fix type error
-                decision_point: decision.decision_point,
+                decision_point: decision.decision_point as DecisionPoint, // Explicit cast to fix type error
                 hero_action: decision.hero_action,
                 gto_primary: decision.gto_primary,
                 gto_alternative: decision.gto_alternative,
