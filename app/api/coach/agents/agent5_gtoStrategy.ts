@@ -22,7 +22,7 @@ import {
 } from '../types/agentContracts';
 import { getHandType } from '../utils/handUtils';
 import { evaluateHand } from '../utils/handEvaluator';
-import { getPreflopAction, getOpeningAction, normalizeHand } from '../utils/gtoRanges';
+import { getPreflopAction, getOpeningAction, getVs3BetAction, normalizeHand } from '../utils/gtoRanges';
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -476,7 +476,74 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
     const heroHand = input.heroHand || '';
     const heroPosition = input.positions?.hero || '';
 
-    // Transform villainContext for range lookup
+
+    // Detect if this is an RFI -> vs 3-bet scenario
+    const preflopActions = input.actions.filter(a => a.street === 'preflop');
+    const heroFirstAction = preflopActions.find(a => a.player === 'hero');
+    const heroOpened = heroFirstAction && (heroFirstAction.action === 'raise' || heroFirstAction.action === 'bet');
+
+    // Check if we faced a 3-bet (villain raised after us)
+    // Heuristic: villainContext is 'facing_action' AND we opened
+    const isVs3Bet = input.villainContext?.type === 'facing_action' && heroOpened;
+
+    if (isVs3Bet) {
+        // 1. Get Opening Action (Initial)
+        // We act as if villainContext is 'opening' to get the RFI logic
+        const openResult = getPreflopAction(heroHand, heroPosition, { type: 'opening', villain: null });
+
+        // 2. Get Vs 3-Bet Action (Response)
+        // Call getVs3BetAction directly to lookup in VS_THREE_BET_RANGES
+        const threeBettorPosition = input.villainContext?.villainName || input.positions?.villain || '';
+        const vs3BetResult = getVs3BetAction(heroHand, heroPosition, threeBettorPosition);
+
+        if (!openResult.found && !vs3BetResult.found) return null;
+
+        // Build the composite strategy - ensure initial_action is present with fallback
+        const strategy: GTOStrategy = {
+            preflop: {
+                initial_action: {
+                    primary: { action: 'fold', frequency: 1.0, reasoning: 'Fallback initialization' }
+                }
+            }
+        };
+
+        // Initial Action (Open)
+        if (openResult.found) {
+            const normalizedHand = normalizeHand(heroHand);
+            // Map 3bet/4bet to 'raise' for ActionType compatibility
+            const openActionName = (openResult.action.action === 'raise' || openResult.action.action === '3bet' || openResult.action.action === '4bet') ? 'raise' : openResult.action.action;
+
+            strategy.preflop.initial_action = {
+                primary: {
+                    action: openActionName as any,
+                    sizing: openResult.action.sizing,
+                    frequency: openResult.action.frequency,
+                    reasoning: `GTO ${heroPosition} Opening Range: ${normalizedHand} in range (${(openResult.action.frequency * 100).toFixed(0)}%)`
+                }
+            };
+        }
+
+        // Response to 3-bet
+        if (vs3BetResult.found) {
+            const normalizedHand = normalizeHand(heroHand);
+            const vs3BetActionName = (vs3BetResult.action.action === 'raise' || vs3BetResult.action.action === '3bet' || vs3BetResult.action.action === '4bet') ? 'raise' : vs3BetResult.action.action;
+
+
+            strategy.preflop.response_to_3bet = {
+                primary: {
+                    action: vs3BetActionName as any,
+                    sizing: vs3BetResult.action.sizing,
+                    frequency: vs3BetResult.action.frequency,
+                    reasoning: `GTO Defense vs 3-bet: ${normalizedHand} is ${(vs3BetResult.action.frequency * 100).toFixed(0)}% call/raise`
+                }
+            };
+        }
+
+        console.error('[Agent5 DEBUG] Returning composite strategy:', JSON.stringify(strategy, null, 2));
+        return strategy;
+    }
+
+    // Standard Single-Action Logic (Opening or Limping or Cold Call)
     const villainContextForRanges = input.villainContext
         ? {
             type: input.villainContext.type,

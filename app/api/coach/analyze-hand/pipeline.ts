@@ -249,15 +249,34 @@ function determineVillainContext(
         return { type: 'opening', villain: null };
     }
 
-    if (hasPostflopActions) {
-        // Hero raised AND hand went to flop - find who called/3-bet
-        const postHeroActions = actions.slice(heroActionIndex + 1);
+    // NEW: Check if someone raised AFTER hero (3-bet), regardless of whether hand went to flop
+    const postHeroActions = actions.slice(heroActionIndex + 1);
+    const threeBetAction = postHeroActions.find((a: any) =>
+        a.street === 'preflop' &&
+        a.player !== heroName &&
+        ['raises', 'raise', 'raiseTo', 'raiseto'].includes(a.action?.toLowerCase?.() || a.action)
+    );
 
-        // Find the caller or 3-bettor
+    if (threeBetAction) {
+        // Hero opened, someone 3-bet - this is a facing_action scenario
+        const players = replayerData?.players || [];
+        const threeBettorInfo = players.find((p: any) => p.name === threeBetAction.player);
+        const villainPos = threeBettorInfo?.position || extractVillainPosition(rawText, heroPosition);
+
+        console.error(`[VillainContext] Hero raised, ${threeBetAction.player} (${villainPos}) 3-bet - facing action`);
+        return {
+            type: 'facing_action',
+            villain: villainPos,
+            villainName: threeBetAction.player
+        };
+    }
+
+    if (hasPostflopActions) {
+        // Hero raised AND hand went to flop - find who called
         const callerAction = postHeroActions.find((a: any) =>
             a.street === 'preflop' &&
             a.player !== heroName &&
-            ['calls', 'call', 'raises', 'raise', 'raiseTo', 'raiseto'].includes(a.action?.toLowerCase?.() || a.action)
+            ['calls', 'call'].includes(a.action?.toLowerCase?.() || a.action)
         );
 
         if (callerAction) {
@@ -265,7 +284,7 @@ function determineVillainContext(
             const callerInfo = players.find((p: any) => p.name === callerAction.player);
             const villainPos = callerInfo?.position || extractVillainPosition(rawText, heroPosition);
 
-            console.error(`[VillainContext] Hero raised, ${callerAction.player} (${villainPos}) called/3-bet - facing action for postflop`);
+            console.error(`[VillainContext] Hero raised, ${callerAction.player} (${villainPos}) called - facing action for postflop`);
             return {
                 type: 'facing_action',
                 villain: villainPos,
@@ -274,8 +293,8 @@ function determineVillainContext(
         }
     }
 
-    // Hero raised but hand didn't go to flop (everyone folded) - still opening analysis
-    console.error(`[VillainContext] Hero raised first, no postflop - opening scenario`);
+    // Hero raised but no one called or 3-bet (everyone folded) - opening analysis
+    console.error(`[VillainContext] Hero raised first, everyone folded - opening scenario`);
     return { type: 'opening', villain: null };
 }
 
@@ -779,7 +798,10 @@ interface FormatInput {
 function detectBettingAction(actions: Action[]): { has3Bet: boolean; has4Bet: boolean } {
     // Count preflop raises to determine 3-bet/4-bet
     const preflopActions = actions.filter(a => a.street === 'preflop');
-    const raises = preflopActions.filter(a => a.action === 'raise');
+    const raises = preflopActions.filter(a => {
+        const action = (a.action as any);
+        return action === 'raise' || action === 'raiseTo' || action === 'raises' || action === 'raiseto';
+    });
 
     // 1st raise = open, 2nd raise = 3-bet, 3rd raise = 4-bet
     const has3Bet = raises.length >= 2;
@@ -885,8 +907,14 @@ function correctPositionHallucinations(
 function formatOutput(data: FormatInput): CoachOutput {
     const { gtoStrategy, mistakes, ranges, equity, advantages, boardAnalysis, rawBoard, positions, actions } = data;
 
+    // DEBUG: Log what we received
+    console.error('[FormatOutput DEBUG] gtoStrategy received:', JSON.stringify(gtoStrategy, null, 2));
+    console.error('[FormatOutput DEBUG] gtoStrategy.preflop:', gtoStrategy?.preflop);
+    console.error('[FormatOutput DEBUG] gtoStrategy.preflop.response_to_3bet:', gtoStrategy?.preflop?.response_to_3bet);
+
     // Detect if 3-bet/4-bet actually occurred
     const { has3Bet, has4Bet } = detectBettingAction(actions || []);
+    console.error('[FormatOutput DEBUG] has3Bet:', has3Bet, 'has4Bet:', has4Bet);
 
     // Helper to format a mixed action recommendation
     const formatMixedAction = (rec: any): string => {
