@@ -438,7 +438,7 @@ const VS_THREE_BET_RANGES: Record<string, Record<string, Record<string, number>>
             'QJs': 1.0, 'QTs': 1.0, 'Q9s': 0.7,
             'JTs': 1.0, 'J9s': 0.9, 'T9s': 1.0, 'T8s': 0.9,
             '98s': 0.9, '87s': 0.9, '76s': 1.0, '65s': 0.9, '54s': 1.0,
-            'AKo': 0.5, 'AQo': 0.7, 'AJo': 0.6,
+            'AKo': 0.5, 'AQo': 0.7, 'AJo': 0.6, 'ATo': 0.0, 'A9o': 0.0, // Explicit Folds
             'KQo': 0.8, 'KJo': 0.3,
         },
     },

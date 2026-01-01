@@ -495,17 +495,28 @@ function generateInterpretation(bucket2D: string, tier: string, description: str
 }
 
 function createHeroClassification(input: Agent1Input, ranges: RangeData, engineData: any): HeroClassification {
-    const heroHand = (input.actions.find(a => a.player === 'hero') as any)?.cards || '';
+    const heroHand = input.positions.hero ?
+        ((input.actions.find(a => a.player === 'hero' && (a as any).cards) as any)?.cards ||
+            (input as any).heroHand ||
+            (input as any).cards ||
+            '') : '';
+
     const board = input.boardAnalysis.flop?.cards || '';
 
-    if (!heroHand || !board) {
-        return {
-            bucket2D: "(0,0)",
-            tier: "AIR",
-            percentile: "Unknown",
-            description: "Preflop - hand not yet classified",
-            interpretation: "Waiting for postflop action"
-        };
+    // PREFLOP / NO BOARD LOGIC
+    if (!board) {
+        if (!heroHand || heroHand.length < 2) {
+            return {
+                bucket2D: "(0,0)",
+                tier: "AIR",
+                percentile: "Unknown",
+                description: "Preflop - waiting for cards",
+                interpretation: "Waiting for action"
+            };
+        }
+
+        // Use Centralized Preflop Classifier
+        return RangeEngine.categorizePreflopHand(heroHand);
     }
 
     const classification = classifyHand(heroHand, board);

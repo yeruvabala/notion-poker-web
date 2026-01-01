@@ -9,6 +9,7 @@ import { evaluateHand, HandEvaluation } from './handEvaluator';
 import { getPreflopAction, normalizeHand, getOpeningFrequency } from './gtoRanges';
 import { getHandType } from '../utils/handUtils';
 import { classifyBoard } from './boardClassifier';
+import { PreflopClassifier, HandClassification } from './PreflopClassifier';
 
 // =============================================================================
 // DATA STRUCTURES
@@ -124,6 +125,13 @@ export class RangeEngine {
             const bucket = this.categorizeHand(combo.hand, boardStr);
             return { ...combo, bucket };
         });
+    }
+
+    /**
+     * Categorize a preflop hand without board
+     */
+    static categorizePreflopHand(hand: string): HandClassification {
+        return PreflopClassifier.classify(hand);
     }
 
     /**
