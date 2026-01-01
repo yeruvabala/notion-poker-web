@@ -272,11 +272,11 @@ function formatContextForPrompt(input: Agent5Input): string {
     lines.push('');
 
     // Phase 4: Hand Classification (2D Bucketing) - tells LLM exactly what Hero has
-    if (input.handClassification) {
+    if (input.heroClassification) {
         lines.push('HAND STRENGTH (Code-Verified - DO NOT Re-Analyze):');
-        lines.push(`  Made Hand: ${input.handClassification.madeHand}/5 (${input.handClassification.description.split('+')[0].trim()})`);
-        lines.push(`  Draw Strength: ${input.handClassification.drawStrength}/3`);
-        lines.push(`  2D Bucket: ${input.handClassification.bucket2D}`);
+        lines.push(`  Tier: ${input.heroClassification.tier} (${input.heroClassification.description})`);
+        lines.push(`  Percentile: ${input.heroClassification.percentile}`);
+        lines.push(`  2D Bucket: ${input.heroClassification.bucket2D}`);
         lines.push('');
         lines.push('CRITICAL: Use the HAND STRENGTH above. Do not guess or re-calculate.');
         lines.push('');
@@ -373,6 +373,97 @@ function formatContextForPrompt(input: Agent5Input): string {
     if (input.spr.river_spr !== undefined) {
         lines.push(`River SPR: ${input.spr.river_spr.toFixed(1)}`);
     }
+    lines.push('');
+
+    // ═══════════════════════════════════════════════════════════
+    // 🎯 PHASE 15: STRATEGIC CONTEXT SYNTHESIS
+    // ═══════════════════════════════════════════════════════════
+
+    lines.push('═══════════════════════════════════════════════════');
+    lines.push('🎯 STRATEGIC CONTEXT SYNTHESIS (Phase 15)');
+    lines.push('Use this to provide EDUCATIONAL, CONTEXTUAL advice');
+    lines.push('═══════════════════════════════════════════════════');
+    lines.push('');
+
+    // Build strategic insights from all context
+    const strategicInsights: string[] = [];
+
+    // 1. Hand Strength + Range Position
+    if (input.heroClassification) {
+        const tier = input.heroClassification.tier || 'UNKNOWN';
+        const percentile = input.heroClassification.percentile || '';
+        strategicInsights.push(`HAND STRENGTH: ${tier} (${percentile})`);
+
+        if (tier === 'MONSTER' || tier === 'STRONG') {
+            strategicInsights.push('→ STRONG HAND: Bet for value,  can commit stack');
+        } else if (tier === 'MARGINAL') {
+            strategicInsights.push('→ MARGINAL: Proceed carefully, avoid overcommitting');
+        } else if (tier === 'WEAK' || tier === 'AIR') {
+            strategicInsights.push('→ WEAK: Consider fold or bluff with fold equity');
+        }
+    }
+
+    // 2. SPR Implications
+    if (input.spr) {
+        const zone = input.spr.spr_zone;
+        const shovezone = input.spr.commitment_thresholds?.shove_zone;
+
+        strategicInsights.push(`SPR ZONE: ${zone}`);
+
+        if (shovezone) {
+            strategicInsights.push('→ ⚠️ SHOVE ZONE (SPR < 3): Plan to commit with decent hands');
+        } else if (zone === 'POT_COMMITTED' || zone === 'COMMITTED') {
+            strategicInsights.push('→ LOW SPR: Bet big or shove, hard to fold decent hands');
+        } else if (zone === 'DEEP' || zone === 'VERY_DEEP') {
+            strategicInsights.push('→ DEEP STACKS: More maneuvering room, pot control important');
+        }
+    }
+
+    // 3. Range Dynamics
+    const flopAdv = input.advantages?.flop;
+    if (flopAdv) {
+        const rangeLeader = flopAdv.range_advantage?.leader;
+        const nutLeader = flopAdv.nut_advantage?.leader;
+
+        if (rangeLeader === 'hero') {
+            strategicInsights.push('RANGE ADVANTAGE: You - bet more frequently');
+        } else if (rangeLeader === 'villain') {
+            strategicInsights.push('RANGE DISADVANTAGE: Villain - play defensively');
+        }
+
+        if (nutLeader === 'hero') {
+            strategicInsights.push('NUT ADVANTAGE: You - can apply max pressure');
+        } else if (nutLeader === 'villain') {
+            strategicInsights.push('NUT DISADVANTAGE: Villain - avoid big pots with marginal');
+        }
+    }
+
+    // 4. Equity vs Odds
+    const equityEdge = input.equity.equity_vs_range - input.equity.pot_odds.equity_needed;
+    if (equityEdge > 0.10) {
+        strategicInsights.push(`EQUITY EDGE: +${(equityEdge * 100).toFixed(0)}% - calling/raising profitable`);
+    } else if (equityEdge < -0.10) {
+        strategicInsights.push(`EQUITY DEFICIT: ${(equityEdge * 100).toFixed(0)}% - fold unless implied odds`);
+    }
+
+    // Output strategic insights
+    if (strategicInsights.length > 0) {
+        lines.push('KEY INSIGHTS:');
+        strategicInsights.forEach(insight => {
+            lines.push(`  • ${insight}`);
+        });
+        lines.push('');
+    }
+
+    lines.push('COACHING REQUIREMENT:');
+    lines.push('When providing strategy, explain:');
+    lines.push('1. WHAT to do (recommendation with %)');
+    lines.push('2. WHY it\'s optimal (reference insights above)');
+    lines.push('3. IF villain responds (raise/call), what next?');
+    lines.push('4. MULTI-STREET plan (how to play turn/river)');
+    lines.push('');
+    lines.push('═══════════════════════════════════════════════════');
+    lines.push('');
 
     return lines.join('\n');
 }
