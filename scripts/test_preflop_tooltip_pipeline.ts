@@ -64,7 +64,7 @@ async function testPreflopTooltip() {
 
         // CHECK 2: GTO Strategy
         console.log('\n🧠 GTO Strategy Summary:');
-        console.log(result.gtoStrategy.filter(l => l.includes('CRITICAL') || l.includes('VERIFIED')).join('\n'));
+        console.log((result.gto_strategy || []).filter((l: string) => l.includes('CRITICAL') || l.includes('VERIFIED')).join('\n'));
 
         // CHECK 3: Mistakes
         console.log('\n🚨 Mistakes Summary:');
