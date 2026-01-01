@@ -43250,3 +43250,32 @@ openai.RateLimitError: Error code: 429 - {'error': {'message': 'You exceeded you
 2025-12-31 01:43:32,534 [INFO] [ORCHESTRATOR] Stage Indexing completed. Total items processed: 0
 2025-12-31 01:43:32,534 [INFO] [ORCHESTRATOR] Cycle 649 completed successfully.
 2025-12-31 01:43:32,534 [INFO] [ORCHESTRATOR] Sleeping 30s before next cycle...
+2025-12-31 13:07:34,661 [INFO] Starting coach_worker run_once with batch_size=30
+2025-12-31 13:07:34,662 [INFO] Loading environment variables from /Users/ash/Desktop/onlypoker/notion-poker-web/backend/.env
+2025-12-31 13:07:35,231 [INFO] No hands needing coaching.
+2025-12-31 13:07:35,285 [INFO] No new coached hands to move into silver.
+2025-12-31 13:07:35,286 [INFO] Closed Postgres connection.
+2025-12-31 18:05:32,654 [INFO] [ORCHESTRATOR] Pipeline running in SINGLE mode.
+2025-12-31 18:05:32,655 [INFO] [ORCHESTRATOR] --- Starting Stage: Ingestion (worker.py) ---
+2025-12-31 18:05:33,566 [INFO] [ORCHESTRATOR] Stage Ingestion completed successfully.
+2025-12-31 18:05:33,567 [INFO] [ORCHESTRATOR] --- Starting Stage: Analysis (coach_worker.py) ---
+2025-12-31 18:05:33,567 [INFO] [ORCHESTRATOR] Loop 1/50 for Analysis...
+2025-12-31 18:05:34,101 [INFO] [ORCHESTRATOR] Stage Analysis finished (Queue empty).
+2025-12-31 18:05:34,102 [INFO] [ORCHESTRATOR] Stage Analysis completed. Total items processed: 0
+2025-12-31 18:05:34,102 [INFO] [ORCHESTRATOR] --- Starting Stage: Indexing (study_ingest.py) ---
+2025-12-31 18:05:34,102 [INFO] [ORCHESTRATOR] Loop 1/10 for Indexing...
+2025-12-31 18:05:34,960 [INFO] [ORCHESTRATOR] Stage Indexing reported 0 items processed. Stopping.
+2025-12-31 18:05:34,960 [INFO] [ORCHESTRATOR] Stage Indexing completed. Total items processed: 0
+2025-12-31 18:05:34,960 [INFO] [ORCHESTRATOR] Pipeline execution FINISHED.
+2025-12-31 18:09:29,735 [INFO] [ORCHESTRATOR] Pipeline running in SINGLE mode.
+2025-12-31 18:09:29,736 [INFO] [ORCHESTRATOR] --- Starting Stage: Ingestion (worker.py) ---
+2025-12-31 18:09:30,552 [INFO] [ORCHESTRATOR] Stage Ingestion completed successfully.
+2025-12-31 18:09:30,552 [INFO] [ORCHESTRATOR] --- Starting Stage: Analysis (coach_worker.py) ---
+2025-12-31 18:09:30,552 [INFO] [ORCHESTRATOR] Loop 1/50 for Analysis...
+2025-12-31 18:09:31,091 [INFO] [ORCHESTRATOR] Stage Analysis finished (Queue empty).
+2025-12-31 18:09:31,091 [INFO] [ORCHESTRATOR] Stage Analysis completed. Total items processed: 0
+2025-12-31 18:09:31,091 [INFO] [ORCHESTRATOR] --- Starting Stage: Indexing (study_ingest.py) ---
+2025-12-31 18:09:31,091 [INFO] [ORCHESTRATOR] Loop 1/10 for Indexing...
+2025-12-31 18:09:31,958 [INFO] [ORCHESTRATOR] Stage Indexing reported 0 items processed. Stopping.
+2025-12-31 18:09:31,959 [INFO] [ORCHESTRATOR] Stage Indexing completed. Total items processed: 0
+2025-12-31 18:09:31,959 [INFO] [ORCHESTRATOR] Pipeline execution FINISHED.
