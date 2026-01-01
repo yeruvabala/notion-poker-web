@@ -535,4 +535,9 @@ export interface CoachOutput {
         equity: EquityData;
         advantages: AdvantageData;
     };
+
+    // Phase 12-14.5: Enhanced coaching data top-level access
+    heroClassification?: HeroClassification | null;
+    spr?: SPRData | null;
+    mistakes?: MistakeAnalysis | null;
 }
