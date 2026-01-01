@@ -37,6 +37,14 @@ export function normalizeHand(hand: string): string {
     // Clean the input - remove spaces and standardize
     const cleaned = hand.replace(/\s+/g, '').toUpperCase();
 
+    // Handle already normalized formats like "AKs", "AKo", "AA"
+    if (cleaned.length === 3 && (cleaned.endsWith('S') || cleaned.endsWith('O'))) {
+        return cleaned.slice(0, 2) + cleaned.slice(2).toLowerCase();
+    }
+    if (cleaned.length === 2 && cleaned[0] === cleaned[1]) {
+        return cleaned;
+    }
+
     // Handle formats like "7♠ 2♥" or "7s2h" or "7s 2h"
     const cardPattern = /([2-9TJQKA])([♠♥♦♣SHDC])/gi;
     const matches = [...cleaned.matchAll(cardPattern)];
@@ -752,7 +760,7 @@ const VS_FOUR_BET_RANGES: Record<string, Record<string, Record<string, number>>>
     // BB 3-bets, faces BTN 4-bet
     'BB_3bet_vs_BTN_4bet': {
         '5bet_shove': {
-            'AA': 1.0, 'KK': 1.0, 'QQ': 1.0,
+            'AA': 0.9, 'KK': 1.0, 'QQ': 1.0,
             'AKs': 1.0, 'AKo': 1.0,
             'A5s': 1.0, 'A4s': 0.5,
         },
@@ -766,7 +774,7 @@ const VS_FOUR_BET_RANGES: Record<string, Record<string, Record<string, number>>>
 
     'BB_3bet_vs_UTG_4bet': {
         '5bet_shove': {
-            'AA': 1.0, 'KK': 1.0,
+            'AA': 1.0, 'KK': 0.9,
             'AKs': 0.8, 'AKo': 0.2,
         },
         'call': {
@@ -790,7 +798,7 @@ const VS_FOUR_BET_RANGES: Record<string, Record<string, Record<string, number>>>
 
     'SB_3bet_vs_BTN_4bet': {
         '5bet_shove': {
-            'AA': 1.0, 'KK': 1.0, 'QQ': 1.0, 'JJ': 0.5,
+            'AA': 0.8, 'KK': 1.0, 'QQ': 1.0, 'JJ': 0.5,
             'AKs': 1.0, 'AKo': 1.0,
             'A5s': 1.0, 'A4s': 0.6,
         },
