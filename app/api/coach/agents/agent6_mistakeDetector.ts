@@ -421,6 +421,14 @@ Provide a summary with counts and overall assessment.`;
             console.log(`[Agent 6: Primary Leak] ${worstLeak}`);
         }
 
+        // Calculate metrics for full MistakeAnalysis compliance
+        const totalEVLost = mistakes.reduce((sum, m) => sum + (m.ev_impact || 0), 0);
+        const severitySummary = {
+            critical: mistakes.filter(m => m.severity === 'critical').length,
+            moderate: mistakes.filter(m => m.severity === 'moderate').length,
+            minor: mistakes.filter(m => m.severity === 'minor').length
+        };
+
         return {
             decisions: enhancedDecisions,
             summary: {
@@ -430,6 +438,8 @@ Provide a summary with counts and overall assessment.`;
                 overall_assessment: llmResult.summary?.overall_assessment || `${optimalCount} optimal, ${acceptableCount} acceptable, ${mistakeCount} mistakes`
             },
             mistakes,
+            total_ev_lost: totalEVLost,
+            severity_summary: severitySummary,
             primary_leak: llmResult.primary_leak || undefined,
             leak_categories: leakCategories, // Phase 14: Add leak categorization
             worst_leak: worstLeak || undefined // Phase 14: Add worst leak
@@ -443,6 +453,36 @@ Provide a summary with counts and overall assessment.`;
         const acceptableCount = decisions.filter(d => d.play_quality === 'acceptable').length;
         const mistakeCount = decisions.filter(d => d.play_quality === 'mistake').length;
 
+        // Calculate mistakes for fallback
+        const mistakes = decisions
+            .filter(d => d.play_quality === 'mistake')
+            .map(d => ({
+                street: d.street as Street,
+                gto_recommendation: {
+                    action: d.gto_primary.action,
+                    sizing: d.gto_primary.sizing,
+                    reasoning: d.gto_primary.reasoning || 'Deterministic result'
+                },
+                hero_action: {
+                    action: d.hero_action
+                },
+                is_mistake: true,
+                severity: (d.leak_category?.includes('GRAVE') ? 'critical' : 'moderate') as Severity,
+                ev_impact: -5.0,
+                reasoning: 'Deterministic classification (LLM failed)',
+                context_used: {},
+                flag_for_analysis: true,
+                category: d.leak_category || 'general_mistake'
+            }));
+
+        // Calculate metrics
+        const totalEVLost = mistakes.reduce((sum, m) => sum + (m.ev_impact || 0), 0);
+        const severitySummary = {
+            critical: mistakes.filter(m => m.severity === 'critical').length,
+            moderate: mistakes.filter(m => m.severity === 'moderate').length,
+            minor: mistakes.filter(m => m.severity === 'minor').length
+        };
+
         return {
             decisions: decisions.map(d => ({
                 ...d,
@@ -454,27 +494,10 @@ Provide a summary with counts and overall assessment.`;
                 mistake_count: mistakeCount,
                 overall_assessment: 'Error occurred, showing deterministic results'
             },
-            mistakes: decisions
-                .filter(d => d.play_quality === 'mistake')
-                .map(d => ({
-                    street: d.street as Street,
-                    gto_recommendation: {
-                        action: d.gto_primary.action,
-                        sizing: d.gto_primary.sizing,
-                        reasoning: d.gto_primary.reasoning || 'Deterministic result'
-                    },
-                    hero_action: {
-                        action: d.hero_action
-                    },
-                    is_mistake: true,
-                    severity: (d.leak_category?.includes('GRAVE') ? 'critical' : 'moderate') as Severity,
-                    ev_impact: -5.0,
-                    reasoning: 'Deterministic classification (LLM failed)',
-                    context_used: {},
-                    flag_for_analysis: true,
-                    category: d.leak_category || 'general_mistake'
-                })),
-            primary_leak: undefined,
+            mistakes,
+            total_ev_lost: totalEVLost,
+            severity_summary: severitySummary,
+            primary_leak: undefined, // Fix typing
             leak_categories: leakCategories,
             worst_leak: worstLeak || undefined
         };
