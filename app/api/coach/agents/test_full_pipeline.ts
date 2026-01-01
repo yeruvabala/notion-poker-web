@@ -25,7 +25,7 @@ if (fs.existsSync(envPath)) {
 import { agent0_boardAnalyzer, BOARD_ANALYZER_SYSTEM_PROMPT } from './agent0_boardAnalyzer';
 import { agent1_rangeBuilder, RANGE_BUILDER_SYSTEM_PROMPT } from './agent1_rangeBuilder';
 import { agent2_equityCalculator } from './agent2_equityCalculator';
-import { agent3_advantageAnalyzer, ADVANTAGE_ANALYZER_PROMPT } from './agent3_advantageAnalyzer';
+import { agent3_advantageAnalyzer } from './agent3_advantageAnalyzer';
 import { agent4_sprCalculator } from './agent4_sprCalculator';
 import { agent5_gtoStrategy, GTO_STRATEGY_PROMPT, formatContextForPrompt } from './agent5_gtoStrategy';
 import { agent6_mistakeDetector, MISTAKE_DETECTOR_PROMPT } from './agent6_mistakeDetector';
