@@ -28,17 +28,14 @@ import {
     LeakCategory,  // Import from contracts
     Street,
     DecisionPoint,
-    DecisionClassification
+    DecisionClassification,
+    StrategicLeakCategory
 } from '../types/agentContracts';
 
 // Re-export for external use
 export type { LeakCategory } from '../types/agentContracts';
 
-export interface StrategicLeakCategory {
-    category: LeakCategory;
-    count: number;
-    examples: string[];
-}
+
 
 
 

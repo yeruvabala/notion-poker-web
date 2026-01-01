@@ -432,7 +432,7 @@ Provide a summary with counts and overall assessment.`;
             mistakes,
             primary_leak: llmResult.primary_leak || undefined,
             leak_categories: leakCategories, // Phase 14: Add leak categorization
-            worst_leak: worstLeak // Phase 14: Add worst leak
+            worst_leak: worstLeak || undefined // Phase 14: Add worst leak
         };
 
     } catch (error) {
@@ -476,7 +476,7 @@ Provide a summary with counts and overall assessment.`;
                 })),
             primary_leak: undefined,
             leak_categories: leakCategories,
-            worst_leak: worstLeak
+            worst_leak: worstLeak || undefined
         };
     }
 }
