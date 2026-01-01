@@ -102,7 +102,8 @@ async function runFullPipelineTest() {
         const ranges = await agent1_rangeBuilder({
             boardAnalysis,
             positions: testInput.positions,
-            actions: testInput.actions
+            actions: testInput.actions,
+            stacks: testInput.stacks
         });
         console.log('✅ Ranges:', JSON.stringify(ranges, null, 2));
 
