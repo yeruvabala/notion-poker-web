@@ -22,6 +22,9 @@ import {
     Street,
     ActionType,
     PlayQuality,
+    ActionRecommendation,
+    SingleAction,
+    LeakCategory,
     Position,
     EquityData,
     SPRData,
@@ -370,7 +373,7 @@ Provide a summary with counts and overall assessment.`;
         const enhancedDecisions = decisions.map((decision, idx) => {
             const llmDecision = llmResult.decisions?.[idx];
             return {
-                street: decision.street,
+                street: decision.street as Street, // Explicit cast to fix type error
                 decision_point: decision.decision_point,
                 hero_action: decision.hero_action,
                 gto_primary: decision.gto_primary,
