@@ -29,7 +29,8 @@ import {
     EquityData,
     SPRData,
     HeroClassification,
-    DecisionPoint
+    DecisionPoint,
+    Severity
 } from '../types/agentContracts';
 import { MistakeClassifier, AnalysisContext } from '../utils/MistakeClassifier';
 
@@ -391,13 +392,26 @@ Provide a summary with counts and overall assessment.`;
         const mistakeCount = decisions.filter(d => d.play_quality === 'mistake').length;
 
         // Extract mistakes
+        // Extract mistakes with full record structure
         const mistakes = decisions
             .filter(d => d.play_quality === 'mistake')
             .map(d => ({
-                street: d.street,
-                hero_action: d.hero_action,
-                should_have: d.gto_primary.action,
-                impact: `Should have ${d.gto_primary.action} (primary) instead of ${d.hero_action}`
+                street: d.street as Street,
+                gto_recommendation: {
+                    action: d.gto_primary.action,
+                    sizing: d.gto_primary.sizing,
+                    reasoning: d.gto_primary.reasoning
+                },
+                hero_action: {
+                    action: d.hero_action
+                },
+                is_mistake: true,
+                severity: (d.leak_category?.includes('GRAVE') ? 'critical' : 'moderate') as Severity,
+                ev_impact: -5.0, // Placeholder for EV loss
+                reasoning: d.reasoning || `Should have ${d.gto_primary.action} instead of ${d.hero_action}`,
+                context_used: {}, // Placeholder for context
+                flag_for_analysis: true,
+                category: d.leak_category || 'general_mistake'
             }));
 
         const duration = Date.now() - startTime;
@@ -416,7 +430,7 @@ Provide a summary with counts and overall assessment.`;
                 overall_assessment: llmResult.summary?.overall_assessment || `${optimalCount} optimal, ${acceptableCount} acceptable, ${mistakeCount} mistakes`
             },
             mistakes,
-            primary_leak: llmResult.primary_leak || null,
+            primary_leak: llmResult.primary_leak || undefined,
             leak_categories: leakCategories, // Phase 14: Add leak categorization
             worst_leak: worstLeak // Phase 14: Add worst leak
         };
@@ -443,12 +457,24 @@ Provide a summary with counts and overall assessment.`;
             mistakes: decisions
                 .filter(d => d.play_quality === 'mistake')
                 .map(d => ({
-                    street: d.street,
-                    hero_action: d.hero_action,
-                    should_have: d.gto_primary.action,
-                    impact: 'Deterministic classification'
+                    street: d.street as Street,
+                    gto_recommendation: {
+                        action: d.gto_primary.action,
+                        sizing: d.gto_primary.sizing,
+                        reasoning: d.gto_primary.reasoning || 'Deterministic result'
+                    },
+                    hero_action: {
+                        action: d.hero_action
+                    },
+                    is_mistake: true,
+                    severity: (d.leak_category?.includes('GRAVE') ? 'critical' : 'moderate') as Severity,
+                    ev_impact: -5.0,
+                    reasoning: 'Deterministic classification (LLM failed)',
+                    context_used: {},
+                    flag_for_analysis: true,
+                    category: d.leak_category || 'general_mistake'
                 })),
-            primary_leak: null,
+            primary_leak: undefined,
             leak_categories: leakCategories,
             worst_leak: worstLeak
         };

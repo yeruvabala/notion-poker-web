@@ -25,7 +25,10 @@ import {
     HeroClassification,
     RangeData,
     EquityData,
-    LeakCategory  // Import from contracts
+    LeakCategory,  // Import from contracts
+    Street,
+    DecisionPoint,
+    DecisionClassification
 } from '../types/agentContracts';
 
 // Re-export for external use
@@ -37,15 +40,7 @@ export interface StrategicLeakCategory {
     examples: string[];
 }
 
-export interface DecisionClassification {
-    street: string;
-    decision_point: string;
-    hero_action: ActionType;
-    gto_primary: SingleAction;
-    gto_alternative?: SingleAction;
-    play_quality: PlayQuality;
-    leak_category?: LeakCategory;
-}
+
 
 export interface AnalysisContext {
     spr: SPRData;
@@ -164,12 +159,15 @@ export class MistakeClassifier {
             );
 
             const classification: DecisionClassification = {
-                street,
-                decision_point: decisionPoint,
+                street: street as Street,
+                decision_point: decisionPoint as DecisionPoint,
                 hero_action: heroAction,
                 gto_primary: gtoRec.primary,
                 gto_alternative: gtoRec.alternative,
-                play_quality: playQuality
+                play_quality: playQuality,
+                reasoning: playQuality === 'mistake'
+                    ? `Mistake: Hero ${heroAction} vs GTO ${gtoRec.primary.action}`
+                    : `Hero action matched GTO (${playQuality})`
             };
 
             // Add leak category if it's a mistake

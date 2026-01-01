@@ -484,16 +484,11 @@ export interface DecisionClassification {
     street: Street;
     decision_point: DecisionPoint;
     hero_action: ActionType;
-    gto_primary: {
-        action: ActionType;
-        frequency?: number;
-    };
-    gto_alternative?: {
-        action: ActionType;
-        frequency?: number;
-    };
+    gto_primary: SingleAction;
+    gto_alternative?: SingleAction;
     play_quality: PlayQuality;  // 'optimal' | 'acceptable' | 'mistake'
     reasoning: string;
+    leak_category?: LeakCategory; // Phase 14: Categorized leak
 }
 
 /**
@@ -519,6 +514,8 @@ export interface MistakeAnalysis {
     // NEW: 3-tier classification data
     decisions?: DecisionClassification[];
     summary?: ClassificationSummary;
+    leak_categories?: StrategicLeakCategory[]; // Phase 14: Strategic leak analysis
+    worst_leak?: string;                       // Phase 14: Identified worst leak
 }
 
 // ═══════════════════════════════════════════════════════════════
