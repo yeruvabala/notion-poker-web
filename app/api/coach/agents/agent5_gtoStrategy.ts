@@ -23,6 +23,7 @@ import {
 import { getHandType } from '../utils/handUtils';
 import { evaluateHand } from '../utils/handEvaluator';
 import { getPreflopAction, getOpeningAction, getVs3BetAction, normalizeHand } from '../utils/gtoRanges';
+import { generatePreflopReasoning } from '../utils/PreflopReasoningEngine';
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -519,7 +520,7 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
                     action: openActionName as any,
                     sizing: openResult.action.sizing,
                     frequency: openResult.action.frequency,
-                    reasoning: `GTO ${heroPosition} Opening Range: ${normalizedHand} in range (${(openResult.action.frequency * 100).toFixed(0)}%)`
+                    reasoning: generatePreflopReasoning(heroHand, openActionName as any, heroPosition, 'table', openResult.action.frequency)
                 }
             };
         }
@@ -536,16 +537,14 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
             console.error('[Agent5 3BET DEBUG] Setting response_to_3bet with action:', vs3BetActionName);
 
             // Generate reasoning based on actual action
-            let vs3betReasoning = '';
-            if (vs3BetActionName === 'fold') {
-                vs3betReasoning = `GTO Defense vs 3-bet: ${normalizedHand} should fold (${(vs3BetResult.action.frequency * 100).toFixed(0)}% fold frequency)`;
-            } else if (vs3BetActionName === 'call') {
-                vs3betReasoning = `GTO Defense vs 3-bet: ${normalizedHand} is ${(vs3BetResult.action.frequency * 100).toFixed(0)}% call`;
-            } else if (vs3BetActionName === 'raise') {
-                vs3betReasoning = `GTO Defense vs 3-bet: ${normalizedHand} is ${(vs3BetResult.action.frequency * 100).toFixed(0)}% 4-bet`;
-            } else {
-                vs3betReasoning = `GTO Defense vs 3-bet: ${normalizedHand} - ${vs3BetActionName} ${(vs3BetResult.action.frequency * 100).toFixed(0)}%`;
-            }
+            // Generate reasoning based on actual action using PreflopReasoningEngine
+            const vs3betReasoning = generatePreflopReasoning(
+                heroHand,
+                vs3BetActionName as any,
+                heroPosition,
+                threeBettorPosition || 'Villain',
+                vs3BetResult.action.frequency
+            );
 
             strategy.preflop.response_to_3bet = {
                 primary: {
@@ -589,9 +588,7 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
         ? 'raise'
         : preflopAction.action;
 
-    const reasoning = preflopAction.action === 'fold'
-        ? `GTO ${heroPosition} range: ${normalizedHand} is NOT in opening range - fold`
-        : `GTO ${heroPosition} range: ${normalizedHand} is in range at ${(preflopAction.frequency * 100).toFixed(0)}% frequency`;
+    const reasoning = generatePreflopReasoning(heroHand, actionName as any, heroPosition, 'table', preflopAction.frequency);
 
     return {
         preflop: {

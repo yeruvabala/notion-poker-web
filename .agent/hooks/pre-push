@@ -6,7 +6,9 @@ echo ""
 # Change to repo root
 cd "$(git rev-parse --show-toplevel)"
 
-# 1. TypeScript type check (fast!)
+# ============================================================
+# 1. TypeScript Type Check (REQUIRED)
+# ============================================================
 echo "📝 Checking TypeScript types..."
 npx tsc --noEmit
 
@@ -21,21 +23,72 @@ fi
 echo "✅ TypeScript types OK"
 echo ""
 
-# 2. Lint check (skip if no lint script)
-# echo "🎨 Running linter..."
-# npm run lint --silent
-# if [ $? -ne 0 ]; then
-#     echo ""
-#     echo "❌ Linting errors found!"
-#     echo "💡 Fix the errors above and try pushing again."
-#     echo ""
-#     exit 1
-# fi
-# echo "✅ Linting OK"
-# echo ""
+# ============================================================
+# 2. Check for Console.log (WARNING ONLY)
+# ============================================================
+echo "🧹 Checking for console.log..."
+CONSOLE_COUNT=$(git diff --cached --diff-filter=ACM | grep -i "console\.log\|console\.error\|console\.warn" | wc -l | tr -d ' ')
 
-# Optional: Skip build check for speed (build takes ~30s)
-# Uncomment the lines below if you want full build check
+if [ "$CONSOLE_COUNT" -gt 0 ]; then
+    echo "⚠️  Warning: Found $CONSOLE_COUNT console statement(s) in staged files"
+    echo "   Review these before deploying to production"
+    # Not blocking - just a warning
+fi
+echo ""
+
+# ============================================================
+# 3. Check for API Keys/Secrets (REQUIRED)
+# ============================================================
+echo "🔐 Checking for secrets..."
+if git diff --cached | grep -iE "api[_-]?key\s*=|secret\s*=|password\s*=|token\s*=" | grep -v "example" | grep -q .; then
+    echo ""
+    echo "❌ Possible API key/secret detected in staged files!"
+    echo "💡 Make sure you're not committing sensitive data!"
+    echo ""
+    exit 1
+fi
+echo "✅ No secrets detected"
+echo ""
+
+# ============================================================
+# 4. Check for Large Files (REQUIRED)
+# ============================================================
+echo "📦 Checking file sizes..."
+MAX_SIZE=2097152  # 2MB in bytes
+LARGE_FILES=$(git diff --cached --name-only --diff-filter=ACM | while read file; do
+    if [ -f "$file" ]; then
+        size=$(wc -c < "$file" 2>/dev/null || echo 0)
+        if [ "$size" -gt "$MAX_SIZE" ]; then
+            echo "$file ($(($size / 1024))KB)"
+        fi
+    fi
+done)
+
+if [ ! -z "$LARGE_FILES" ]; then
+    echo ""
+    echo "❌ Large files detected (>2MB):"
+    echo "$LARGE_FILES"
+    echo "💡 Consider using Git LFS or reducing file size"
+    echo ""
+    exit 1
+fi
+echo "✅ All files within size limit"
+echo ""
+
+# ============================================================
+# 5. Check for Debugger Statements (WARNING)
+# ============================================================
+echo "🐛 Checking for debugger statements..."
+if git diff --cached --diff-filter=ACM | grep -n "debugger;" | grep -q .; then
+    echo "⚠️  Warning: Found 'debugger;' statement in staged files"
+    echo "   These should be removed before production"
+fi
+echo ""
+
+# ============================================================
+# Optional: Build Check (Disabled by default - slow)
+# ============================================================
+# Uncomment to enable full build check before push
 # echo "🏗️  Running build..."
 # npm run build
 # if [ $? -ne 0 ]; then
@@ -45,6 +98,7 @@ echo ""
 #     exit 1
 # fi
 # echo "✅ Build OK"
+# echo ""
 
 echo "✅ All checks passed! Pushing..."
 echo ""

@@ -162,7 +162,7 @@ export function normalizePosition(position: string): string {
 // =============================================================================
 // Frequency: 1.0 = always, 0.5 = 50% of time, 0 = never
 
-const RFI_RANGES: Record<string, Record<string, number>> = {
+export const RFI_RANGES: Record<string, Record<string, number>> = {
     // Button (BTN) - ~45% of hands
     BTN: {
         // Pairs
@@ -575,7 +575,7 @@ const THREE_BET_RANGES: Record<string, Record<string, Record<string, number>>> =
 // VS 3-BET RANGES (When you open and face a 3bet)
 // =============================================================================
 
-const VS_THREE_BET_RANGES: Record<string, Record<string, Record<string, number>>> = {
+export const VS_THREE_BET_RANGES: Record<string, Record<string, Record<string, number>>> = {
     // BTN open, facing SB 3bet
     'BTN_vs_SB_3bet': {
         '4bet': {
@@ -593,6 +593,79 @@ const VS_THREE_BET_RANGES: Record<string, Record<string, Record<string, number>>
             'AKo': 0.5, 'AQo': 0.7, 'AJo': 0.6, 'ATo': 0.0, 'A9o': 0.0, // Explicit Folds
             'KQo': 0.8, 'KJo': 0.3,
         },
+    },
+
+    // --- UTG OPENS, FACES 3-BET ---
+
+    'UTG_vs_CO_3bet': {
+        '4bet': {
+            // OOP vs Strong Range. We 4-bet for value and protection.
+            'AA': 1.0, 'KK': 1.0, 'QQ': 0.4,
+            'AKs': 1.0, 'AKo': 1.0,
+            'A5s': 1.0, 'A4s': 0.5, // 4-bet bluffs
+        },
+        'call': {
+            // Tight calling range due to being Out of Position
+            'QQ': 0.6, 'JJ': 1.0, 'TT': 1.0, '99': 0.5,
+            'AQs': 1.0, 'AJs': 0.5,
+            'KQs': 0.5,
+            // Fold most offsuit broadways and small pairs
+        }
+    },
+
+    'UTG_vs_SB_3bet': {
+        '4bet': {
+            // IP vs SB. We can flat our premiums more often.
+            'AA': 0.5, 'KK': 0.5, // Trapping in position allowed
+            'QQ': 0.2,
+            'AKs': 0.4, 'AKo': 0.8, // 4-bet AKo to end hand, flat AKs
+            'A5s': 0.5,
+        },
+        'call': {
+            // Wide IP defense
+            'AA': 0.5, 'KK': 0.5, // Traps
+            'QQ': 0.8, 'JJ': 1.0, 'TT': 1.0, '99': 1.0, '88': 1.0, '77': 1.0,
+            'AKs': 0.6, 'AQs': 1.0, 'AJs': 1.0, 'ATs': 1.0,
+            'KQs': 1.0, 'KJs': 1.0, 'QJs': 1.0, 'JTs': 1.0,
+            'AKo': 0.2, 'AQo': 0.5, // Floating offsuit
+        }
+    },
+
+    // --- HJ OPENS, FACES 3-BET ---
+
+    'HJ_vs_CO_3bet': {
+        '4bet': {
+            // OOP vs IP aggressor. High frequency 4-bet.
+            'AA': 1.0, 'KK': 1.0, 'QQ': 1.0, 'JJ': 0.4,
+            'AKs': 1.0, 'AKo': 1.0,
+            'AQs': 0.3,
+            'A5s': 1.0, 'A4s': 0.6, 'KQs': 0.2,
+        },
+        'call': {
+            // Condensed calling range
+            'JJ': 0.6, 'TT': 1.0, '99': 0.8, '88': 0.5,
+            'AQs': 0.7, 'AJs': 0.6,
+            'KQs': 0.8, 'KJs': 0.5,
+            'QJs': 0.6, 'JTs': 0.5,
+            // Fold AKo/AQo mostly
+        }
+    },
+
+    'HJ_vs_SB_3bet': {
+        '4bet': {
+            // IP vs SB. 
+            'AA': 1.0, 'KK': 1.0, 'QQ': 0.5,
+            'AKs': 1.0, 'AKo': 1.0,
+            'A5s': 0.6, 'A4s': 0.4,
+        },
+        'call': {
+            // Comfortable IP calling range
+            'QQ': 0.5, 'JJ': 1.0, 'TT': 1.0, '99': 1.0, '88': 1.0, '77': 0.8,
+            'AQs': 1.0, 'AJs': 1.0, 'ATs': 0.8,
+            'KQs': 1.0, 'KJs': 1.0, 'KTs': 0.6,
+            'QJs': 1.0, 'JTs': 1.0, 'T9s': 0.7,
+            'AQo': 0.5, 'KQo': 0.3,
+        }
     },
 
     // CO open, facing BB 3bet
@@ -931,6 +1004,163 @@ export function getFacingOpenAction(
             return {
                 found: true,
                 action: { action: '3bet', frequency: threeBetFreq, sizing: '11bb' },
+                scenario: key,
+                source: 'range_table',
+            };
+        } else {
+            return {
+                found: true,
+                action: { action: 'call', frequency: callFreq },
+                scenario: key,
+                source: 'range_table',
+            };
+        }
+    }
+
+    // Fold
+    return {
+        found: true,
+        action: { action: 'fold', frequency: 1.0 },
+        scenario: key,
+        source: 'range_table',
+    };
+}
+
+/**
+ * Get action when CONSIDERING calling an open raise (Cold Call)
+ * Uses the 'call' portion of THREE_BET_RANGES
+ */
+export function getColdCallAction(
+    hand: string,
+    heroPosition: string,
+    openerPosition: string
+): RangeResult {
+    const normalized = normalizeHand(hand);
+    const key = `${heroPosition.toUpperCase()}_vs_${openerPosition.toUpperCase()}`;
+    const rangeData = THREE_BET_RANGES[key];
+
+    if (!rangeData) {
+        return {
+            found: false,
+            action: { action: 'fold', frequency: 1.0 },
+            scenario: key,
+            source: 'llm_fallback',
+        };
+    }
+
+    const callFreq = rangeData['call']?.[normalized] || 0;
+
+    if (callFreq > 0) {
+        return {
+            found: true,
+            action: { action: 'call', frequency: callFreq },
+            scenario: key,
+            source: 'range_table',
+        };
+    }
+
+    return {
+        found: true,
+        action: { action: 'fold', frequency: 1.0 },
+        scenario: key,
+        source: 'range_table',
+    };
+}
+
+/**
+ * Get action when CONSIDERING making a 3-bet (Hero vs Opener)
+ * This uses the exact same THREE_BET_RANGES table as getFacingOpenAction,
+ * but returns the 3-bet frequency specifically for Range Building.
+ */
+export function getMaking3BetAction(
+    hand: string,
+    heroPosition: string,
+    openerPosition: string
+): RangeResult {
+    const normalized = normalizeHand(hand);
+    const key = `${heroPosition.toUpperCase()}_vs_${openerPosition.toUpperCase()}`;
+
+    // THREE_BET_RANGES is defined in this file (line 340)
+    // It contains { '3bet': ..., 'call': ... }
+    const rangeData = THREE_BET_RANGES[key];
+
+    if (!rangeData) {
+        return {
+            found: false,
+            action: { action: 'fold', frequency: 1.0 }, // If no range, assume we don't 3bet
+            scenario: key,
+            source: 'llm_fallback',
+        };
+    }
+
+    const threeBetFreq = rangeData['3bet']?.[normalized] || 0;
+
+    if (threeBetFreq > 0) {
+        return {
+            found: true,
+            action: { action: '3bet', frequency: threeBetFreq },
+            scenario: key,
+            source: 'range_table',
+        };
+    }
+
+    return {
+        found: true,
+        action: { action: 'fold', frequency: 1.0 }, // effectively 0% 3bet
+        scenario: key,
+        source: 'range_table',
+    };
+}
+
+/**
+ * Get action when facing a 4bet (after you 3-bet)
+ */
+export function getVs4BetAction(
+    hand: string,
+    heroPosition: string, // The player facing the 4-bet (who originally 3-bet)
+    fourBettorPosition: string // The player who 4-bet
+): RangeResult {
+    const normalized = normalizeHand(hand);
+    const key = `${heroPosition.toUpperCase()}_3bet_vs_${fourBettorPosition.toUpperCase()}_4bet`;
+
+    const rangeData = VS_FOUR_BET_RANGES[key];
+    if (!rangeData) {
+        return {
+            found: false,
+            action: { action: 'fold', frequency: 1.0 },
+            scenario: key,
+            source: 'llm_fallback',
+        };
+    }
+
+    // Check 5bet shove range
+    const shoveFreq = rangeData['5bet_shove']?.[normalized] || 0;
+    if (shoveFreq >= 0.5) {
+        return {
+            found: true,
+            action: { action: '5bet', frequency: shoveFreq, sizing: 'all-in' },
+            scenario: key,
+            source: 'range_table',
+        };
+    }
+
+    // Check call range
+    const callFreq = rangeData['call']?.[normalized] || 0;
+    if (callFreq >= 0.5) {
+        return {
+            found: true,
+            action: { action: 'call', frequency: callFreq },
+            scenario: key,
+            source: 'range_table',
+        };
+    }
+
+    // Mixed or fold
+    if (shoveFreq > 0 || callFreq > 0) {
+        if (shoveFreq > callFreq) {
+            return {
+                found: true,
+                action: { action: '5bet', frequency: shoveFreq, sizing: 'all-in' },
                 scenario: key,
                 source: 'range_table',
             };
