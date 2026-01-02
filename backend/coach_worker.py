@@ -180,7 +180,12 @@ def call_coach_api(
         dev = resp_json.get("exploit_deviation")
         lt  = resp_json.get("learning_tag")
         hero_pos = resp_json.get("hero_position")
-        exploit_sigs = resp_json.get("exploit_signals")  # NEW: Agent 7 data
+        exploit_sigs = resp_json.get("exploit_signals")
+        
+        # Enhanced Coaching Data (Phase 12-14.5)
+        hero_cls = resp_json.get("hero_classification")
+        spr_ana = resp_json.get("spr_analysis")
+        mistake_ana = resp_json.get("mistake_analysis")
         
         if lt is None:
             lt_list: Optional[List[str]] = []
@@ -189,7 +194,16 @@ def call_coach_api(
         else:
             lt_list = [str(lt)]
         
-        return {"gto_strategy": gto, "exploit_deviation": dev, "learning_tag": lt_list, "hero_position": hero_pos, "exploit_signals": exploit_sigs}
+        return {
+            "gto_strategy": gto, 
+            "exploit_deviation": dev, 
+            "learning_tag": lt_list, 
+            "hero_position": hero_pos, 
+            "exploit_signals": exploit_sigs,
+            "hero_classification": hero_cls,
+            "spr_analysis": spr_ana,
+            "mistake_analysis": mistake_ana
+        }
 
     except error.HTTPError as e:
         try: err_body = e.read().decode("utf-8")
@@ -301,8 +315,11 @@ def update_hand_with_coach(
     gto_strategy: Optional[str],
     exploit_deviation: Optional[str],
     learning_tag: Optional[List[str]],
-    exploit_signals: Optional[Any] = None,  # NEW: Agent 7 data
+    exploit_signals: Optional[Any] = None,
     position: Optional[str] = None,
+    hero_classification: Optional[Any] = None,
+    spr_analysis: Optional[Any] = None,
+    mistake_analysis: Optional[Any] = None,
 ) -> None:
     if gto_strategy is None and exploit_deviation is None and not learning_tag:
         return
@@ -312,13 +329,26 @@ def update_hand_with_coach(
             exploit_deviation = %s,
             learning_tag = %s,
             exploit_signals = %s,
-            position = COALESCE(%s, position)
+            position = COALESCE(%s, position),
+            hero_classification = %s,
+            spr_analysis = %s,
+            mistake_analysis = %s
         WHERE id = %s;
     """
     with conn.cursor() as cur:
         # Use Json wrapper for JSONB column
         from psycopg2.extras import Json
-        cur.execute(sql, (gto_strategy, exploit_deviation, learning_tag, Json(exploit_signals) if exploit_signals else None, position, hand_id))
+        cur.execute(sql, (
+            gto_strategy, 
+            exploit_deviation, 
+            learning_tag, 
+            Json(exploit_signals) if exploit_signals else None, 
+            position, 
+            Json(hero_classification) if hero_classification else None,
+            Json(spr_analysis) if spr_analysis else None,
+            Json(mistake_analysis) if mistake_analysis else None,
+            hand_id
+        ))
 
 def coach_new_hands(conn, batch_size: int) -> int:
     rows = fetch_hands_for_coaching(conn, batch_size)
@@ -353,7 +383,12 @@ def coach_new_hands(conn, batch_size: int) -> int:
         
         if gto is None and dev is None and not lt:
             continue
-        update_hand_with_coach(conn, hand_id, gto, dev, lt, exploit_signals, hero_pos)
+
+        hero_cls = response.get('hero_classification')
+        spr_ana = response.get('spr_analysis')
+        mistake_ana = response.get('mistake_analysis')
+
+        update_hand_with_coach(conn, hand_id, gto, dev, lt, exploit_signals, hero_pos, hero_cls, spr_ana, mistake_ana)
         coached += 1
     logger.info("Coached %d hands this run.", coached)
     return coached
