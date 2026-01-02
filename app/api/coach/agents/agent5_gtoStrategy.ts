@@ -535,12 +535,24 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
 
             console.error('[Agent5 3BET DEBUG] Setting response_to_3bet with action:', vs3BetActionName);
 
+            // Generate reasoning based on actual action
+            let vs3betReasoning = '';
+            if (vs3BetActionName === 'fold') {
+                vs3betReasoning = `GTO Defense vs 3-bet: ${normalizedHand} should fold (${(vs3BetResult.action.frequency * 100).toFixed(0)}% fold frequency)`;
+            } else if (vs3BetActionName === 'call') {
+                vs3betReasoning = `GTO Defense vs 3-bet: ${normalizedHand} is ${(vs3BetResult.action.frequency * 100).toFixed(0)}% call`;
+            } else if (vs3BetActionName === 'raise') {
+                vs3betReasoning = `GTO Defense vs 3-bet: ${normalizedHand} is ${(vs3BetResult.action.frequency * 100).toFixed(0)}% 4-bet`;
+            } else {
+                vs3betReasoning = `GTO Defense vs 3-bet: ${normalizedHand} - ${vs3BetActionName} ${(vs3BetResult.action.frequency * 100).toFixed(0)}%`;
+            }
+
             strategy.preflop.response_to_3bet = {
                 primary: {
                     action: vs3BetActionName as any,
                     sizing: vs3BetResult.action.sizing,
                     frequency: vs3BetResult.action.frequency,
-                    reasoning: `GTO Defense vs 3-bet: ${normalizedHand} is ${(vs3BetResult.action.frequency * 100).toFixed(0)}% call/raise`
+                    reasoning: vs3betReasoning
                 }
             };
 
