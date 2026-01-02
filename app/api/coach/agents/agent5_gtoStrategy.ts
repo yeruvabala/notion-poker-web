@@ -524,10 +524,15 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
         }
 
         // Response to 3-bet
+        console.error('[Agent5 3BET DEBUG] vs3BetResult:', JSON.stringify(vs3BetResult, null, 2));
+        console.error('[Agent5 3BET DEBUG] vs3BetResult.found:', vs3BetResult.found);
+        console.error('[Agent5 3BET DEBUG] vs3BetResult.action:', vs3BetResult.action);
+
         if (vs3BetResult.found) {
             const normalizedHand = normalizeHand(heroHand);
             const vs3BetActionName = (vs3BetResult.action.action === 'raise' || vs3BetResult.action.action === '3bet' || vs3BetResult.action.action === '4bet') ? 'raise' : vs3BetResult.action.action;
 
+            console.error('[Agent5 3BET DEBUG] Setting response_to_3bet with action:', vs3BetActionName);
 
             strategy.preflop.response_to_3bet = {
                 primary: {
@@ -537,8 +542,13 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
                     reasoning: `GTO Defense vs 3-bet: ${normalizedHand} is ${(vs3BetResult.action.frequency * 100).toFixed(0)}% call/raise`
                 }
             };
+
+            console.error('[Agent5 3BET DEBUG] response_to_3bet set to:', JSON.stringify(strategy.preflop.response_to_3bet, null, 2));
+        } else {
+            console.error('[Agent5 3BET DEBUG] vs3BetResult.found is FALSE - NOT setting response_to_3bet');
         }
 
+        console.error('[Agent5 DEBUG] Final strategy.preflop:', JSON.stringify(strategy.preflop, null, 2));
         console.error('[Agent5 DEBUG] Returning composite strategy:', JSON.stringify(strategy, null, 2));
         return strategy;
     }

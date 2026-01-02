@@ -151,11 +151,17 @@ def insert_hands(user_id, blocks):
         return 0
     
     rows = []
-    for b in blocks:
-        # Parse fully to get metadata
+    parse_success = 0
+    parse_failures = 0
+    
+    for idx, b in enumerate(blocks):
+        # CRITICAL: Always extract date first, even if parsing fails
+        # This prevents hands from showing today's date instead of actual hand date
+        date_str = extract_date(b)
+        
+        # Attempt full parse with detailed error handling
         try:
             data = parse_for_replayer(b)
-            date_str = extract_date(b)
             
             # Extract fields
             sb = data.get("sb")
@@ -179,15 +185,50 @@ def insert_hands(user_id, blocks):
                 board = " ".join(board_arr)
             
             rows.append((user_id, "upload", b, date_str, stakes, position, cards, board, Json(data)))
+            parse_success += 1
+            
         except Exception as e:
-            log(f"Warning: Failed to parse hand for metadata: {e}")
-            # Fallback to basic insert
-            rows.append((user_id, "upload", b, None, None, None, None, None, None))
+            # PRODUCTION ERROR LOGGING: Log details for debugging
+            error_msg = str(e)
+            error_type = type(e).__name__
+            hand_preview = b[:200] if b else "EMPTY"
+            
+            log(f"❌ PARSE FAILURE #{parse_failures + 1} ({error_type}): {error_msg}")
+            log(f"   Hand preview: {hand_preview}...")
+            
+            # Fallback: Try to extract BASIC metadata manually
+            # This ensures we at least get date/stakes even if full parse fails
+            basic_stakes = None
+            try:
+                # Try to extract stakes with simple regex
+                import re
+                stakes_match = re.search(r'\$?([0-9.]+)\s*/\s*\$?([0-9.]+)', b)
+                if stakes_match:
+                    sb_val = float(stakes_match.group(1))
+                    bb_val = float(stakes_match.group(2))
+                    basic_stakes = f"${sb_val}/${bb_val}"
+                    log(f"   ✓ Extracted fallback stakes: {basic_stakes}")
+            except:
+                pass
+            
+            # Insert with whatever we could extract
+            # NULL for replayer_data means coach worker won't try to analyze it
+            rows.append((user_id, "upload", b, date_str, basic_stakes, None, None, None, None))
+            parse_failures += 1
 
     with pg() as conn, conn.cursor() as cur:
         execute_values(cur, INSERT_HANDS_SQL, rows, page_size=200)
         conn.commit()
-    return len(rows)
+    
+    # Log summary statistics
+    total = len(rows)
+    success_rate = (parse_success / total * 100) if total > 0 else 0
+    log(f"📊 Parsing Summary: {parse_success}/{total} succeeded ({success_rate:.1f}%), {parse_failures} failed")
+    
+    if parse_failures > 0:
+        log(f"⚠️  WARNING: {parse_failures} hands failed to parse and may have incomplete data")
+    
+    return total
 
 def set_status(file_id, status, err=None):
     with pg() as conn, conn.cursor() as cur:
