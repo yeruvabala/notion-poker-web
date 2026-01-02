@@ -493,7 +493,8 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
 
         // 2. Get Vs 3-Bet Action (Response)
         // Call getVs3BetAction directly to lookup in VS_THREE_BET_RANGES
-        const threeBettorPosition = input.villainContext?.villainName || input.positions?.villain || '';
+        // CRITICAL: Use villain POSITION, not player name!
+        const threeBettorPosition = input.villainContext?.villain || input.positions?.villain || '';
         const vs3BetResult = getVs3BetAction(heroHand, heroPosition, threeBettorPosition);
 
         if (!openResult.found && !vs3BetResult.found) return null;
