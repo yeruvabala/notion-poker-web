@@ -333,7 +333,8 @@ export interface Agent5Input {
     };
     villainContext?: {          // NEW: Context about how villain was determined
         type: 'opening' | 'sb_vs_bb' | 'facing_action';
-        villainName?: string;
+        villain?: string;           // Villain's position (e.g., 'SB', 'BB')
+        villainName?: string;       // Villain's player name (e.g., 'Arepitarica')
     };
     heroClassification?: HeroClassification;  // Phase 12: Unified classification from Agent 1
 }
