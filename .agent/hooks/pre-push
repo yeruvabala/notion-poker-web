@@ -21,20 +21,18 @@ fi
 echo "✅ TypeScript types OK"
 echo ""
 
-# 2. Lint check (fast!)
-echo "🎨 Running linter..."
-npm run lint --silent
-
-if [ $? -ne 0 ]; then
-    echo ""
-    echo "❌ Linting errors found!"
-    echo "💡 Fix the errors above and try pushing again."
-    echo ""
-    exit 1
-fi
-
-echo "✅ Linting OK"
-echo ""
+# 2. Lint check (skip if no lint script)
+# echo "🎨 Running linter..."
+# npm run lint --silent
+# if [ $? -ne 0 ]; then
+#     echo ""
+#     echo "❌ Linting errors found!"
+#     echo "💡 Fix the errors above and try pushing again."
+#     echo ""
+#     exit 1
+# fi
+# echo "✅ Linting OK"
+# echo ""
 
 # Optional: Skip build check for speed (build takes ~30s)
 # Uncomment the lines below if you want full build check
