@@ -1,0 +1,53 @@
+#!/bin/bash
+
+echo "🔍 Pre-push checks running..."
+echo ""
+
+# Change to repo root
+cd "$(git rev-parse --show-toplevel)"
+
+# 1. TypeScript type check (fast!)
+echo "📝 Checking TypeScript types..."
+npx tsc --noEmit
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ TypeScript type errors found!"
+    echo "💡 Fix the errors above and try pushing again."
+    echo ""
+    exit 1
+fi
+
+echo "✅ TypeScript types OK"
+echo ""
+
+# 2. Lint check (fast!)
+echo "🎨 Running linter..."
+npm run lint --silent
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ Linting errors found!"
+    echo "💡 Fix the errors above and try pushing again."
+    echo ""
+    exit 1
+fi
+
+echo "✅ Linting OK"
+echo ""
+
+# Optional: Skip build check for speed (build takes ~30s)
+# Uncomment the lines below if you want full build check
+# echo "🏗️  Running build..."
+# npm run build
+# if [ $? -ne 0 ]; then
+#     echo ""
+#     echo "❌ Build failed!"
+#     echo ""
+#     exit 1
+# fi
+# echo "✅ Build OK"
+
+echo "✅ All checks passed! Pushing..."
+echo ""
+exit 0
