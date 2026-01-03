@@ -45,7 +45,69 @@ export interface EnrichedHandContext extends HandContext {
         confidence: number;
         reasoning: string;
     }>;
+
+    // NEW: Scenario/intent classification
+    scenario?: 'opening' | 'facing_action' | 'postflop';
 }
+
+// ============================================================================
+// ENHANCED PATTERN LIBRARY (Phase 1)
+// ============================================================================
+
+const ENHANCED_PATTERNS = {
+    // Card detection - multiple formats
+    cards: {
+        // Standard: "A♠ K♥" or "Ah Kh"
+        standard: /\b([AKQJT2-9][shdc♠♥♦♣])\s*([AKQJT2-9][shdc♠♥♦♣])\b/i,
+        // Shorthand suited: "AKs", "KJs"
+        shorthandSuited: /\b([AKQJT2-9])([AKQJT2-9])s\b/i,
+        // Shorthand offsuit: "AKo", "KJo"
+        shorthandOffsuit: /\b([AKQJT2-9])([AKQJT2-9])o\b/i,
+        // Pairs: "AA", "KK", "QQ"
+        pairs: /\b([AKQJT2-9])\1\b/,
+        // Context-aware: "hero with KJs", "I have AKo"
+        withContext: /(?:hero|i|me)\s+(?:with|have|has|holding|dealt)\s+([AKQJT2-9]{2}[so]?)/i
+    },
+
+    // Position detection - enhanced variations
+    positions: {
+        // Explicit: "hero on HJ", "at BTN"
+        explicit: /(?:hero|i|me|my).*?\b(?:on|at|from|in)\s+(BTN|button|CO|cutoff|HJ|hijack|UTG|SB|BB|small\s+blind|big\s+blind)\b/i,
+        // Action-based: "opens from HJ"
+        actionBased: /(?:open|raise|fold)s?\s+(?:from|in|on)\s+(BTN|CO|HJ|UTG|SB|BB)\b/i,
+        // Possessive: "HJ's action"
+        possessive: /\b(BTN|CO|HJ|UTG|SB|BB)(?:'s|s')\s+(?:action|hand|decision)\b/i,
+        // Standalone: "HJ" in context
+        standalone: /\b(BTN|button|CO|cutoff|HJ|hijack|UTG|SB|BB)\b/i
+    },
+
+    // Intent classification - NEW
+    intent: {
+        // Opening scenario: "should open", "can I raise"
+        opening: /\b(?:should|can|do|does|would).*?(?:open|raise|fold|play)\s+(?:this|the)?\s*hand\b/i,
+        // Facing action: "action on hero", "villain raised"
+        facingAction: /\b(?:facing|action\s+on|villain|opponent|he|they).*?(?:raise|bet|3-?bet|4-?bet)/i,
+        // Postflop: "on the flop", "turn card"
+        postflop: /\b(?:flop|turn|river)\b/i
+    },
+
+    // Board detection - street-aware
+    board: {
+        flop: /flop:?\s*([AKQJT2-9][shdc♠♥♦♣])\s*([AKQJT2-9][shdc♠♥♦♣])\s*([AKQJT2-9][shdc♠♥♦♣])/i,
+        turn: /turn:?\s*([AKQJT2-9][shdc♠♥♦♣])/i,
+        river: /river:?\s*([AKQJT2-9][shdc♠♥♦♣])/i,
+        inline: /board.*?([AKQJT2-9][shdc♠♥♦♣](?:\s*[AKQJT2-9][shdc♠♥♦♣]){2,4})/i
+    }
+};
+
+// Confidence levels for different detection methods
+const CONFIDENCE_LEVELS = {
+    EXPLICIT: 95,      // Direct exact match
+    STRONG_PATTERN: 85, // Strong contextual pattern
+    INFERRED: 70,      // Logical inference
+    WEAK_PATTERN: 60,  // Ambiguous pattern
+    DEFAULT: 30        // Fallback value
+};
 
 // ============================================================================
 // TIER 1: SMART DEFAULTS
@@ -238,28 +300,142 @@ export function inferPotSize(context: HandContext): FallbackResult | null {
 }
 
 /**
- * Infer hero cards from story text
+ * Infer hero cards from story text (ENHANCED Phase 1)
  */
 export function inferHeroCards(context: HandContext): FallbackResult | null {
-    const text = (context.rawText || '').toLowerCase(); // Actually, extraction needs Case usually? 
-    // normalizeHand handles case. But regex needs to be careful.
+    const text = context.rawText || '';
 
-    // Pattern 1: "Hero has KK", "BTN with KK", "I have AKs"
-    // Allow Hero, I, or any Position as the subject
-    const explicitPattern = /(?:hero|i|utg|hj|co|btn|sb|bb)\b.*?\b(?:has|have|with|dealt|holding|holds)\s+([2-9tjqka][shdc]?\s*[2-9tjqka][shdc]?)/i;
-    const match = context.rawText?.match(explicitPattern);
+    // Try patterns in order of confidence
 
-    if (match) {
+    // Pattern 1: Context-aware ("hero with KJs", "I have AKo")
+    const contextMatch = text.match(ENHANCED_PATTERNS.cards.withContext);
+    if (contextMatch) {
+        const handStr = contextMatch[1];
         return {
-            value: match[1].replace(/\s+/g, ''), // "K K" -> "KK"
+            value: normalizeCardFormat(handStr),
             source: 'inferred',
-            confidence: 95,
-            reasoning: `Detected hand "${match[1]}" assigned to Hero`
+            confidence: CONFIDENCE_LEVELS.EXPLICIT,
+            reasoning: `Detected "${handStr}" explicitly mentioned for hero`
         };
     }
 
-    // Pattern 2: Standalone strong hands (e.g. "KK", "AKs") at start or in context
-    // This is risky, skipping for now to avoid false positives.
+    // Pattern 2: Shorthand suited ("KJs", "AKs")
+    const suitedMatch = text.match(ENHANCED_PATTERNS.cards.shorthandSuited);
+    if (suitedMatch) {
+        const rank1 = suitedMatch[1];
+        const rank2 = suitedMatch[2];
+        return {
+            value: `${rank1}${rank2}s`,
+            source: 'inferred',
+            confidence: CONFIDENCE_LEVELS.STRONG_PATTERN,
+            reasoning: `Detected suited hand "${rank1}${rank2}s"`
+        };
+    }
+
+    // Pattern 3: Shorthand offsuit ("KJo", "AKo")
+    const offsuitMatch = text.match(ENHANCED_PATTERNS.cards.shorthandOffsuit);
+    if (offsuitMatch) {
+        const rank1 = offsuitMatch[1];
+        const rank2 = offsuitMatch[2];
+        return {
+            value: `${rank1}${rank2}o`,
+            source: 'inferred',
+            confidence: CONFIDENCE_LEVELS.STRONG_PATTERN,
+            reasoning: `Detected offsuit hand "${rank1}${rank2}o"`
+        };
+    }
+
+    // Pattern 4: Pairs ("KK", "AA")
+    const pairMatch = text.match(ENHANCED_PATTERNS.cards.pairs);
+    if (pairMatch) {
+        const rank = pairMatch[1];
+        return {
+            value: `${rank}${rank}`,
+            source: 'inferred',
+            confidence: CONFIDENCE_LEVELS.STRONG_PATTERN,
+            reasoning: `Detected pocket pair "${rank}${rank}"`
+        };
+    }
+
+    // Pattern 5: Standard format ("A♠ K♥" or "Ah Kd")
+    const standardMatch = text.match(ENHANCED_PATTERNS.cards.standard);
+    if (standardMatch) {
+        const card1 = standardMatch[1];
+        const card2 = standardMatch[2];
+        return {
+            value: `${card1}${card2}`,
+            source: 'inferred',
+            confidence: CONFIDENCE_LEVELS.STRONG_PATTERN,
+            reasoning: `Detected specific cards "${card1} ${card2}"`
+        };
+    }
+
+    return null;
+}
+
+/**
+ * Helper: Normalize card format to consistent notation
+ */
+function normalizeCardFormat(handStr: string): string {
+    // Preserve suited/offsuit notation
+    // "KJs" → "KJs" (keep lowercase s)
+    // "KJo" → "KJo" (keep lowercase o)
+    const upper = handStr.toUpperCase();
+    const last = handStr.slice(-1);
+
+    // If last char is 's' or 'o', keep it lowercase
+    if (last === 's' || last === 'o') {
+        return upper.slice(0, -1) + last;
+    }
+
+    return upper;
+}
+
+/**
+ * Infer intent/scenario type from story (NEW Phase 1)
+ */
+export function inferIntent(context: HandContext): FallbackResult | null {
+    const text = (context.rawText || '').toLowerCase();
+
+    // Postflop has highest priority (most specific)
+    if (ENHANCED_PATTERNS.intent.postflop.test(text)) {
+        return {
+            value: 'postflop',
+            source: 'inferred',
+            confidence: CONFIDENCE_LEVELS.EXPLICIT,
+            reasoning: 'Detected postflop street mentioned (flop/turn/river)'
+        };
+    }
+
+    // 3-bet/4-bet scenarios are facing action, not opening
+    if (/3-?bet|4-?bet/i.test(text)) {
+        return {
+            value: 'facing_action',
+            source: 'inferred',
+            confidence: CONFIDENCE_LEVELS.STRONG_PATTERN,
+            reasoning: 'Detected 3-bet/4-bet scenario (facing raise)'
+        };
+    }
+
+    // Facing action (villain raised/bet)
+    if (ENHANCED_PATTERNS.intent.facingAction.test(text)) {
+        return {
+            value: 'facing_action',
+            source: 'inferred',
+            confidence: CONFIDENCE_LEVELS.STRONG_PATTERN,
+            reasoning: 'Detected facing aggression (villain raised/bet)'
+        };
+    }
+
+    // Opening scenario (should/can hero open)
+    if (ENHANCED_PATTERNS.intent.opening.test(text)) {
+        return {
+            value: 'opening',
+            source: 'inferred',
+            confidence: CONFIDENCE_LEVELS.STRONG_PATTERN,
+            reasoning: 'Detected opening decision (should/can hero open)'
+        };
+    }
 
     return null;
 }
@@ -355,6 +531,21 @@ export function enrichHandContext(context: HandContext): EnrichedHandContext {
 
             enriched.assumptions.push({
                 field: 'heroCards',
+                value: result.value,
+                source: result.source,
+                confidence: result.confidence,
+                reasoning: result.reasoning
+            });
+        }
+    }
+
+    // NEW: Infer scenario/intent (Phase 1)
+    if (!enriched.scenario) {
+        const result = inferIntent(context);
+        if (result) {
+            enriched.scenario = result.value;
+            enriched.assumptions.push({
+                field: 'scenario',
                 value: result.value,
                 source: result.source,
                 confidence: result.confidence,
