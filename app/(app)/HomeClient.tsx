@@ -88,9 +88,23 @@ function parsePosition(t: string): string {
     if (/\butg/i.test(pos)) return 'UTG';
   }
 
-  // Normalize: fix typos and slang first
+  // Normalize: abbreviations and 9-max support
   let text = t;
-  text = text.replace(/\b(otb|button|on the button)\b/gi, 'BTN');
+  // Common abbreviations → standard names
+  text = text.replace(/\bbut\b/gi, 'button');
+  text = text.replace(/\bcut\b/gi, 'cutoff');
+  text = text.replace(/\bhi\b/gi, 'hijack');
+  text = text.replace(/\bdealer\b/gi, 'button');
+  text = text.replace(/\bsmall\b/gi, 'SB');
+  text = text.replace(/\bbig\b/gi, 'BB');
+  // 9-max abbreviations → standard format
+  text = text.replace(/\butg1\b/gi, 'UTG+1');
+  text = text.replace(/\butg2\b/gi, 'UTG+2');
+  text = text.replace(/\bmiddle\b/gi, 'MP');
+  text = text.replace(/\bmid\b/gi, 'MP');
+  // Full words → abbreviations
+  text = text.replace(/\b(otb|on the button)\b/gi, 'BTN');
+  text = text.replace(/\b(button)\b/gi, 'BTN');
   text = text.replace(/\bUnder the gun\b/gi, 'UTG');
   text = text.replace(/\bCutoff\b/gi, 'CO');
   text = text.replace(/\bHijack\b/gi, 'HJ');

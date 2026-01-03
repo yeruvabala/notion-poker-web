@@ -69,16 +69,16 @@ const ENHANCED_PATTERNS = {
         withContext: /(?:hero|i|me)\s+(?:with|have|has|holding|dealt)\s+([AKQJT2-9]{2}[so]?)/i
     },
 
-    // Position detection - enhanced variations
+    // Position detection - enhanced variations (6-max + 9-max support)
     positions: {
-        // Explicit: "hero on HJ", "at BTN"
-        explicit: /(?:hero|i|me|my).*?\b(?:on|at|from|in)\s+(BTN|button|CO|cutoff|HJ|hijack|UTG|SB|BB|small\s+blind|big\s+blind)\b/i,
+        // Explicit: "hero on HJ", "at BTN", "on UTG+1", "in middle"
+        explicit: /(?:hero|i|me|my).*?\b(?:on|at|from|in)\s+(BTN|button|but|dealer|CO|cutoff|cut|HJ|hijack|hi|UTG\+?[12]?|utg[12]?|MP|middle|mid|SB|BB|small\s+blind|big\s+blind|small|big)\b/i,
         // Action-based: "opens from HJ"
-        actionBased: /(?:open|raise|fold)s?\s+(?:from|in|on)\s+(BTN|CO|HJ|UTG|SB|BB)\b/i,
+        actionBased: /(?:open|raise|fold)s?\s+(?:from|in|on)\s+(BTN|CO|HJ|UTG\+?[12]?|MP|SB|BB)\b/i,
         // Possessive: "HJ's action"
-        possessive: /\b(BTN|CO|HJ|UTG|SB|BB)(?:'s|s')\s+(?:action|hand|decision)\b/i,
+        possessive: /\b(BTN|CO|HJ|UTG\+?[12]?|MP|SB|BB)(?:'s|s')\s+(?:action|hand|decision)\b/i,
         // Standalone: "HJ" in context
-        standalone: /\b(BTN|button|CO|cutoff|HJ|hijack|UTG|SB|BB)\b/i
+        standalone: /\b(BTN|button|CO|cutoff|HJ|hijack|UTG\+?[12]?|MP|middle|SB|BB)\b/i
     },
 
     // Intent classification - NEW
