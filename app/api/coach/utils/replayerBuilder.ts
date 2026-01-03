@@ -42,6 +42,37 @@ export interface Action {
 }
 
 /**
+ * Convert shorthand card notation to literal cards with suits
+ * KJs → ["K♠", "J♥"] (suited uses same suit)
+ * AKo → ["A♠", "K♥"] (offsuit uses different suits)
+ * 99 → ["9♠", "9♦"] (pairs use different suits)
+ * Already literal → pass through
+ */
+function convertShorthandToLiteral(cardStr: string): string[] {
+    // Already has suits (literal format) - pass through
+    if (/[♠♥♦♣shdc]/.test(cardStr)) {
+        return cardStr.split(/\s+/).filter(c => c.length >= 2);
+    }
+
+    // Shorthand format: "KJs", "AKo", "99"
+    const match = cardStr.match(/^([AKQJT2-9])([AKQJT2-9])([so])?$/i);
+    if (!match) {
+        // Not recognized format, return as-is
+        return [cardStr];
+    }
+
+    const [_, rank1, rank2, suitedness] = match;
+
+    // Suited (or not specified, default to suited for variety)
+    if (suitedness === 's' || !suitedness) {
+        return [`${rank1}♠`, `${rank2}♠`]; // Same suit
+    }
+
+    // Offsuit
+    return [`${rank1}♠`, `${rank2}♥`]; // Different suits
+}
+
+/**
  * Build replayer_data from text story + enriched context
  * 
  * @param rawText - Original hand history text
@@ -61,11 +92,11 @@ export function buildReplayerData(
 ): ReplayerData {
 
     // ════════════════════════════════════════════════════════════
-    // STEP 1: Extract Hero Cards
+    // STEP 1: Extract Hero Cards (with shorthand support)
     // ════════════════════════════════════════════════════════════
     const visibleCards = hints?.cards || enriched?.heroCards || '';
     const heroCards = visibleCards
-        ? visibleCards.split(/\s+/).filter(c => c.length >= 2)
+        ? convertShorthandToLiteral(visibleCards)
         : [];
 
     // ════════════════════════════════════════════════════════════
