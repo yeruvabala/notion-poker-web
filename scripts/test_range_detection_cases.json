@@ -1,0 +1,173 @@
+[
+    {
+        "id": "RFI_UTG",
+        "category": "RFI",
+        "story": "UTG with AKs, I raise",
+        "hand": "AKs",
+        "position": "UTG",
+        "expectedSection": "PREFLOP (Initial)",
+        "expectedActionKeyword": "raise"
+    },
+    {
+        "id": "RFI_HJ",
+        "category": "RFI",
+        "story": "HJ with JJ, I raise",
+        "hand": "JJ",
+        "position": "HJ",
+        "expectedSection": "PREFLOP (Initial)",
+        "expectedActionKeyword": "raise"
+    },
+    {
+        "id": "RFI_CO",
+        "category": "RFI",
+        "story": "CO with 88, I raise",
+        "hand": "88",
+        "position": "CO",
+        "expectedSection": "PREFLOP (Initial)",
+        "expectedActionKeyword": "raise"
+    },
+    {
+        "id": "RFI_BTN",
+        "category": "RFI",
+        "story": "BTN with K7s, I raise",
+        "hand": "K7s",
+        "position": "BTN",
+        "expectedSection": "PREFLOP (Initial)",
+        "expectedActionKeyword": "raise"
+    },
+    {
+        "id": "RFI_SB",
+        "category": "RFI",
+        "story": "SB with Q4s, I raise",
+        "hand": "Q4s",
+        "position": "SB",
+        "expectedSection": "PREFLOP (Initial)",
+        "expectedActionKeyword": "raise"
+    },
+    {
+        "id": "3BET_SB_vs_BTN",
+        "category": "3BET",
+        "story": "BTN opens, I'm in SB with AA, I 3-bet",
+        "hand": "AA",
+        "position": "SB",
+        "expectedSection": "PREFLOP (Response)",
+        "expectedActionKeyword": "raise"
+    },
+    {
+        "id": "3BET_BB_vs_BTN",
+        "category": "3BET",
+        "story": "BTN opens, I'm in BB with QQ, I 3-bet",
+        "hand": "QQ",
+        "position": "BB",
+        "expectedSection": "PREFLOP (Response)",
+        "expectedActionKeyword": "raise"
+    },
+    {
+        "id": "VS_3BET_BTN_vs_SB",
+        "category": "VS_3BET",
+        "story": "BTN with JJ, SB 3-bets, what to do?",
+        "hand": "JJ",
+        "position": "BTN",
+        "expectedSection": "PREFLOP (vs 3-bet)",
+        "expectedActionKeyword": "calls"
+    },
+    {
+        "id": "VS_3BET_BTN_vs_BB_BUG",
+        "category": "VS_3BET",
+        "story": "BTN with KK, BB 3-bets, what to do?",
+        "hand": "KK",
+        "position": "BTN",
+        "expectedSection": "PREFLOP (vs 3-bet)",
+        "expectedActionKeyword": "raise"
+    },
+    {
+        "id": "VS_3BET_BTN_vs_BB_CALL",
+        "category": "VS_3BET",
+        "story": "BTN with TT, BB 3-bets, what to do?",
+        "hand": "TT",
+        "position": "BTN",
+        "expectedSection": "PREFLOP (vs 3-bet)",
+        "expectedActionKeyword": "call"
+    },
+    {
+        "id": "VS_3BET_CO_vs_BTN",
+        "category": "VS_3BET",
+        "story": "CO with AA, BTN 3-bets",
+        "hand": "AA",
+        "position": "CO",
+        "expectedSection": "PREFLOP (vs 3-bet)",
+        "expectedActionKeyword": "raise"
+    },
+    {
+        "id": "VS_3BET_UTG_vs_SB",
+        "category": "VS_3BET",
+        "story": "UTG with AKs, SB 3-bets",
+        "hand": "AKs",
+        "position": "UTG",
+        "expectedSection": "PREFLOP (vs 3-bet)",
+        "expectedActionKeyword": "raise"
+    },
+    {
+        "id": "VS_3BET_HJ_vs_BB",
+        "category": "VS_3BET",
+        "story": "HJ with QQ, BB 3-bets",
+        "hand": "QQ",
+        "position": "HJ",
+        "expectedSection": "PREFLOP (vs 3-bet)",
+        "expectedActionKeyword": "call"
+    },
+    {
+        "id": "VS_4BET_BB_vs_BTN",
+        "category": "VS_4BET",
+        "story": "BB with KK, BTN opens, I 3-bet, BTN 4-bets",
+        "hand": "KK",
+        "position": "BB",
+        "expectedSection": "PREFLOP (vs 4-bet)",
+        "expectedActionKeyword": "raise"
+    },
+    {
+        "id": "VS_4BET_SB_vs_BTN_AKs",
+        "category": "VS_4BET",
+        "story": "SB with AKs, BTN opens, I 3-bet, BTN 4-bets",
+        "hand": "AKs",
+        "position": "SB",
+        "expectedSection": "PREFLOP (vs 4-bet)",
+        "expectedActionKeyword": "raise"
+    },
+    {
+        "id": "VS_4BET_SB_vs_BTN",
+        "category": "VS_4BET",
+        "story": "SB with JJ, BTN opens, I 3-bet, BTN 4-bets",
+        "hand": "JJ",
+        "position": "SB",
+        "expectedSection": "PREFLOP (vs 4-bet)",
+        "expectedActionKeyword": "call"
+    },
+    {
+        "id": "COLD_CALL_BB_vs_UTG",
+        "category": "COLD_CALL",
+        "story": "UTG opens, I'm in BB with 76s, I call",
+        "hand": "76s",
+        "position": "BB",
+        "expectedSection": "PREFLOP (Response)",
+        "expectedActionKeyword": "call"
+    },
+    {
+        "id": "COLD_CALL_BTN_vs_CO",
+        "category": "COLD_CALL",
+        "story": "CO opens, I'm BTN with AJs, I call",
+        "hand": "AJs",
+        "position": "BTN",
+        "expectedSection": "PREFLOP (Response)",
+        "expectedActionKeyword": "call"
+    },
+    {
+        "id": "SQUEEZE_BB_vs_BTN_SB",
+        "category": "SQUEEZE",
+        "story": "BTN opens, SB calls, I'm BB with KK, I squeeze",
+        "hand": "KK",
+        "position": "BB",
+        "expectedSection": "PREFLOP (Response)",
+        "expectedActionKeyword": "raise"
+    }
+]

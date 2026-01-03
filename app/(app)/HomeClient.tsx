@@ -422,6 +422,12 @@ export default function HomeClient() {
   const [rv, setRv] = useState<string>('');   // river
 
   const [gtoEdit, setGtoEdit] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false); // Advanced Options collapsed by default
+  const [transparencyData, setTransparencyData] = useState<{
+    assumptions: any[];
+    confidence: number;
+    message: string;
+  } | null>(null); // Transparency metadata from API
 
   // ← ADDED: read signed-in user's email and show it under the title
   const supabase = createClient();
@@ -604,28 +610,44 @@ export default function HomeClient() {
         cards: capturedHeroCards || undefined,
         board: capturedBoard || undefined,
         notes: currentInput || undefined,
-        rawText: currentInput || undefined,
+        raw_text: currentInput || undefined, // API expects snake_case
         fe_hint: feNeeded || undefined,
         spr_hint: spr || undefined,
         action_hint: capturedActionHint || undefined,
         hand_class: undefined, // Recalculated by API
-        source_used: 'PREVIEW' // Using preview parse, not manual fields
+        source_used: 'STORY' // Using preview which parses from story
       };
 
-      const r = await fetch('/api/analyze-hand', {
+      const r = await fetch('/api/coach/analyze-hand', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-app-token': '7f8dc46687ee09ccbff411d4a1507bc08bfb97bf556430a95f5413b59bd780d0'
+        },
         body: JSON.stringify(payload),
       });
       if (!r.ok) {
         const e = await r.json().catch(() => ({}));
-        throw new Error(e?.error || `Analyze failed (${r.status})`);
+        console.error('[HomeClient] API Error:', e);
+        throw new Error(e?.details || e?.error || `Analyze failed (${r.status})`);
       }
 
       // ══════════════════════════════════════════════════
       // STEP 3: UPDATE - Set new data from API response
       // ══════════════════════════════════════════════════
       const data = await r.json();
+
+      // DEBUG: Log what we received
+      console.log('[HomeClient] API Response:', {
+        transparency: data?.transparency,
+        gto_strategy_preview: data?.gto_strategy?.substring(0, 200)
+      });
+
+      // Capture transparency metadata from API
+      if (data?.transparency) {
+        setTransparencyData(data.transparency);
+      }
+
       setFields({
         gto_strategy: (data?.gto_strategy ?? '') || '',
         exploit_deviation: (data?.exploit_deviation ?? '') || '',
@@ -720,13 +742,6 @@ Turn K♦ — ...`}
                     {aiLoading ? 'Analyzing…' : 'Analyze Hand'}
                   </button>
                   <button
-                    className="btn btn-platinum-premium btn-ony--sm"
-                    onClick={syncFromStory}
-                    title="Copy stakes/position/hero/board from the story preview into the editors"
-                  >
-                    Sync
-                  </button>
-                  <button
                     className="btn btn-ony btn-ony--sm"
                     onClick={() => {
                       setInput(''); setFields(null); setStatus(null); setError(null);
@@ -739,120 +754,138 @@ Turn K♦ — ...`}
                   </button>
                 </div>
                 {error && <div className="err">{error}</div>}
-              </section>
 
-              {/* Situation Summary (editable) */}
-              <section className="card ony-card platinum-container-frame">
-                <div className="cardTitle platinum-text-gradient">Situation Summary</div>
+                {/* Live Preview Chips */}
+                {(preview.position || preview.stakes || preview.heroCards || preview.board.flop) && (
+                  <div className="parsed-preview">
+                    {preview.position && <span className="preview-chip">📍 {preview.position}</span>}
+                    {preview.stakes && <span className="preview-chip">💰 {preview.stakes}</span>}
+                    {preview.heroCards && <span className="preview-chip">🃏 {preview.heroCards}</span>}
+                    {preview.board.flop && <span className="preview-chip">🎲 Flop: {preview.board.flop}</span>}
+                    {preview.board.turn && <span className="preview-chip">Turn: {preview.board.turn}</span>}
+                    {preview.board.river && <span className="preview-chip">River: {preview.board.river}</span>}
+                  </div>
+                )}
 
-                <div className="summaryGrid">
-                  <Info label="Mode">
-                    <select className="input input-ony platinum-inner-border" value={mode} onChange={e => setMode(e.target.value as any)}>
-                      <option value="CASH">CASH</option>
-                      <option value="MTT">MTT</option>
-                    </select>
-                  </Info>
-
-                  <Info label="Blinds / Stakes">
-                    <input className="input input-ony platinum-inner-border" value={stakes} onChange={e => setStakes(e.target.value)} placeholder={preview.stakes || '(unknown)'} />
-                  </Info>
-
-                  <Info label="Effective Stack (bb)">
-                    <input className="input input-ony platinum-inner-border" value={eff} onChange={e => setEff(e.target.value)} placeholder="(optional)" />
-                  </Info>
-
-                  <Info label="Positions">
-                    <input className="input input-ony platinum-inner-border" value={position} onChange={e => setPosition(e.target.value.toUpperCase())} placeholder={preview.position || '(unknown)'} />
-                  </Info>
-
-                  <Info label="Hero Hand">
-                    <div className="cardsRow">
-                      <CardEditor value={h1} onChange={setH1} placeholder={(preview.heroCards || '').split(' ')[0] || 'K♠'} />
-                      <CardEditor value={h2} onChange={setH2} placeholder={(preview.heroCards || '').split(' ')[1] || 'K♦'} />
+                {/* Transparency Warning - Live Preview (shows AS YOU TYPE) */}
+                {(preview.position || preview.stakes || preview.heroCards || preview.board.flop) && (
+                  <div className="transparency-note">
+                    <div className="transparency-header">
+                      <span className="transparency-icon">💡</span>
+                      <span className="transparency-title">
+                        {transparencyData
+                          ? `Analysis used (Confidence: ${transparencyData.confidence}%)`
+                          : 'Will detect from your story:'}
+                      </span>
                     </div>
-                  </Info>
 
-                  <Info label="Board">
-                    <div className="boardRow">
-                      <span className="pillLbl">Flop</span>
-                      <CardEditor value={f1} onChange={setF1} placeholder={(preview.board.flop || '').split(' ')[0] || 'J♠'} />
-                      <CardEditor value={f2} onChange={setF2} placeholder={(preview.board.flop || '').split(' ')[1] || 'T♠'} />
-                      <CardEditor value={f3} onChange={setF3} placeholder={(preview.board.flop || '').split(' ')[2] || '4♣'} />
-                    </div>
-                    <div className="boardRow">
-                      <span className="pillLbl">Turn</span>
-                      <CardEditor value={tr} onChange={setTr} placeholder={preview.board.turn || '9♣'} />
-                    </div>
-                    <div className="boardRow">
-                      <span className="pillLbl">River</span>
-                      <CardEditor value={rv} onChange={setRv} placeholder={preview.board.river || '3♠'} />
-                    </div>
-                  </Info>
-                </div>
+                    {/* Show API transparency if available, otherwise show preview */}
+                    {transparencyData && transparencyData.message ? (
+                      <>
+                        <div className="transparency-message">
+                          {transparencyData.message}
+                        </div>
+                        <div className="transparency-items">
+                          {transparencyData.assumptions.map((assumption: any, idx: number) => {
+                            const emoji = assumption.source === 'inferred' ? '🔍'
+                              : assumption.source === 'defaulted' ? '📊'
+                                : '✅';
+                            const className = assumption.source === 'inferred' ? 'inferred'
+                              : assumption.source === 'defaulted' ? 'defaulted'
+                                : 'detected';
 
-                <div className="hint">
-                  <b>Source:</b> <span className="chip">{sourceUsed === 'SUMMARY' ? 'Using: Summary editors' : 'Using: Story parse'}</span>
-                  &nbsp; • Postflop: add exact suits (e.g., <b>As 4s</b>) for accuracy. “Sync from Story” copies the parse below.
-                </div>
-                {actionHint && <div className="hint">Detected action: <b>{actionHint}</b></div>}
-              </section>
+                            return (
+                              <div key={idx} className={`transparency-item ${className}`} title={assumption.reasoning}>
+                                {emoji} <strong>{assumption.field}:</strong> {String(assumption.value)}
+                                <span className="transparency-confidence">({assumption.confidence}%)</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="transparency-items">
+                        {preview.position && <span className="transparency-item detected">✅ Position: {preview.position}</span>}
+                        {preview.stakes && <span className="transparency-item detected">✅ Stakes: {preview.stakes}</span>}
+                        {preview.heroCards && <span className="transparency-item detected">✅ Hero Cards: {preview.heroCards}</span>}
+                        {preview.board.flop && <span className="transparency-item detected">✅ Board: {preview.board.flop}{preview.board.turn ? ` ${preview.board.turn}` : ''}{preview.board.river ? ` ${preview.board.river}` : ''}</span>}
 
-              {/* FE & SPR */}
-              <section className="card ony-card platinum-container-frame">
-                <div className="cardTitle">Fold-Equity Threshold & SPR</div>
+                        {/* Show what will be ASSUMED */}
+                        {!preview.stakes && <span className="transparency-item defaulted">📊 Effective Stack: 100bb (will default)</span>}
+                        <span className="transparency-item inferred">🔍 Opponent Position: Will auto-detect from story</span>
+                        <span className="transparency-item inferred">🔍 Bet Sizing: Will estimate from story</span>
+                      </div>
+                    )}
 
-                <div className="feSprGrid">
-                  <div className="box platinum-inner-border">
-                    <div className="boxTitle">FE calculator (bb units)</div>
-                    <div className="grid2">
-                      <label className="lbl">Risk (bb)</label>
-                      <input className="input input-ony platinum-inner-border" value={risk} onChange={e => setRisk(e.target.value)} placeholder="e.g., jam = eff BB" />
-                      <label className="lbl">Reward (bb)</label>
-                      <input className="input input-ony platinum-inner-border" value={reward} onChange={e => setReward(e.target.value)} placeholder="pre-pot + bet size" />
-                    </div>
-                    <div className="calcLine">
-                      FE needed ≈ <b>{feNeeded || '0%'}</b> &nbsp;
-                      <span className="muted">(Risk / (Risk + Reward))</span>
+                    <div className="transparency-hint">
+                      💡 Click "Advanced Options" to override any assumptions
                     </div>
                   </div>
+                )}
+              </section>
 
-                  <div className="box platinum-inner-border">
-                    <div className="boxTitle">SPR (flop)</div>
-                    <div className="grid2">
-                      <label className="lbl">Flop pot (bb)</label>
-                      <input className="input input-ony platinum-inner-border" value={flopPot} onChange={e => setFlopPot(e.target.value)} placeholder="e.g., 5.9" />
-                      <label className="lbl">Behind (bb)</label>
-                      <input className="input input-ony platinum-inner-border" value={behind} onChange={e => setBehind(e.target.value)} placeholder="effective after prefl" />
+              {/* Advanced Options (Collapsible) */}
+              <section className="card ony-card platinum-container-frame">
+                <button
+                  className="advanced-toggle"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                >
+                  <span className="advanced-title">⚙️ Advanced Options</span>
+                  <span className="advanced-arrow">{showAdvanced ? '▲' : '▼'}</span>
+                </button>
+
+                {showAdvanced && (
+                  <div className="advanced-content">
+                    <div className="hint" style={{ marginBottom: 12 }}>
+                      Override auto-detected values if needed
                     </div>
-                    <div className="calcLine">SPR ≈ <b>{spr || '0'}</b></div>
-                    <div className="sprChips">
-                      <span className="chip">SPR ≤ 2: jam / b50 / x</span>
-                      <span className="chip">SPR 2–5: b33 / b50 / x</span>
-                      <span className="chip">SPR 5+: b25–33 / x</span>
+
+                    <div className="summaryGrid">
+                      <Info label="Blinds / Stakes">
+                        <input className="input input-ony platinum-inner-border" value={stakes} onChange={e => setStakes(e.target.value)} placeholder={preview.stakes || '(unknown)'} />
+                      </Info>
+
+                      <Info label="Effective Stack (bb)">
+                        <input className="input input-ony platinum-inner-border" value={eff} onChange={e => setEff(e.target.value)} placeholder="(optional)" />
+                      </Info>
+
+                      <Info label="Position">
+                        <input className="input input-ony platinum-inner-border" value={position} onChange={e => setPosition(e.target.value.toUpperCase())} placeholder={preview.position || '(unknown)'} />
+                      </Info>
+
+                      <Info label="Hero Hand">
+                        <div className="cardsRow">
+                          <CardEditor value={h1} onChange={setH1} placeholder={(preview.heroCards || '').split(' ')[0] || 'K♠'} />
+                          <CardEditor value={h2} onChange={setH2} placeholder={(preview.heroCards || '').split(' ')[1] || 'K♦'} />
+                        </div>
+                      </Info>
+
+                      <Info label="Board">
+                        <div className="boardRow">
+                          <span className="pillLbl">Flop</span>
+                          <CardEditor value={f1} onChange={setF1} placeholder={(preview.board.flop || '').split(' ')[0] || 'J♠'} />
+                          <CardEditor value={f2} onChange={setF2} placeholder={(preview.board.flop || '').split(' ')[1] || 'T♠'} />
+                          <CardEditor value={f3} onChange={setF3} placeholder={(preview.board.flop || '').split(' ')[2] || '4♣'} />
+                        </div>
+                        <div className="boardRow">
+                          <span className="pillLbl">Turn</span>
+                          <CardEditor value={tr} onChange={setTr} placeholder={preview.board.turn || '9♣'} />
+                        </div>
+                        <div className="boardRow">
+                          <span className="pillLbl">River</span>
+                          <CardEditor value={rv} onChange={setRv} placeholder={preview.board.river || '3♠'} />
+                        </div>
+                      </Info>
                     </div>
                   </div>
-                </div>
+                )}
               </section>
+
+
             </div>
 
             {/* RIGHT column */}
             <div className="col">
-              {/* top info card */}
-              <section className="card ony-card platinum-container-frame">
-                <div className="infoGrid">
-                  <Info label="Date"><div>{today}</div></Info>
-                  <Info label="Position"><div>{(position || preview.position) || <span className="muted">(unknown)</span>}</div></Info>
-                  <Info label="Stakes"><div>{(stakes || preview.stakes) || <span className="muted">(unknown)</span>}</div></Info>
-                  <Info label="Cards">
-                    {heroCardsStr
-                      ? heroCardsStr.split(' ').map((c, i) => (
-                        <span key={i} style={{ marginRight: 6 }}><CardText c={c} /></span>
-                      ))
-                      : <span className="muted">(unknown)</span>
-                    }
-                  </Info>
-                </div>
-              </section>
 
 
               {/* Learning Tags */}
@@ -1067,9 +1100,111 @@ Turn K♦ — ...`}
           .exploit-arrow.same{color:#94A3B8}
           .exploit-reason{font-size:11px;color:#60a5fa;margin-top:2px}
           .exploit-advice{font-size:11px;color:#fde047;margin-top:12px;padding-top:8px;border-top:1px solid #525252}
+
+          /* Live Preview Chips */
+          .parsed-preview{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding:12px;background:rgba(38,38,38,0.5);border-radius:12px;border:1px dashed #525252}
+          .preview-chip{
+            display:inline-block;
+            padding:6px 12px;
+            border-radius:999px;
+            font-size:12px;
+            font-weight:600;
+            background:linear-gradient(135deg,#e5e5e5,#9ca3af);
+            color:#121212;
+            border:none;
+            box-shadow:0 2px 4px rgba(0,0,0,0.2);
+          }
+          
+          /* Advanced Options Accordion */
+          .advanced-toggle{
+            width:100%;
+            background:transparent;
+            border:none;
+            padding:12px 0;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            cursor:pointer;
+            color:#E2E8F0;
+            transition:all 0.2s;
+          }
+          .advanced-toggle:hover{opacity:0.8}
+          .advanced-title{font-size:13px;font-weight:700;color:#E2E8F0}
+          .advanced-arrow{font-size:12px;color:#94A3B8;transition:transform 0.2s}
+          .advanced-content{
+            padding-top:12px;
+            animation:slideDown 0.3s ease-out;
+          }
+          @keyframes slideDown{
+            from{opacity:0;transform:translateY(-10px)}
+            to{opacity:1;transform:translateY(0)}
+          }
+
+          /* Transparency Note */
+          .transparency-note{
+            margin-top:16px;
+            padding:14px;
+            background:rgba(59,130,246,0.08);
+            border:1px solid rgba(59,130,246,0.2);
+            border-radius:12px;
+          }
+          .transparency-header{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            margin-bottom:10px;
+          }
+          .transparency-icon{font-size:16px}
+          .transparency-title{font-size:12px;font-weight:700;color:#60a5fa}
+          .transparency-message{
+            font-size:12px;
+            color:#94A3B8;
+            margin-bottom:10px;
+            padding:8px;
+            background:rgba(0,0,0,0.2);
+            border-radius:6px;
+          }
+          .transparency-items{
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+            margin-bottom:10px;
+          }
+          .transparency-item{
+            font-size:11px;
+            padding:4px 8px;
+            border-radius:6px;
+            display:inline-block;
+          }
+          .transparency-item.missing{
+            background:rgba(239,68,68,0.1);
+            border:1px solid rgba(239,68,68,0.3);
+            color:#fca5a5;
+          }
+          .transparency-item.defaulted{
+            background:rgba(251,191,36,0.1);
+            border:1px solid rgba(251,191,36,0.3);
+            color:#fde047;
+          }
+          .transparency-item.inferred{
+            background:rgba(34,197,94,0.1);
+            border:1px solid rgba(34,197,94,0.3);
+            color:#86efac;
+          }
+          .transparency-hint{
+            font-size:11px;
+            color:#94A3B8;
+            font-style:italic;
+            margin-top:8px;
+          }
+          .transparency-confidence{
+            font-size:10px;
+            color:#94A3B8;
+            margin-left:4px;
+          }
         `}</style>
-      </main>
-    </div>
+      </main >
+    </div >
   );
 }
 

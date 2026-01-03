@@ -43279,3 +43279,181 @@ openai.RateLimitError: Error code: 429 - {'error': {'message': 'You exceeded you
 2025-12-31 18:09:31,958 [INFO] [ORCHESTRATOR] Stage Indexing reported 0 items processed. Stopping.
 2025-12-31 18:09:31,959 [INFO] [ORCHESTRATOR] Stage Indexing completed. Total items processed: 0
 2025-12-31 18:09:31,959 [INFO] [ORCHESTRATOR] Pipeline execution FINISHED.
+2026-01-02 19:34:38,622 [INFO] [ORCHESTRATOR] Pipeline running in CONTINUOUS mode (interval: 30s)
+2026-01-02 19:34:38,622 [INFO] [ORCHESTRATOR] Press Ctrl+C to stop gracefully.
+2026-01-02 19:34:38,622 [INFO] [ORCHESTRATOR] === Pipeline Cycle 1 ===
+2026-01-02 19:34:38,622 [INFO] [ORCHESTRATOR] --- Starting Stage: Ingestion (worker.py) ---
+2026-01-02 19:34:40,429 [INFO] [ORCHESTRATOR] Stage Ingestion completed successfully.
+2026-01-02 19:34:40,429 [INFO] [ORCHESTRATOR] --- Starting Stage: Analysis (coach_worker.py) ---
+2026-01-02 19:34:40,429 [INFO] [ORCHESTRATOR] Loop 1/50 for Analysis...
+2026-01-02 19:37:23,032 [INFO] [ORCHESTRATOR] Processed 10 items. Continuing...
+2026-01-02 19:37:24,035 [INFO] [ORCHESTRATOR] Loop 2/50 for Analysis...
+2026-01-02 19:37:24,601 [INFO] [ORCHESTRATOR] Stage Analysis reported 0 items processed. Stopping.
+2026-01-02 19:37:24,601 [INFO] [ORCHESTRATOR] Stage Analysis completed. Total items processed: 10
+2026-01-02 19:37:24,601 [INFO] [ORCHESTRATOR] --- Starting Stage: Indexing (study_ingest.py) ---
+2026-01-02 19:37:24,601 [INFO] [ORCHESTRATOR] Loop 1/10 for Indexing...
+2026-01-02 19:37:27,790 [INFO] [ORCHESTRATOR] Stage Indexing reported 0 items processed. Stopping.
+2026-01-02 19:37:27,790 [INFO] [ORCHESTRATOR] Stage Indexing completed. Total items processed: 0
+2026-01-02 19:37:27,790 [INFO] [ORCHESTRATOR] Cycle 1 completed successfully.
+2026-01-02 19:37:27,790 [INFO] [ORCHESTRATOR] Sleeping 30s before next cycle...
+2026-01-02 19:37:57,795 [INFO] [ORCHESTRATOR] === Pipeline Cycle 2 ===
+2026-01-02 19:37:57,797 [INFO] [ORCHESTRATOR] --- Starting Stage: Ingestion (worker.py) ---
+2026-01-02 19:37:58,602 [INFO] [ORCHESTRATOR] Stage Ingestion completed successfully.
+2026-01-02 19:37:58,602 [INFO] [ORCHESTRATOR] --- Starting Stage: Analysis (coach_worker.py) ---
+2026-01-02 19:37:58,602 [INFO] [ORCHESTRATOR] Loop 1/50 for Analysis...
+2026-01-02 19:37:59,008 [INFO] [ORCHESTRATOR] Stage Analysis reported 0 items processed. Stopping.
+2026-01-02 19:37:59,008 [INFO] [ORCHESTRATOR] Stage Analysis completed. Total items processed: 0
+2026-01-02 19:37:59,008 [INFO] [ORCHESTRATOR] --- Starting Stage: Indexing (study_ingest.py) ---
+2026-01-02 19:37:59,008 [INFO] [ORCHESTRATOR] Loop 1/10 for Indexing...
+2026-01-02 19:37:59,862 [INFO] [ORCHESTRATOR] Stage Indexing reported 0 items processed. Stopping.
+2026-01-02 19:37:59,862 [INFO] [ORCHESTRATOR] Stage Indexing completed. Total items processed: 0
+2026-01-02 19:37:59,862 [INFO] [ORCHESTRATOR] Cycle 2 completed successfully.
+2026-01-02 19:37:59,862 [INFO] [ORCHESTRATOR] Sleeping 30s before next cycle...
+2026-01-02 19:38:29,867 [INFO] [ORCHESTRATOR] === Pipeline Cycle 3 ===
+2026-01-02 19:38:29,870 [INFO] [ORCHESTRATOR] --- Starting Stage: Ingestion (worker.py) ---
+2026-01-02 19:38:30,658 [INFO] [ORCHESTRATOR] Stage Ingestion completed successfully.
+2026-01-02 19:38:30,659 [INFO] [ORCHESTRATOR] --- Starting Stage: Analysis (coach_worker.py) ---
+2026-01-02 19:38:30,659 [INFO] [ORCHESTRATOR] Loop 1/50 for Analysis...
+2026-01-02 19:38:31,134 [INFO] [ORCHESTRATOR] Stage Analysis reported 0 items processed. Stopping.
+2026-01-02 19:38:31,135 [INFO] [ORCHESTRATOR] Stage Analysis completed. Total items processed: 0
+2026-01-02 19:38:31,135 [INFO] [ORCHESTRATOR] --- Starting Stage: Indexing (study_ingest.py) ---
+2026-01-02 19:38:31,135 [INFO] [ORCHESTRATOR] Loop 1/10 for Indexing...
+2026-01-02 19:38:32,062 [INFO] [ORCHESTRATOR] Stage Indexing reported 0 items processed. Stopping.
+2026-01-02 19:38:32,062 [INFO] [ORCHESTRATOR] Stage Indexing completed. Total items processed: 0
+2026-01-02 19:38:32,062 [INFO] [ORCHESTRATOR] Cycle 3 completed successfully.
+2026-01-02 19:38:32,062 [INFO] [ORCHESTRATOR] Sleeping 30s before next cycle...
+2026-01-02 19:39:02,063 [INFO] [ORCHESTRATOR] === Pipeline Cycle 4 ===
+2026-01-02 19:39:02,064 [INFO] [ORCHESTRATOR] --- Starting Stage: Ingestion (worker.py) ---
+2026-01-02 19:39:02,911 [INFO] [ORCHESTRATOR] Stage Ingestion completed successfully.
+2026-01-02 19:39:02,911 [INFO] [ORCHESTRATOR] --- Starting Stage: Analysis (coach_worker.py) ---
+2026-01-02 19:39:02,911 [INFO] [ORCHESTRATOR] Loop 1/50 for Analysis...
+2026-01-02 19:39:03,338 [INFO] [ORCHESTRATOR] Stage Analysis reported 0 items processed. Stopping.
+2026-01-02 19:39:03,339 [INFO] [ORCHESTRATOR] Stage Analysis completed. Total items processed: 0
+2026-01-02 19:39:03,339 [INFO] [ORCHESTRATOR] --- Starting Stage: Indexing (study_ingest.py) ---
+2026-01-02 19:39:03,339 [INFO] [ORCHESTRATOR] Loop 1/10 for Indexing...
+2026-01-02 19:39:04,165 [INFO] [ORCHESTRATOR] Stage Indexing reported 0 items processed. Stopping.
+2026-01-02 19:39:04,165 [INFO] [ORCHESTRATOR] Stage Indexing completed. Total items processed: 0
+2026-01-02 19:39:04,165 [INFO] [ORCHESTRATOR] Cycle 4 completed successfully.
+2026-01-02 19:39:04,165 [INFO] [ORCHESTRATOR] Sleeping 30s before next cycle...
+2026-01-02 19:39:34,171 [INFO] [ORCHESTRATOR] === Pipeline Cycle 5 ===
+2026-01-02 19:39:34,173 [INFO] [ORCHESTRATOR] --- Starting Stage: Ingestion (worker.py) ---
+2026-01-02 19:39:35,073 [INFO] [ORCHESTRATOR] Stage Ingestion completed successfully.
+2026-01-02 19:39:35,073 [INFO] [ORCHESTRATOR] --- Starting Stage: Analysis (coach_worker.py) ---
+2026-01-02 19:39:35,073 [INFO] [ORCHESTRATOR] Loop 1/50 for Analysis...
+2026-01-02 19:39:35,553 [INFO] [ORCHESTRATOR] Stage Analysis reported 0 items processed. Stopping.
+2026-01-02 19:39:35,553 [INFO] [ORCHESTRATOR] Stage Analysis completed. Total items processed: 0
+2026-01-02 19:39:35,553 [INFO] [ORCHESTRATOR] --- Starting Stage: Indexing (study_ingest.py) ---
+2026-01-02 19:39:35,553 [INFO] [ORCHESTRATOR] Loop 1/10 for Indexing...
+2026-01-02 19:39:36,422 [INFO] [ORCHESTRATOR] Stage Indexing reported 0 items processed. Stopping.
+2026-01-02 19:39:36,422 [INFO] [ORCHESTRATOR] Stage Indexing completed. Total items processed: 0
+2026-01-02 19:39:36,422 [INFO] [ORCHESTRATOR] Cycle 5 completed successfully.
+2026-01-02 19:39:36,422 [INFO] [ORCHESTRATOR] Sleeping 30s before next cycle...
+2026-01-02 19:40:06,426 [INFO] [ORCHESTRATOR] === Pipeline Cycle 6 ===
+2026-01-02 19:40:06,428 [INFO] [ORCHESTRATOR] --- Starting Stage: Ingestion (worker.py) ---
+2026-01-02 19:40:07,146 [INFO] [ORCHESTRATOR] Stage Ingestion completed successfully.
+2026-01-02 19:40:07,146 [INFO] [ORCHESTRATOR] --- Starting Stage: Analysis (coach_worker.py) ---
+2026-01-02 19:40:07,147 [INFO] [ORCHESTRATOR] Loop 1/50 for Analysis...
+2026-01-02 19:40:07,614 [INFO] [ORCHESTRATOR] Stage Analysis reported 0 items processed. Stopping.
+2026-01-02 19:40:07,615 [INFO] [ORCHESTRATOR] Stage Analysis completed. Total items processed: 0
+2026-01-02 19:40:07,615 [INFO] [ORCHESTRATOR] --- Starting Stage: Indexing (study_ingest.py) ---
+2026-01-02 19:40:07,615 [INFO] [ORCHESTRATOR] Loop 1/10 for Indexing...
+2026-01-02 19:40:08,480 [INFO] [ORCHESTRATOR] Stage Indexing reported 0 items processed. Stopping.
+2026-01-02 19:40:08,480 [INFO] [ORCHESTRATOR] Stage Indexing completed. Total items processed: 0
+2026-01-02 19:40:08,480 [INFO] [ORCHESTRATOR] Cycle 6 completed successfully.
+2026-01-02 19:40:08,480 [INFO] [ORCHESTRATOR] Sleeping 30s before next cycle...
+2026-01-02 19:40:38,486 [INFO] [ORCHESTRATOR] === Pipeline Cycle 7 ===
+2026-01-02 19:40:38,489 [INFO] [ORCHESTRATOR] --- Starting Stage: Ingestion (worker.py) ---
+2026-01-02 19:40:39,450 [INFO] [ORCHESTRATOR] Stage Ingestion completed successfully.
+2026-01-02 19:40:39,450 [INFO] [ORCHESTRATOR] --- Starting Stage: Analysis (coach_worker.py) ---
+2026-01-02 19:40:39,450 [INFO] [ORCHESTRATOR] Loop 1/50 for Analysis...
+2026-01-02 19:40:39,940 [INFO] [ORCHESTRATOR] Stage Analysis reported 0 items processed. Stopping.
+2026-01-02 19:40:39,940 [INFO] [ORCHESTRATOR] Stage Analysis completed. Total items processed: 0
+2026-01-02 19:40:39,941 [INFO] [ORCHESTRATOR] --- Starting Stage: Indexing (study_ingest.py) ---
+2026-01-02 19:40:39,941 [INFO] [ORCHESTRATOR] Loop 1/10 for Indexing...
+2026-01-02 19:40:40,787 [INFO] [ORCHESTRATOR] Stage Indexing reported 0 items processed. Stopping.
+2026-01-02 19:40:40,787 [INFO] [ORCHESTRATOR] Stage Indexing completed. Total items processed: 0
+2026-01-02 19:40:40,787 [INFO] [ORCHESTRATOR] Cycle 7 completed successfully.
+2026-01-02 19:40:40,787 [INFO] [ORCHESTRATOR] Sleeping 30s before next cycle...
+2026-01-02 19:41:10,789 [INFO] [ORCHESTRATOR] === Pipeline Cycle 8 ===
+2026-01-02 19:41:10,792 [INFO] [ORCHESTRATOR] --- Starting Stage: Ingestion (worker.py) ---
+2026-01-02 19:41:11,595 [INFO] [ORCHESTRATOR] Stage Ingestion completed successfully.
+2026-01-02 19:41:11,596 [INFO] [ORCHESTRATOR] --- Starting Stage: Analysis (coach_worker.py) ---
+2026-01-02 19:41:11,596 [INFO] [ORCHESTRATOR] Loop 1/50 for Analysis...
+2026-01-02 19:41:12,104 [INFO] [ORCHESTRATOR] Stage Analysis reported 0 items processed. Stopping.
+2026-01-02 19:41:12,104 [INFO] [ORCHESTRATOR] Stage Analysis completed. Total items processed: 0
+2026-01-02 19:41:12,104 [INFO] [ORCHESTRATOR] --- Starting Stage: Indexing (study_ingest.py) ---
+2026-01-02 19:41:12,104 [INFO] [ORCHESTRATOR] Loop 1/10 for Indexing...
+2026-01-02 19:41:12,968 [INFO] [ORCHESTRATOR] Stage Indexing reported 0 items processed. Stopping.
+2026-01-02 19:41:12,968 [INFO] [ORCHESTRATOR] Stage Indexing completed. Total items processed: 0
+2026-01-02 19:41:12,968 [INFO] [ORCHESTRATOR] Cycle 8 completed successfully.
+2026-01-02 19:41:12,968 [INFO] [ORCHESTRATOR] Sleeping 30s before next cycle...
+2026-01-02 19:41:42,970 [INFO] [ORCHESTRATOR] === Pipeline Cycle 9 ===
+2026-01-02 19:41:42,971 [INFO] [ORCHESTRATOR] --- Starting Stage: Ingestion (worker.py) ---
+2026-01-02 19:41:43,796 [INFO] [ORCHESTRATOR] Stage Ingestion completed successfully.
+2026-01-02 19:41:43,796 [INFO] [ORCHESTRATOR] --- Starting Stage: Analysis (coach_worker.py) ---
+2026-01-02 19:41:43,796 [INFO] [ORCHESTRATOR] Loop 1/50 for Analysis...
+2026-01-02 19:41:44,245 [INFO] [ORCHESTRATOR] Stage Analysis reported 0 items processed. Stopping.
+2026-01-02 19:41:44,245 [INFO] [ORCHESTRATOR] Stage Analysis completed. Total items processed: 0
+2026-01-02 19:41:44,245 [INFO] [ORCHESTRATOR] --- Starting Stage: Indexing (study_ingest.py) ---
+2026-01-02 19:41:44,245 [INFO] [ORCHESTRATOR] Loop 1/10 for Indexing...
+2026-01-02 19:41:45,061 [INFO] [ORCHESTRATOR] Stage Indexing reported 0 items processed. Stopping.
+2026-01-02 19:41:45,062 [INFO] [ORCHESTRATOR] Stage Indexing completed. Total items processed: 0
+2026-01-02 19:41:45,062 [INFO] [ORCHESTRATOR] Cycle 9 completed successfully.
+2026-01-02 19:41:45,062 [INFO] [ORCHESTRATOR] Sleeping 30s before next cycle...
+2026-01-02 19:42:15,067 [INFO] [ORCHESTRATOR] === Pipeline Cycle 10 ===
+2026-01-02 19:42:15,069 [INFO] [ORCHESTRATOR] --- Starting Stage: Ingestion (worker.py) ---
+2026-01-02 19:42:16,148 [INFO] [ORCHESTRATOR] Stage Ingestion completed successfully.
+2026-01-02 19:42:16,148 [INFO] [ORCHESTRATOR] --- Starting Stage: Analysis (coach_worker.py) ---
+2026-01-02 19:42:16,148 [INFO] [ORCHESTRATOR] Loop 1/50 for Analysis...
+2026-01-02 19:42:16,707 [INFO] [ORCHESTRATOR] Stage Analysis reported 0 items processed. Stopping.
+2026-01-02 19:42:16,707 [INFO] [ORCHESTRATOR] Stage Analysis completed. Total items processed: 0
+2026-01-02 19:42:16,707 [INFO] [ORCHESTRATOR] --- Starting Stage: Indexing (study_ingest.py) ---
+2026-01-02 19:42:16,707 [INFO] [ORCHESTRATOR] Loop 1/10 for Indexing...
+2026-01-02 19:42:17,621 [INFO] [ORCHESTRATOR] Stage Indexing reported 0 items processed. Stopping.
+2026-01-02 19:42:17,622 [INFO] [ORCHESTRATOR] Stage Indexing completed. Total items processed: 0
+2026-01-02 19:42:17,622 [INFO] [ORCHESTRATOR] Cycle 10 completed successfully.
+2026-01-02 19:42:17,622 [INFO] [ORCHESTRATOR] Sleeping 30s before next cycle...
+2026-01-02 19:42:47,627 [INFO] [ORCHESTRATOR] === Pipeline Cycle 11 ===
+2026-01-02 19:42:47,627 [INFO] [ORCHESTRATOR] --- Starting Stage: Ingestion (worker.py) ---
+2026-01-02 19:42:48,510 [INFO] [ORCHESTRATOR] Stage Ingestion completed successfully.
+2026-01-02 19:42:48,510 [INFO] [ORCHESTRATOR] --- Starting Stage: Analysis (coach_worker.py) ---
+2026-01-02 19:42:48,510 [INFO] [ORCHESTRATOR] Loop 1/50 for Analysis...
+2026-01-02 19:42:48,922 [INFO] [ORCHESTRATOR] Stage Analysis reported 0 items processed. Stopping.
+2026-01-02 19:42:48,923 [INFO] [ORCHESTRATOR] Stage Analysis completed. Total items processed: 0
+2026-01-02 19:42:48,923 [INFO] [ORCHESTRATOR] --- Starting Stage: Indexing (study_ingest.py) ---
+2026-01-02 19:42:48,923 [INFO] [ORCHESTRATOR] Loop 1/10 for Indexing...
+2026-01-02 19:42:49,780 [INFO] [ORCHESTRATOR] Stage Indexing reported 0 items processed. Stopping.
+2026-01-02 19:42:49,781 [INFO] [ORCHESTRATOR] Stage Indexing completed. Total items processed: 0
+2026-01-02 19:42:49,781 [INFO] [ORCHESTRATOR] Cycle 11 completed successfully.
+2026-01-02 19:42:49,781 [INFO] [ORCHESTRATOR] Sleeping 30s before next cycle...
+2026-01-02 19:43:19,786 [INFO] [ORCHESTRATOR] === Pipeline Cycle 12 ===
+2026-01-02 19:43:19,787 [INFO] [ORCHESTRATOR] --- Starting Stage: Ingestion (worker.py) ---
+2026-01-02 19:43:20,622 [INFO] [ORCHESTRATOR] Stage Ingestion completed successfully.
+2026-01-02 19:43:20,622 [INFO] [ORCHESTRATOR] --- Starting Stage: Analysis (coach_worker.py) ---
+2026-01-02 19:43:20,622 [INFO] [ORCHESTRATOR] Loop 1/50 for Analysis...
+2026-01-02 19:43:21,059 [INFO] [ORCHESTRATOR] Stage Analysis reported 0 items processed. Stopping.
+2026-01-02 19:43:21,060 [INFO] [ORCHESTRATOR] Stage Analysis completed. Total items processed: 0
+2026-01-02 19:43:21,060 [INFO] [ORCHESTRATOR] --- Starting Stage: Indexing (study_ingest.py) ---
+2026-01-02 19:43:21,060 [INFO] [ORCHESTRATOR] Loop 1/10 for Indexing...
+2026-01-02 19:43:21,929 [INFO] [ORCHESTRATOR] Stage Indexing reported 0 items processed. Stopping.
+2026-01-02 19:43:21,929 [INFO] [ORCHESTRATOR] Stage Indexing completed. Total items processed: 0
+2026-01-02 19:43:21,930 [INFO] [ORCHESTRATOR] Cycle 12 completed successfully.
+2026-01-02 19:43:21,930 [INFO] [ORCHESTRATOR] Sleeping 30s before next cycle...
+2026-01-02 19:43:51,931 [INFO] [ORCHESTRATOR] === Pipeline Cycle 13 ===
+2026-01-02 19:43:51,932 [INFO] [ORCHESTRATOR] --- Starting Stage: Ingestion (worker.py) ---
+2026-01-02 19:43:52,992 [INFO] [ORCHESTRATOR] Stage Ingestion completed successfully.
+2026-01-02 19:43:52,992 [INFO] [ORCHESTRATOR] --- Starting Stage: Analysis (coach_worker.py) ---
+2026-01-02 19:43:52,992 [INFO] [ORCHESTRATOR] Loop 1/50 for Analysis...
+2026-01-02 19:43:53,459 [INFO] [ORCHESTRATOR] Stage Analysis reported 0 items processed. Stopping.
+2026-01-02 19:43:53,459 [INFO] [ORCHESTRATOR] Stage Analysis completed. Total items processed: 0
+2026-01-02 19:43:53,460 [INFO] [ORCHESTRATOR] --- Starting Stage: Indexing (study_ingest.py) ---
+2026-01-02 19:43:53,460 [INFO] [ORCHESTRATOR] Loop 1/10 for Indexing...
+2026-01-02 19:43:54,330 [INFO] [ORCHESTRATOR] Stage Indexing reported 0 items processed. Stopping.
+2026-01-02 19:43:54,330 [INFO] [ORCHESTRATOR] Stage Indexing completed. Total items processed: 0
+2026-01-02 19:43:54,330 [INFO] [ORCHESTRATOR] Cycle 13 completed successfully.
+2026-01-02 19:43:54,330 [INFO] [ORCHESTRATOR] Sleeping 30s before next cycle...
+2026-01-02 19:44:24,333 [INFO] [ORCHESTRATOR] === Pipeline Cycle 14 ===
+2026-01-02 19:44:24,334 [INFO] [ORCHESTRATOR] --- Starting Stage: Ingestion (worker.py) ---
+2026-01-02 19:44:25,064 [INFO] [ORCHESTRATOR] Stage Ingestion completed successfully.
+2026-01-02 19:44:25,065 [INFO] [ORCHESTRATOR] --- Starting Stage: Analysis (coach_worker.py) ---
+2026-01-02 19:44:25,065 [INFO] [ORCHESTRATOR] Loop 1/50 for Analysis...

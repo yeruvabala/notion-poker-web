@@ -55,6 +55,7 @@ export interface HandInput {
     tableSize?: number;         // Number of players (e.g. 6, 9)
     villainContext?: {          // Context about how villain was determined
         type: 'opening' | 'sb_vs_bb' | 'facing_action';
+        villain?: string;           // ADD: Villain position
         villainName?: string;
     };
 }
@@ -122,6 +123,12 @@ export interface Agent1Input {
     actions: Action[];
     tableSize?: number;
     stacks: Stacks;      // NEW: For Phase 8 (Stack Depth)
+    streetsPlayed?: {    // NEW: Track which streets Hero actually played
+        preflop: boolean;
+        flop: boolean;
+        turn: boolean;
+        river: boolean;
+    };
 }
 
 export interface RangeInfo {

@@ -1195,24 +1195,36 @@ export function getVs3BetAction(
     const key = `${heroPosition.toUpperCase()}_vs_${threeBettorPosition.toUpperCase()}_3bet`;
 
     const rangeData = VS_THREE_BET_RANGES[key];
+    console.error(`[RangeDebug] Key="${key}", Hand="${hand}" -> Norm="${normalized}"`);
+    console.error(`[RangeDebug] RangeData Found: ${!!rangeData}`);
+    if (rangeData) console.error(`[RangeDebug] 4bet freq for ${normalized}: ${rangeData['4bet']?.[normalized]}`);
+
     if (!rangeData) {
         return {
             found: false,
             action: { action: 'fold', frequency: 1.0 },
-            scenario: key,
+            scenario: key + ` (DEBUG: Not Found, Norm=${normalized})`,
             source: 'llm_fallback',
         };
     }
 
     // Check 4bet range
     const fourBetFreq = rangeData['4bet']?.[normalized] || 0;
+    console.error(`[RangeDebug] Checking 4bet: normalized="${normalized}", freq=${fourBetFreq}, threshold=0.5`);
+    console.error(`[RangeDebug] Full 4bet range keys:`, Object.keys(rangeData['4bet'] || {}));
+    console.error(`[RangeDebug] Looking for key "${normalized}" in 4bet range`);
+    console.error(`[RangeDebug] Direct lookup rangeData['4bet']['${normalized}']:`, rangeData['4bet']?.[normalized]);
+
     if (fourBetFreq >= 0.5) {
+        console.error(`[RangeDebug] ✅ MATCH! Returning 4-bet for ${normalized}`);
         return {
             found: true,
             action: { action: '4bet', frequency: fourBetFreq, sizing: '24bb' },
-            scenario: key,
+            scenario: key + ` (DEBUG: Found 4bet, Norm=${normalized})`,
             source: 'range_table',
         };
+    } else {
+        console.error(`[RangeDebug] ❌ NO MATCH for 4bet (freq ${fourBetFreq} < 0.5)`);
     }
 
     // Check call range
@@ -1221,7 +1233,7 @@ export function getVs3BetAction(
         return {
             found: true,
             action: { action: 'call', frequency: callFreq },
-            scenario: key,
+            scenario: key + ` (DEBUG: Found call, Norm=${normalized})`,
             source: 'range_table',
         };
     }
@@ -1232,14 +1244,14 @@ export function getVs3BetAction(
             return {
                 found: true,
                 action: { action: '4bet', frequency: fourBetFreq, sizing: '24bb' },
-                scenario: key,
+                scenario: key + ` (DEBUG: Found mixed 4bet > call, Norm=${normalized})`,
                 source: 'range_table',
             };
         } else {
             return {
                 found: true,
                 action: { action: 'call', frequency: callFreq },
-                scenario: key,
+                scenario: key + ` (DEBUG: Found mixed call > 4bet, Norm=${normalized})`,
                 source: 'range_table',
             };
         }
@@ -1249,7 +1261,7 @@ export function getVs3BetAction(
     return {
         found: true,
         action: { action: 'fold', frequency: 1.0 },
-        scenario: key,
+        scenario: key + ` (DEBUG: Fallthrough to Fold, Norm=${normalized}, 4bet=${fourBetFreq}, call=${callFreq}, RangeFound=${!!rangeData})`,
         source: 'range_table',
     };
 }

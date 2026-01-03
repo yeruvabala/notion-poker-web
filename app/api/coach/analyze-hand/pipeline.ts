@@ -595,6 +595,7 @@ export function transformToAgentInput(body: any): HandInput {
         tableSize,
         villainContext: {  // Expose context type to agents
             type: villainContext.type,
+            villain: villainContext.villain || undefined,
             villainName: villainContext.villainName
         }
     };
@@ -661,7 +662,8 @@ export async function runMultiAgentPipeline(input: HandInput): Promise<CoachOutp
                 positions: input.positions,
                 actions: input.actions,
                 tableSize: input.tableSize,
-                stacks: input.stacks   // NEW: Pass stacks for Phase 8 range filtering
+                stacks: input.stacks,   // NEW: Pass stacks for Phase 8 range filtering
+                streetsPlayed           // NEW: Pass which streets were actually played
             }),
             Promise.resolve(agent4_sprCalculator({
                 potSizes: input.potSizes,
@@ -787,6 +789,7 @@ interface FormatInput {
     actions?: any[];
     villainContext?: {
         type: 'opening' | 'sb_vs_bb' | 'facing_action';
+        villain?: string;
         villainName?: string;
     };
 }

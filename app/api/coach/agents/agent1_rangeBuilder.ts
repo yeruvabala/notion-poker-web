@@ -180,8 +180,8 @@ function runRangeSimulation(input: Agent1Input): Record<string, EngineResult> {
         };
     }
 
-    // 3. Turn
-    if (boardAnalysis.turn) {
+    // 3. Turn - Only if actually played
+    if (boardAnalysis.turn && input.streetsPlayed?.turn) {
         const turnCard = boardAnalysis.turn.card;
         const boardCards = [...(boardAnalysis.flop?.cards.split(' ') || []), turnCard];
 
@@ -204,8 +204,8 @@ function runRangeSimulation(input: Agent1Input): Record<string, EngineResult> {
         };
     }
 
-    // 4. River
-    if (boardAnalysis.river) {
+    // 4. River - Only if actually played
+    if (boardAnalysis.river && input.streetsPlayed?.river) {
         const riverCard = boardAnalysis.river.card;
         const boardCards = [...(boardAnalysis.flop?.cards.split(' ') || []), boardAnalysis.turn?.card || '', riverCard];
 
