@@ -154,29 +154,39 @@ function parseHeroCardsSmart(t: string): string {
     return prettyCards(`${r1}${suit} ${r2}${suit}`);
   }
 
-  // Pattern 3: Rank abbreviations with context (e.g., "i got KK", "with AK")
+  // Pattern 3: Rank abbreviations with context (e.g., "i got KK", "with AK", "with KJs")
   // CRITICAL: Require context words to avoid matching blinds like "1k-2k-2k"
-  const abbrMatch = s.match(/\b(?:hero|i|holding|with|have|has|got)\b[^.\n]{0,30}?([akqjt2-9]{2})\b/i);
+  // UPDATED: Now captures optional 's' or 'o' suffix for suited/offsuit
+  const abbrMatch = s.match(/\b(?:hero|i|holding|with|have|has|got)\b[^.\n]{0,30}?([akqjt2-9]{2})([so])?\b/i);
   if (abbrMatch) {
     const ranks = abbrMatch[1].toUpperCase();
+    const suitedness = abbrMatch[2]; // 's', 'o', or undefined
     const afterRanks = s.slice(abbrMatch.index! + abbrMatch[0].length);
 
-    // FIXED: Default to OFFSUIT (different suits) instead of suited
-    let suit1 = 's', suit2 = 'd';
+    // Handle explicit 's' or 'o' suffix
+    if (suitedness === 's') {
+      // Suited: Both same suit
+      return prettyCards(`${ranks[0]}s ${ranks[1]}s`);
+    } else if (suitedness === 'o') {
+      // Offsuit: Different suits
+      return prettyCards(`${ranks[0]}s ${ranks[1]}d`);
+    } else {
+      // No suffix - check for other indicators or default to offsuit
+      let suit1 = 's', suit2 = 'd'; // Default offsuit
 
-    // Check for specific suit indicators immediately after ranks (using anchor ^)
-    if (/^\s*(dd|diamonds?)/i.test(afterRanks)) {
-      suit1 = suit2 = 'd'; // Both diamonds
-    } else if (/^\s*(hh|hearts?)/i.test(afterRanks)) {
-      suit1 = suit2 = 'h'; // Both hearts
-    } else if (/^\s*(cc|clubs?)/i.test(afterRanks)) {
-      suit1 = suit2 = 'c'; // Both clubs
-    } else if (/^\s*(suited|ss|spades?)/i.test(afterRanks)) {
-      suit1 = suit2 = 's'; // Both spades
+      // Check for specific suit indicators immediately after ranks
+      if (/^\s*(dd|diamonds?)/i.test(afterRanks)) {
+        suit1 = suit2 = 'd'; // Both diamonds
+      } else if (/^\s*(hh|hearts?)/i.test(afterRanks)) {
+        suit1 = suit2 = 'h'; // Both hearts
+      } else if (/^\s*(cc|clubs?)/i.test(afterRanks)) {
+        suit1 = suit2 = 'c'; // Both clubs
+      } else if (/^\s*(suited|ss|spades?)/i.test(afterRanks)) {
+        suit1 = suit2 = 's'; // Both spades
+      }
+
+      return prettyCards(`${ranks[0]}${suit1} ${ranks[1]}${suit2}`);
     }
-    // else: keep default offsuit (s, d)
-
-    return prettyCards(`${ranks[0]}${suit1} ${ranks[1]}${suit2}`);
   }
 
   // Pattern 4: Any two cards with suits (fallback)
