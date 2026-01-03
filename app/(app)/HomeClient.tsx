@@ -618,7 +618,7 @@ export default function HomeClient() {
         source_used: 'STORY' // Using preview which parses from story
       };
 
-      const r = await fetch('/api/coach/analyze-hand', {
+      const r = await fetch('/api/coach/analyze-text', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
