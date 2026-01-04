@@ -54,7 +54,7 @@ export interface HandInput {
     lastBet?: number;           // Last bet to call (for pot odds)
     tableSize?: number;         // Number of players (e.g. 6, 9)
     villainContext?: {          // Context about how villain was determined
-        type: 'opening' | 'sb_vs_bb' | 'facing_action';
+        type: 'opening' | 'sb_vs_bb' | 'facing_action' | 'vs_3bet' | 'vs_4bet';
         villain?: string;           // ADD: Villain position
         villainName?: string;
     };
@@ -339,7 +339,7 @@ export interface Agent5Input {
         river: boolean;
     };
     villainContext?: {          // NEW: Context about how villain was determined
-        type: 'opening' | 'sb_vs_bb' | 'facing_action';
+        type: 'opening' | 'sb_vs_bb' | 'facing_action' | 'vs_3bet' | 'vs_4bet';
         villain?: string;           // Villain's position (e.g., 'SB', 'BB')
         villainName?: string;       // Villain's player name (e.g., 'Arepitarica')
     };

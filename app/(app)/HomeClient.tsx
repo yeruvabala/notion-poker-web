@@ -31,6 +31,31 @@ const SUIT_WORD: Record<string, string> = {
 const isRed = (s: string) => s === '♥' || s === '♦';
 const suitColor = (suit: string) => (isRed(suit) ? '#dc2626' : '#111827');
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ADVANCED OPTIONS CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+const TABLE_FORMATS = {
+  'HU': { label: 'Heads-Up (2)', positions: ['BTN', 'BB'] },
+  '6max': { label: '6-Max', positions: ['BTN', 'CO', 'HJ', 'UTG', 'SB', 'BB'] },
+  '9max': { label: '9-Max', positions: ['BTN', 'CO', 'HJ', 'MP', 'UTG+2', 'UTG+1', 'UTG', 'SB', 'BB'] }
+} as const;
+
+const ACTION_TYPES = [
+  { value: 'RFI', label: 'RFI (Opening)' },
+  { value: 'facing_open', label: 'Facing Open' },
+  { value: 'vs_3bet', label: 'Facing 3-Bet' },
+  { value: 'vs_4bet', label: 'Facing 4-Bet' },
+  { value: 'general', label: 'Auto-Detect (General)' }
+] as const;
+
+const SUITS_CONFIG = [
+  { value: '♠', label: '♠', color: '#111827' },
+  { value: '♥', label: '♥', color: '#dc2626' },
+  { value: '♦', label: '♦', color: '#dc2626' },
+  { value: '♣', label: '♣', color: '#111827' }
+] as const;
+
 function suitifyToken(tok: string): string {
   const t = (tok || '').trim();
   if (!t) return '';
@@ -436,6 +461,11 @@ export default function HomeClient() {
   const [stakes, setStakes] = useState<string>('');
   const [eff, setEff] = useState<string>('');
   const [position, setPosition] = useState<string>('');
+  const [villainPosition, setVillainPosition] = useState<string>('');
+
+  // NEW: Table format and action type for Advanced Options redesign
+  const [tableFormat, setTableFormat] = useState<'HU' | '6max' | '9max'>('6max');
+  const [actionType, setActionType] = useState<string>('RFI');
 
   const [h1, setH1] = useState<string>('');   // hero card 1
   const [h2, setH2] = useState<string>('');   // hero card 2
@@ -445,6 +475,124 @@ export default function HomeClient() {
   const [tr, setTr] = useState<string>('');   // turn
   const [rv, setRv] = useState<string>('');   // river
 
+  // NEW: Interactive Preflop Action Builder
+  interface PreflopAction {
+    player: 'H' | 'V';
+    action: 'raise' | 'call' | 'fold' | '3bet' | '4bet' | 'limp';
+    amount?: number; // in bb
+  }
+  const [preflopActions, setPreflopActions] = useState<PreflopAction[]>([]);
+  const [isAddingAction, setIsAddingAction] = useState(false);
+  const [pendingPlayer, setPendingPlayer] = useState<'H' | 'V' | null>(null);
+  const [pendingAction, setPendingAction] = useState<string>('');
+  const [pendingAmount, setPendingAmount] = useState<string>('');
+
+  // Calculate pot from preflop actions (starts with 1.5bb for SB+BB)
+  const calculatePot = (actions: PreflopAction[]): number => {
+    let pot = 1.5; // SB (0.5) + BB (1.0)
+    for (const act of actions) {
+      if (act.amount) pot += act.amount;
+    }
+    return pot;
+  };
+
+  // NEW: Postflop Action Builder for Flop
+  interface PostflopAction {
+    player: 'H' | 'V';
+    action: 'check' | 'bet' | 'call' | 'raise' | 'fold';
+    amount?: number; // in bb
+  }
+  // Flop actions
+  const [flopActions, setFlopActions] = useState<PostflopAction[]>([]);
+  const [isAddingFlopAction, setIsAddingFlopAction] = useState(false);
+  const [pendingFlopPlayer, setPendingFlopPlayer] = useState<'H' | 'V' | null>(null);
+  const [pendingFlopAction, setPendingFlopAction] = useState<string>('');
+  const [pendingFlopAmount, setPendingFlopAmount] = useState<string>('');
+
+  // Turn actions
+  const [turnActions, setTurnActions] = useState<PostflopAction[]>([]);
+  const [isAddingTurnAction, setIsAddingTurnAction] = useState(false);
+  const [pendingTurnPlayer, setPendingTurnPlayer] = useState<'H' | 'V' | null>(null);
+  const [pendingTurnAction, setPendingTurnAction] = useState<string>('');
+  const [pendingTurnAmount, setPendingTurnAmount] = useState<string>('');
+
+  // River actions
+  const [riverActions, setRiverActions] = useState<PostflopAction[]>([]);
+  const [isAddingRiverAction, setIsAddingRiverAction] = useState(false);
+  const [pendingRiverPlayer, setPendingRiverPlayer] = useState<'H' | 'V' | null>(null);
+  const [pendingRiverAction, setPendingRiverAction] = useState<string>('');
+  const [pendingRiverAmount, setPendingRiverAmount] = useState<string>('');
+
+  // Determine first actor postflop (OOP acts first)
+  const getFirstActorPostflop = (): 'H' | 'V' => {
+    const positionOrder = ['SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 'MP', 'HJ', 'CO', 'BTN'];
+    const heroPos = position || 'BTN';
+    const villainPos = villainPosition || 'BB';
+    const heroIndex = positionOrder.indexOf(heroPos);
+    const villainIndex = positionOrder.indexOf(villainPos);
+    // Lower index = more OOP, OOP acts first
+    return heroIndex < villainIndex ? 'H' : 'V';
+  };
+
+  // Calculate total pot including all streets
+  const calculateTotalPot = (): number => {
+    let pot = calculatePot(preflopActions); // Start with preflop pot
+    // Add flop bets/calls/raises
+    for (const act of flopActions) {
+      if (act.amount && (act.action === 'bet' || act.action === 'call' || act.action === 'raise')) {
+        pot += act.amount;
+      }
+    }
+    // Add turn bets/calls/raises
+    for (const act of turnActions) {
+      if (act.amount && (act.action === 'bet' || act.action === 'call' || act.action === 'raise')) {
+        pot += act.amount;
+      }
+    }
+    // Add river bets/calls/raises
+    for (const act of riverActions) {
+      if (act.amount && (act.action === 'bet' || act.action === 'call' || act.action === 'raise')) {
+        pot += act.amount;
+      }
+    }
+    return pot;
+  };
+
+  // Get all currently used cards (for duplicate prevention)
+  const getUsedCards = (excludeField?: 'h1' | 'h2' | 'f1' | 'f2' | 'f3' | 'tr' | 'rv'): Set<string> => {
+    const allCards = { h1, h2, f1, f2, f3, tr, rv };
+    const cards = Object.entries(allCards)
+      .filter(([field, card]) => card && field !== excludeField)
+      .map(([_, card]) => card);
+    return new Set(cards);
+  };
+
+  // Find the first available suit for a rank, with fallback order: ♠ → ♥ → ♦ → ♣
+  const getFirstAvailableSuit = (rank: string, preferredSuit: string, excludeField: 'h1' | 'h2' | 'f1' | 'f2' | 'f3' | 'tr' | 'rv'): string | null => {
+    if (!rank) return preferredSuit;
+    const usedCards = getUsedCards(excludeField);
+    const suitOrder = [preferredSuit, '♠', '♥', '♦', '♣'].filter((s, i, arr) => arr.indexOf(s) === i); // Remove duplicates, keep order
+    for (const suit of suitOrder) {
+      if (!usedCards.has(rank + suit)) {
+        return suit;
+      }
+    }
+    return null; // All suits taken for this rank
+  };
+
+  // Get counts of used ranks to disable them if all 4 suits are taken
+  const getUsedRankCounts = (excludeField?: 'h1' | 'h2' | 'f1' | 'f2' | 'f3' | 'tr' | 'rv'): Record<string, number> => {
+    const allCards = { h1, h2, f1, f2, f3, tr, rv };
+    const counts: Record<string, number> = {};
+    Object.entries(allCards).forEach(([field, card]) => {
+      if (card && field !== excludeField) {
+        const rank = card.slice(0, -1);
+        counts[rank] = (counts[rank] || 0) + 1;
+      }
+    });
+    return counts;
+  };
+
   const [gtoEdit, setGtoEdit] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false); // Advanced Options collapsed by default
   const [transparencyData, setTransparencyData] = useState<{
@@ -452,6 +600,26 @@ export default function HomeClient() {
     confidence: number;
     message: string;
   } | null>(null); // Transparency metadata from API
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // CORRECTION TRACKING: For data flywheel (Phase 3 of LLM Fallback system)
+  // ══════════════════════════════════════════════════════════════════════════
+  const [initialParsedState, setInitialParsedState] = useState<{
+    heroPosition: string;
+    heroCards: string;
+    effectiveStack: string;
+    capturedAt: number;
+  } | null>(null);
+  const [isAiFallback, setIsAiFallback] = useState(false);
+  const [parsingConfidence, setParsingConfidence] = useState(0);
+
+  // Track when user manually overrides via Advanced Options
+  // Only log corrections when user explicitly changes something
+  const [userOverrodeFields, setUserOverrodeFields] = useState<{
+    position: boolean;
+    cards: boolean;
+    stack: boolean;
+  }>({ position: false, cards: false, stack: false });
 
   // ← ADDED: read signed-in user's email and show it under the title
   const supabase = createClient();
@@ -541,6 +709,29 @@ export default function HomeClient() {
     action_hint: parseActionHint(input)
   }), [input]);
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // CAPTURE INITIAL STATE: For correction logging (data flywheel)
+  // ══════════════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    // Capture initial parsed state when preview has meaningful data
+    // Only capture once per input (when input changes significantly)
+    if (!initialParsedState && (preview.position || preview.heroCards)) {
+      setInitialParsedState({
+        heroPosition: preview.position || '',
+        heroCards: preview.heroCards || '',
+        effectiveStack: eff || '100',
+        capturedAt: Date.now()
+      });
+    }
+  }, [preview.position, preview.heroCards, initialParsedState, eff]);
+
+  // Reset initial state when input changes significantly
+  useEffect(() => {
+    if (input.length < 5) {
+      setInitialParsedState(null);
+    }
+  }, [input]);
+
   function syncFromStory() {
     if (!stakes && preview.stakes) setStakes(preview.stakes);
     if (!position && preview.position) setPosition(preview.position);
@@ -625,12 +816,70 @@ export default function HomeClient() {
     // ══════════════════════════════════════════════════
     setAiLoading(true);
 
+    // ══════════════════════════════════════════════════
+    // STEP 2.5: LOG CORRECTIONS (Data Flywheel)
+    // ══════════════════════════════════════════════════
+    // Compare initial parsed state vs what user is submitting
+    // If different, log the correction for improvement analysis
+    if (initialParsedState) {
+      const finalState = {
+        heroPosition: capturedPosition,
+        heroCards: capturedHeroCards,
+        effectiveStack: eff || '100'
+      };
+
+      // Check if user made any corrections via Advanced Options
+      // Only count as correction if user MANUALLY changed something
+      const hasUserOverride = userOverrodeFields.position || userOverrodeFields.cards || userOverrodeFields.stack;
+
+      const hasCorrections = hasUserOverride && (
+        initialParsedState.heroPosition !== finalState.heroPosition ||
+        initialParsedState.heroCards !== finalState.heroCards ||
+        initialParsedState.effectiveStack !== finalState.effectiveStack
+      );
+
+      if (hasCorrections) {
+        // Fire-and-forget: Don't await, don't block analysis
+        fetch('/api/system/log-correction', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            raw_input_text: currentInput,
+            parser_output: {
+              heroPosition: initialParsedState.heroPosition,
+              heroCards: initialParsedState.heroCards,
+              effectiveStack: parseInt(initialParsedState.effectiveStack) || 100
+            },
+            user_corrected: {
+              heroPosition: finalState.heroPosition,
+              heroCards: finalState.heroCards,
+              effectiveStack: parseInt(finalState.effectiveStack) || 100
+            },
+            was_ai_fallback: isAiFallback,
+            parsing_confidence: parsingConfidence
+          })
+        }).catch(err => console.warn('[Correction Log] Failed:', err));
+
+        console.log('[Flywheel] Logged correction:', {
+          from: initialParsedState,
+          to: finalState,
+          wasAiFallback: isAiFallback,
+          overrodeFields: userOverrodeFields
+        });
+      }
+
+      // Reset for next analysis
+      setInitialParsedState(null);
+      setUserOverrodeFields({ position: false, cards: false, stack: false });
+    }
+
     try {
       // Use CAPTURED data from preview (parsed from input text)
       const payload = {
         date: today,
         stakes: capturedStakes || undefined,
         position: capturedPosition || undefined,
+        villain_position: villainPosition || undefined, // NEW: Villain position from Advanced Options
         cards: capturedHeroCards || undefined,
         board: capturedBoard || undefined,
         notes: currentInput || undefined,
@@ -638,6 +887,11 @@ export default function HomeClient() {
         fe_hint: feNeeded || undefined,
         spr_hint: spr || undefined,
         action_hint: capturedActionHint || undefined,
+        action_type: actionType || undefined, // NEW: User-selected action type from Advanced Options
+        table_format: tableFormat || undefined, // NEW: Table format (HU/6max/9max)
+        effective_stack: eff || undefined, // NEW: Effective Stack from input
+        preflop_actions: preflopActions.length > 0 ? preflopActions : undefined, // NEW: Explicit preflop action chain
+        pot_size: preflopActions.length > 0 ? calculatePot(preflopActions) : undefined, // NEW: Calculated pot from actions
         hand_class: undefined, // Recalculated by API
         source_used: 'STORY' // Using preview which parses from story
       };
@@ -864,42 +1118,1049 @@ Turn K♦ — ...`}
                       Override auto-detected values if needed
                     </div>
 
-                    <div className="summaryGrid">
-                      <Info label="Blinds / Stakes">
-                        <input className="input input-ony platinum-inner-border" value={stakes} onChange={e => setStakes(e.target.value)} placeholder={preview.stakes || '(unknown)'} />
-                      </Info>
-
-                      <Info label="Effective Stack (bb)">
-                        <input className="input input-ony platinum-inner-border" value={eff} onChange={e => setEff(e.target.value)} placeholder="(optional)" />
-                      </Info>
-
-                      <Info label="Position">
-                        <input className="input input-ony platinum-inner-border" value={position} onChange={e => setPosition(e.target.value.toUpperCase())} placeholder={preview.position || '(unknown)'} />
-                      </Info>
-
-                      <Info label="Hero Hand">
-                        <div className="cardsRow">
-                          <CardEditor value={h1} onChange={setH1} placeholder={(preview.heroCards || '').split(' ')[0] || 'K♠'} />
-                          <CardEditor value={h2} onChange={setH2} placeholder={(preview.heroCards || '').split(' ')[1] || 'K♦'} />
+                    {/* Row 1: Table Format + Position */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                      <div className="ibox platinum-inner-border">
+                        <div className="lblSmall">Table Format</div>
+                        <div style={{ display: 'flex', alignItems: 'center', background: '#1f1f1f', borderRadius: '8px', padding: '6px 10px', border: '1px solid #3a3a3a' }}>
+                          <select
+                            className="option-selector"
+                            value={tableFormat}
+                            onChange={(e) => setTableFormat(e.target.value as 'HU' | '6max' | '9max')}
+                            style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '14px', fontWeight: 500, color: '#e5e7eb', cursor: 'pointer', width: '100%', outline: 'none' }}
+                          >
+                            {Object.entries(TABLE_FORMATS).map(([key, val]) => (
+                              <option key={key} value={key}>{val.label}</option>
+                            ))}
+                          </select>
                         </div>
-                      </Info>
+                      </div>
 
-                      <Info label="Board">
-                        <div className="boardRow">
-                          <span className="pillLbl">Flop</span>
-                          <CardEditor value={f1} onChange={setF1} placeholder={(preview.board.flop || '').split(' ')[0] || 'J♠'} />
-                          <CardEditor value={f2} onChange={setF2} placeholder={(preview.board.flop || '').split(' ')[1] || 'T♠'} />
-                          <CardEditor value={f3} onChange={setF3} placeholder={(preview.board.flop || '').split(' ')[2] || '4♣'} />
+                      <div className="ibox platinum-inner-border">
+                        <div className="lblSmall">Villain Position</div>
+                        <div style={{ display: 'flex', alignItems: 'center', background: '#1f1f1f', borderRadius: '8px', padding: '6px 10px', border: '1px solid #3a3a3a' }}>
+                          <select
+                            className="option-selector"
+                            value={villainPosition}
+                            onChange={(e) => { setVillainPosition(e.target.value); setUserOverrodeFields(prev => ({ ...prev, position: true })); }}
+                            style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '14px', fontWeight: 500, color: '#e5e7eb', cursor: 'pointer', width: '100%', outline: 'none' }}
+                          >
+                            <option value="">(auto-detect)</option>
+                            {TABLE_FORMATS[tableFormat].positions.map((pos) => (
+                              <option key={pos} value={pos}>{pos}</option>
+                            ))}
+                          </select>
                         </div>
-                        <div className="boardRow">
-                          <span className="pillLbl">Turn</span>
-                          <CardEditor value={tr} onChange={setTr} placeholder={preview.board.turn || '9♣'} />
+                      </div>
+                    </div>
+
+                    {/* Row 2: Action Type + Effective Stack */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                      <div className="ibox platinum-inner-border">
+                        <div className="lblSmall">Action Type</div>
+                        <div style={{ display: 'flex', alignItems: 'center', background: '#1f1f1f', borderRadius: '8px', padding: '6px 10px', border: '1px solid #3a3a3a' }}>
+                          <select
+                            className="option-selector"
+                            value={actionType}
+                            onChange={(e) => setActionType(e.target.value)}
+                            style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '14px', fontWeight: 500, color: '#e5e7eb', cursor: 'pointer', width: '100%', outline: 'none' }}
+                          >
+                            {ACTION_TYPES.map((at) => (
+                              <option key={at.value} value={at.value}>{at.label}</option>
+                            ))}
+                          </select>
                         </div>
-                        <div className="boardRow">
-                          <span className="pillLbl">River</span>
-                          <CardEditor value={rv} onChange={setRv} placeholder={preview.board.river || '3♠'} />
+                      </div>
+
+                      <div className="ibox platinum-inner-border">
+                        <div className="lblSmall">Effective Stack (bb)</div>
+                        <div style={{ display: 'flex', alignItems: 'center', background: '#1f1f1f', borderRadius: '8px', padding: '6px 10px', border: '1px solid #3a3a3a' }}>
+                          <input
+                            className="option-selector"
+                            value={eff}
+                            onChange={e => { setEff(e.target.value); setUserOverrodeFields(prev => ({ ...prev, stack: true })); }}
+                            placeholder="100"
+                            style={{ background: 'transparent', border: 'none', fontSize: '14px', fontWeight: 500, color: '#e5e7eb', width: '100%', outline: 'none' }}
+                          />
                         </div>
-                      </Info>
+                      </div>
+                    </div>
+
+                    {/* Row 3: Hero Hand + Hero Position */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                      {/* Hero Hand - Card selectors */}
+                      <div className="ibox platinum-inner-border">
+                        <div className="lblSmall">Hero Hand</div>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'flex-start', padding: '4px 0' }}>
+                          {/* Card 1 */}
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            background: '#1f1f1f',
+                            borderRadius: '8px',
+                            padding: '6px 8px',
+                            border: '1px solid #3a3a3a',
+                          }}>
+                            <select
+                              value={h1 ? h1.slice(0, -1) : ''}
+                              onChange={(e) => {
+                                if (!e.target.value) {
+                                  setH1('');
+                                  setUserOverrodeFields(prev => ({ ...prev, cards: true }));
+                                  return;
+                                }
+                                const preferredSuit = h1 ? h1.slice(-1) : '♠';
+                                const availableSuit = getFirstAvailableSuit(e.target.value, preferredSuit, 'h1');
+                                if (availableSuit) {
+                                  setH1(e.target.value + availableSuit);
+                                  setUserOverrodeFields(prev => ({ ...prev, cards: true }));
+                                }
+                              }}
+                              className="rank-selector"
+                              style={{
+                                appearance: 'none',
+                                WebkitAppearance: 'none',
+                                background: 'transparent',
+                                border: 'none',
+                                fontSize: '20px',
+                                fontWeight: 600,
+                                color: '#e5e7eb',
+                                cursor: 'pointer',
+                                padding: '0',
+                                width: '24px',
+                                textAlign: 'center',
+                                outline: 'none',
+                              }}
+                              title="Select rank"
+                            >
+                              <option value="">🂠</option>
+                              {(() => {
+                                const rankCounts = getUsedRankCounts('h1');
+                                return RANKS.map(r => {
+                                  const disabled = (rankCounts[r] || 0) >= 4;
+                                  return <option key={r} value={r} disabled={disabled} style={{ color: disabled ? '#666' : undefined }}>{r}</option>;
+                                });
+                              })()}
+                            </select>
+                            <select
+                              value={h1 ? h1.slice(-1) : ''}
+                              onChange={(e) => {
+                                const rank = h1 ? h1.slice(0, -1) : '';
+                                const newCard = (rank || 'A') + e.target.value;
+                                const usedCards = getUsedCards('h1');
+                                if (e.target.value && !usedCards.has(newCard)) {
+                                  setH1(newCard);
+                                  setUserOverrodeFields(prev => ({ ...prev, cards: true }));
+                                }
+                              }}
+                              className="suit-selector"
+                              style={{
+                                appearance: 'none',
+                                WebkitAppearance: 'none',
+                                background: 'transparent',
+                                border: 'none',
+                                fontSize: '20px',
+                                fontWeight: 600,
+                                color: h1 && isRed(h1.slice(-1)) ? '#ef4444' : '#e5e7eb',
+                                cursor: 'pointer',
+                                padding: '0',
+                                width: '24px',
+                                textAlign: 'center',
+                                outline: 'none',
+                              }}
+                              title="Select suit"
+                            >
+                              <option value="">?</option>
+                              {(() => {
+                                const rank = h1 ? h1.slice(0, -1) : '';
+                                const usedCards = getUsedCards('h1');
+                                return SUITS_CONFIG.map(s => {
+                                  const wouldBe = rank + s.value;
+                                  const isUsed = !!(rank && usedCards.has(wouldBe));
+                                  return <option key={s.value} value={s.value} disabled={isUsed} style={{ color: isUsed ? '#666' : undefined }}>{s.label}</option>;
+                                });
+                              })()}
+                            </select>
+                          </div>
+
+                          {/* Card 2 */}
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            background: '#1f1f1f',
+                            borderRadius: '8px',
+                            padding: '6px 8px',
+                            border: '1px solid #3a3a3a',
+                          }}>
+                            <select
+                              value={h2 ? h2.slice(0, -1) : ''}
+                              onChange={(e) => {
+                                if (!e.target.value) {
+                                  setH2('');
+                                  setUserOverrodeFields(prev => ({ ...prev, cards: true }));
+                                  return;
+                                }
+                                const preferredSuit = h2 ? h2.slice(-1) : '♠';
+                                const availableSuit = getFirstAvailableSuit(e.target.value, preferredSuit, 'h2');
+                                if (availableSuit) {
+                                  setH2(e.target.value + availableSuit);
+                                  setUserOverrodeFields(prev => ({ ...prev, cards: true }));
+                                }
+                              }}
+                              className="rank-selector"
+                              style={{
+                                appearance: 'none',
+                                WebkitAppearance: 'none',
+                                background: 'transparent',
+                                border: 'none',
+                                fontSize: '20px',
+                                fontWeight: 600,
+                                color: '#e5e7eb',
+                                cursor: 'pointer',
+                                padding: '0',
+                                width: '24px',
+                                textAlign: 'center',
+                                outline: 'none',
+                              }}
+                              title="Select rank"
+                            >
+                              <option value="">🂠</option>
+                              {(() => {
+                                const rankCounts = getUsedRankCounts('h2');
+                                return RANKS.map(r => {
+                                  const disabled = (rankCounts[r] || 0) >= 4;
+                                  return <option key={r} value={r} disabled={disabled} style={{ color: disabled ? '#666' : undefined }}>{r}</option>;
+                                });
+                              })()}
+                            </select>
+                            <select
+                              value={h2 ? h2.slice(-1) : ''}
+                              onChange={(e) => {
+                                const rank = h2 ? h2.slice(0, -1) : '';
+                                const newCard = (rank || 'A') + e.target.value;
+                                const usedCards = getUsedCards('h2');
+                                if (e.target.value && !usedCards.has(newCard)) {
+                                  setH2(newCard);
+                                  setUserOverrodeFields(prev => ({ ...prev, cards: true }));
+                                }
+                              }}
+                              className="suit-selector"
+                              style={{
+                                appearance: 'none',
+                                WebkitAppearance: 'none',
+                                background: 'transparent',
+                                border: 'none',
+                                fontSize: '20px',
+                                fontWeight: 600,
+                                color: h2 && isRed(h2.slice(-1)) ? '#ef4444' : '#e5e7eb',
+                                cursor: 'pointer',
+                                padding: '0',
+                                width: '24px',
+                                textAlign: 'center',
+                                outline: 'none',
+                              }}
+                              title="Select suit"
+                            >
+                              <option value="">?</option>
+                              {(() => {
+                                const rank = h2 ? h2.slice(0, -1) : '';
+                                const usedCards = getUsedCards('h2');
+                                return SUITS_CONFIG.map(s => {
+                                  const wouldBe = rank + s.value;
+                                  const isUsed = !!(rank && usedCards.has(wouldBe));
+                                  return <option key={s.value} value={s.value} disabled={isUsed} style={{ color: isUsed ? '#666' : undefined }}>{s.label}</option>;
+                                });
+                              })()}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Hero Position dropdown */}
+                      <div className="ibox platinum-inner-border">
+                        <div className="lblSmall">Hero Position</div>
+                        <div style={{ display: 'flex', alignItems: 'center', background: '#1f1f1f', borderRadius: '8px', padding: '6px 10px', border: '1px solid #3a3a3a' }}>
+                          <select
+                            className="option-selector"
+                            value={position}
+                            onChange={(e) => { setPosition(e.target.value); setUserOverrodeFields(prev => ({ ...prev, position: true })); }}
+                            style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '14px', fontWeight: 500, color: '#e5e7eb', cursor: 'pointer', width: '100%', outline: 'none' }}
+                          >
+                            <option value="">{preview.position || '(auto-detect)'}</option>
+                            {TABLE_FORMATS[tableFormat].positions.map((pos) => (
+                              <option key={pos} value={pos}>{pos}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    {/* CSS for hover shine effect */}
+                    <style>{`
+                      .rank-selector, .suit-selector, .option-selector {
+                        transition: filter 0.15s ease, text-shadow 0.15s ease;
+                      }
+                      .rank-selector:hover, .suit-selector:hover, .option-selector:hover {
+                        filter: brightness(1.3);
+                        text-shadow: 0 0 8px rgba(200, 200, 200, 0.6);
+                      }
+                    `}</style>
+
+                    {/* Row 4: Board (optional) - Same style as Hero Hand */}
+                    <div className="ibox platinum-inner-border">
+                      <div className="lblSmall">Board (optional - leave empty for preflop)</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {/* Preflop Action Builder */}
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <span style={{ width: '40px', color: '#9ca3af', fontSize: '12px' }}>Preflop</span>
+
+                            {/* Render existing actions as chips */}
+                            {preflopActions.map((act, idx) => (
+                              <div
+                                key={idx}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '2px',
+                                  background: act.player === 'H' ? '#1a365d' : '#4a1d1d',
+                                  borderRadius: '12px',
+                                  padding: '4px 8px',
+                                  fontSize: '12px',
+                                  fontWeight: 500,
+                                  color: '#e5e7eb',
+                                  cursor: 'pointer',
+                                }}
+                                title="Click to edit"
+                                onClick={() => {
+                                  // Remove this and all subsequent actions, then open edit mode for this player
+                                  const playerToEdit = act.player;
+                                  setPreflopActions(prev => prev.slice(0, idx));
+                                  setIsAddingAction(true);
+                                  setPendingPlayer(playerToEdit);
+                                  setPendingAction('');
+                                  setPendingAmount('');
+                                }}
+                              >
+                                <span style={{ fontWeight: 700 }}>{act.player}</span>
+                                <span>:</span>
+                                <span>{act.amount ? `${act.amount}bb` : ''}</span>
+                                <span style={{ opacity: 0.8 }}>{act.action}</span>
+                              </div>
+                            ))}
+
+                            {/* Arrow after actions - hide if last action is call/fold (betting ends) */}
+                            {preflopActions.length > 0 && !isAddingAction &&
+                              preflopActions[preflopActions.length - 1]?.action !== 'call' &&
+                              preflopActions[preflopActions.length - 1]?.action !== 'fold' && (
+                                <span style={{ color: '#6b7280', fontSize: '12px' }}>→</span>
+                              )}
+
+                            {/* Add Action Button - hide if last action is call/fold (betting ends) */}
+                            {!isAddingAction && (
+                              preflopActions.length === 0 ||
+                              (preflopActions[preflopActions.length - 1]?.action !== 'call' &&
+                                preflopActions[preflopActions.length - 1]?.action !== 'fold')
+                            ) ? (
+                              <button
+                                onClick={() => setIsAddingAction(true)}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  background: '#2a2a2a',
+                                  border: '1px dashed #4a4a4a',
+                                  borderRadius: '12px',
+                                  padding: '4px 10px',
+                                  fontSize: '14px',
+                                  color: '#9ca3af',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.15s ease',
+                                }}
+                                onMouseOver={(e) => { e.currentTarget.style.borderColor = '#6b7280'; e.currentTarget.style.color = '#e5e7eb'; }}
+                                onMouseOut={(e) => { e.currentTarget.style.borderColor = '#4a4a4a'; e.currentTarget.style.color = '#9ca3af'; }}
+                              >
+                                {preflopActions.length === 0 ? '?' : '+'}
+                              </button>
+                            ) : isAddingAction ? (
+                              /* Action Entry Form */
+                              <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                {/* Player Selector - Auto-alternate after actions */}
+                                {!pendingPlayer ? (
+                                  (() => {
+                                    // Determine next player based on last action
+                                    const lastAction = preflopActions.length > 0 ? preflopActions[preflopActions.length - 1] : null;
+                                    const nextPlayer = lastAction ? (lastAction.player === 'H' ? 'V' : 'H') : null;
+
+                                    if (nextPlayer) {
+                                      // Auto-show only the alternating player
+                                      return (
+                                        <>
+                                          <button
+                                            onClick={() => setPendingPlayer(nextPlayer)}
+                                            style={{
+                                              background: nextPlayer === 'H' ? '#1a365d' : '#4a1d1d',
+                                              border: 'none',
+                                              borderRadius: '8px',
+                                              padding: '4px 8px',
+                                              fontSize: '12px',
+                                              fontWeight: 700,
+                                              color: nextPlayer === 'H' ? '#93c5fd' : '#fca5a5',
+                                              cursor: 'pointer'
+                                            }}
+                                          >{nextPlayer}</button>
+                                          <button
+                                            onClick={() => { setIsAddingAction(false); setPendingPlayer(null); setPendingAction(''); setPendingAmount(''); }}
+                                            style={{ background: 'transparent', border: 'none', fontSize: '12px', color: '#6b7280', cursor: 'pointer', padding: '4px' }}
+                                          >✕</button>
+                                        </>
+                                      );
+                                    } else {
+                                      // First action - show both H and V
+                                      return (
+                                        <>
+                                          <button
+                                            onClick={() => setPendingPlayer('H')}
+                                            style={{ background: '#1a365d', border: 'none', borderRadius: '8px', padding: '4px 8px', fontSize: '12px', fontWeight: 700, color: '#93c5fd', cursor: 'pointer' }}
+                                          >H</button>
+                                          <button
+                                            onClick={() => setPendingPlayer('V')}
+                                            style={{ background: '#4a1d1d', border: 'none', borderRadius: '8px', padding: '4px 8px', fontSize: '12px', fontWeight: 700, color: '#fca5a5', cursor: 'pointer' }}
+                                          >V</button>
+                                          <button
+                                            onClick={() => { setIsAddingAction(false); setPendingPlayer(null); setPendingAction(''); setPendingAmount(''); }}
+                                            style={{ background: 'transparent', border: 'none', fontSize: '12px', color: '#6b7280', cursor: 'pointer', padding: '4px' }}
+                                          >✕</button>
+                                        </>
+                                      );
+                                    }
+                                  })()
+                                ) : (
+                                  /* Action + Amount Entry */
+                                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                    <span style={{ fontWeight: 700, color: pendingPlayer === 'H' ? '#93c5fd' : '#fca5a5', fontSize: '12px' }}>{pendingPlayer}:</span>
+                                    <input
+                                      type="number"
+                                      placeholder="bb"
+                                      min="0"
+                                      value={pendingAmount}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        // Prevent negative numbers
+                                        if (val === '' || parseFloat(val) >= 0) {
+                                          setPendingAmount(val);
+                                        }
+                                      }}
+                                      style={{ width: '40px', background: '#1f1f1f', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '2px 4px', fontSize: '12px', color: '#e5e7eb', outline: 'none' }}
+                                    />
+                                    <select
+                                      value={pendingAction}
+                                      onChange={(e) => {
+                                        const action = e.target.value;
+                                        if (!action) return; // Ignore empty selection
+
+                                        // Parse preset sizes from action value
+                                        let finalAction = action;
+                                        let amount = pendingAmount;
+
+                                        // Handle preset raise sizes
+                                        if (action.startsWith('raise_')) {
+                                          finalAction = 'raise';
+                                          amount = action.replace('raise_', '');
+                                        } else if (action.startsWith('3bet_')) {
+                                          finalAction = '3bet';
+                                          amount = action.replace('3bet_', '');
+                                        } else if (action.startsWith('4bet_')) {
+                                          finalAction = '4bet';
+                                          amount = action.replace('4bet_', '');
+                                        } else if (action === 'limp') {
+                                          finalAction = 'limp';
+                                          amount = '1';
+                                        } else if (action === 'call') {
+                                          // Get amount from last raise
+                                          const raises = preflopActions.filter(a =>
+                                            a.action === 'raise' || a.action === '3bet' || a.action === '4bet'
+                                          );
+                                          const lastRaise = raises[raises.length - 1];
+                                          if (lastRaise?.amount) {
+                                            amount = lastRaise.amount.toString();
+                                          }
+                                        } else if (action === 'raise' && pendingAmount) {
+                                          finalAction = 'raise';
+                                        } else if (action === '3bet' && pendingAmount) {
+                                          finalAction = '3bet';
+                                        } else if (action === '4bet' && pendingAmount) {
+                                          finalAction = '4bet';
+                                        }
+
+                                        // Auto-submit if we have a valid action
+                                        const currentPlayer = pendingPlayer;
+                                        setPreflopActions(prev => [...prev, {
+                                          player: pendingPlayer!,
+                                          action: finalAction as any,
+                                          amount: amount ? parseFloat(amount) : undefined
+                                        }]);
+
+                                        // If call/fold, close form. Otherwise, advance to next player.
+                                        if (finalAction === 'call' || finalAction === 'fold') {
+                                          setIsAddingAction(false);
+                                          setPendingPlayer(null);
+                                          setPendingAction('');
+                                          setPendingAmount('');
+                                        } else {
+                                          setPendingPlayer(currentPlayer === 'H' ? 'V' : 'H');
+                                          setPendingAction('');
+                                          setPendingAmount('');
+                                        }
+                                      }}
+                                      style={{ background: '#1f1f1f', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '2px 4px', fontSize: '12px', color: '#e5e7eb', outline: 'none', cursor: 'pointer' }}
+                                    >
+                                      <option value="">action</option>
+                                      {/* Context-aware action options with preset sizes */}
+                                      {(() => {
+                                        const hasCustom = pendingAmount && parseFloat(pendingAmount) > 0;
+                                        const raises = preflopActions.filter(a =>
+                                          a.action === 'raise' || a.action === '3bet' || a.action === '4bet'
+                                        );
+                                        const raiseCount = raises.length;
+
+                                        // First action (no prior raises) - limp, raise presets
+                                        if (raiseCount === 0) {
+                                          return (
+                                            <>
+                                              <option value="fold">fold</option>
+                                              <option value="limp">limp (1bb)</option>
+                                              <optgroup label="Raise">
+                                                <option value="raise_2">raise 2bb</option>
+                                                <option value="raise_2.2">raise 2.2bb</option>
+                                                <option value="raise_2.5">raise 2.5bb</option>
+                                                <option value="raise_3">raise 3bb</option>
+                                                <option value="raise_4">raise 4bb</option>
+                                                {hasCustom && <option value="raise">raise {pendingAmount}bb</option>}
+                                              </optgroup>
+                                            </>
+                                          );
+                                        }
+                                        // After open (1 raise) - call or 3bet presets
+                                        else if (raiseCount === 1) {
+                                          const openAmount = raises[0]?.amount || 2.5;
+                                          return (
+                                            <>
+                                              <option value="fold">fold</option>
+                                              <option value="call">call ({openAmount}bb)</option>
+                                              <optgroup label="3-Bet">
+                                                <option value="3bet_7">3bet 7bb</option>
+                                                <option value="3bet_8">3bet 8bb</option>
+                                                <option value="3bet_9">3bet 9bb</option>
+                                                <option value="3bet_10">3bet 10bb</option>
+                                                <option value="3bet_12">3bet 12bb</option>
+                                                {hasCustom && <option value="3bet">3bet {pendingAmount}bb</option>}
+                                              </optgroup>
+                                            </>
+                                          );
+                                        }
+                                        // After 3bet (2 raises) - call or 4bet presets
+                                        else if (raiseCount === 2) {
+                                          const threeBetAmount = raises[1]?.amount || 9;
+                                          return (
+                                            <>
+                                              <option value="fold">fold</option>
+                                              <option value="call">call ({threeBetAmount}bb)</option>
+                                              <optgroup label="4-Bet">
+                                                <option value="4bet_18">4bet 18bb</option>
+                                                <option value="4bet_20">4bet 20bb</option>
+                                                <option value="4bet_22">4bet 22bb</option>
+                                                <option value="4bet_25">4bet 25bb</option>
+                                                {hasCustom && <option value="4bet">4bet {pendingAmount}bb</option>}
+                                              </optgroup>
+                                            </>
+                                          );
+                                        }
+                                        // After 4bet+ (3+ raises) - just fold/call
+                                        else {
+                                          const lastRaiseAmount = raises[raises.length - 1]?.amount || 24;
+                                          return (
+                                            <>
+                                              <option value="fold">fold</option>
+                                              <option value="call">call ({lastRaiseAmount}bb)</option>
+                                            </>
+                                          );
+                                        }
+                                      })()}
+                                    </select>
+                                    <button
+                                      onClick={() => {
+                                        if (pendingAction) {
+                                          const currentPlayer = pendingPlayer;
+                                          const actionToAdd = pendingAction;
+                                          setPreflopActions(prev => [...prev, {
+                                            player: pendingPlayer!,
+                                            action: pendingAction as any,
+                                            amount: pendingAmount ? parseFloat(pendingAmount) : undefined
+                                          }]);
+
+                                          // If call or fold, action sequence is complete - close form
+                                          if (actionToAdd === 'call' || actionToAdd === 'fold') {
+                                            setIsAddingAction(false);
+                                            setPendingPlayer(null);
+                                            setPendingAction('');
+                                            setPendingAmount('');
+                                          } else {
+                                            // Raise/3bet/4bet - auto-advance to alternate player
+                                            setPendingPlayer(currentPlayer === 'H' ? 'V' : 'H');
+                                            setPendingAction('');
+                                            setPendingAmount('');
+                                          }
+                                        }
+                                      }}
+                                      disabled={!pendingAction}
+                                      style={{
+                                        background: pendingAction ? '#22c55e' : '#2a2a2a',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        padding: '2px 6px',
+                                        fontSize: '12px',
+                                        color: pendingAction ? '#fff' : '#6b7280',
+                                        cursor: pendingAction ? 'pointer' : 'not-allowed'
+                                      }}
+                                    >✓</button>
+                                    <button
+                                      onClick={() => { setPendingPlayer(null); setPendingAction(''); setPendingAmount(''); }}
+                                      style={{ background: 'transparent', border: 'none', fontSize: '12px', color: '#6b7280', cursor: 'pointer', padding: '2px' }}
+                                    >←</button>
+                                  </div>
+                                )}
+                              </div>
+                            ) : null}
+                          </div>
+
+                          {/* Pot Display */}
+                          <div style={{
+                            background: '#1f1f1f',
+                            borderRadius: '8px',
+                            padding: '4px 10px',
+                            fontSize: '12px',
+                            color: (preflopActions.length > 0 || flopActions.length > 0) ? '#22c55e' : '#6b7280',
+                            fontWeight: 500,
+                            whiteSpace: 'nowrap'
+                          }}>
+                            Pot: {preflopActions.length > 0 ? `${calculateTotalPot().toFixed(1)}bb` : '--'}
+                          </div>
+                        </div>
+
+                        {/* Flop */}
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <span style={{ width: '40px', color: '#9ca3af', fontSize: '12px' }}>Flop</span>
+                          {/* Flop Card 1 */}
+                          <div style={{ display: 'flex', alignItems: 'center', background: '#1f1f1f', borderRadius: '6px', padding: '4px 6px', border: '1px solid #3a3a3a' }}>
+                            <select className="rank-selector" value={f1 ? f1.slice(0, -1) : ''} onChange={(e) => { if (!e.target.value) { setF1(''); return; } const ps = f1 ? f1.slice(-1) : '♠'; const as = getFirstAvailableSuit(e.target.value, ps, 'f1'); if (as) setF1(e.target.value + as); }} style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '16px', fontWeight: 600, color: '#e5e7eb', cursor: 'pointer', width: '20px', textAlign: 'center', outline: 'none' }} title="Rank"><option value="">🂠</option>{(() => { const c = getUsedRankCounts('f1'); return RANKS.map(r => { const d = (c[r] || 0) >= 4; return <option key={r} value={r} disabled={d} style={{ color: d ? '#666' : undefined }}>{r}</option>; }); })()}</select>
+                            <select className="suit-selector" value={f1 ? f1.slice(-1) : ''} onChange={(e) => { const rank = f1 ? f1.slice(0, -1) : ''; const newCard = (rank || 'A') + e.target.value; const usedCards = getUsedCards('f1'); if (e.target.value && !usedCards.has(newCard)) setF1(newCard); }} style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '16px', fontWeight: 600, color: f1 && isRed(f1.slice(-1)) ? '#ef4444' : '#e5e7eb', cursor: 'pointer', width: '20px', textAlign: 'center', outline: 'none' }} title="Suit"><option value="">?</option>{(() => { const rank = f1 ? f1.slice(0, -1) : ''; const usedCards = getUsedCards('f1'); return SUITS_CONFIG.map(s => { const wouldBe = rank + s.value; const isUsed = !!(rank && usedCards.has(wouldBe)); return <option key={s.value} value={s.value} disabled={isUsed}>{s.label}</option>; }); })()}</select>
+                          </div>
+                          {/* Flop Card 2 */}
+                          <div style={{ display: 'flex', alignItems: 'center', background: '#1f1f1f', borderRadius: '6px', padding: '4px 6px', border: '1px solid #3a3a3a' }}>
+                            <select className="rank-selector" value={f2 ? f2.slice(0, -1) : ''} onChange={(e) => { if (!e.target.value) { setF2(''); return; } const ps = f2 ? f2.slice(-1) : '♠'; const as = getFirstAvailableSuit(e.target.value, ps, 'f2'); if (as) setF2(e.target.value + as); }} style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '16px', fontWeight: 600, color: '#e5e7eb', cursor: 'pointer', width: '20px', textAlign: 'center', outline: 'none' }} title="Rank"><option value="">🂠</option>{(() => { const c = getUsedRankCounts('f2'); return RANKS.map(r => { const d = (c[r] || 0) >= 4; return <option key={r} value={r} disabled={d} style={{ color: d ? '#666' : undefined }}>{r}</option>; }); })()}</select>
+                            <select className="suit-selector" value={f2 ? f2.slice(-1) : ''} onChange={(e) => { const rank = f2 ? f2.slice(0, -1) : ''; const newCard = (rank || 'A') + e.target.value; const usedCards = getUsedCards('f2'); if (e.target.value && !usedCards.has(newCard)) setF2(newCard); }} style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '16px', fontWeight: 600, color: f2 && isRed(f2.slice(-1)) ? '#ef4444' : '#e5e7eb', cursor: 'pointer', width: '20px', textAlign: 'center', outline: 'none' }} title="Suit"><option value="">?</option>{(() => { const rank = f2 ? f2.slice(0, -1) : ''; const usedCards = getUsedCards('f2'); return SUITS_CONFIG.map(s => { const wouldBe = rank + s.value; const isUsed = !!(rank && usedCards.has(wouldBe)); return <option key={s.value} value={s.value} disabled={isUsed}>{s.label}</option>; }); })()}</select>
+                          </div>
+                          {/* Flop Card 3 */}
+                          <div style={{ display: 'flex', alignItems: 'center', background: '#1f1f1f', borderRadius: '6px', padding: '4px 6px', border: '1px solid #3a3a3a' }}>
+                            <select className="rank-selector" value={f3 ? f3.slice(0, -1) : ''} onChange={(e) => { if (!e.target.value) { setF3(''); return; } const ps = f3 ? f3.slice(-1) : '♠'; const as = getFirstAvailableSuit(e.target.value, ps, 'f3'); if (as) setF3(e.target.value + as); }} style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '16px', fontWeight: 600, color: '#e5e7eb', cursor: 'pointer', width: '20px', textAlign: 'center', outline: 'none' }} title="Rank"><option value="">🂠</option>{(() => { const c = getUsedRankCounts('f3'); return RANKS.map(r => { const d = (c[r] || 0) >= 4; return <option key={r} value={r} disabled={d} style={{ color: d ? '#666' : undefined }}>{r}</option>; }); })()}</select>
+                            <select className="suit-selector" value={f3 ? f3.slice(-1) : ''} onChange={(e) => { const rank = f3 ? f3.slice(0, -1) : ''; const newCard = (rank || 'A') + e.target.value; const usedCards = getUsedCards('f3'); if (e.target.value && !usedCards.has(newCard)) setF3(newCard); }} style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '16px', fontWeight: 600, color: f3 && isRed(f3.slice(-1)) ? '#ef4444' : '#e5e7eb', cursor: 'pointer', width: '20px', textAlign: 'center', outline: 'none' }} title="Suit"><option value="">?</option>{(() => { const rank = f3 ? f3.slice(0, -1) : ''; const usedCards = getUsedCards('f3'); return SUITS_CONFIG.map(s => { const wouldBe = rank + s.value; const isUsed = !!(rank && usedCards.has(wouldBe)); return <option key={s.value} value={s.value} disabled={isUsed}>{s.label}</option>; }); })()}</select>
+                          </div>
+                        </div>
+
+                        {/* Flop Action Builder - show only when flop cards are filled */}
+                        {f1 && f2 && f3 && (
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'space-between', marginLeft: '48px' }}>
+                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <span style={{ color: '#6b7280', fontSize: '11px', fontStyle: 'italic' }}>Action:</span>
+
+                              {/* Render existing flop actions as chips */}
+                              {flopActions.map((act, idx) => (
+                                <div
+                                  key={idx}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '2px',
+                                    background: act.player === 'H' ? '#1a365d' : '#4a1d1d',
+                                    borderRadius: '12px',
+                                    padding: '4px 8px',
+                                    fontSize: '12px',
+                                    fontWeight: 500,
+                                    color: '#e5e7eb',
+                                    cursor: 'pointer',
+                                  }}
+                                  title="Click to edit"
+                                  onClick={() => {
+                                    const playerToEdit = act.player;
+                                    setFlopActions(prev => prev.slice(0, idx));
+                                    setIsAddingFlopAction(true);
+                                    setPendingFlopPlayer(playerToEdit);
+                                    setPendingFlopAction('');
+                                    setPendingFlopAmount('');
+                                  }}
+                                >
+                                  <span style={{ fontWeight: 700 }}>{act.player}</span>
+                                  <span>:</span>
+                                  <span>{act.amount ? `${act.amount}bb` : ''}</span>
+                                  <span style={{ opacity: 0.8 }}>{act.action}</span>
+                                </div>
+                              ))}
+
+                              {/* Arrow after actions - hide if action ended (call/fold/check-check) */}
+                              {(() => {
+                                const lastAction = flopActions[flopActions.length - 1];
+                                const secondLastAction = flopActions[flopActions.length - 2];
+                                const isCheckCheck = lastAction?.action === 'check' && secondLastAction?.action === 'check';
+                                const actionEnded = lastAction?.action === 'call' || lastAction?.action === 'fold' || isCheckCheck;
+                                return flopActions.length > 0 && !isAddingFlopAction && !actionEnded && (
+                                  <span style={{ color: '#6b7280', fontSize: '12px' }}>→</span>
+                                );
+                              })()}
+
+                              {/* Add Action Button - hide if action ended (call/fold/check-check) */}
+                              {(() => {
+                                const lastAction = flopActions[flopActions.length - 1];
+                                const secondLastAction = flopActions[flopActions.length - 2];
+                                const isCheckCheck = lastAction?.action === 'check' && secondLastAction?.action === 'check';
+                                const actionEnded = lastAction?.action === 'call' || lastAction?.action === 'fold' || isCheckCheck;
+                                return !isAddingFlopAction && (flopActions.length === 0 || !actionEnded);
+                              })() ? (
+                                <button
+                                  onClick={() => {
+                                    setIsAddingFlopAction(true);
+                                    // Auto-set first actor based on position
+                                    if (flopActions.length === 0) {
+                                      setPendingFlopPlayer(getFirstActorPostflop());
+                                    }
+                                  }}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    background: '#2a2a2a',
+                                    border: '1px dashed #4a4a4a',
+                                    borderRadius: '12px',
+                                    padding: '4px 10px',
+                                    fontSize: '14px',
+                                    color: '#9ca3af',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease',
+                                  }}
+                                  onMouseOver={(e) => { e.currentTarget.style.borderColor = '#6b7280'; e.currentTarget.style.color = '#e5e7eb'; }}
+                                  onMouseOut={(e) => { e.currentTarget.style.borderColor = '#4a4a4a'; e.currentTarget.style.color = '#9ca3af'; }}
+                                >
+                                  {flopActions.length === 0 ? '?' : '+'}
+                                </button>
+                              ) : isAddingFlopAction ? (
+                                /* Flop Action Entry Form */
+                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                  {/* Player already selected (show player badge) */}
+                                  {pendingFlopPlayer ? (
+                                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                      <span style={{ fontWeight: 700, color: pendingFlopPlayer === 'H' ? '#93c5fd' : '#fca5a5', fontSize: '12px' }}>{pendingFlopPlayer}:</span>
+
+                                      {/* Custom input - % for bet, bb for raise */}
+                                      {(() => {
+                                        const bets = flopActions.filter(a => a.action === 'bet' || a.action === 'raise');
+                                        const hasBet = bets.length > 0;
+                                        return (
+                                          <input
+                                            type="number"
+                                            placeholder={hasBet ? "bb" : "%"}
+                                            min="0"
+                                            value={pendingFlopAmount}
+                                            onChange={(e) => {
+                                              const val = e.target.value;
+                                              if (val === '' || parseFloat(val) >= 0) {
+                                                setPendingFlopAmount(val);
+                                              }
+                                            }}
+                                            style={{ width: '35px', background: '#1f1f1f', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '2px 4px', fontSize: '12px', color: '#e5e7eb', outline: 'none' }}
+                                            title={hasBet ? "Enter custom raise amount in bb" : "Enter custom % of pot (e.g., 40 for 40%)"}
+                                          />
+                                        );
+                                      })()}
+
+                                      <select
+                                        value={pendingFlopAction}
+                                        onChange={(e) => {
+                                          const action = e.target.value;
+                                          if (!action) return;
+
+                                          const currentPot = calculateTotalPot();
+                                          let finalAction = action;
+                                          let amount: number | undefined = undefined;
+
+                                          // Handle bet percentage options
+                                          if (action.startsWith('bet_')) {
+                                            finalAction = 'bet';
+                                            const pct = parseFloat(action.replace('bet_', '')) / 100;
+                                            amount = parseFloat((currentPot * pct).toFixed(1));
+                                          } else if (action === 'bet_custom' && pendingFlopAmount) {
+                                            finalAction = 'bet';
+                                            const pct = parseFloat(pendingFlopAmount) / 100;
+                                            amount = parseFloat((currentPot * pct).toFixed(1));
+                                          } else if (action === 'call') {
+                                            const lastBet = flopActions.filter(a => a.action === 'bet' || a.action === 'raise').pop();
+                                            if (lastBet?.amount) {
+                                              amount = lastBet.amount;
+                                            }
+                                          } else if (action.startsWith('raise_')) {
+                                            // Handle raise multiplier options
+                                            finalAction = 'raise';
+                                            const lastBet = flopActions.filter(a => a.action === 'bet' || a.action === 'raise').pop();
+                                            const facingAmount = lastBet?.amount || 0;
+                                            if (action === 'raise_custom' && pendingFlopAmount) {
+                                              amount = parseFloat(pendingFlopAmount);
+                                            } else {
+                                              const multiplier = parseFloat(action.replace('raise_', ''));
+                                              amount = parseFloat((facingAmount * multiplier).toFixed(1));
+                                            }
+                                          }
+
+                                          // Auto-submit
+                                          const currentPlayer = pendingFlopPlayer;
+                                          setFlopActions(prev => [...prev, {
+                                            player: pendingFlopPlayer!,
+                                            action: finalAction as any,
+                                            amount: amount
+                                          }]);
+
+                                          // Check if action should end
+                                          const isCheckCheck = finalAction === 'check' && flopActions.length > 0 && flopActions[flopActions.length - 1]?.action === 'check';
+
+                                          if (finalAction === 'call' || finalAction === 'fold' || isCheckCheck) {
+                                            setIsAddingFlopAction(false);
+                                            setPendingFlopPlayer(null);
+                                            setPendingFlopAction('');
+                                            setPendingFlopAmount('');
+                                          } else {
+                                            setPendingFlopPlayer(currentPlayer === 'H' ? 'V' : 'H');
+                                            setPendingFlopAction('');
+                                            setPendingFlopAmount('');
+                                          }
+                                        }}
+                                        style={{ background: '#1f1f1f', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '2px 4px', fontSize: '12px', color: '#e5e7eb', outline: 'none', cursor: 'pointer' }}
+                                      >
+                                        <option value="">action</option>
+                                        {/* Postflop action options based on context */}
+                                        {(() => {
+                                          const bets = flopActions.filter(a => a.action === 'bet' || a.action === 'raise');
+                                          const hasBet = bets.length > 0;
+                                          const lastBet = bets[bets.length - 1];
+
+                                          // No prior bets - show check/fold and bet options
+                                          if (!hasBet) {
+                                            const hasCustomPct = pendingFlopAmount && parseFloat(pendingFlopAmount) > 0;
+                                            return (
+                                              <>
+                                                <option value="check">check</option>
+                                                <option value="fold">fold</option>
+                                                <optgroup label="Bet">
+                                                  <option value="bet_33">bet 33%</option>
+                                                  <option value="bet_50">bet 50%</option>
+                                                  <option value="bet_75">bet 75%</option>
+                                                  <option value="bet_100">bet Pot</option>
+                                                  {hasCustomPct && <option value="bet_custom">bet {pendingFlopAmount}%</option>}
+                                                </optgroup>
+                                              </>
+                                            );
+                                          }
+                                          // Facing a bet - show fold, call, raise options
+                                          else {
+                                            const facingAmount = lastBet?.amount || 0;
+                                            const hasCustomAmount = pendingFlopAmount && parseFloat(pendingFlopAmount) > 0;
+                                            return (
+                                              <>
+                                                <option value="fold">fold</option>
+                                                <option value="call">call ({facingAmount}bb)</option>
+                                                <optgroup label="Raise">
+                                                  <option value="raise_2">raise 2x ({(facingAmount * 2).toFixed(1)}bb)</option>
+                                                  <option value="raise_3">raise 3x ({(facingAmount * 3).toFixed(1)}bb)</option>
+                                                  <option value="raise_4">raise 4x ({(facingAmount * 4).toFixed(1)}bb)</option>
+                                                  {hasCustomAmount && <option value="raise_custom">raise {pendingFlopAmount}bb</option>}
+                                                </optgroup>
+                                              </>
+                                            );
+                                          }
+                                        })()}
+                                      </select>
+                                      <button
+                                        onClick={() => { setPendingFlopPlayer(null); setPendingFlopAction(''); setPendingFlopAmount(''); setIsAddingFlopAction(false); }}
+                                        style={{ background: 'transparent', border: 'none', fontSize: '12px', color: '#6b7280', cursor: 'pointer', padding: '2px' }}
+                                      >←</button>
+                                    </div>
+                                  ) : (
+                                    /* Select player if not auto-set */
+                                    <>
+                                      <button
+                                        onClick={() => setPendingFlopPlayer('H')}
+                                        style={{ background: '#1a365d', border: 'none', borderRadius: '8px', padding: '4px 8px', fontSize: '12px', fontWeight: 700, color: '#93c5fd', cursor: 'pointer' }}
+                                      >H</button>
+                                      <button
+                                        onClick={() => setPendingFlopPlayer('V')}
+                                        style={{ background: '#4a1d1d', border: 'none', borderRadius: '8px', padding: '4px 8px', fontSize: '12px', fontWeight: 700, color: '#fca5a5', cursor: 'pointer' }}
+                                      >V</button>
+                                      <button
+                                        onClick={() => { setIsAddingFlopAction(false); setPendingFlopPlayer(null); setPendingFlopAction(''); setPendingFlopAmount(''); }}
+                                        style={{ background: 'transparent', border: 'none', fontSize: '12px', color: '#6b7280', cursor: 'pointer', padding: '4px' }}
+                                      >✕</button>
+                                    </>
+                                  )}
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Turn */}
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <span style={{ width: '40px', color: '#9ca3af', fontSize: '12px' }}>Turn</span>
+                          <div style={{ display: 'flex', alignItems: 'center', background: '#1f1f1f', borderRadius: '6px', padding: '4px 6px', border: '1px solid #3a3a3a' }}>
+                            <select className="rank-selector" value={tr ? tr.slice(0, -1) : ''} onChange={(e) => { if (!e.target.value) { setTr(''); return; } const ps = tr ? tr.slice(-1) : '♠'; const as = getFirstAvailableSuit(e.target.value, ps, 'tr'); if (as) setTr(e.target.value + as); }} style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '16px', fontWeight: 600, color: '#e5e7eb', cursor: 'pointer', width: '20px', textAlign: 'center', outline: 'none' }} title="Rank"><option value="">🂠</option>{(() => { const c = getUsedRankCounts('tr'); return RANKS.map(r => { const d = (c[r] || 0) >= 4; return <option key={r} value={r} disabled={d} style={{ color: d ? '#666' : undefined }}>{r}</option>; }); })()}</select>
+                            <select className="suit-selector" value={tr ? tr.slice(-1) : ''} onChange={(e) => { const rank = tr ? tr.slice(0, -1) : ''; const newCard = (rank || 'A') + e.target.value; const usedCards = getUsedCards('tr'); if (e.target.value && !usedCards.has(newCard)) setTr(newCard); }} style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '16px', fontWeight: 600, color: tr && isRed(tr.slice(-1)) ? '#ef4444' : '#e5e7eb', cursor: 'pointer', width: '20px', textAlign: 'center', outline: 'none' }} title="Suit"><option value="">?</option>{(() => { const rank = tr ? tr.slice(0, -1) : ''; const usedCards = getUsedCards('tr'); return SUITS_CONFIG.map(s => { const wouldBe = rank + s.value; const isUsed = !!(rank && usedCards.has(wouldBe)); return <option key={s.value} value={s.value} disabled={isUsed}>{s.label}</option>; }); })()}</select>
+                          </div>
+                        </div>
+
+                        {/* Turn Action Builder - show only when turn card is filled */}
+                        {tr && (
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'space-between', marginLeft: '48px' }}>
+                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <span style={{ color: '#6b7280', fontSize: '11px', fontStyle: 'italic' }}>Action:</span>
+                              {/* Existing turn actions */}
+                              {turnActions.map((act, idx) => (
+                                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '2px', background: act.player === 'H' ? '#1a365d' : '#4a1d1d', borderRadius: '12px', padding: '4px 8px', fontSize: '12px', fontWeight: 500, color: '#e5e7eb', cursor: 'pointer' }} title="Click to edit" onClick={() => { setTurnActions(prev => prev.slice(0, idx)); setIsAddingTurnAction(true); setPendingTurnPlayer(act.player); setPendingTurnAction(''); setPendingTurnAmount(''); }}>
+                                  <span style={{ fontWeight: 700 }}>{act.player}</span>:<span>{act.amount ? `${act.amount}bb` : ''}</span><span style={{ opacity: 0.8 }}>{act.action}</span>
+                                </div>
+                              ))}
+                              {/* Arrow/button visibility */}
+                              {(() => {
+                                const lastAction = turnActions[turnActions.length - 1];
+                                const secondLastAction = turnActions[turnActions.length - 2];
+                                const isCheckCheck = lastAction?.action === 'check' && secondLastAction?.action === 'check';
+                                const actionEnded = lastAction?.action === 'call' || lastAction?.action === 'fold' || isCheckCheck;
+                                return turnActions.length > 0 && !isAddingTurnAction && !actionEnded && <span style={{ color: '#6b7280', fontSize: '12px' }}>→</span>;
+                              })()}
+                              {(() => {
+                                const lastAction = turnActions[turnActions.length - 1];
+                                const secondLastAction = turnActions[turnActions.length - 2];
+                                const isCheckCheck = lastAction?.action === 'check' && secondLastAction?.action === 'check';
+                                const actionEnded = lastAction?.action === 'call' || lastAction?.action === 'fold' || isCheckCheck;
+                                return !isAddingTurnAction && (turnActions.length === 0 || !actionEnded);
+                              })() ? (
+                                <button onClick={() => { setIsAddingTurnAction(true); if (turnActions.length === 0) setPendingTurnPlayer(getFirstActorPostflop()); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2a2a2a', border: '1px dashed #4a4a4a', borderRadius: '12px', padding: '4px 10px', fontSize: '14px', color: '#9ca3af', cursor: 'pointer' }}>{turnActions.length === 0 ? '?' : '+'}</button>
+                              ) : isAddingTurnAction ? (
+                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                  {pendingTurnPlayer ? (
+                                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                      <span style={{ fontWeight: 700, color: pendingTurnPlayer === 'H' ? '#93c5fd' : '#fca5a5', fontSize: '12px' }}>{pendingTurnPlayer}:</span>
+                                      <input type="number" placeholder={turnActions.some(a => a.action === 'bet' || a.action === 'raise') ? "bb" : "%"} min="0" value={pendingTurnAmount} onChange={(e) => { if (e.target.value === '' || parseFloat(e.target.value) >= 0) setPendingTurnAmount(e.target.value); }} style={{ width: '35px', background: '#1f1f1f', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '2px 4px', fontSize: '12px', color: '#e5e7eb', outline: 'none' }} />
+                                      <select value={pendingTurnAction} onChange={(e) => {
+                                        const action = e.target.value; if (!action) return;
+                                        const currentPot = calculateTotalPot();
+                                        let finalAction = action, amount: number | undefined;
+                                        if (action.startsWith('bet_')) { finalAction = 'bet'; const pct = action === 'bet_custom' ? parseFloat(pendingTurnAmount) / 100 : parseFloat(action.replace('bet_', '')) / 100; amount = parseFloat((currentPot * pct).toFixed(1)); }
+                                        else if (action === 'call') { const lastBet = turnActions.filter(a => a.action === 'bet' || a.action === 'raise').pop(); if (lastBet?.amount) amount = lastBet.amount; }
+                                        else if (action.startsWith('raise_')) { finalAction = 'raise'; const lastBet = turnActions.filter(a => a.action === 'bet' || a.action === 'raise').pop(); const facingAmount = lastBet?.amount || 0; if (action === 'raise_custom') amount = parseFloat(pendingTurnAmount); else { const mult = parseFloat(action.replace('raise_', '')); amount = parseFloat((facingAmount * mult).toFixed(1)); } }
+                                        const currentPlayer = pendingTurnPlayer;
+                                        setTurnActions(prev => [...prev, { player: pendingTurnPlayer!, action: finalAction as any, amount }]);
+                                        const isCheckCheck = finalAction === 'check' && turnActions.length > 0 && turnActions[turnActions.length - 1]?.action === 'check';
+                                        if (finalAction === 'call' || finalAction === 'fold' || isCheckCheck) { setIsAddingTurnAction(false); setPendingTurnPlayer(null); setPendingTurnAction(''); setPendingTurnAmount(''); }
+                                        else { setPendingTurnPlayer(currentPlayer === 'H' ? 'V' : 'H'); setPendingTurnAction(''); setPendingTurnAmount(''); }
+                                      }} style={{ background: '#1f1f1f', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '2px 4px', fontSize: '12px', color: '#e5e7eb', outline: 'none', cursor: 'pointer' }}>
+                                        <option value="">action</option>
+                                        {(() => {
+                                          const bets = turnActions.filter(a => a.action === 'bet' || a.action === 'raise');
+                                          const hasBet = bets.length > 0;
+                                          if (!hasBet) { const hasCustom = pendingTurnAmount && parseFloat(pendingTurnAmount) > 0; return <><option value="check">check</option><option value="fold">fold</option><optgroup label="Bet"><option value="bet_33">bet 33%</option><option value="bet_50">bet 50%</option><option value="bet_75">bet 75%</option><option value="bet_100">bet Pot</option>{hasCustom && <option value="bet_custom">bet {pendingTurnAmount}%</option>}</optgroup></>; }
+                                          else { const lastBet = bets[bets.length - 1]; const facingAmount = lastBet?.amount || 0; const hasCustom = pendingTurnAmount && parseFloat(pendingTurnAmount) > 0; return <><option value="fold">fold</option><option value="call">call ({facingAmount}bb)</option><optgroup label="Raise"><option value="raise_2">raise 2x ({(facingAmount * 2).toFixed(1)}bb)</option><option value="raise_3">raise 3x ({(facingAmount * 3).toFixed(1)}bb)</option><option value="raise_4">raise 4x ({(facingAmount * 4).toFixed(1)}bb)</option>{hasCustom && <option value="raise_custom">raise {pendingTurnAmount}bb</option>}</optgroup></>; }
+                                        })()}
+                                      </select>
+                                      <button onClick={() => { setPendingTurnPlayer(null); setPendingTurnAction(''); setPendingTurnAmount(''); setIsAddingTurnAction(false); }} style={{ background: 'transparent', border: 'none', fontSize: '12px', color: '#6b7280', cursor: 'pointer', padding: '2px' }}>←</button>
+                                    </div>
+                                  ) : (
+                                    <><button onClick={() => setPendingTurnPlayer('H')} style={{ background: '#1a365d', border: 'none', borderRadius: '8px', padding: '4px 8px', fontSize: '12px', fontWeight: 700, color: '#93c5fd', cursor: 'pointer' }}>H</button><button onClick={() => setPendingTurnPlayer('V')} style={{ background: '#4a1d1d', border: 'none', borderRadius: '8px', padding: '4px 8px', fontSize: '12px', fontWeight: 700, color: '#fca5a5', cursor: 'pointer' }}>V</button><button onClick={() => { setIsAddingTurnAction(false); setPendingTurnPlayer(null); }} style={{ background: 'transparent', border: 'none', fontSize: '12px', color: '#6b7280', cursor: 'pointer', padding: '4px' }}>✕</button></>
+                                  )}
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* River */}
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <span style={{ width: '40px', color: '#9ca3af', fontSize: '12px' }}>River</span>
+                          <div style={{ display: 'flex', alignItems: 'center', background: '#1f1f1f', borderRadius: '6px', padding: '4px 6px', border: '1px solid #3a3a3a' }}>
+                            <select className="rank-selector" value={rv ? rv.slice(0, -1) : ''} onChange={(e) => { if (!e.target.value) { setRv(''); return; } const ps = rv ? rv.slice(-1) : '♠'; const as = getFirstAvailableSuit(e.target.value, ps, 'rv'); if (as) setRv(e.target.value + as); }} style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '16px', fontWeight: 600, color: '#e5e7eb', cursor: 'pointer', width: '20px', textAlign: 'center', outline: 'none' }} title="Rank"><option value="">🂠</option>{(() => { const c = getUsedRankCounts('rv'); return RANKS.map(r => { const d = (c[r] || 0) >= 4; return <option key={r} value={r} disabled={d} style={{ color: d ? '#666' : undefined }}>{r}</option>; }); })()}</select>
+                            <select className="suit-selector" value={rv ? rv.slice(-1) : ''} onChange={(e) => { const rank = rv ? rv.slice(0, -1) : ''; const newCard = (rank || 'A') + e.target.value; const usedCards = getUsedCards('rv'); if (e.target.value && !usedCards.has(newCard)) setRv(newCard); }} style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '16px', fontWeight: 600, color: rv && isRed(rv.slice(-1)) ? '#ef4444' : '#e5e7eb', cursor: 'pointer', width: '20px', textAlign: 'center', outline: 'none' }} title="Suit"><option value="">?</option>{(() => { const rank = rv ? rv.slice(0, -1) : ''; const usedCards = getUsedCards('rv'); return SUITS_CONFIG.map(s => { const wouldBe = rank + s.value; const isUsed = !!(rank && usedCards.has(wouldBe)); return <option key={s.value} value={s.value} disabled={isUsed}>{s.label}</option>; }); })()}</select>
+                          </div>
+                        </div>
+
+                        {/* River Action Builder - show only when river card is filled */}
+                        {rv && (
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'space-between', marginLeft: '48px' }}>
+                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <span style={{ color: '#6b7280', fontSize: '11px', fontStyle: 'italic' }}>Action:</span>
+                              {/* Existing river actions */}
+                              {riverActions.map((act, idx) => (
+                                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '2px', background: act.player === 'H' ? '#1a365d' : '#4a1d1d', borderRadius: '12px', padding: '4px 8px', fontSize: '12px', fontWeight: 500, color: '#e5e7eb', cursor: 'pointer' }} title="Click to edit" onClick={() => { setRiverActions(prev => prev.slice(0, idx)); setIsAddingRiverAction(true); setPendingRiverPlayer(act.player); setPendingRiverAction(''); setPendingRiverAmount(''); }}>
+                                  <span style={{ fontWeight: 700 }}>{act.player}</span>:<span>{act.amount ? `${act.amount}bb` : ''}</span><span style={{ opacity: 0.8 }}>{act.action}</span>
+                                </div>
+                              ))}
+                              {/* Arrow/button visibility */}
+                              {(() => {
+                                const lastAction = riverActions[riverActions.length - 1];
+                                const secondLastAction = riverActions[riverActions.length - 2];
+                                const isCheckCheck = lastAction?.action === 'check' && secondLastAction?.action === 'check';
+                                const actionEnded = lastAction?.action === 'call' || lastAction?.action === 'fold' || isCheckCheck;
+                                return riverActions.length > 0 && !isAddingRiverAction && !actionEnded && <span style={{ color: '#6b7280', fontSize: '12px' }}>→</span>;
+                              })()}
+                              {(() => {
+                                const lastAction = riverActions[riverActions.length - 1];
+                                const secondLastAction = riverActions[riverActions.length - 2];
+                                const isCheckCheck = lastAction?.action === 'check' && secondLastAction?.action === 'check';
+                                const actionEnded = lastAction?.action === 'call' || lastAction?.action === 'fold' || isCheckCheck;
+                                return !isAddingRiverAction && (riverActions.length === 0 || !actionEnded);
+                              })() ? (
+                                <button onClick={() => { setIsAddingRiverAction(true); if (riverActions.length === 0) setPendingRiverPlayer(getFirstActorPostflop()); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2a2a2a', border: '1px dashed #4a4a4a', borderRadius: '12px', padding: '4px 10px', fontSize: '14px', color: '#9ca3af', cursor: 'pointer' }}>{riverActions.length === 0 ? '?' : '+'}</button>
+                              ) : isAddingRiverAction ? (
+                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                  {pendingRiverPlayer ? (
+                                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                      <span style={{ fontWeight: 700, color: pendingRiverPlayer === 'H' ? '#93c5fd' : '#fca5a5', fontSize: '12px' }}>{pendingRiverPlayer}:</span>
+                                      <input type="number" placeholder={riverActions.some(a => a.action === 'bet' || a.action === 'raise') ? "bb" : "%"} min="0" value={pendingRiverAmount} onChange={(e) => { if (e.target.value === '' || parseFloat(e.target.value) >= 0) setPendingRiverAmount(e.target.value); }} style={{ width: '35px', background: '#1f1f1f', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '2px 4px', fontSize: '12px', color: '#e5e7eb', outline: 'none' }} />
+                                      <select value={pendingRiverAction} onChange={(e) => {
+                                        const action = e.target.value; if (!action) return;
+                                        const currentPot = calculateTotalPot();
+                                        let finalAction = action, amount: number | undefined;
+                                        if (action.startsWith('bet_')) { finalAction = 'bet'; const pct = action === 'bet_custom' ? parseFloat(pendingRiverAmount) / 100 : parseFloat(action.replace('bet_', '')) / 100; amount = parseFloat((currentPot * pct).toFixed(1)); }
+                                        else if (action === 'call') { const lastBet = riverActions.filter(a => a.action === 'bet' || a.action === 'raise').pop(); if (lastBet?.amount) amount = lastBet.amount; }
+                                        else if (action.startsWith('raise_')) { finalAction = 'raise'; const lastBet = riverActions.filter(a => a.action === 'bet' || a.action === 'raise').pop(); const facingAmount = lastBet?.amount || 0; if (action === 'raise_custom') amount = parseFloat(pendingRiverAmount); else { const mult = parseFloat(action.replace('raise_', '')); amount = parseFloat((facingAmount * mult).toFixed(1)); } }
+                                        const currentPlayer = pendingRiverPlayer;
+                                        setRiverActions(prev => [...prev, { player: pendingRiverPlayer!, action: finalAction as any, amount }]);
+                                        const isCheckCheck = finalAction === 'check' && riverActions.length > 0 && riverActions[riverActions.length - 1]?.action === 'check';
+                                        if (finalAction === 'call' || finalAction === 'fold' || isCheckCheck) { setIsAddingRiverAction(false); setPendingRiverPlayer(null); setPendingRiverAction(''); setPendingRiverAmount(''); }
+                                        else { setPendingRiverPlayer(currentPlayer === 'H' ? 'V' : 'H'); setPendingRiverAction(''); setPendingRiverAmount(''); }
+                                      }} style={{ background: '#1f1f1f', border: '1px solid #3a3a3a', borderRadius: '4px', padding: '2px 4px', fontSize: '12px', color: '#e5e7eb', outline: 'none', cursor: 'pointer' }}>
+                                        <option value="">action</option>
+                                        {(() => {
+                                          const bets = riverActions.filter(a => a.action === 'bet' || a.action === 'raise');
+                                          const hasBet = bets.length > 0;
+                                          if (!hasBet) { const hasCustom = pendingRiverAmount && parseFloat(pendingRiverAmount) > 0; return <><option value="check">check</option><option value="fold">fold</option><optgroup label="Bet"><option value="bet_33">bet 33%</option><option value="bet_50">bet 50%</option><option value="bet_75">bet 75%</option><option value="bet_100">bet Pot</option>{hasCustom && <option value="bet_custom">bet {pendingRiverAmount}%</option>}</optgroup></>; }
+                                          else { const lastBet = bets[bets.length - 1]; const facingAmount = lastBet?.amount || 0; const hasCustom = pendingRiverAmount && parseFloat(pendingRiverAmount) > 0; return <><option value="fold">fold</option><option value="call">call ({facingAmount}bb)</option><optgroup label="Raise"><option value="raise_2">raise 2x ({(facingAmount * 2).toFixed(1)}bb)</option><option value="raise_3">raise 3x ({(facingAmount * 3).toFixed(1)}bb)</option><option value="raise_4">raise 4x ({(facingAmount * 4).toFixed(1)}bb)</option>{hasCustom && <option value="raise_custom">raise {pendingRiverAmount}bb</option>}</optgroup></>; }
+                                        })()}
+                                      </select>
+                                      <button onClick={() => { setPendingRiverPlayer(null); setPendingRiverAction(''); setPendingRiverAmount(''); setIsAddingRiverAction(false); }} style={{ background: 'transparent', border: 'none', fontSize: '12px', color: '#6b7280', cursor: 'pointer', padding: '2px' }}>←</button>
+                                    </div>
+                                  ) : (
+                                    <><button onClick={() => setPendingRiverPlayer('H')} style={{ background: '#1a365d', border: 'none', borderRadius: '8px', padding: '4px 8px', fontSize: '12px', fontWeight: 700, color: '#93c5fd', cursor: 'pointer' }}>H</button><button onClick={() => setPendingRiverPlayer('V')} style={{ background: '#4a1d1d', border: 'none', borderRadius: '8px', padding: '4px 8px', fontSize: '12px', fontWeight: 700, color: '#fca5a5', cursor: 'pointer' }}>V</button><button onClick={() => { setIsAddingRiverAction(false); setPendingRiverPlayer(null); }} style={{ background: 'transparent', border: 'none', fontSize: '12px', color: '#6b7280', cursor: 'pointer', padding: '4px' }}>✕</button></>
+                                  )}
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1257,11 +2518,15 @@ function CardEditor({
       <input
         className="cardInput input-ony platinum-inner-border"
         value={local}
-        onChange={(e) => setLocal(e.target.value)}
-        onBlur={() => onChange(suitifyToken(local))}
+        onChange={(e) => {
+          const val = e.target.value;
+          setLocal(val);
+          onChange(suitifyToken(val)); // Update parent immediately!
+        }}
         placeholder={placeholder || 'A♠'}
       />
       <div className="cardEcho" title="Normalized">{echo}</div>
     </div>
   );
 }
+

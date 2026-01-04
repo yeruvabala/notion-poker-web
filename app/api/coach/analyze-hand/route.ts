@@ -198,7 +198,7 @@ export async function POST(req: Request) {
         calculateOverallConfidence
       } = await import('../utils/ParserFallbacks');
 
-      enriched = enrichHandContext({
+      enriched = await enrichHandContext({
         heroPosition: position as any,
         heroCards: cards,
         board,

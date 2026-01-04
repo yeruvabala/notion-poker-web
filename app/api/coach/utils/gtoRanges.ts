@@ -812,15 +812,36 @@ export const VS_THREE_BET_RANGES: Record<string, Record<string, Record<string, n
 
     'SB_vs_BB_3bet': {
         '4bet': {
-            'AA': 1.0, 'KK': 1.0, 'QQ': 1.0, 'JJ': 1.0, 'TT': 0.5,
-            'AKs': 1.0, 'AQs': 1.0, 'AJs': 0.4,
-            'AKo': 1.0, 'AQo': 0.8,
-            'A5s': 1.0, 'A4s': 1.0, 'A2s': 0.5, 'K4s': 0.2,
+            // --- Value Range (Linear + Merged) ---
+            'AA': 1.0, 'KK': 1.0, 'QQ': 1.0, 'JJ': 1.0, // Premium pairs are pure 4-bets
+            'TT': 0.5, // Mixed strategy (often called to protect calling range)
+            'AKs': 1.0, 'AQs': 0.4, // AQs is a mix
+            'AKo': 1.0, 'AQo': 0.6, // Offsuit premiums played aggressively
+
+            // --- Bluffs (Polarized) ---
+            // Wheel Aces are the best bluffs here (block AA/KK, can wheel)
+            'A5s': 1.0, 'A4s': 1.0,
+            'A3s': 0.5, 'A2s': 0.5,
+
+            // Occasional suited King bluffs for board coverage
+            'K5s': 0.2, 'K4s': 0.2,
         },
         'call': {
-            'TT': 0.5, '99': 0.7, '88': 0.7, '77': 0.6,
-            'AJs': 0.6, 'ATs': 0.8, 'A9s': 0.6,
-            'KQs': 0.8, 'KJs': 0.7, 'QJs': 0.7, 'JTs': 0.6,
+            // --- Pairs (Set Mining & Medium Strength) ---
+            'TT': 0.5, '99': 1.0, '88': 1.0, '77': 1.0,
+            '66': 1.0, '55': 0.5, '44': 0.2, // Lower pairs struggle OOP
+
+            // --- Suited Broadways & Aces ---
+            'AQs': 0.6, 'AJs': 1.0, 'ATs': 1.0, 'A9s': 0.6,
+            'KQs': 1.0, 'KJs': 1.0, 'KTs': 0.8,
+            'QJs': 1.0, 'JTs': 1.0,
+
+            // --- Suited Connectors (Defending OOP) ---
+            'T9s': 1.0, '98s': 0.8, '87s': 0.6, '76s': 0.4,
+
+            // --- Offsuit Defenses (Wide BvB Standards) ---
+            'AQo': 0.4, 'AJo': 0.7, // Defending AJo is standard BvB
+            'KQo': 0.6, 'KJo': 0.3,
         },
     },
 };
@@ -830,6 +851,27 @@ export const VS_THREE_BET_RANGES: Record<string, Record<string, Record<string, n
 // =============================================================================
 
 const VS_FOUR_BET_RANGES: Record<string, Record<string, Record<string, number>>> = {
+    // BB 3-bet vs SB 4-bet (Hero IP)
+    'BB_3bet_vs_SB_4bet': {
+        '5bet_shove': {
+            // --- Value Shoves ---
+            'QQ': 1.0, 'JJ': 0.5, 'TT': 0.2,
+            'AKs': 0.8, 'AKo': 0.8,
+            // --- Bluff Shoves ---
+            'A5s': 1.0, 'A4s': 1.0, 'A2s': 0.5,
+            'KJs': 0.1,
+        },
+        'call': {
+            // --- The "Position" Advantage Range (Traps + Flats) ---
+            'AA': 1.0, 'KK': 1.0, // Trapping IP
+            'JJ': 0.5, 'TT': 0.8, '99': 1.0, '88': 0.5,
+            'AKs': 0.2, 'AKo': 0.2,
+            'AQs': 1.0, 'AJs': 1.0, 'ATs': 0.5,
+            'KQs': 1.0, 'KJs': 0.6,
+            'QJs': 0.5,
+        }
+    },
+
     // BB 3-bets, faces BTN 4-bet
     'BB_3bet_vs_BTN_4bet': {
         '5bet_shove': {
@@ -1279,9 +1321,19 @@ export function getPreflopAction(
         return getOpeningAction(hand, heroPosition);
     }
 
-    // Facing action
+    // Facing action (Open)
     if (villainContext.type === 'facing_action' && villainContext.villain) {
         return getFacingOpenAction(hand, heroPosition, villainContext.villain);
+    }
+
+    // Facing 3-Bet
+    if (villainContext.type === 'vs_3bet' && villainContext.villain) {
+        return getVs3BetAction(hand, heroPosition, villainContext.villain);
+    }
+
+    // Facing 4-Bet
+    if (villainContext.type === 'vs_4bet' && villainContext.villain) {
+        return getVs4BetAction(hand, heroPosition, villainContext.villain);
     }
 
     // SB vs BB

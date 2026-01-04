@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
         // ════════════════════════════════════════════════════════════
         // STEP 1: Validate Input
         // ════════════════════════════════════════════════════════════
-        const { raw_text, date, stakes, position, cards, board, notes } = body;
+        const { raw_text, date, stakes, position, villain_position, cards, board, notes, action_type, table_format, effective_stack, preflop_actions, pot_size } = body;
 
         if (!raw_text || raw_text.length < 20) {
             return NextResponse.json(
@@ -50,17 +50,19 @@ export async function POST(req: NextRequest) {
             textLength: raw_text.length,
             hasPosition: !!position,
             hasCards: !!cards,
-            hasBoard: !!board
+            hasBoard: !!board,
+            actionType: action_type,
+            stack: effective_stack
         });
 
         // ════════════════════════════════════════════════════════════
         // STEP 2: Enrich Context (Fallbacks & Inference)
         // ════════════════════════════════════════════════════════════
-        const enriched = enrichHandContext({
+        const enriched = await enrichHandContext({
             rawText: raw_text,
             heroPosition: position || undefined,
             heroCards: cards || undefined,
-            effectiveStack: 100, // Default for now
+            effectiveStack: effective_stack ? Number(effective_stack) : 100,
         });
 
         console.log('[Text API] Enriched context:', {
@@ -99,9 +101,13 @@ export async function POST(req: NextRequest) {
         // ════════════════════════════════════════════════════════════
         const replayerData = buildReplayerData(raw_text, enriched, {
             position,
+            villainPosition: villain_position,
             cards,
             board,
-            boardRanks
+            boardRanks,
+            actionType: action_type,
+            preflopActions: preflop_actions,
+            potSize: pot_size
         });
 
         // Validate structure

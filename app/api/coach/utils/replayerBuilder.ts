@@ -85,9 +85,13 @@ export function buildReplayerData(
     enriched?: EnrichedHandContext,
     hints?: {
         position?: string;
+        villainPosition?: string;
         cards?: string;
         board?: string;
         boardRanks?: string[];
+        actionType?: string;
+        preflopActions?: { player: 'H' | 'V'; action: string; amount?: number }[];
+        potSize?: number;
     }
 ): ReplayerData {
 
@@ -123,69 +127,123 @@ export function buildReplayerData(
     // ════════════════════════════════════════════════════════════
     const actionSequence = enriched?.actions || '';
     const replayerActions: Action[] = [];
+    const actionType = hints?.actionType;
 
-    // Detect 3-bet scenario
-    const isVillain3Bet = actionSequence.includes('villain_3bet') || /3-?bet/i.test(rawText);
-    const hasHeroOpen = actionSequence.includes('hero_open');
+    // A) HIGHEST PRIORITY: Explicit Preflop Actions from UI
+    if (hints?.preflopActions && hints.preflopActions.length > 0) {
+        console.log('[ReplayerBuilder] Using explicit preflopActions:', hints.preflopActions);
+        for (const act of hints.preflopActions) {
+            const playerName = act.player === 'H' ? 'Hero' : 'Villain';
+            // Map action names to replayer format
+            let replayerAction = 'raises';
+            if (act.action === 'call') replayerAction = 'calls';
+            else if (act.action === 'fold') replayerAction = 'folds';
+            else if (act.action === 'limp') replayerAction = 'calls';
+            else if (act.action === 'raise' || act.action === '3bet' || act.action === '4bet') replayerAction = 'raises';
 
-    // Hero opens (RFI)
-    if (hasHeroOpen || (isVillain3Bet && !hasHeroOpen)) {
-        replayerActions.push({
-            player: 'Hero',
-            action: 'raises',
-            amount: 2.5,
-            street: 'preflop'
-        });
+            replayerActions.push({
+                player: playerName,
+                action: replayerAction as any,
+                amount: act.amount || 0,
+                street: 'preflop'
+            });
+        }
     }
+    // B) Explicit Action Type Override
+    else if (actionType && actionType !== 'general') {
+        switch (actionType) {
+            case 'RFI':
+                // Hero is first to act (after blinds)
+                // No actions (handled by getting Hero Position + Blinds)
+                break;
 
-    // Villain 3-bets
-    if (isVillain3Bet) {
-        replayerActions.push({
-            player: 'Villain',
-            action: 'raises',
-            amount: 7,
-            street: 'preflop'
-        });
+            case 'facing_open':
+                // Villain opens
+                replayerActions.push({ player: 'Villain', action: 'raises', amount: 2.5, street: 'preflop' });
+                // Hero is pending
+                break;
+
+            case 'vs_3bet':
+                // Hero opens, Villain 3-bets
+                replayerActions.push({ player: 'Hero', action: 'raises', amount: 2.5, street: 'preflop' });
+                replayerActions.push({ player: 'Villain', action: 'raises', amount: 9, street: 'preflop' }); // 3 bet size
+                break;
+
+            case 'vs_4bet':
+                // Villain opens, Hero 3-bets, Villain 4-bets
+                replayerActions.push({ player: 'Villain', action: 'raises', amount: 2.5, street: 'preflop' });
+                replayerActions.push({ player: 'Hero', action: 'raises', amount: 9, street: 'preflop' });
+                replayerActions.push({ player: 'Villain', action: 'raises', amount: 24, street: 'preflop' }); // 4 bet size
+                break;
+
+
+        }
     }
+    // B) Feature Inference (Legacy Regex)
+    else {
+        // Detect 3-bet scenario
+        const isVillain3Bet = actionSequence.includes('villain_3bet') || /3-?bet/i.test(rawText);
+        const hasHeroOpen = actionSequence.includes('hero_open');
 
-    // Hero calls 3-bet
-    if (actionSequence.includes('hero_call')) {
-        replayerActions.push({
-            player: 'Hero',
-            action: 'calls',
-            amount: 7,
-            street: 'preflop'
-        });
-    }
+        // Hero opens (RFI)
+        if (hasHeroOpen || (isVillain3Bet && !hasHeroOpen)) {
+            replayerActions.push({
+                player: 'Hero',
+                action: 'raises',
+                amount: 2.5,
+                street: 'preflop'
+            });
+        }
 
-    // Hero 4-bets (if mentioned)
-    if (/[45]-?bet/i.test(rawText)) {
-        replayerActions.push({
-            player: 'Hero',
-            action: 'raises',
-            amount: null,
-            street: 'preflop'
-        });
-    }
+        // Villain 3-bets
+        if (isVillain3Bet) {
+            replayerActions.push({
+                player: 'Villain',
+                action: 'raises',
+                amount: 7,
+                street: 'preflop'
+            });
+        }
 
-    // Flop action: Facing a bet
-    if (street === 'flop' && /facing\s+(?:a\s+)?bet/i.test(rawText)) {
-        // Villain bets
-        replayerActions.push({
-            player: 'Villain',
-            action: 'bets',
-            amount: null,
-            street: 'flop'
-        });
+        // Hero calls 3-bet
+        if (actionSequence.includes('hero_call')) {
+            replayerActions.push({
+                player: 'Hero',
+                action: 'calls',
+                amount: 7,
+                street: 'preflop'
+            });
+        }
 
-        // Hero's decision is pending (GTO analysis target)
-        replayerActions.push({
-            player: 'Hero',
-            action: 'pending',
-            amount: null,
-            street: 'flop',
-            decision: 'facing_bet'
-        });
+        // Hero 4-bets (if mentioned)
+        if (/[45]-?bet/i.test(rawText)) {
+            replayerActions.push({
+                player: 'Hero',
+                action: 'raises',
+                amount: null,
+                street: 'preflop'
+            });
+        }
+
+        // Flop action: Facing a bet
+        if (street === 'flop' && /facing\s+(?:a\s+)?bet/i.test(rawText)) {
+            // Villain bets
+            replayerActions.push({
+                player: 'Villain',
+                action: 'bets',
+                amount: null,
+                street: 'flop'
+            });
+
+            // Hero's decision is pending (GTO analysis target)
+            replayerActions.push({
+                player: 'Hero',
+                action: 'pending',
+                amount: null,
+                street: 'flop',
+                decision: 'facing_bet'
+            });
+        }
     }
 
     // ════════════════════════════════════════════════════════════
@@ -208,7 +266,7 @@ export function buildReplayerData(
             cards: null,
             isActive: true,
             stack: enriched?.effectiveStack || 100,
-            position: enriched?.villainPosition || 'BB'
+            position: hints?.villainPosition || enriched?.villainPosition || 'BB'
         }
     ];
 
@@ -218,7 +276,7 @@ export function buildReplayerData(
     return {
         players,
         board: boardCards,
-        pot: enriched?.potSize || 6,
+        pot: hints?.potSize || enriched?.potSize || 6,
         street,
         sb: 0.5,
         bb: 1,

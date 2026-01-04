@@ -11,6 +11,8 @@
 
 export type Position = 'UTG' | 'UTG+1' | 'UTG+2' | 'HJ' | 'CO' | 'BTN' | 'SB' | 'BB';
 
+import { parseWithLLM, isLLMParsingEnabled } from './llmParser';
+
 export interface HandContext {
     // What we know for sure
     heroPosition?: Position;
@@ -31,7 +33,7 @@ export interface HandContext {
 
 export interface FallbackResult {
     value: any;
-    source: 'detected' | 'inferred' | 'defaulted';
+    source: 'detected' | 'inferred' | 'defaulted' | 'AI_Inferred';
     confidence: number; // 0-100
     reasoning: string;
 }
@@ -41,13 +43,17 @@ export interface EnrichedHandContext extends HandContext {
     assumptions: Array<{
         field: string;
         value: any;
-        source: 'detected' | 'inferred' | 'defaulted';
+        source: 'detected' | 'inferred' | 'defaulted' | 'AI_Inferred';
         confidence: number;
         reasoning: string;
     }>;
 
     // NEW: Scenario/intent classification
     scenario?: 'opening' | 'facing_action' | 'postflop';
+
+    // NEW: LLM Fallback tracking
+    isAiFallback?: boolean;
+    parsingConfidence?: number; // Overall parsing confidence 0-100
 }
 
 // ============================================================================
@@ -474,6 +480,44 @@ export function calculateOverallConfidence(enriched: EnrichedHandContext): numbe
     return totalWeight > 0 ? Math.round(weightedSum / totalWeight) : 100;
 }
 
+function calculateParsingConfidence(context: EnrichedHandContext): number {
+    let score = 0;
+
+    // Critical fields (20 points each)
+    if (context.heroPosition) {
+        const isDefaulted = context.assumptions.some(a =>
+            a.field === 'heroPosition' && a.source === 'defaulted'
+        );
+        score += isDefaulted ? 5 : 20;
+    }
+
+    if (context.heroCards) {
+        const isDefaulted = context.assumptions.some(a =>
+            a.field === 'heroCards' && a.source === 'defaulted'
+        );
+        score += isDefaulted ? 5 : 20;
+    }
+
+    if (context.effectiveStack && context.effectiveStack !== 100) {
+        score += 20;
+    }
+
+    // Important fields (10 points each)
+    if (context.villainPosition) score += 10;
+    if (context.scenario) score += 10;
+    if (context.potSize && context.potSize !== 6) score += 10;
+
+    // Bonus: No defaulted critical fields
+    const hasDefaultedCritical = context.assumptions.some(a =>
+        a.source === 'defaulted' && ['heroPosition', 'heroCards'].includes(a.field)
+    );
+    if (!hasDefaultedCritical && (context.heroPosition || context.heroCards)) {
+        score += 10;
+    }
+
+    return Math.min(score, 100);
+}
+
 // ============================================================================
 // MAIN ENRICHMENT FUNCTION
 // ============================================================================
@@ -484,7 +528,8 @@ export function calculateOverallConfidence(enriched: EnrichedHandContext): numbe
  * @param context - Partial hand data from user input
  * @returns Enriched context with transparency metadata
  */
-export function enrichHandContext(context: HandContext): EnrichedHandContext {
+export async function enrichHandContext(context: HandContext): Promise<EnrichedHandContext> {
+
     // Step 1: Apply defaults
     let enriched = applyDefaults(context);
 
@@ -583,6 +628,87 @@ export function enrichHandContext(context: HandContext): EnrichedHandContext {
             });
         }
     }
+
+    // Step 3: Calculate parsing confidence
+    const parsingConfidence = calculateParsingConfidence(enriched);
+
+    // Step 4: LLM Fallback Trigger
+    const needsLLMFallback =
+        parsingConfidence < 50 ||
+        !enriched.heroPosition ||
+        !enriched.heroCards;
+
+    let isAiFallback = false;
+
+    if (needsLLMFallback && context.rawText && isLLMParsingEnabled()) {
+        console.log('[Parser] Low confidence (' + parsingConfidence + '%), trying LLM fallback...');
+
+        const llmResult = await parseWithLLM(context.rawText);
+
+        if (llmResult) {
+            isAiFallback = true;
+
+            // Merge: Only fill null/undefined fields
+            if (!enriched.heroPosition && llmResult.heroPosition) {
+                enriched.heroPosition = llmResult.heroPosition as Position;
+                enriched.assumptions.push({
+                    field: 'heroPosition',
+                    value: llmResult.heroPosition,
+                    source: 'AI_Inferred',
+                    confidence: 65,
+                    reasoning: 'Regex failed, AI detected pattern from context'
+                });
+            }
+
+            if (!enriched.heroCards && llmResult.heroCards) {
+                enriched.heroCards = llmResult.heroCards;
+                enriched.assumptions.push({
+                    field: 'heroCards',
+                    value: llmResult.heroCards,
+                    source: 'AI_Inferred',
+                    confidence: 65,
+                    reasoning: 'Regex failed, AI detected cards from story'
+                });
+            }
+
+            if (!enriched.villainPosition && llmResult.villainPosition) {
+                enriched.villainPosition = llmResult.villainPosition as Position;
+                enriched.assumptions.push({
+                    field: 'villainPosition',
+                    value: llmResult.villainPosition,
+                    source: 'AI_Inferred',
+                    confidence: 65,
+                    reasoning: 'AI detected opponent position'
+                });
+            }
+
+            if (!enriched.effectiveStack && llmResult.effectiveStack) {
+                enriched.effectiveStack = llmResult.effectiveStack;
+                enriched.assumptions.push({
+                    field: 'effectiveStack',
+                    value: llmResult.effectiveStack,
+                    source: 'AI_Inferred',
+                    confidence: 60,
+                    reasoning: 'AI detected stack size'
+                });
+            }
+
+            if (!enriched.scenario && llmResult.scenario) {
+                enriched.scenario = llmResult.scenario as 'opening' | 'facing_action' | 'postflop';
+                enriched.assumptions.push({
+                    field: 'scenario',
+                    value: llmResult.scenario,
+                    source: 'AI_Inferred',
+                    confidence: 70,
+                    reasoning: 'AI detected hand scenario type'
+                });
+            }
+        }
+    }
+
+    // Step 5: Add tracking fields
+    enriched.isAiFallback = isAiFallback;
+    enriched.parsingConfidence = parsingConfidence;
 
     return enriched;
 }

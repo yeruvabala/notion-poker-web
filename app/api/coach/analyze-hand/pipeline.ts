@@ -167,12 +167,12 @@ function extractVillainPosition(rawText: string, heroPosition: string): string {
  * - { type: 'facing_action', villain: position } - Hero faced a raise before their action
  */
 interface VillainContext {
-    type: 'opening' | 'sb_vs_bb' | 'facing_action';
+    type: 'opening' | 'facing_action' | 'sb_vs_bb' | 'vs_3bet' | 'vs_4bet';
     villain: string | null;
     villainName?: string;
 }
 
-function determineVillainContext(
+export function determineVillainContext(
     replayerData: any,
     heroPosition: string,
     heroName: string,
@@ -217,6 +217,23 @@ function determineVillainContext(
         const players = replayerData?.players || [];
         const raiserInfo = players.find((p: any) => p.name === raiserName);
         const villainPos = raiserInfo?.position || extractVillainPosition(rawText, heroPosition);
+
+        // Check if Hero 3-bet and now faces a 4-bet
+        const postHeroActions = actions.slice(heroActionIndex + 1);
+        const fourBetAction = postHeroActions.find((a: any) =>
+            a.street === 'preflop' &&
+            ['raises', 'raise', 'raiseTo', 'raiseto'].includes(a.action?.toLowerCase?.() || a.action)
+        );
+
+        if (fourBetAction) {
+            console.error(`[VillainContext] Hero 3-bet, then faced 4-bet from ${fourBetAction.player} - vs 4bet action`);
+            const fourBettorInfo = players.find((p: any) => p.name === fourBetAction.player);
+            return {
+                type: 'vs_4bet',
+                villain: fourBettorInfo?.position || villainPos, // Update villain if 4-bettor is different (unlikely in HU/short)
+                villainName: fourBetAction.player
+            };
+        }
 
         console.error(`[VillainContext] Hero faced raise from ${raiserName} (${villainPos})`);
         return {
@@ -263,9 +280,9 @@ function determineVillainContext(
         const threeBettorInfo = players.find((p: any) => p.name === threeBetAction.player);
         const villainPos = threeBettorInfo?.position || extractVillainPosition(rawText, heroPosition);
 
-        console.error(`[VillainContext] Hero raised, ${threeBetAction.player} (${villainPos}) 3-bet - facing action`);
+        console.error(`[VillainContext] Hero raised, ${threeBetAction.player} (${villainPos}) 3-bet - vs 3bet action`);
         return {
-            type: 'facing_action',
+            type: 'vs_3bet',
             villain: villainPos,
             villainName: threeBetAction.player
         };
