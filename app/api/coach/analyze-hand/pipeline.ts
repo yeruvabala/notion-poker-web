@@ -859,7 +859,7 @@ function correctPositionHallucinations(
     text: string,
     heroPos: string,
     villainPos: string,
-    villainContext?: { type: 'opening' | 'sb_vs_bb' | 'facing_action'; villainName?: string }
+    villainContext?: { type: 'opening' | 'sb_vs_bb' | 'facing_action' | 'vs_3bet' | 'vs_4bet'; villainName?: string }
 ): string {
     // For OPENING scenarios from late position, Hero is IN POSITION against blinds
     if (villainContext?.type === 'opening') {
