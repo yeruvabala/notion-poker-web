@@ -524,7 +524,30 @@ export default function HomeClient() {
   const [pendingRiverAmount, setPendingRiverAmount] = useState<string>('');
 
   // Determine first actor postflop (OOP acts first)
+  // Determine first actor postflop (OOP acts first)
   const getFirstActorPostflop = (): 'H' | 'V' => {
+    // Special HU Logic: SB is Button, acts LAST postflop. BB acts FIRST.
+    if (tableFormat === 'HU') {
+      const heroPos = position || 'SB';
+      const villainPos = villainPosition || 'BB';
+
+      // If Hero is active (SB/low index) and Villain is BB (high index), SB acts LAST.
+      // So if Hero=SB (Index 0), Villain=BB (Index 1) => Hero acts LAST ('V').
+      // Logic: In HU, LOWER index (SB) acts LAST. HIGHER index (BB) acts FIRST.
+      // Standard: Lower acts First.
+      // HU: Lower acts Last.
+
+      const positionOrder = ['SB', 'BB']; // Just need relative order
+      const heroIndex = positionOrder.indexOf(heroPos) === -1 ? 0 : positionOrder.indexOf(heroPos); // Default to SB (0) if not found
+      const villainIndex = positionOrder.indexOf(villainPos) === -1 ? 1 : positionOrder.indexOf(villainPos); // Default to BB (1) if not found
+
+      // If Hero is SB (0) and Villain is BB (1):
+      // Hero (0) < Villain (1). We want Hero to act LAST ('V').
+      // So condition: if Hero < Villain => 'V' (Villain acts first).
+      return heroIndex < villainIndex ? 'V' : 'H';
+    }
+
+    // Standard Ring Game Logic
     const positionOrder = ['SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 'MP', 'HJ', 'CO', 'BTN'];
     const heroPos = position || 'BTN';
     const villainPos = villainPosition || 'BB';
