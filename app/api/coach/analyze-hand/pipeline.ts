@@ -805,7 +805,7 @@ interface FormatInput {
     positions?: any;              // Position type
     actions?: any[];
     villainContext?: {
-        type: 'opening' | 'sb_vs_bb' | 'facing_action';
+        type: 'opening' | 'sb_vs_bb' | 'facing_action' | 'vs_3bet' | 'vs_4bet';
         villain?: string;
         villainName?: string;
     };

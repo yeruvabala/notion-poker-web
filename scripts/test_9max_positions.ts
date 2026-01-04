@@ -98,39 +98,42 @@ console.log('='.repeat(60));
 let passed = 0;
 let failed = 0;
 
-for (const test of testCases) {
-    console.log(`\n📝 ${test.name}`);
-    console.log(`Input: "${test.input.rawText}"`);
 
-    try {
-        const enriched = enrichHandContext(test.input as any);
+(async () => {
+    for (const test of testCases) {
+        console.log(`\n📝 ${test.name}`);
+        console.log(`Input: "${test.input.rawText}"`);
 
-        // Check hero position
-        if (test.expect.heroPosition) {
-            if (enriched.heroPosition === test.expect.heroPosition) {
-                console.log(`  ✅ Position: ${enriched.heroPosition}`);
-                passed++;
-            } else {
-                console.log(`  ❌ Position: Expected "${test.expect.heroPosition}", got "${enriched.heroPosition}"`);
-                failed++;
+        try {
+            const enriched = await enrichHandContext(test.input as any);
+
+            // Check hero position
+            if (test.expect.heroPosition) {
+                if (enriched.heroPosition === test.expect.heroPosition) {
+                    console.log(`  ✅ Position: ${enriched.heroPosition}`);
+                    passed++;
+                } else {
+                    console.log(`  ❌ Position: Expected "${test.expect.heroPosition}", got "${enriched.heroPosition}"`);
+                    failed++;
+                }
             }
-        }
 
-        // Show assumptions
-        console.log(`  📊 Assumptions (${enriched.assumptions.length}):`);
-        for (const assumption of enriched.assumptions.slice(0, 2)) {
-            console.log(`    - ${assumption.field}: ${assumption.value} (${assumption.confidence}%)`);
-        }
+            // Show assumptions
+            console.log(`  📊 Assumptions (${enriched.assumptions.length}):`);
+            for (const assumption of enriched.assumptions.slice(0, 2)) {
+                console.log(`    - ${assumption.field}: ${assumption.value} (${assumption.confidence}%)`);
+            }
 
-    } catch (error: any) {
-        console.log(`  💥 Error: ${error.message}`);
-        failed++;
+        } catch (error: any) {
+            console.log(`  💥 Error: ${error.message}`);
+            failed++;
+        }
     }
-}
 
-console.log('\n' + '='.repeat(60));
-console.log(`\n📊 Results: ${passed} passed, ${failed} failed`);
-console.log(`Success rate: ${Math.round((passed / (passed + failed)) * 100)}%\n`);
+    console.log('\n' + '='.repeat(60));
+    console.log(`\n📊 Results: ${passed} passed, ${failed} failed`);
+    console.log(`Success rate: ${Math.round((passed / (passed + failed)) * 100)}%\n`);
+})();
 
 // Also test that normalization works correctly for ranges
 console.log('\n🔄 Testing Range Normalization:\n');

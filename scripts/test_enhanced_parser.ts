@@ -73,47 +73,50 @@ console.log('='.repeat(60));
 let passed = 0;
 let failed = 0;
 
-for (const test of testCases) {
-    console.log(`\n📝 ${test.name}`);
-    console.log(`Input: "${test.input.rawText}"`);
 
-    try {
-        const enriched = enrichHandContext(test.input as any);
+(async () => {
+    for (const test of testCases) {
+        console.log(`\n📝 ${test.name}`);
+        console.log(`Input: "${test.input.rawText}"`);
 
-        // Check hero cards
-        if (test.expect.heroCards) {
-            if (enriched.heroCards === test.expect.heroCards) {
-                console.log(`  ✅ Cards: ${enriched.heroCards}`);
-                passed++;
-            } else {
-                console.log(`  ❌ Cards: Expected "${test.expect.heroCards}", got "${enriched.heroCards}"`);
-                failed++;
+        try {
+            const enriched = await enrichHandContext(test.input as any);
+
+            // Check hero cards
+            if (test.expect.heroCards) {
+                if (enriched.heroCards === test.expect.heroCards) {
+                    console.log(`  ✅ Cards: ${enriched.heroCards}`);
+                    passed++;
+                } else {
+                    console.log(`  ❌ Cards: Expected "${test.expect.heroCards}", got "${enriched.heroCards}"`);
+                    failed++;
+                }
             }
-        }
 
-        // Check scenario
-        if (test.expect.scenario) {
-            if (enriched.scenario === test.expect.scenario) {
-                console.log(`  ✅ Scenario: ${enriched.scenario}`);
-                passed++;
-            } else {
-                console.log(`  ❌ Scenario: Expected "${test.expect.scenario}", got "${enriched.scenario}"`);
-                failed++;
+            // Check scenario
+            if (test.expect.scenario) {
+                if (enriched.scenario === test.expect.scenario) {
+                    console.log(`  ✅ Scenario: ${enriched.scenario}`);
+                    passed++;
+                } else {
+                    console.log(`  ❌ Scenario: Expected "${test.expect.scenario}", got "${enriched.scenario}"`);
+                    failed++;
+                }
             }
-        }
 
-        // Show all assumptions
-        console.log(`  📊 Assumptions (${enriched.assumptions.length}):`);
-        for (const assumption of enriched.assumptions.slice(0, 3)) {
-            console.log(`    - ${assumption.field}: ${assumption.value} (${assumption.confidence}% ${assumption.source})`);
-        }
+            // Show all assumptions
+            console.log(`  📊 Assumptions (${enriched.assumptions.length}):`);
+            for (const assumption of enriched.assumptions.slice(0, 3)) {
+                console.log(`    - ${assumption.field}: ${assumption.value} (${assumption.confidence}% ${assumption.source})`);
+            }
 
-    } catch (error: any) {
-        console.log(`  💥 Error: ${error.message}`);
-        failed++;
+        } catch (error: any) {
+            console.log(`  💥 Error: ${error.message}`);
+            failed++;
+        }
     }
-}
 
-console.log('\n' + '='.repeat(60));
-console.log(`\n📊 Results: ${passed} passed, ${failed} failed`);
-console.log(`Success rate: ${Math.round((passed / (passed + failed)) * 100)}%\n`);
+    console.log('\n' + '='.repeat(60));
+    console.log(`\n📊 Results: ${passed} passed, ${failed} failed`);
+    console.log(`Success rate: ${Math.round((passed / (passed + failed)) * 100)}%\n`);
+})();
