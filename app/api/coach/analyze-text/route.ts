@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
         // ════════════════════════════════════════════════════════════
         // STEP 1: Validate Input
         // ════════════════════════════════════════════════════════════
-        const { raw_text, date, stakes, position, villain_position, cards, board, notes, action_type, table_format, effective_stack, preflop_actions, pot_size } = body;
+        const { raw_text, date, stakes, position, villain_position, cards, board, board_cards, notes, action_type, table_format, effective_stack, preflop_actions, flop_actions, turn_actions, river_actions, pot_size } = body;
 
         if (!raw_text || raw_text.length < 20) {
             return NextResponse.json(
@@ -104,10 +104,15 @@ export async function POST(req: NextRequest) {
             villainPosition: villain_position,
             cards,
             board,
+            boardCards: board_cards, // Structured board array from UI
             boardRanks,
             actionType: action_type,
             preflopActions: preflop_actions,
-            potSize: pot_size
+            flopActions: flop_actions, // Postflop actions
+            turnActions: turn_actions,
+            riverActions: river_actions,
+            potSize: pot_size,
+            stakes
         });
 
         // Validate structure

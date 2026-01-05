@@ -897,24 +897,31 @@ export default function HomeClient() {
     }
 
     try {
+      // Build structured board from individual card fields
+      const boardCards = [f1, f2, f3, tr, rv].filter(Boolean);
+
       // Use CAPTURED data from preview (parsed from input text)
       const payload = {
         date: today,
-        stakes: capturedStakes || undefined,
+        stakes: stakes || capturedStakes || undefined, // Include stakes for future SPR/range adjustments
         position: capturedPosition || undefined,
-        villain_position: villainPosition || undefined, // NEW: Villain position from Advanced Options
+        villain_position: villainPosition || undefined, // Villain position from Advanced Options
         cards: capturedHeroCards || undefined,
         board: capturedBoard || undefined,
+        board_cards: boardCards.length > 0 ? boardCards : undefined, // Structured board array
         notes: currentInput || undefined,
         raw_text: currentInput || undefined, // API expects snake_case
         fe_hint: feNeeded || undefined,
         spr_hint: spr || undefined,
         action_hint: capturedActionHint || undefined,
-        action_type: actionType || undefined, // NEW: User-selected action type from Advanced Options
-        table_format: tableFormat || undefined, // NEW: Table format (HU/6max/9max)
-        effective_stack: eff || undefined, // NEW: Effective Stack from input
-        preflop_actions: preflopActions.length > 0 ? preflopActions : undefined, // NEW: Explicit preflop action chain
-        pot_size: preflopActions.length > 0 ? calculatePot(preflopActions) : undefined, // NEW: Calculated pot from actions
+        action_type: actionType || undefined, // User-selected action type from Advanced Options
+        table_format: tableFormat || undefined, // Table format (HU/6max/9max)
+        effective_stack: eff || undefined, // Effective Stack from input
+        preflop_actions: preflopActions.length > 0 ? preflopActions : undefined, // Explicit preflop action chain
+        flop_actions: flopActions.length > 0 ? flopActions : undefined, // Postflop: Flop actions
+        turn_actions: turnActions.length > 0 ? turnActions : undefined, // Postflop: Turn actions
+        river_actions: riverActions.length > 0 ? riverActions : undefined, // Postflop: River actions
+        pot_size: (preflopActions.length > 0 || flopActions.length > 0) ? calculateTotalPot() : undefined, // Full pot calculation
         hand_class: undefined, // Recalculated by API
         source_used: 'STORY' // Using preview which parses from story
       };

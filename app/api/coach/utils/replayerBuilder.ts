@@ -49,15 +49,23 @@ export interface Action {
  * Already literal → pass through
  */
 function convertShorthandToLiteral(cardStr: string): string[] {
-    // Already has suits (literal format) - pass through
-    if (/[♠♥♦♣shdc]/.test(cardStr)) {
-        return cardStr.split(/\s+/).filter(c => c.length >= 2);
+    console.log('[convertShorthandToLiteral] Input:', cardStr);
+
+    // Already has UNICODE suits (literal format) - pass through
+    // Match ♠♥♦♣ only, NOT letter suits like 's' 'h' 'd' 'c' (those need conversion too)
+    if (/[♠♥♦♣]/.test(cardStr)) {
+        const result = cardStr.split(/\s+/).filter(c => c.length >= 2);
+        console.log('[convertShorthandToLiteral] Detected unicode suit, result:', result);
+        return result;
     }
 
     // Shorthand format: "KJs", "AKo", "99"
     const match = cardStr.match(/^([AKQJT2-9])([AKQJT2-9])([so])?$/i);
+    console.log('[convertShorthandToLiteral] Shorthand match:', match);
+
     if (!match) {
         // Not recognized format, return as-is
+        console.log('[convertShorthandToLiteral] No match, returning as-is');
         return [cardStr];
     }
 
@@ -65,11 +73,15 @@ function convertShorthandToLiteral(cardStr: string): string[] {
 
     // Suited (or not specified, default to suited for variety)
     if (suitedness === 's' || !suitedness) {
-        return [`${rank1}♠`, `${rank2}♠`]; // Same suit
+        const result = [`${rank1.toUpperCase()}♠`, `${rank2.toUpperCase()}♠`]; // Same suit
+        console.log('[convertShorthandToLiteral] Suited result:', result);
+        return result;
     }
 
     // Offsuit
-    return [`${rank1}♠`, `${rank2}♥`]; // Different suits
+    const result = [`${rank1.toUpperCase()}♠`, `${rank2.toUpperCase()}♥`]; // Different suits
+    console.log('[convertShorthandToLiteral] Offsuit result:', result);
+    return result;
 }
 
 /**
@@ -88,10 +100,15 @@ export function buildReplayerData(
         villainPosition?: string;
         cards?: string;
         board?: string;
+        boardCards?: string[]; // Structured board array from UI (e.g., ["K♠", "Q♥", "3♦"])
         boardRanks?: string[];
         actionType?: string;
         preflopActions?: { player: 'H' | 'V'; action: string; amount?: number }[];
+        flopActions?: { player: 'H' | 'V'; action: string; amount?: number }[];
+        turnActions?: { player: 'H' | 'V'; action: string; amount?: number }[];
+        riverActions?: { player: 'H' | 'V'; action: string; amount?: number }[];
         potSize?: number;
+        stakes?: string;
     }
 ): ReplayerData {
 
@@ -103,15 +120,23 @@ export function buildReplayerData(
         ? convertShorthandToLiteral(visibleCards)
         : [];
 
+
     // ════════════════════════════════════════════════════════════
-    // STEP 2: Build Board with Rainbow Suits
+    // STEP 2: Build Board
     // ════════════════════════════════════════════════════════════
-    // Avoid false monotone classification by using different suits
-    const rainbowSuits = ['♠', '♥', '♦', '♣'];
-    const boardRanks = hints?.boardRanks || [];
-    const boardCards = boardRanks.length > 0
-        ? boardRanks.map((rank, idx) => `${rank}${rainbowSuits[idx % 4]}`)
-        : [];
+    // Priority: 1) Structured boardCards from UI (already has suits)
+    //           2) boardRanks (need to assign rainbow suits)
+    let boardCards: string[] = [];
+
+    if (hints?.boardCards && hints.boardCards.length > 0) {
+        // Use structured board cards directly from UI (e.g., ["K♠", "Q♥", "3♦"])
+        boardCards = hints.boardCards;
+        console.log('[ReplayerBuilder] Using structured boardCards from UI:', boardCards);
+    } else if (hints?.boardRanks && hints.boardRanks.length > 0) {
+        // Fallback: Assign rainbow suits to ranks
+        const rainbowSuits = ['♠', '♥', '♦', '♣'];
+        boardCards = hints.boardRanks.map((rank, idx) => `${rank}${rainbowSuits[idx % 4]}`);
+    }
 
     // ════════════════════════════════════════════════════════════
     // STEP 3: Determine Street
@@ -242,6 +267,60 @@ export function buildReplayerData(
                 amount: null,
                 street: 'flop',
                 decision: 'facing_bet'
+            });
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // STEP 4b: Add Explicit Postflop Actions from UI
+    // ════════════════════════════════════════════════════════════
+    // Helper to map UI actions to replayer format
+    const mapPostflopAction = (action: string): string => {
+        switch (action) {
+            case 'check': return 'checks';
+            case 'bet': return 'bets';
+            case 'call': return 'calls';
+            case 'raise': return 'raises';
+            case 'fold': return 'folds';
+            default: return action;
+        }
+    };
+
+    // Add flop actions
+    if (hints?.flopActions && hints.flopActions.length > 0) {
+        console.log('[ReplayerBuilder] Using explicit flopActions:', hints.flopActions);
+        for (const act of hints.flopActions) {
+            replayerActions.push({
+                player: act.player === 'H' ? 'Hero' : 'Villain',
+                action: mapPostflopAction(act.action),
+                amount: act.amount || null,
+                street: 'flop'
+            });
+        }
+    }
+
+    // Add turn actions
+    if (hints?.turnActions && hints.turnActions.length > 0) {
+        console.log('[ReplayerBuilder] Using explicit turnActions:', hints.turnActions);
+        for (const act of hints.turnActions) {
+            replayerActions.push({
+                player: act.player === 'H' ? 'Hero' : 'Villain',
+                action: mapPostflopAction(act.action),
+                amount: act.amount || null,
+                street: 'turn'
+            });
+        }
+    }
+
+    // Add river actions
+    if (hints?.riverActions && hints.riverActions.length > 0) {
+        console.log('[ReplayerBuilder] Using explicit riverActions:', hints.riverActions);
+        for (const act of hints.riverActions) {
+            replayerActions.push({
+                player: act.player === 'H' ? 'Hero' : 'Villain',
+                action: mapPostflopAction(act.action),
+                amount: act.amount || null,
+                street: 'river'
             });
         }
     }
