@@ -1,5 +1,12 @@
 import './globals.css';
 import AuthSync from '@/components/AuthSync';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
 export const metadata = {
   title: 'Only Poker',
@@ -12,7 +19,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <body className="min-h-screen bg-[#1c1c1c] text-[#E2E8F0] antialiased">
         <AuthSync />
         {children}

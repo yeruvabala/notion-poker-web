@@ -54,7 +54,20 @@ function convertShorthandToLiteral(cardStr: string): string[] {
     // Already has UNICODE suits (literal format) - pass through
     // Match ♠♥♦♣ only, NOT letter suits like 's' 'h' 'd' 'c' (those need conversion too)
     if (/[♠♥♦♣]/.test(cardStr)) {
-        const result = cardStr.split(/\s+/).filter(c => c.length >= 2);
+        // First try splitting by whitespace
+        let result = cardStr.split(/\s+/).filter(c => c.length >= 2);
+
+        // If only 1 result and it's 4+ chars (e.g., "A♠Q♠"), split into individual cards
+        // Unicode suits are 1 char, so each card is 2 chars (rank + suit)
+        if (result.length === 1 && result[0].length >= 4) {
+            // Match all cards in format: rank (1 char) + suit (unicode symbol)
+            const cardPattern = /[AKQJT2-9][♠♥♦♣]/gi;
+            const matches = result[0].match(cardPattern);
+            if (matches && matches.length >= 2) {
+                result = matches.map(c => c.toUpperCase());
+            }
+        }
+
         console.log('[convertShorthandToLiteral] Detected unicode suit, result:', result);
         return result;
     }

@@ -191,12 +191,12 @@ export class MistakeClassifier {
             if (isIP) {
                 const villainChecked = ['check', 'bet'].includes(action);
                 const gtoRec = villainChecked
-                    ? gtoStrategy.flop.if_villain_checks_to_hero
-                    : gtoStrategy.flop.if_villain_bets_into_hero;
+                    ? gtoStrategy.flop.if_villain_checks
+                    : gtoStrategy.flop.if_villain_bets;
                 addDecision('flop', villainChecked ? 'vs_check' : 'vs_bet', action, gtoRec);
 
                 if (heroActions.flop.second) {
-                    addDecision('flop', 'vs_raise', heroActions.flop.second.action, gtoStrategy.flop.if_bet_and_villain_raises);
+                    addDecision('flop', 'vs_raise', heroActions.flop.second.action, gtoStrategy.flop.if_hero_bets_and_villain_raises);
                 }
             } else {
                 addDecision('flop', 'initial_action', action, gtoStrategy.flop.initial_action);
@@ -217,12 +217,12 @@ export class MistakeClassifier {
             if (isIP) {
                 const villainChecked = ['check', 'bet'].includes(action);
                 const gtoRec = villainChecked
-                    ? gtoStrategy.turn.if_villain_checks_to_hero
-                    : gtoStrategy.turn.if_villain_bets_into_hero;
+                    ? gtoStrategy.turn.if_villain_checks
+                    : gtoStrategy.turn.if_villain_bets;
                 addDecision('turn', villainChecked ? 'vs_check' : 'vs_bet', action, gtoRec);
 
                 if (heroActions.turn.second) {
-                    addDecision('turn', 'vs_raise', heroActions.turn.second.action, gtoStrategy.turn.if_bet_and_villain_raises);
+                    addDecision('turn', 'vs_raise', heroActions.turn.second.action, gtoStrategy.turn.if_hero_bets_and_villain_raises);
                 }
             } else {
                 addDecision('turn', 'initial_action', action, gtoStrategy.turn.initial_action);
@@ -243,12 +243,12 @@ export class MistakeClassifier {
             if (isIP) {
                 const villainChecked = ['check', 'bet'].includes(action);
                 const gtoRec = villainChecked
-                    ? gtoStrategy.river.if_villain_checks_to_hero
-                    : gtoStrategy.river.if_villain_bets_into_hero;
+                    ? gtoStrategy.river.if_villain_checks
+                    : gtoStrategy.river.if_villain_bets;
                 addDecision('river', villainChecked ? 'vs_check' : 'vs_bet', action, gtoRec);
 
                 if (heroActions.river.second) {
-                    addDecision('river', 'vs_raise', heroActions.river.second.action, gtoStrategy.river.if_bet_and_villain_raises);
+                    addDecision('river', 'vs_raise', heroActions.river.second.action, gtoStrategy.river.if_hero_bets_and_villain_raises);
                 }
             } else {
                 addDecision('river', 'initial_action', action, gtoStrategy.river.initial_action);

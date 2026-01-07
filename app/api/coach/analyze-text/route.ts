@@ -39,27 +39,35 @@ export async function POST(req: NextRequest) {
         // ════════════════════════════════════════════════════════════
         const { raw_text, date, stakes, position, villain_position, cards, board, board_cards, notes, action_type, table_format, effective_stack, preflop_actions, flop_actions, turn_actions, river_actions, pot_size } = body;
 
-        if (!raw_text || raw_text.length < 20) {
+        // Check if we have enough data from Advanced Options (cards + preflop actions)
+        const hasAdvancedOptionsData = cards && cards.length >= 2 && preflop_actions && preflop_actions.length > 0;
+
+        // Require either story text OR Advanced Options data
+        if ((!raw_text || raw_text.length < 20) && !hasAdvancedOptionsData) {
             return NextResponse.json(
-                { error: 'Hand story too short (minimum 20 characters)' },
+                { error: 'Hand story too short (minimum 20 characters) or use Advanced Options with hero cards and actions' },
                 { status: 400 }
             );
         }
 
-        console.log('[Text API] Processing text input:', {
-            textLength: raw_text.length,
+        // Use a placeholder text if only Advanced Options data is provided
+        const effectiveText = (raw_text && raw_text.length >= 20) ? raw_text : `Hero holds ${cards} and plays from ${position || 'BTN'}`;
+
+        console.log('[Text API] Processing input:', {
+            textLength: effectiveText.length,
             hasPosition: !!position,
             hasCards: !!cards,
             hasBoard: !!board,
             actionType: action_type,
-            stack: effective_stack
+            stack: effective_stack,
+            usingAdvancedOptions: hasAdvancedOptionsData && (!raw_text || raw_text.length < 20)
         });
 
         // ════════════════════════════════════════════════════════════
         // STEP 2: Enrich Context (Fallbacks & Inference)
         // ════════════════════════════════════════════════════════════
         const enriched = await enrichHandContext({
-            rawText: raw_text,
+            rawText: effectiveText,
             heroPosition: position || undefined,
             heroCards: cards || undefined,
             effectiveStack: effective_stack ? Number(effective_stack) : 100,
@@ -99,7 +107,7 @@ export async function POST(req: NextRequest) {
         // ════════════════════════════════════════════════════════════
         // STEP 4: Build Replayer Data
         // ════════════════════════════════════════════════════════════
-        const replayerData = buildReplayerData(raw_text, enriched, {
+        const replayerData = buildReplayerData(effectiveText, enriched, {
             position,
             villainPosition: villain_position,
             cards,
@@ -124,13 +132,48 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        console.log('[Text API] Built replayer_data:', {
+        // COMPREHENSIVE DEBUG LOG: Verify ALL parsed values
+        console.error('[🔍 DEBUG - Complete Replayer Data]', JSON.stringify({
+            // Hero Info
             heroPosition: replayerData.players[0].position,
+            heroCards: replayerData.players[0].cards,
+            heroStack: replayerData.players[0].stack,
+
+            // Villain Info
             villainPosition: replayerData.players[1].position,
+            villainPositionHint: villain_position,
+
+            // Board Cards by Street
             board: replayerData.board,
+            flop: replayerData.board.slice(0, 3),
+            turn: replayerData.board[3] || null,
+            river: replayerData.board[4] || null,
             street: replayerData.street,
-            actionsCount: replayerData.actions.length
-        });
+
+            // Pot & Blinds
+            pot: replayerData.pot,
+            sb: replayerData.sb,
+            bb: replayerData.bb,
+
+            // Actions
+            actionsCount: replayerData.actions.length,
+            actions: replayerData.actions,
+
+            // UI Hints Received
+            hints: {
+                cards: cards,
+                board: board,
+                board_cards: board_cards,
+                position: position,
+                villain_position: villain_position,
+                action_type: action_type,
+                preflop_actions: preflop_actions,
+                flop_actions: flop_actions,
+                turn_actions: turn_actions,
+                river_actions: river_actions,
+                pot_size: pot_size
+            }
+        }, null, 2));
 
         // ════════════════════════════════════════════════════════════
         // STEP 5: Transform to Agent Input (Same as Old Flow)
@@ -144,7 +187,7 @@ export async function POST(req: NextRequest) {
 
         const pipelineInput = transformToAgentInput({
             replayer_data: replayerData,
-            raw_text,
+            raw_text: effectiveText,
             hand_id: 'text_input',
             parsed: {
                 position,

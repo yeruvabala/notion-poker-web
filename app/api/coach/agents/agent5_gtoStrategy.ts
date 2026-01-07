@@ -22,7 +22,7 @@ import {
 } from '../types/agentContracts';
 import { getHandType } from '../utils/handUtils';
 import { evaluateHand } from '../utils/handEvaluator';
-import { getPreflopAction, getOpeningAction, getVs3BetAction, normalizeHand } from '../utils/gtoRanges';
+import { getPreflopAction, getOpeningAction, getVs3BetAction, getFacingOpenAction, normalizeHand } from '../utils/gtoRanges';
 import { generatePreflopReasoning } from '../utils/PreflopReasoningEngine';
 
 const openai = new OpenAI({
@@ -478,14 +478,59 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
     const heroPosition = input.positions?.hero || '';
 
 
+
     // Detect if this is an RFI -> vs 3-bet scenario
     const preflopActions = input.actions.filter(a => a.street === 'preflop');
     const heroFirstAction = preflopActions.find(a => a.player === 'hero');
-    const heroOpened = heroFirstAction && (heroFirstAction.action === 'raise' || heroFirstAction.action === 'bet');
+    const heroRaised = heroFirstAction && (heroFirstAction.action === 'raise' || heroFirstAction.action === 'bet');
 
-    // Check if we faced a 3-bet (villain raised after us)
-    // Heuristic: villainContext is 'facing_action' AND we opened
-    const isVs3Bet = input.villainContext?.type === 'facing_action' && heroOpened;
+    // Check if villain raised BEFORE hero's action (hero is facing an open)
+    const villainRaises = preflopActions.filter(a => a.player === 'villain' && (a.action === 'raise' || a.action === 'bet'));
+    const heroActionIndex = preflopActions.findIndex(a => a.player === 'hero');
+    const villainRaisedBeforeHero = villainRaises.some((_, i) => {
+        const villainIdx = preflopActions.findIndex(a => a === villainRaises[i]);
+        return villainIdx < heroActionIndex;
+    });
+
+    // CASE 1: Hero is the 3-BETTOR (villain opened, Hero 3-bet)
+    // Uses THREE_BET_RANGES via getFacingOpenAction
+    const isHeroThe3Bettor = heroRaised && villainRaisedBeforeHero &&
+        input.villainContext?.type === 'facing_action';
+
+    if (isHeroThe3Bettor) {
+        const villainPosition = input.villainContext?.villain || input.positions?.villain || '';
+        console.error(`[Agent5] Hero is the 3-BETTOR! ${heroPosition} 3-betting ${villainPosition} open`);
+
+        // Use getFacingOpenAction which looks up THREE_BET_RANGES
+        const threeBetResult = getFacingOpenAction(heroHand, heroPosition, villainPosition);
+
+        if (!threeBetResult.found) return null;
+
+        // Build strategy with 3-bet as the action (NOT "initial_action")
+        const actionName = threeBetResult.action.action === '3bet' ? 'raise' : threeBetResult.action.action;
+        const reasoning = generatePreflopReasoning(heroHand, actionName as any, heroPosition, villainPosition, threeBetResult.action.frequency);
+
+        return {
+            preflop: {
+                // Use initial_action but the label will be corrected in formatOutput
+                initial_action: {
+                    primary: {
+                        action: actionName as any,
+                        sizing: threeBetResult.action.sizing || '3x',
+                        frequency: threeBetResult.action.frequency,
+                        reasoning: reasoning
+                    }
+                },
+                // Mark that this is a 3-bet scenario for formatOutput
+                _hero_is_3bettor: true
+            }
+        };
+    }
+
+    // CASE 2: Hero OPENED and villain 3-bet us (uses VS_THREE_BET_RANGES)
+    // This is the ORIGINAL logic
+    const heroOpenedFirst = heroRaised && !villainRaisedBeforeHero;
+    const isVs3Bet = input.villainContext?.type === 'vs_3bet' && heroOpenedFirst;
 
     if (isVs3Bet) {
         // 1. Get Opening Action (Initial)
@@ -575,7 +620,7 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
     const villainContextForRanges = input.villainContext
         ? {
             type: input.villainContext.type,
-            villain: input.villainContext.villainName || null
+            villain: input.villainContext.villain || null  // FIXED: Use .villain (position) not .villainName
         }
         : undefined;
 
@@ -853,7 +898,7 @@ function createFallbackStrategy(input: Agent5Input): GTOStrategy {
     const villainContextForRanges = input.villainContext
         ? {
             type: input.villainContext.type,
-            villain: input.villainContext.villainName || null
+            villain: input.villainContext.villain || null  // FIXED: Use .villain (position) not .villainName
         }
         : undefined;
 

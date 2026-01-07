@@ -148,15 +148,15 @@ function buildComparisonPrompt(
             const villainChecked = ['check', 'bet'].includes(action);
 
             if (villainChecked) {
-                formatGtoRec(gtoStrategy.flop.if_villain_checks_to_hero, "GTO (vs Check)");
+                formatGtoRec(gtoStrategy.flop.if_villain_checks, "GTO (vs Check)");
             } else {
-                formatGtoRec(gtoStrategy.flop.if_villain_bets_into_hero, "GTO (vs Bet)");
+                formatGtoRec(gtoStrategy.flop.if_villain_bets, "GTO (vs Bet)");
             }
 
             // Second action (Hero Bets -> Villain Raises -> Hero Respond)
             if (heroActions.flop.second) {
                 lines.push(`  Hero second action: ${heroActions.flop.second.action}`);
-                formatGtoRec(gtoStrategy.flop.if_bet_and_villain_raises, "GTO (vs Raise)");
+                formatGtoRec(gtoStrategy.flop.if_hero_bets_and_villain_raises, "GTO (vs Raise)");
             }
 
         } else {
@@ -185,14 +185,14 @@ function buildComparisonPrompt(
             const villainChecked = ['check', 'bet'].includes(action);
 
             if (villainChecked) {
-                formatGtoRec(gtoStrategy.turn.if_villain_checks_to_hero, "GTO (vs Check)");
+                formatGtoRec(gtoStrategy.turn.if_villain_checks, "GTO (vs Check)");
             } else {
-                formatGtoRec(gtoStrategy.turn.if_villain_bets_into_hero, "GTO (vs Bet)");
+                formatGtoRec(gtoStrategy.turn.if_villain_bets, "GTO (vs Bet)");
             }
 
             if (heroActions.turn.second) {
                 lines.push(`  Hero second action: ${heroActions.turn.second.action}`);
-                formatGtoRec(gtoStrategy.turn.if_bet_and_villain_raises, "GTO (vs Raise)");
+                formatGtoRec(gtoStrategy.turn.if_hero_bets_and_villain_raises, "GTO (vs Raise)");
             }
         } else {
             const turnInitial = gtoStrategy.turn.initial_action;
@@ -219,14 +219,14 @@ function buildComparisonPrompt(
             const villainChecked = ['check', 'bet'].includes(action);
 
             if (villainChecked) {
-                formatGtoRec(gtoStrategy.river.if_villain_checks_to_hero, "GTO (vs Check)");
+                formatGtoRec(gtoStrategy.river.if_villain_checks, "GTO (vs Check)");
             } else {
-                formatGtoRec(gtoStrategy.river.if_villain_bets_into_hero, "GTO (vs Bet)");
+                formatGtoRec(gtoStrategy.river.if_villain_bets, "GTO (vs Bet)");
             }
 
             if (heroActions.river.second) {
                 lines.push(`  Hero second action: ${heroActions.river.second.action}`);
-                formatGtoRec(gtoStrategy.river.if_bet_and_villain_raises, "GTO (vs Raise)");
+                formatGtoRec(gtoStrategy.river.if_hero_bets_and_villain_raises, "GTO (vs Raise)");
             }
         } else {
             const riverInitial = gtoStrategy.river.initial_action;

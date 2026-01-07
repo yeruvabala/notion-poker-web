@@ -569,6 +569,60 @@ const THREE_BET_RANGES: Record<string, Record<string, Record<string, number>>> =
             'AQo': 0.4, 'AJo': 0.8, 'KQo': 0.8,
         },
     },
+
+    // =========================================================================
+    // ADDED: 3 Missing THREE_BET_RANGES for Hero 3-betting early opens
+    // =========================================================================
+
+    // HJ 3-betting vs UTG open (very tight - UTG has strong range)
+    'HJ_vs_UTG': {
+        '3bet': {
+            'AA': 1.0, 'KK': 1.0, 'QQ': 0.6,
+            'AKs': 1.0, 'AQs': 0.4,
+            'AKo': 0.8,
+            'A5s': 0.3, // Occasional blocker 3-bet
+        },
+        'call': {
+            'QQ': 0.4, 'JJ': 1.0, 'TT': 1.0, '99': 0.8, '88': 0.6,
+            'AQs': 0.6, 'AJs': 1.0, 'ATs': 0.8,
+            'KQs': 1.0, 'KJs': 0.8, 'QJs': 0.7, 'JTs': 0.6,
+            'AKo': 0.2, 'AQo': 0.5,
+        },
+    },
+
+    // CO 3-betting vs UTG open (tight - UTG is strong)
+    'CO_vs_UTG': {
+        '3bet': {
+            'AA': 1.0, 'KK': 1.0, 'QQ': 0.8, 'JJ': 0.3,
+            'AKs': 1.0, 'AQs': 0.5,
+            'AKo': 1.0, 'AQo': 0.3,
+            'A5s': 0.4, 'A4s': 0.2,
+        },
+        'call': {
+            'QQ': 0.2, 'JJ': 0.7, 'TT': 1.0, '99': 1.0, '88': 0.8, '77': 0.6,
+            'AQs': 0.5, 'AJs': 1.0, 'ATs': 1.0, 'A9s': 0.6,
+            'KQs': 1.0, 'KJs': 1.0, 'KTs': 0.8,
+            'QJs': 1.0, 'QTs': 0.7, 'JTs': 1.0, 'T9s': 0.8,
+            'AQo': 0.7, 'AJo': 0.5, 'KQo': 0.8,
+        },
+    },
+
+    // CO 3-betting vs HJ open (slightly wider than vs UTG)
+    'CO_vs_HJ': {
+        '3bet': {
+            'AA': 1.0, 'KK': 1.0, 'QQ': 1.0, 'JJ': 0.5, 'TT': 0.2,
+            'AKs': 1.0, 'AQs': 0.8, 'AJs': 0.3,
+            'AKo': 1.0, 'AQo': 0.5,
+            'A5s': 0.6, 'A4s': 0.4, 'KQs': 0.2,
+        },
+        'call': {
+            'JJ': 0.5, 'TT': 0.8, '99': 1.0, '88': 1.0, '77': 0.8, '66': 0.5,
+            'AJs': 0.7, 'ATs': 1.0, 'A9s': 0.8,
+            'KQs': 0.8, 'KJs': 1.0, 'KTs': 1.0,
+            'QJs': 1.0, 'QTs': 0.9, 'JTs': 1.0, 'T9s': 1.0, '98s': 0.8,
+            'AQo': 0.5, 'AJo': 0.8, 'KQo': 1.0, 'KJo': 0.5,
+        },
+    },
 };
 
 // =============================================================================
@@ -947,6 +1001,121 @@ const VS_FOUR_BET_RANGES: Record<string, Record<string, Record<string, number>>>
             'KQs': 0.5,
         },
     },
+
+    // =========================================================================
+    // ADDED: 8 Missing VS_FOUR_BET ranges for complete 6-max coverage
+    // =========================================================================
+
+    // SB 3-bets CO open, CO 4-bets back (THE BUG FIX)
+    'SB_3bet_vs_CO_4bet': {
+        '5bet_shove': {
+            // Value shoves - tight range OOP vs LP 4-bet
+            'AA': 0.8, 'KK': 1.0, 'QQ': 0.6,
+            'AKs': 1.0, 'AKo': 0.8,
+            // NOTE: A5s is NOT here - it FOLDS vs 4-bet (was a 3-bet bluff)
+        },
+        'call': {
+            'AA': 0.2, // Trap sometimes
+            'QQ': 0.4, 'JJ': 0.5, 'TT': 0.3,
+            'AQs': 0.5, 'AJs': 0.2,
+            'KQs': 0.2,
+            // A5s is NOT here - FOLD
+        },
+    },
+
+    // SB 3-bets HJ open, HJ 4-bets back
+    'SB_3bet_vs_HJ_4bet': {
+        '5bet_shove': {
+            'AA': 1.0, 'KK': 1.0, 'QQ': 0.4,
+            'AKs': 1.0, 'AKo': 0.6,
+        },
+        'call': {
+            'QQ': 0.6, 'JJ': 0.6, 'TT': 0.3,
+            'AQs': 0.4,
+        },
+    },
+
+    // BB 3-bets CO open, CO 4-bets back
+    'BB_3bet_vs_CO_4bet': {
+        '5bet_shove': {
+            'AA': 0.9, 'KK': 1.0, 'QQ': 0.8,
+            'AKs': 1.0, 'AKo': 1.0,
+            'A5s': 0.8, 'A4s': 0.4, // BB has more equity IP
+        },
+        'call': {
+            'AA': 0.1,
+            'QQ': 0.2, 'JJ': 0.6, 'TT': 0.4, '99': 0.2,
+            'AQs': 0.7, 'AJs': 0.3,
+            'KQs': 0.4,
+        },
+    },
+
+    // HJ 3-bets UTG open, UTG 4-bets back (tight spot)
+    'HJ_3bet_vs_UTG_4bet': {
+        '5bet_shove': {
+            'AA': 1.0, 'KK': 0.8,
+            'AKs': 0.6, 'AKo': 0.2,
+        },
+        'call': {
+            'KK': 0.2,
+            'QQ': 0.8, 'JJ': 0.4,
+            'AKs': 0.4, 'AKo': 0.3,
+        },
+    },
+
+    // CO 3-bets UTG open, UTG 4-bets back
+    'CO_3bet_vs_UTG_4bet': {
+        '5bet_shove': {
+            'AA': 1.0, 'KK': 0.9,
+            'AKs': 0.8, 'AKo': 0.3,
+        },
+        'call': {
+            'KK': 0.1,
+            'QQ': 0.9, 'JJ': 0.5, 'TT': 0.2,
+            'AKs': 0.2, 'AKo': 0.4,
+            'AQs': 0.3,
+        },
+    },
+
+    // CO 3-bets HJ open, HJ 4-bets back
+    'CO_3bet_vs_HJ_4bet': {
+        '5bet_shove': {
+            'AA': 1.0, 'KK': 1.0, 'QQ': 0.5,
+            'AKs': 1.0, 'AKo': 0.7,
+            'A5s': 0.3, // Occasional bluff shove
+        },
+        'call': {
+            'QQ': 0.5, 'JJ': 0.7, 'TT': 0.4, '99': 0.2,
+            'AQs': 0.6, 'AJs': 0.3,
+            'KQs': 0.3,
+        },
+    },
+
+    // BTN 3-bets UTG open, UTG 4-bets back (rare but happens)
+    'BTN_3bet_vs_UTG_4bet': {
+        '5bet_shove': {
+            'AA': 1.0, 'KK': 1.0, 'QQ': 0.3,
+            'AKs': 1.0, 'AKo': 0.5,
+        },
+        'call': {
+            'QQ': 0.7, 'JJ': 0.6, 'TT': 0.3,
+            'AKo': 0.5, 'AQs': 0.4,
+        },
+    },
+
+    // BTN 3-bets HJ open, HJ 4-bets back
+    'BTN_3bet_vs_HJ_4bet': {
+        '5bet_shove': {
+            'AA': 1.0, 'KK': 1.0, 'QQ': 0.8, 'JJ': 0.2,
+            'AKs': 1.0, 'AKo': 1.0,
+            'A5s': 0.5, 'A4s': 0.3, // BTN IP can bluff shove more
+        },
+        'call': {
+            'JJ': 0.8, 'TT': 0.6, '99': 0.3,
+            'AQs': 0.7, 'AJs': 0.4,
+            'KQs': 0.5,
+        },
+    },
 };
 
 // =============================================================================
@@ -1008,6 +1177,7 @@ export function getFacingOpenAction(
     const key = `${heroPosition.toUpperCase()}_vs_${openerPosition.toUpperCase()}`;
 
     const rangeData = THREE_BET_RANGES[key];
+
     if (!rangeData) {
         return {
             found: false,

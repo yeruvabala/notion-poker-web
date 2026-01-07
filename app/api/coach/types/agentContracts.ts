@@ -387,7 +387,7 @@ export interface ActionRecommendation {
  */
 export interface StreetDecisionTree {
     // Decision Point 1: Hero's initial action (when first to act)
-    initial_action: MixedActionRecommendation;
+    initial_action?: MixedActionRecommendation;
 
     // Decision Point 2A: If hero checks and villain bets
     if_check_and_villain_bets?: MixedActionRecommendation;
@@ -395,11 +395,16 @@ export interface StreetDecisionTree {
     // Decision Point 2B: If hero bets and villain raises
     if_bet_and_villain_raises?: MixedActionRecommendation;
 
-    // For IP situations: What to do when villain checks to hero
+    // For IP situations: What to do when villain checks to hero (ALIASES)
     if_villain_checks_to_hero?: MixedActionRecommendation;
+    if_villain_checks?: MixedActionRecommendation;  // Alias used by GTO Agent
 
-    // For IP situations: What to do when villain bets into hero
+    // For IP situations: What to do when villain bets into hero (ALIASES)
     if_villain_bets_into_hero?: MixedActionRecommendation;
+    if_villain_bets?: MixedActionRecommendation;  // Alias used by GTO Agent
+
+    // If hero bets and villain raises (IP situations)
+    if_hero_bets_and_villain_raises?: MixedActionRecommendation;  // Used by GTO Agent
 }
 
 /**
@@ -410,6 +415,7 @@ export interface PreflopDecisionTree {
     initial_action: MixedActionRecommendation;        // RFI, Limp, Fold, or Response to Open
     response_to_3bet?: MixedActionRecommendation;     // If Hero Opened and faces 3-bet
     response_to_4bet?: MixedActionRecommendation;     // If Hero 3-bet and faces 4-bet
+    _hero_is_3bettor?: boolean;                       // Flag: Hero made the 3-bet (for UI labeling)
 }
 
 export interface GTOStrategy {

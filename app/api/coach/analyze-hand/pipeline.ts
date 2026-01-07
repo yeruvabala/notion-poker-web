@@ -198,9 +198,20 @@ export function determineVillainContext(
     if (heroActionIndex === -1) {
         // Hero didn't act in preflop - use fallback
         console.error('[VillainContext] Hero action not found, using fallback');
+
+        // Priority 1: Get villain position from players array (most reliable)
+        const players = replayerData?.players || [];
+        const villain = players.find((p: any) => !p.isHero);
+        const villainPosFromPlayers = villain?.position;
+
+        // Priority 2: Fall back to text extraction
+        const villainPos = villainPosFromPlayers || extractVillainPosition(rawText, heroPosition);
+
+        console.error(`[VillainContext] Fallback villain position: ${villainPos} (from players: ${villainPosFromPlayers})`);
+
         return {
             type: 'facing_action',
-            villain: extractVillainPosition(rawText, heroPosition)
+            villain: villainPos
         };
     }
 
@@ -987,9 +998,12 @@ function formatOutput(data: FormatInput): CoachOutput {
     // Preflop (simple ActionRecommendation)
     // Preflop (Decision Tree)
     if (gtoStrategy.preflop) {
-        // Initial Action
+        // Initial Action - Check if Hero is the 3-bettor
         if (gtoStrategy.preflop.initial_action) {
-            gtoText += `**PREFLOP (Initial):** ${formatMixedAction(gtoStrategy.preflop.initial_action)}`;
+            // Check for _hero_is_3bettor flag set by agent5
+            const isHeroThe3Bettor = (gtoStrategy.preflop as any)._hero_is_3bettor === true;
+            const preflopLabel = isHeroThe3Bettor ? '**PREFLOP (3-bet):**' : '**PREFLOP (Initial):**';
+            gtoText += `${preflopLabel} ${formatMixedAction(gtoStrategy.preflop.initial_action)}`;
             gtoText += `\n└─ ${formatMixedReasoning(gtoStrategy.preflop.initial_action)}\n`;
         }
 

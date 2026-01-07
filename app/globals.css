@@ -158,27 +158,622 @@ select {
     /* Slightly more rounded for premium feel */
 }
 
-/* Platinum Inner Box (Solid Dark Platinum Background) */
+/* Platinum Inner Box - Option A: Ultra-thin Gradient Border */
 .platinum-inner-border {
     background-color: transparent !important;
 
     background:
-        /* LAYER 1: The Inner Background (Lighter Grey) */
-        linear-gradient(#262626, #262626) padding-box,
+        /* LAYER 1: The Inner Background */
+        linear-gradient(#1a1a1a, #1a1a1a) padding-box,
 
-        /* LAYER 2: The Platinum Border Mask (Unchanged) */
+        /* LAYER 2: Subtle Platinum Edge (refined gradient) */
         linear-gradient(135deg,
-            #e0e0e0 0%,
-            #909090 25%,
-            #d0d0d0 50%,
-            #707070 75%,
-            #a0a0a0 100%) border-box !important;
+            rgba(180, 180, 180, 0.6) 0%,
+            rgba(100, 100, 100, 0.4) 25%,
+            rgba(160, 160, 160, 0.5) 50%,
+            rgba(80, 80, 80, 0.3) 75%,
+            rgba(140, 140, 140, 0.5) 100%) border-box !important;
 
-    border: 1.5px solid transparent !important;
-    border-radius: 8px;
+    /* Ultra-thin 1px border for elegance */
+    border: 1px solid transparent !important;
+    border-radius: 10px;
 
-    /* Keep inner shadow for depth */
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+    /* Subtle shadow for depth */
+    box-shadow:
+        0 0 0 0.5px rgba(255, 255, 255, 0.05),
+        0 1px 2px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(0, 0, 0, 0.2) !important;
 
     color: #e0e0e0;
+}
+
+/* ============================================
+   GTO STRATEGY BOX - Premium Holographic Style
+   ============================================ */
+
+/* Keyframes for the animated shimmer border */
+@keyframes gto-border-shimmer {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Keyframes for the subtle pulse glow */
+@keyframes gto-pulse-glow {
+
+    0%,
+    100% {
+        box-shadow:
+            0 0 20px rgba(180, 180, 180, 0.1),
+            0 0 40px rgba(140, 140, 140, 0.05),
+            inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    }
+
+    50% {
+        box-shadow:
+            0 0 25px rgba(200, 200, 200, 0.15),
+            0 0 50px rgba(160, 160, 160, 0.08),
+            inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    }
+}
+
+/* Keyframes for scan line effect */
+@keyframes gto-scan-line {
+    0% {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 0.3;
+    }
+
+    90% {
+        opacity: 0.3;
+    }
+
+    100% {
+        transform: translateY(500%);
+        opacity: 0;
+    }
+}
+
+.gto-strategy-box {
+    padding: 16px;
+    background: #1a1a1a;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #3a3a3a;
+}
+
+/* Loading state - animated border shimmer */
+.gto-strategy-box.loading {
+    border-color: transparent;
+    animation: gto-pulse-glow 4s ease-in-out infinite;
+}
+
+/* Animated holographic border - only when loading */
+.gto-strategy-box.loading::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    padding: 1.5px;
+    background: linear-gradient(90deg,
+            rgba(100, 100, 100, 0.3) 0%,
+            rgba(180, 180, 180, 0.6) 15%,
+            rgba(255, 255, 255, 0.8) 30%,
+            rgba(180, 180, 180, 0.6) 45%,
+            rgba(100, 100, 100, 0.3) 60%,
+            rgba(180, 180, 180, 0.6) 75%,
+            rgba(255, 255, 255, 0.8) 90%,
+            rgba(100, 100, 100, 0.3) 100%);
+    background-size: 200% 200%;
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: gto-border-shimmer 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+/* Populated state - same clean look */
+.gto-strategy-box.populated {
+    border: 1px solid #3a3a3a;
+}
+
+/* ============================================
+   TITLE ONE-TIME SHIMMER ANIMATION
+   ============================================ */
+
+/* Keyframes for one-time title shimmer */
+@keyframes title-shimmer {
+    0% {
+        background-position: -200% 50%;
+    }
+
+    100% {
+        background-position: 200% 50%;
+    }
+}
+
+/* Title with one-time shimmer - triggered 2s after page load */
+.title-shimmer-once {
+    background: linear-gradient(90deg,
+            #6b7280 0%,
+            #ffffff 15%,
+            #e0e0e0 30%,
+            #ffffff 45%,
+            #6b7280 50%,
+            #6b7280 100%) !important;
+    background-size: 200% 100%;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+    animation: title-shimmer 2s ease-out forwards;
+    animation-delay: 2s;
+}
+
+/* Empty state styling */
+.gto-box-content.gto-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 140px;
+}
+
+/* Robot Watermark - Always visible behind content */
+.gto-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+    filter: drop-shadow(0 0 8px rgba(180, 180, 180, 0.3));
+}
+
+/* When content is empty, show watermark more prominently with glow */
+.gto-empty .gto-watermark {
+    opacity: 0.35;
+    filter: drop-shadow(0 0 12px rgba(200, 200, 200, 0.4));
+}
+
+/* GTO Body content sits above watermark */
+.gto-box-content .gtoBody {
+    position: relative;
+    z-index: 1;
+}
+
+/* ============================================
+   PLAY REVIEW BOX - Premium Style (matches GTO)
+   ============================================ */
+
+.play-review-box {
+    padding: 16px;
+    background: #1a1a1a;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #3a3a3a;
+    min-height: 140px;
+}
+
+/* Loading state - animated border shimmer */
+.play-review-box.loading {
+    border-color: transparent;
+    animation: gto-pulse-glow 4s ease-in-out infinite;
+}
+
+/* Animated holographic border - only when loading */
+.play-review-box.loading::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    padding: 1.5px;
+    background: linear-gradient(90deg,
+            rgba(100, 100, 100, 0.3) 0%,
+            rgba(180, 180, 180, 0.6) 15%,
+            rgba(255, 255, 255, 0.8) 30%,
+            rgba(180, 180, 180, 0.6) 45%,
+            rgba(100, 100, 100, 0.3) 60%,
+            rgba(180, 180, 180, 0.6) 75%,
+            rgba(255, 255, 255, 0.8) 90%,
+            rgba(100, 100, 100, 0.3) 100%);
+    background-size: 200% 200%;
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: gto-border-shimmer 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+/* Populated state */
+.play-review-box.populated {
+    border: 1px solid #3a3a3a;
+}
+
+/* Chart Watermark */
+.play-review-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+    filter: drop-shadow(0 0 8px rgba(180, 180, 180, 0.3));
+}
+
+/* When empty, show watermark more prominently */
+.play-review-box:not(.populated) .play-review-watermark {
+    opacity: 0.35;
+    filter: drop-shadow(0 0 12px rgba(200, 200, 200, 0.4));
+}
+
+/* Content sits above watermark */
+.play-review-content {
+    position: relative;
+    z-index: 1;
+}
+
+/* Play Review List */
+.play-review-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.play-review-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 14px;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+    /* Platinum gradient text - matches GTO Strategy */
+    background: linear-gradient(to right, #6b7280 0%, #ffffff 40%, #ffffff 60%, #6b7280 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+}
+
+.play-review-list li:last-child {
+    border-bottom: none;
+}
+
+/* Platinum gradient for key labels like "PLAY CLASSIFICATION" and "Decision Breakdown" */
+.play-review-list li strong {
+    background: linear-gradient(135deg, #E8E8E8 0%, #D4D4D8 25%, #FAFAFA 50%, #A1A1AA 75%, #E8E8E8 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    font-weight: 700;
+}
+
+/* ============================================
+   HOLOGRAPHIC POKER CHIP CLASSIFICATION DOTS
+   Premium animated gradients for play quality
+   ============================================ */
+
+/* Keyframes for holographic shimmer effect */
+@keyframes chip-shimmer {
+
+    0%,
+    100% {
+        filter: brightness(1) drop-shadow(0 0 4px currentColor);
+    }
+
+    50% {
+        filter: brightness(1.3) drop-shadow(0 0 8px currentColor);
+    }
+}
+
+@keyframes gold-pulse {
+
+    0%,
+    100% {
+        text-shadow: 0 0 8px rgba(255, 215, 0, 0.6), 0 0 16px rgba(0, 255, 255, 0.3);
+    }
+
+    50% {
+        text-shadow: 0 0 12px rgba(255, 215, 0, 0.8), 0 0 24px rgba(0, 255, 255, 0.5);
+    }
+}
+
+@keyframes silver-pulse {
+
+    0%,
+    100% {
+        text-shadow: 0 0 6px rgba(192, 192, 220, 0.5), 0 0 12px rgba(180, 160, 255, 0.3);
+    }
+
+    50% {
+        text-shadow: 0 0 10px rgba(220, 220, 240, 0.7), 0 0 18px rgba(200, 180, 255, 0.4);
+    }
+}
+
+@keyframes rose-pulse {
+
+    0%,
+    100% {
+        text-shadow: 0 0 8px rgba(255, 100, 150, 0.6), 0 0 16px rgba(255, 0, 128, 0.3);
+    }
+
+    50% {
+        text-shadow: 0 0 12px rgba(255, 120, 180, 0.8), 0 0 24px rgba(255, 50, 150, 0.5);
+    }
+}
+
+/* 🟢 OPTIMAL - Champagne Gold to Cyan (VIP High-Roller Chip) */
+.classification-dot-optimal {
+    background: linear-gradient(135deg, #FFD700 0%, #F0E68C 25%, #00CED1 50%, #FFD700 75%, #E6BE8A 100%) !important;
+    background-size: 200% 200% !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+    animation: chip-shimmer 2s ease-in-out infinite, gold-pulse 3s ease-in-out infinite;
+    font-size: 1.1em;
+}
+
+/* 🟡 ACCEPTABLE - Cool Silver to Lavender (Platinum Theme) */
+.classification-dot-acceptable {
+    background: linear-gradient(135deg, #C0C0C0 0%, #E8E8F0 25%, #B8A0E0 50%, #D4D4DC 75%, #A8A8C0 100%) !important;
+    background-size: 200% 200% !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+    animation: chip-shimmer 2.5s ease-in-out infinite, silver-pulse 3.5s ease-in-out infinite;
+    font-size: 1.1em;
+}
+
+/* 🔴 MISTAKE - Deep Rose to Electric Magenta (Dramatic but Elegant) */
+.classification-dot-mistake {
+    background: linear-gradient(135deg, #FF6B9D 0%, #FF1493 25%, #FF69B4 50%, #DC143C 75%, #FF6B9D 100%) !important;
+    background-size: 200% 200% !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+    animation: chip-shimmer 2s ease-in-out infinite, rose-pulse 2.5s ease-in-out infinite;
+    font-size: 1.1em;
+}
+
+/* Empty state */
+.play-review-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+}
+
+.empty-hint {
+    color: #6b7280;
+    font-size: 13px;
+    font-style: italic;
+}
+
+/* Action buttons container */
+.play-review-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Quick Insight Sparkle Button */
+.btn-insight-sparkle {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+    color: #fbbf24;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow:
+        0 2px 8px rgba(251, 191, 36, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.btn-insight-sparkle:hover {
+    background: linear-gradient(135deg, #2a2a2a 0%, #3d3d3d 50%, #2a2a2a 100%);
+    box-shadow:
+        0 4px 16px rgba(251, 191, 36, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.btn-insight-sparkle:active {
+    transform: translateY(0);
+}
+
+.sparkle-icon {
+    font-size: 16px;
+}
+
+/* Study List Button */
+.btn-study-list {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border: 1px solid #4a5568;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #2d2d2d 0%, #1a1a1a 100%);
+    color: #e2e8f0;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-study-list:hover {
+    background: linear-gradient(180deg, #3d3d3d 0%, #2a2a2a 100%);
+    border-color: #718096;
+    transform: translateY(-1px);
+}
+
+.btn-study-list:active {
+    transform: translateY(0);
+}
+
+.btn-study-list:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.list-icon {
+    font-size: 14px;
+}
+
+/* Status message */
+.play-review-status {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    color: #86efac;
+    font-size: 13px;
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* ========================================
+   MOBILE-ONLY STYLES (< 640px)
+   These DO NOT affect web/desktop layout
+   ======================================== */
+@media (max-width: 640px) {
+
+    /* Base layout adjustments */
+    body {
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    /* Reduce container padding for mobile */
+    .platinum-container-frame {
+        padding: 12px !important;
+        margin: 8px !important;
+        border-radius: 12px !important;
+    }
+
+    .platinum-inner-border {
+        padding: 10px !important;
+    }
+
+    /* Larger touch targets for buttons */
+    .btn-platinum-premium,
+    .op-surface .btn-ony,
+    .op-surface .btn-platinum {
+        min-height: 48px !important;
+        padding: 14px 20px !important;
+        font-size: 16px !important;
+    }
+
+    /* Larger touch targets for inputs */
+    .op-surface .input-ony,
+    .input-deep-screen,
+    input,
+    textarea,
+    select {
+        min-height: 48px !important;
+        font-size: 16px !important;
+        padding: 12px 14px !important;
+    }
+
+    /* Card input slots - larger for finger taps */
+    input[maxlength="2"],
+    input[maxlength="1"] {
+        min-width: 44px !important;
+        min-height: 44px !important;
+        font-size: 18px !important;
+        text-align: center !important;
+    }
+
+    /* Tighter spacing between form elements */
+    .space-y-4>*+* {
+        margin-top: 12px !important;
+    }
+
+    .space-y-3>*+* {
+        margin-top: 10px !important;
+    }
+
+    /* Stack horizontal layouts on mobile */
+    .flex.gap-4,
+    .flex.gap-3,
+    .flex.gap-2 {
+        flex-wrap: wrap !important;
+    }
+
+    /* Full-width buttons on mobile */
+    button[type="submit"],
+    .w-full {
+        width: 100% !important;
+    }
+
+    /* Reduce heading sizes */
+    h1 {
+        font-size: 1.5rem !important;
+    }
+
+    h2 {
+        font-size: 1.25rem !important;
+    }
+
+    h3 {
+        font-size: 1.1rem !important;
+    }
+
+    /* Scrollable containers */
+    .overflow-x-auto {
+        -webkit-overflow-scrolling: touch;
+    }
 }

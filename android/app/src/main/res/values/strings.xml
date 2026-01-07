@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">OnlyPoker</string>
+    <string name="title_activity_main">OnlyPoker</string>
+    <string name="package_name">com.onlypoker.app</string>
+    <string name="custom_url_scheme">com.onlypoker.app</string>
+</resources>
