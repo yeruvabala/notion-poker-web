@@ -777,3 +777,1245 @@ select {
         -webkit-overflow-scrolling: touch;
     }
 }
+
+/* ============================================
+   PREMIUM HOMEPAGE ENHANCEMENTS
+   Elevated dashboard design with animations
+   ============================================ */
+
+/* Animated Title Gradient - Only Poker Branding */
+@keyframes title-gradient-shift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.homepage-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    background: linear-gradient(90deg,
+            #888888 0%,
+            #c0c0c0 20%,
+            #ffffff 40%,
+            #ffffff 60%,
+            #c0c0c0 80%,
+            #888888 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: title-gradient-shift 8s ease-in-out infinite;
+    text-shadow: none;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* Suit decorations with shimmer */
+@keyframes suit-shimmer {
+
+    0%,
+    100% {
+        opacity: 0.6;
+        filter: brightness(1);
+    }
+
+    50% {
+        opacity: 1;
+        filter: brightness(1.4);
+    }
+}
+
+.suit-decoration {
+    display: inline-flex;
+    gap: 6px;
+    font-size: 1rem;
+    margin-top: 4px;
+}
+
+.suit-decoration span {
+    animation: suit-shimmer 3s ease-in-out infinite;
+}
+
+.suit-decoration span:nth-child(1) {
+    color: #9ca3af;
+    animation-delay: 0s;
+}
+
+.suit-decoration span:nth-child(2) {
+    color: #f87171;
+    animation-delay: 0.5s;
+}
+
+.suit-decoration span:nth-child(3) {
+    color: #f87171;
+    animation-delay: 1s;
+}
+
+.suit-decoration span:nth-child(4) {
+    color: #9ca3af;
+    animation-delay: 1.5s;
+}
+
+/* User email/beta badge styling */
+.user-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    background: rgba(30, 30, 30, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    color: #9ca3af;
+    backdrop-filter: blur(4px);
+}
+
+.beta-tag {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Premium Glass Card Effect */
+.glass-card {
+    background: rgba(26, 26, 26, 0.85) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Subtle Background Pattern */
+.dashboard-bg-pattern {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.01) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Enhanced Section Headers */
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.section-header-icon {
+    font-size: 1.2rem;
+    filter: grayscale(0.3);
+}
+
+.section-header-title {
+    font-size: 1rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #E8E8E8 0%, #FAFAFA 50%, #D4D4D8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Empty State Enhancement */
+.empty-state-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    text-align: center;
+    padding: 24px;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    opacity: 0.4;
+    filter: grayscale(0.5);
+}
+
+.empty-state-text {
+    font-size: 0.9rem;
+    color: #6b7280;
+    max-width: 200px;
+    line-height: 1.5;
+}
+
+.empty-state-hint {
+    font-size: 0.75rem;
+    color: #4b5563;
+    margin-top: 8px;
+    font-style: italic;
+}
+
+/* Input Group Styling */
+.input-group {
+    position: relative;
+}
+
+.input-group-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+/* Analyze Button Pulse (when ready) */
+@keyframes analyze-pulse {
+
+    0%,
+    100% {
+        box-shadow:
+            0 4px 8px rgba(0, 0, 0, 0.5),
+            0 0 0 0 rgba(255, 255, 255, 0.2);
+    }
+
+    50% {
+        box-shadow:
+            0 4px 8px rgba(0, 0, 0, 0.5),
+            0 0 0 8px rgba(255, 255, 255, 0);
+    }
+}
+
+.btn-platinum-premium:not([disabled]) {
+    animation: analyze-pulse 2s ease-in-out infinite;
+}
+
+.btn-platinum-premium:not([disabled]):hover {
+    animation: none;
+    transform: translateY(-2px);
+    box-shadow:
+        0 8px 16px rgba(0, 0, 0, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Card Selector Hover Effects */
+.card-selector-wrapper {
+    transition: all 0.2s ease;
+}
+
+.card-selector-wrapper:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Quick Stats Row */
+.stats-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.stat-pill {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(30, 30, 30, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+.stat-pill-value {
+    font-weight: 600;
+    color: #e5e7eb;
+}
+
+/* Divider Line */
+.premium-divider {
+    height: 1px;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.1) 20%,
+            rgba(255, 255, 255, 0.1) 80%,
+            transparent 100%);
+    margin: 16px 0;
+}
+
+/* Card Chip Display */
+.card-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.card-chip-red {
+    color: #ef4444;
+}
+
+.card-chip-black {
+    color: #e5e7eb;
+}
+
+/* Status indicators */
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-dot-success {
+    background: #22c55e;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.status-dot-warning {
+    background: #f59e0b;
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+.status-dot-error {
+    background: #ef4444;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+/* Floating Action Hint */
+.floating-hint {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 12px 20px;
+    background: rgba(26, 26, 26, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    font-size: 0.8rem;
+    color: #9ca3af;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    z-index: 100;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+}
+
+.floating-hint.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ============================================
+   PREMIUM SIDEBAR - PLATINUM HIGH-ROLLER THEME
+   Poker-inspired VIP aesthetic with gold accents
+   ============================================ */
+
+/* Shimmer animation for VIP badge */
+@keyframes vip-shimmer {
+    0% {
+        background-position: -200% center;
+    }
+
+    100% {
+        background-position: 200% center;
+    }
+}
+
+/* Subtle glow pulse for active item - platinum */
+@keyframes platinum-glow-pulse {
+
+    0%,
+    100% {
+        box-shadow: inset 3px 0 8px -4px rgba(192, 192, 192, 0.4);
+    }
+
+    50% {
+        box-shadow: inset 3px 0 12px -4px rgba(255, 255, 255, 0.5);
+    }
+}
+
+/* Sidebar container - Deep felt-inspired dark */
+.sidebar-premium {
+    background: linear-gradient(180deg,
+            #151517 0%,
+            #101012 50%,
+            #0d0d0f 100%) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-right: 1px solid rgba(255, 255, 255, 0.04) !important;
+    box-shadow:
+        4px 0 32px rgba(0, 0, 0, 0.5),
+        inset -1px 0 0 rgba(255, 255, 255, 0.02);
+}
+
+/* Brand header */
+.sidebar-brand {
+    position: relative;
+}
+
+/* Brand title with platinum gradient - matches ONLY POKER title */
+.sidebar-brand-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: linear-gradient(90deg,
+            #888888 0%,
+            #c0c0c0 30%,
+            #ffffff 50%,
+            #c0c0c0 70%,
+            #888888 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    transition: all 0.3s ease;
+}
+
+.sidebar-brand-title:hover {
+    animation: title-gradient-shift 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.15));
+}
+
+/* Version Badge - Platinum with subtle shimmer */
+.sidebar-version-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: linear-gradient(135deg,
+            rgba(192, 192, 192, 0.1) 0%,
+            rgba(255, 255, 255, 0.05) 50%,
+            rgba(192, 192, 192, 0.1) 100%);
+    border: 1px solid rgba(192, 192, 192, 0.2);
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    transition: all 0.3s ease;
+    background-size: 400% 100%;
+}
+
+.sidebar-version-badge span:first-child {
+    color: #c0c0c0;
+}
+
+.sidebar-version-badge span:nth-child(2) {
+    color: rgba(192, 192, 192, 0.5);
+}
+
+.sidebar-version-badge span:last-child {
+    color: #9ca3af;
+}
+
+.sidebar-version-badge:hover {
+    background: linear-gradient(90deg,
+            rgba(192, 192, 192, 0.08) 0%,
+            rgba(255, 255, 255, 0.12) 25%,
+            rgba(255, 255, 255, 0.18) 50%,
+            rgba(255, 255, 255, 0.12) 75%,
+            rgba(192, 192, 192, 0.08) 100%);
+    background-size: 400% 100%;
+    animation: vip-shimmer 2s ease-in-out infinite;
+    border-color: rgba(192, 192, 192, 0.35);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.08);
+}
+
+/* Navigation items */
+.sidebar-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #8a8a8f;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Platinum accent bar - left edge */
+.sidebar-nav-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg,
+            #c0c0c0 0%,
+            #ffffff 50%,
+            #c0c0c0 100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+    border-radius: 0 3px 3px 0;
+}
+
+.sidebar-nav-item:hover {
+    color: #e5e5e5;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.sidebar-nav-item:hover::before {
+    opacity: 0.4;
+}
+
+.sidebar-nav-item:hover .sidebar-nav-icon {
+    color: #d1d5db;
+}
+
+/* Active state - Platinum glow from left edge */
+.sidebar-nav-item.active {
+    color: #f5f5f5;
+    background: linear-gradient(90deg,
+            rgba(192, 192, 192, 0.06) 0%,
+            rgba(192, 192, 192, 0.02) 30%,
+            transparent 60%);
+    animation: platinum-glow-pulse 3s ease-in-out infinite;
+}
+
+.sidebar-nav-item.active::before {
+    opacity: 1;
+    background: linear-gradient(180deg,
+            #c0c0c0 0%,
+            #ffffff 50%,
+            #c0c0c0 100%);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.25);
+}
+
+.sidebar-nav-item.active .sidebar-nav-icon {
+    color: #e5e5e5;
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.2));
+}
+
+/* Icon styling */
+.sidebar-nav-icon {
+    width: 18px;
+    height: 18px;
+    color: #6b6b70;
+    transition: all 0.2s ease;
+}
+
+.sidebar-nav-item:hover .sidebar-nav-icon {
+    transform: scale(1.05);
+}
+
+/* Sign out button - subtle red treatment */
+.sidebar-signout {
+    color: #8a8a8f;
+}
+
+.sidebar-signout:hover {
+    color: #f87171 !important;
+    background: rgba(239, 68, 68, 0.06) !important;
+}
+
+.sidebar-signout:hover::before {
+    background: linear-gradient(180deg, #f87171 0%, #ef4444 100%) !important;
+    opacity: 0.6 !important;
+}
+
+.sidebar-signout:hover .sidebar-nav-icon {
+    color: #f87171 !important;
+}
+
+/* Sidebar divider - subtle platinum fade */
+.sidebar-divider {
+    height: 1px;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(192, 192, 192, 0.1) 20%,
+            rgba(192, 192, 192, 0.15) 50%,
+            rgba(192, 192, 192, 0.1) 80%,
+            transparent 100%);
+    margin: 12px 0;
+}
+
+/* Suit decoration for sidebar (optional enhancement) */
+.sidebar-suit-decoration {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.6rem;
+    opacity: 0.3;
+    margin-top: 8px;
+}
+
+.sidebar-suit-decoration span:nth-child(odd) {
+    color: #9ca3af;
+}
+
+.sidebar-suit-decoration span:nth-child(even) {
+    color: #ef4444;
+}
+
+/* Premium section header icon animation */
+@keyframes icon-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+        filter: brightness(1.3);
+    }
+}
+
+.section-header-icon {
+    font-size: 1.2rem;
+    filter: grayscale(0.2);
+    transition: all 0.3s ease;
+}
+
+.section-header:hover .section-header-icon {
+    animation: icon-pulse 1s ease-in-out;
+    filter: grayscale(0);
+}
+
+/* Smooth transitions for all interactive elements */
+button,
+select,
+input {
+    transition: all 0.15s ease;
+}
+
+/* Focus ring enhancement */
+*:focus-visible {
+    outline: none;
+    box-shadow:
+        0 0 0 2px rgba(59, 130, 246, 0.5),
+        0 0 0 4px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* ============================================
+   TOP-RIGHT USER PROFILE PILL
+   Subtle, non-intrusive user identification
+   ============================================ */
+
+.user-profile-pill {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: rgba(26, 26, 26, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 50;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.user-profile-pill:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(36, 36, 36, 0.95);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.user-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+}
+
+.user-email-text {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.preview-badge-pill {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.55rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* On mobile, make profile pill more compact */
+@media (max-width: 640px) {
+    .user-profile-pill {
+        top: 12px;
+        right: 12px;
+        padding: 4px 10px;
+    }
+
+    .user-email-text {
+        display: none;
+    }
+
+    .user-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 0.75rem;
+    }
+}
+
+/* ============================================
+   PHASE 1: PREMIUM HOMEPAGE UI REDESIGN
+   Transforming from "developer pretty" to premium
+   ============================================ */
+
+/* -------- 1. PREMIUM HERO CARD STYLING -------- */
+/* 3D playing card effect for card selectors */
+
+.premium-card-slot {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 52px;
+    min-height: 72px;
+    background: linear-gradient(145deg, #ffffff 0%, #f5f5f5 20%, #e8e8e8 100%);
+    border-radius: 10px;
+    box-shadow:
+        0 6px 20px rgba(0, 0, 0, 0.5),
+        0 2px 8px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transform: perspective(600px) rotateY(-3deg) rotateX(2deg);
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: pointer;
+}
+
+.premium-card-slot:hover {
+    transform: perspective(600px) rotateY(0deg) rotateX(0deg) translateY(-4px) scale(1.02);
+    box-shadow:
+        0 12px 32px rgba(0, 0, 0, 0.6),
+        0 4px 12px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 1),
+        0 0 20px rgba(255, 215, 0, 0.15);
+}
+
+.premium-card-slot.card-selected {
+    background: linear-gradient(145deg, #fffdf5 0%, #fff8e5 20%, #fff0c0 100%);
+    border-color: rgba(255, 215, 0, 0.4);
+    box-shadow:
+        0 6px 20px rgba(255, 215, 0, 0.25),
+        0 2px 8px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Empty card placeholder with pulsing animation */
+.premium-card-slot.card-empty::before {
+    content: '🂠';
+    font-size: 2rem;
+    opacity: 0.4;
+    filter: grayscale(1);
+    animation: card-pulse 2s ease-in-out infinite;
+}
+
+@keyframes card-pulse {
+
+    0%,
+    100% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.05);
+    }
+}
+
+/* Card rank and suit display */
+.premium-card-rank {
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #1a1a1a;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+}
+
+.premium-card-suit {
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.premium-card-suit.suit-red {
+    color: #dc2626;
+    text-shadow: 0 1px 2px rgba(220, 38, 38, 0.3);
+}
+
+.premium-card-suit.suit-black {
+    color: #1a1a1a;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+/* Bigger, premium-styled existing card slots */
+.ibox .rank-selector,
+.ibox .suit-selector {
+    font-size: 24px !important;
+    width: 32px !important;
+    text-align: center;
+}
+
+/* Enhanced card input container */
+.hero-hand-container {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+/* Hero card inputs - larger but no cream boxes, keeping dark theme */
+.hero-card-input {
+    display: flex;
+    align-items: center;
+    background: #1f1f1f !important;
+    border-radius: 10px !important;
+    padding: 12px 14px !important;
+    min-height: 64px;
+    border: 1px solid #3a3a3a !important;
+    transition: all 0.3s ease !important;
+}
+
+.hero-card-input:hover {
+    border-color: rgba(192, 192, 192, 0.4) !important;
+    box-shadow: 0 0 12px rgba(192, 192, 192, 0.1) !important;
+}
+
+.hero-card-input .rank-selector {
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    border: none;
+    color: #e5e7eb !important;
+    font-weight: 700 !important;
+    font-size: 28px !important;
+    width: 36px !important;
+    text-align: center;
+    padding: 0;
+    cursor: pointer;
+    outline: none;
+}
+
+.hero-card-input .suit-selector {
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    border: none;
+    color: #e5e7eb !important;
+    font-weight: 700 !important;
+    font-size: 28px !important;
+    width: 36px !important;
+    text-align: center;
+    padding: 0;
+    cursor: pointer;
+    outline: none;
+}
+
+/* Red suits inside hero cards */
+.hero-card-input .suit-selector.suit-red {
+    color: #ef4444 !important;
+}
+
+/* -------- 2. PLATINUM SHIMMER ANALYZE BUTTON -------- */
+@keyframes platinum-border-shimmer {
+    0% {
+        background-position: 200% center;
+    }
+
+    100% {
+        background-position: -200% center;
+    }
+}
+
+@keyframes platinum-glow-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5), 0 0 16px rgba(192, 192, 192, 0.1);
+    }
+
+    50% {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5), 0 0 24px rgba(192, 192, 192, 0.2);
+    }
+}
+
+.btn-analyze-premium {
+    position: relative;
+    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 50%, #0f0f0f 100%) !important;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    overflow: hidden;
+    animation: platinum-glow-pulse 3s ease-in-out infinite;
+}
+
+.btn-analyze-premium::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 14px;
+    padding: 2px;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            #888888 20%,
+            #c0c0c0 35%,
+            #ffffff 50%,
+            #c0c0c0 65%,
+            #888888 80%,
+            transparent 100%);
+    background-size: 200% 100%;
+    animation: platinum-border-shimmer 4s linear infinite;
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.btn-analyze-premium .btn-text {
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(90deg, #888888 0%, #c0c0c0 30%, #ffffff 50%, #c0c0c0 70%, #888888 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    text-shadow: 0 0 16px rgba(255, 255, 255, 0.3);
+}
+
+.btn-analyze-premium:hover {
+    transform: translateY(-2px);
+    animation: none;
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.6),
+        0 0 40px rgba(255, 255, 255, 0.25) !important;
+}
+
+.btn-analyze-premium:hover::before {
+    animation: platinum-border-shimmer 2s linear infinite;
+}
+
+.btn-analyze-premium:disabled {
+    animation: none;
+    opacity: 0.5;
+}
+
+.btn-analyze-premium:disabled::before {
+    animation: none;
+    background: rgba(100, 100, 100, 0.3);
+}
+
+/* -------- 3. SECTION ACCENTS - UNIFIED PLATINUM -------- */
+/* All sections use platinum gradient for consistency */
+.section-accent-gold,
+.section-accent-blue,
+.section-accent-green {
+    /* No special color accents - keep platinum theme */
+}
+
+.section-accent-gold .section-header-title,
+.section-accent-blue .section-header-title,
+.section-accent-green .section-header-title {
+    /* All section headers use the default platinum gradient from .section-header-title */
+    background: linear-gradient(90deg, #888888 0%, #c0c0c0 30%, #ffffff 50%, #c0c0c0 70%, #888888 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+}
+
+/* -------- 4. CLASSIFICATION CELEBRATION EFFECTS -------- */
+/* Celebration glow for OPTIMAL plays */
+@keyframes optimal-celebration {
+
+    0%,
+    100% {
+        box-shadow:
+            inset 0 0 20px rgba(34, 197, 94, 0.1),
+            0 0 15px rgba(34, 197, 94, 0.15);
+    }
+
+    50% {
+        box-shadow:
+            inset 0 0 30px rgba(34, 197, 94, 0.15),
+            0 0 25px rgba(34, 197, 94, 0.25);
+    }
+}
+
+.play-review-box.classification-optimal {
+    background: linear-gradient(135deg,
+            rgba(34, 197, 94, 0.08) 0%,
+            #1a1a1a 30%,
+            #1a1a1a 100%) !important;
+    border-color: rgba(34, 197, 94, 0.4) !important;
+    animation: optimal-celebration 3s ease-in-out infinite;
+}
+
+.play-review-box.classification-optimal .section-header-title {
+    background: linear-gradient(90deg, #22c55e 0%, #86efac 40%, #4ade80 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+}
+
+/* Warning glow for MISTAKE plays */
+@keyframes mistake-warning {
+
+    0%,
+    100% {
+        box-shadow:
+            inset 0 0 15px rgba(239, 68, 68, 0.08),
+            0 0 10px rgba(239, 68, 68, 0.1);
+    }
+
+    50% {
+        box-shadow:
+            inset 0 0 20px rgba(239, 68, 68, 0.12),
+            0 0 18px rgba(239, 68, 68, 0.18);
+    }
+}
+
+.play-review-box.classification-mistake {
+    background: linear-gradient(135deg,
+            rgba(239, 68, 68, 0.06) 0%,
+            #1a1a1a 30%,
+            #1a1a1a 100%) !important;
+    border-color: rgba(239, 68, 68, 0.35) !important;
+    animation: mistake-warning 2.5s ease-in-out infinite;
+}
+
+.play-review-box.classification-mistake .section-header-title {
+    background: linear-gradient(90deg, #ef4444 0%, #fca5a5 40%, #ef4444 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+}
+
+/* Neutral glow for ACCEPTABLE plays */
+.play-review-box.classification-acceptable {
+    background: linear-gradient(135deg,
+            rgba(234, 179, 8, 0.06) 0%,
+            #1a1a1a 30%,
+            #1a1a1a 100%) !important;
+    border-color: rgba(234, 179, 8, 0.35) !important;
+}
+
+/* Classification badge styling */
+.classification-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+}
+
+.classification-badge-optimal {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    color: #4ade80;
+    box-shadow: 0 0 16px rgba(34, 197, 94, 0.2);
+}
+
+.classification-badge-mistake {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.18);
+}
+
+.classification-badge-acceptable {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(234, 179, 8, 0.08) 100%);
+    border: 1px solid rgba(234, 179, 8, 0.35);
+    color: #fcd34d;
+}
+
+/* -------- 5. MICRO-ANIMATIONS -------- */
+/* Fade-in slide-up for sections */
+@keyframes section-appear {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-section-appear {
+    animation: section-appear 0.4s ease-out forwards;
+}
+
+.animate-section-appear.delay-1 {
+    animation-delay: 0.1s;
+    opacity: 0;
+}
+
+.animate-section-appear.delay-2 {
+    animation-delay: 0.2s;
+    opacity: 0;
+}
+
+.animate-section-appear.delay-3 {
+    animation-delay: 0.3s;
+    opacity: 0;
+}
+
+/* Gentle hover lift for glass cards */
+.glass-card {
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.glass-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Interactive element press effect */
+select:active,
+button:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+/* Loading shimmer for result boxes */
+@keyframes loading-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.loading-shimmer {
+    background: linear-gradient(90deg,
+            #1a1a1a 0%,
+            rgba(60, 60, 60, 0.3) 50%,
+            #1a1a1a 100%);
+    background-size: 200% 100%;
+    animation: loading-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Premium chip styling for action chips */
+.action-chip-premium {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: all 0.2s ease;
+}
+
+.action-chip-premium:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.action-chip-hero {
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #93c5fd;
+}
+
+.action-chip-villain {
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+}
+
+/* -------- 6. ENHANCED CARD DISPLAY STYLING -------- */
+/* For displaying selected cards prominently */
+.cards-display {
+    display: flex;
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.card-display-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    min-height: 66px;
+    padding: 8px 10px;
+    background: linear-gradient(145deg, #fffdf5 0%, #f8f5e8 50%, #f0ece0 100%);
+    border-radius: 10px;
+    border: 1px solid rgba(200, 180, 140, 0.5);
+    box-shadow:
+        0 6px 16px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    font-weight: 800;
+    font-size: 1.25rem;
+}
+
+.card-display-item.red {
+    color: #dc2626;
+}
+
+.card-display-item.black {
+    color: #1a1a1a;
+}

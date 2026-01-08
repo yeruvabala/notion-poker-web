@@ -1119,27 +1119,32 @@ export default function HomeClient() {
 
   return (
     <div className="op-surface">
+      {/* Subtle background pattern */}
+      <div className="dashboard-bg-pattern" />
+
       <main className="p">
         <div className="wrap">
-          {/* Header */}
+          {/* Header - Premium Animated Design */}
           <div style={{ textAlign: 'center', marginBottom: 40, marginTop: 20 }}>
-            <h1 className="text-5xl font-extrabold uppercase tracking-wide mb-2 platinum-text-gradient">Only Poker</h1>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, opacity: 0.9 }}>
-              <div style={{ height: 1, width: 80, background: 'linear-gradient(90deg, transparent, #a3a3a3)' }}></div>
-              <div style={{ fontSize: 18, letterSpacing: 6, lineHeight: 1 }}>
-                <span style={{ color: '#e5e7eb', textShadow: '0 0 10px rgba(229,231,235,0.4)' }}>♠️</span>
-                <span style={{ color: '#e5e7eb', textShadow: '0 0 10px rgba(229,231,235,0.4)' }}>♥️</span>
-                <span style={{ color: '#e5e7eb', textShadow: '0 0 10px rgba(229,231,235,0.4)' }}>♣️</span>
-                <span style={{ color: '#e5e7eb', textShadow: '0 0 10px rgba(229,231,235,0.4)' }}>♦️</span>
-              </div>
-              <div style={{ height: 1, width: 80, background: 'linear-gradient(90deg, #a3a3a3, transparent)' }}></div>
+            <h1 className="homepage-title">Only Poker</h1>
+
+            {/* Card Suit Decorations with Shimmer */}
+            <div className="suit-decoration">
+              <span>♠</span>
+              <span>♥</span>
+              <span>♦</span>
+              <span>♣</span>
             </div>
-            {userEmail && (
-              <div className="small muted" style={{ marginTop: 8 }}>
-                Signed in as {userEmail}
-              </div>
-            )}
           </div>
+
+          {/* Top-right User Profile Pill */}
+          {userEmail && (
+            <div className="user-profile-pill">
+              <span className="preview-badge-pill">Preview</span>
+              <span className="user-avatar">{userEmail.charAt(0)}</span>
+              <span className="user-email-text">{userEmail}</span>
+            </div>
+          )}
 
           <div className="grid">
             {/* LEFT column */}
@@ -1161,12 +1166,12 @@ Turn K♦ — ...`}
                 />
                 <div className="row gap">
                   <button
-                    className="btn btn-platinum-premium"
+                    className="btn btn-platinum-premium btn-analyze-premium"
                     style={{ flex: 1 }}
                     onClick={analyze}
                     disabled={aiLoading || (!input.trim() && !(h1 && h2 && preflopActions.length > 0))}
                   >
-                    {aiLoading ? 'Analyzing…' : 'Analyze Hand'}
+                    <span className="btn-text">{aiLoading ? 'Analyzing…' : '✨ Analyze Hand'}</span>
                   </button>
                   <button
                     className="btn btn-ony btn-ony--sm"
@@ -1252,8 +1257,11 @@ Turn K♦ — ...`}
               </section>}
 
               {/* Hand Input (Always Visible) */}
-              <section className="card ony-card platinum-container-frame">
-                <div className="cardTitle platinum-text-gradient" style={{ marginBottom: '12px' }}>✍️ Hand</div>
+              <section className="card ony-card platinum-container-frame glass-card">
+                <div className="section-header section-accent-gold">
+                  <span className="section-header-icon">✍️</span>
+                  <span className="section-header-title">Hand Builder</span>
+                </div>
                 <div className="hand-content">
                   {/* Row 1: Table Format + Position */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
@@ -1329,15 +1337,8 @@ Turn K♦ — ...`}
                     <div className="ibox platinum-inner-border">
                       <div className="lblSmall">Hero Hand</div>
                       <div style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'flex-start', padding: '4px 0' }}>
-                        {/* Card 1 */}
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          background: '#1f1f1f',
-                          borderRadius: '8px',
-                          padding: '6px 8px',
-                          border: '1px solid #3a3a3a',
-                        }}>
+                        {/* Card 1 - Premium Playing Card Style */}
+                        <div className="hero-card-input">
                           <select
                             value={h1 ? h1.slice(0, -1) : ''}
                             onChange={(e) => {
@@ -1354,20 +1355,6 @@ Turn K♦ — ...`}
                               }
                             }}
                             className="rank-selector"
-                            style={{
-                              appearance: 'none',
-                              WebkitAppearance: 'none',
-                              background: 'transparent',
-                              border: 'none',
-                              fontSize: '20px',
-                              fontWeight: 600,
-                              color: '#e5e7eb',
-                              cursor: 'pointer',
-                              padding: '0',
-                              width: '24px',
-                              textAlign: 'center',
-                              outline: 'none',
-                            }}
                             title="Select rank"
                           >
                             <option value="">🂠</option>
@@ -1390,21 +1377,7 @@ Turn K♦ — ...`}
                                 setUserOverrodeFields(prev => ({ ...prev, cards: true }));
                               }
                             }}
-                            className="suit-selector"
-                            style={{
-                              appearance: 'none',
-                              WebkitAppearance: 'none',
-                              background: 'transparent',
-                              border: 'none',
-                              fontSize: '20px',
-                              fontWeight: 600,
-                              color: h1 && isRed(h1.slice(-1)) ? '#ef4444' : '#e5e7eb',
-                              cursor: 'pointer',
-                              padding: '0',
-                              width: '24px',
-                              textAlign: 'center',
-                              outline: 'none',
-                            }}
+                            className={`suit-selector ${h1 && isRed(h1.slice(-1)) ? 'suit-red' : ''}`}
                             title="Select suit"
                           >
                             <option value="">?</option>
@@ -1420,15 +1393,8 @@ Turn K♦ — ...`}
                           </select>
                         </div>
 
-                        {/* Card 2 */}
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          background: '#1f1f1f',
-                          borderRadius: '8px',
-                          padding: '6px 8px',
-                          border: '1px solid #3a3a3a',
-                        }}>
+                        {/* Card 2 - Premium Playing Card Style */}
+                        <div className="hero-card-input">
                           <select
                             value={h2 ? h2.slice(0, -1) : ''}
                             onChange={(e) => {
@@ -1445,20 +1411,6 @@ Turn K♦ — ...`}
                               }
                             }}
                             className="rank-selector"
-                            style={{
-                              appearance: 'none',
-                              WebkitAppearance: 'none',
-                              background: 'transparent',
-                              border: 'none',
-                              fontSize: '20px',
-                              fontWeight: 600,
-                              color: '#e5e7eb',
-                              cursor: 'pointer',
-                              padding: '0',
-                              width: '24px',
-                              textAlign: 'center',
-                              outline: 'none',
-                            }}
                             title="Select rank"
                           >
                             <option value="">🂠</option>
@@ -1481,21 +1433,7 @@ Turn K♦ — ...`}
                                 setUserOverrodeFields(prev => ({ ...prev, cards: true }));
                               }
                             }}
-                            className="suit-selector"
-                            style={{
-                              appearance: 'none',
-                              WebkitAppearance: 'none',
-                              background: 'transparent',
-                              border: 'none',
-                              fontSize: '20px',
-                              fontWeight: 600,
-                              color: h2 && isRed(h2.slice(-1)) ? '#ef4444' : '#e5e7eb',
-                              cursor: 'pointer',
-                              padding: '0',
-                              width: '24px',
-                              textAlign: 'center',
-                              outline: 'none',
-                            }}
+                            className={`suit-selector ${h2 && isRed(h2.slice(-1)) ? 'suit-red' : ''}`}
                             title="Select suit"
                           >
                             <option value="">?</option>
@@ -2302,12 +2240,12 @@ Turn K♦ — ...`}
                   {/* Action Buttons */}
                   <div style={{ display: 'flex', gap: '12px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #3a3a3a' }}>
                     <button
-                      className="btn btn-platinum-premium"
-                      style={{ flex: 1 }}
+                      className="btn btn-platinum-premium btn-analyze-premium"
+                      style={{ flex: 1, padding: '14px 24px' }}
                       onClick={analyze}
                       disabled={aiLoading || !(h1 && h2 && preflopActions.length > 0)}
                     >
-                      {aiLoading ? 'Analyzing…' : 'Analyze Hand'}
+                      <span className="btn-text">{aiLoading ? 'Analyzing…' : '✨ Analyze Hand'}</span>
                     </button>
                     <button
                       className="btn btn-ony btn-ony--sm"
@@ -2343,18 +2281,20 @@ Turn K♦ — ...`}
             <div className="col">
 
               {/* GTO Strategy - FIRST */}
-              <section className="card ony-card platinum-container-frame">
-                <div className="cardTitleRow">
-                  <div className="cardTitle platinum-text-gradient">GTO Strategy</div>
+              <section className="card ony-card platinum-container-frame glass-card">
+                <div className="section-header section-accent-blue">
+                  <span className="section-header-icon">🤖</span>
+                  <span className="section-header-title">GTO Strategy</span>
                 </div>
 
                 <div className={`gtoBox gto-strategy-box${aiLoading ? ' loading' : fields?.gto_strategy ? ' populated' : ''}`}>{renderGTO(fields?.gto_strategy || '', fields?.mistakes)}</div>
               </section>
 
               {/* Play Review - SECOND (Premium Design) */}
-              <section className="card ony-card platinum-container-frame">
-                <div className="cardTitleRow">
-                  <div className="cardTitle platinum-text-gradient">Play Review</div>
+              <section className="card ony-card platinum-container-frame glass-card">
+                <div className="section-header section-accent-green">
+                  <span className="section-header-icon">📊</span>
+                  <span className="section-header-title">Play Review</span>
                 </div>
                 <div className={`play-review-box${aiLoading ? ' loading' : fields?.exploit_deviation ? ' populated' : ''}`}>
                   {/* Chart Watermark */}
