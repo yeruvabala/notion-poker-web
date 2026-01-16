@@ -37,9 +37,10 @@ export async function middleware(req: NextRequest) {
 
   // Public: home page + auth routes + static
   const pathname = req.nextUrl.pathname;
-  const publicPaths = ['/', '/auth/login', '/auth/callback'];
+  const publicPaths = ['/', '/login', '/auth/login', '/auth/callback', '/auth/update-password', '/auth/signout'];
   const isPublic =
     publicPaths.some((p) => pathname === p) ||
+    pathname.startsWith('/auth/') ||
     pathname.startsWith('/_next');
 
   // Guard app sections
