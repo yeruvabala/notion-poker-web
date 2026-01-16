@@ -1,73 +1,85 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function AuthCallbackPage() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const [status, setStatus] = useState('Processing...');
-    const supabase = createClient();
+function CallbackContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [status, setStatus] = useState('Processing...');
+  const supabase = createClient();
 
-    useEffect(() => {
-        async function handleCallback() {
-            const code = searchParams.get('code');
-            const type = searchParams.get('type');
-            const next = searchParams.get('next') || '/';
+  useEffect(() => {
+    async function handleCallback() {
+      const code = searchParams.get('code');
+      const type = searchParams.get('type');
+      const next = searchParams.get('next') || '/';
 
-            // Check for error in URL
-            const error = searchParams.get('error');
-            if (error) {
-                setStatus('Authentication failed. Redirecting...');
-                setTimeout(() => router.push('/login?error=' + error), 2000);
-                return;
-            }
+      // Check for error in URL
+      const error = searchParams.get('error');
+      if (error) {
+        setStatus('Authentication failed. Redirecting...');
+        setTimeout(() => router.push('/login?error=' + error), 2000);
+        return;
+      }
 
-            // If there's a code, exchange it
-            if (code) {
-                const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-                if (exchangeError) {
-                    setStatus('Link expired or invalid. Please try again.');
-                    setTimeout(() => router.push('/login'), 2000);
-                    return;
-                }
-            }
+      // If there's a code, exchange it
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) {
+          setStatus('Link expired or invalid. Please try again.');
+          setTimeout(() => router.push('/login'), 2000);
+          return;
+        }
+      }
 
-            // After code exchange (or if already authenticated), check the session
-            const { data: { session } } = await supabase.auth.getSession();
+      // After code exchange (or if already authenticated), check the session
+      const { data: { session } } = await supabase.auth.getSession();
 
-            if (session) {
-                // Check if this is a password recovery flow
-                // Recovery flow is indicated by type param or if user just came from password reset
-                if (type === 'recovery') {
-                    setStatus('Verified! Redirecting to set new password...');
-                    router.push('/auth/update-password');
-                    return;
-                }
-
-                // Normal login/signup - redirect to next or home
-                setStatus('Success! Redirecting...');
-                router.push(next);
-                return;
-            }
-
-            // No session means something went wrong
-            setStatus('Please try again.');
-            setTimeout(() => router.push('/login'), 2000);
+      if (session) {
+        // Check if this is a password recovery flow
+        if (type === 'recovery') {
+          setStatus('Verified! Redirecting to set new password...');
+          router.push('/auth/update-password');
+          return;
         }
 
-        handleCallback();
-    }, [supabase, router, searchParams]);
+        // Normal login/signup - redirect to next or home
+        setStatus('Success! Redirecting...');
+        router.push(next);
+        return;
+      }
 
-    return (
-        <div className="callback-page">
-            <div className="callback-card">
-                <div className="callback-spinner"></div>
-                <p className="callback-status">{status}</p>
-            </div>
+      // No session means something went wrong
+      setStatus('Please try again.');
+      setTimeout(() => router.push('/login'), 2000);
+    }
 
-            <style jsx>{`
+    handleCallback();
+  }, [supabase, router, searchParams]);
+
+  return (
+    <div className="callback-card">
+      <div className="callback-spinner"></div>
+      <p className="callback-status">{status}</p>
+    </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <div className="callback-page">
+      <Suspense fallback={
+        <div className="callback-card">
+          <div className="callback-spinner"></div>
+          <p className="callback-status">Loading...</p>
+        </div>
+      }>
+        <CallbackContent />
+      </Suspense>
+
+      <style jsx global>{`
         .callback-page {
           min-height: 100dvh;
           display: grid;
@@ -100,6 +112,6 @@ export default function AuthCallbackPage() {
           margin: 0;
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }
