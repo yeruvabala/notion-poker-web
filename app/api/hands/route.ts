@@ -80,6 +80,10 @@ export async function POST(req: Request) {
     exploit_signals: body?.exploit_signals ?? null,  // NEW: Agent 7 data
     learning_tag: Array.isArray(body?.learning_tag) ? body.learning_tag : null,
     notes: body?.notes ?? null,
+    // Session Mode fields
+    source: body?.source ?? 'manual',  // 'upload', 'manual', 'quick_save'
+    session_id: body?.session_id ?? null,  // UUID or null for quick saves
+    is_favorited: body?.is_favorited ?? false,
   };
 
   const { data, error } = await supabase

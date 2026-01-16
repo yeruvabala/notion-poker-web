@@ -19,6 +19,7 @@ type Fields = {
   learning_tag?: string[];
   hand_class?: string | null;
   source_used?: 'SUMMARY' | 'STORY' | null;
+  notes?: string | null; // User notes for the hand
   mistakes?: {
     decisions?: Array<{
       street: string;
@@ -549,6 +550,126 @@ export default function HomeClient() {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // ════════════════════════════════════════════════════════════════════════════
+  // SESSION MODE STATE
+  // ════════════════════════════════════════════════════════════════════════════
+  interface Session { id: string; name: string; hand_count?: number; }
+  const [activeSession, setActiveSession] = useState<Session | null>(null);
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  const [sessionElapsed, setSessionElapsed] = useState<string>('00:00');
+  const [sessionHandCount, setSessionHandCount] = useState(0);
+  const [currentHandSaved, setCurrentHandSaved] = useState(false);
+  const [showSessionModal, setShowSessionModal] = useState(false);
+  const [recentSessions, setRecentSessions] = useState<Session[]>([]);
+  const [newSessionName, setNewSessionName] = useState('');
+  const [loadingSessions, setLoadingSessions] = useState(false);
+
+  // Toast notification state
+  const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
+
+  // Show toast with auto-dismiss
+  const showToast = (message: string) => {
+    setToast({ message, visible: true });
+    setTimeout(() => setToast({ message: '', visible: false }), 2500);
+  };
+
+  // Session timer effect
+  useEffect(() => {
+    if (!sessionStartTime) {
+      setSessionElapsed('00:00');
+      return;
+    }
+    const interval = setInterval(() => {
+      const diff = Date.now() - sessionStartTime.getTime();
+      const mins = Math.floor(diff / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      setSessionElapsed(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [sessionStartTime]);
+
+  // Load active session from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('activeSession');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setActiveSession(parsed.session);
+        setSessionStartTime(new Date(parsed.startTime));
+        setSessionHandCount(parsed.handCount || 0);
+      } catch { }
+    }
+  }, []);
+
+  // Persist active session to localStorage
+  useEffect(() => {
+    if (activeSession && sessionStartTime) {
+      localStorage.setItem('activeSession', JSON.stringify({
+        session: activeSession,
+        startTime: sessionStartTime.toISOString(),
+        handCount: sessionHandCount
+      }));
+    } else {
+      localStorage.removeItem('activeSession');
+    }
+  }, [activeSession, sessionStartTime, sessionHandCount]);
+
+  // Fetch recent sessions when modal opens
+  const fetchRecentSessions = async () => {
+    setLoadingSessions(true);
+    try {
+      const res = await fetch('/api/sessions');
+      const data = await res.json();
+      if (data.ok) setRecentSessions(data.sessions || []);
+    } catch { }
+    setLoadingSessions(false);
+  };
+
+  // Start a new session
+  const startSession = async (name: string) => {
+    try {
+      const res = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setActiveSession(data.session);
+        setSessionStartTime(new Date());
+        setSessionHandCount(0);
+        setShowSessionModal(false);
+        setNewSessionName('');
+        showToast(`📁 Session "${name}" started`);
+      }
+    } catch { }
+  };
+
+  // Resume an existing session
+  const resumeSession = (session: Session) => {
+    setActiveSession(session);
+    setSessionStartTime(new Date());
+    setSessionHandCount(session.hand_count || 0);
+    setShowSessionModal(false);
+    showToast(`📁 Resumed "${session.name}"`);
+  };
+
+  // Exit current session
+  const exitSession = async () => {
+    if (activeSession) {
+      // Mark session as inactive
+      await fetch('/api/sessions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: activeSession.id, is_active: false })
+      });
+    }
+    setActiveSession(null);
+    setSessionStartTime(null);
+    setSessionHandCount(0);
+    showToast('Session ended');
+  };
+
   const [risk, setRisk] = useState<string>('');     // bb
   const [reward, setReward] = useState<string>(''); // bb
   const feNeeded = useMemo(() => {
@@ -586,6 +707,11 @@ export default function HomeClient() {
   const [f3, setF3] = useState<string>('');   // flop 3
   const [tr, setTr] = useState<string>('');   // turn
   const [rv, setRv] = useState<string>('');   // river
+
+  // Reset "saved" state when hand data changes (placed after h1/h2 are defined)
+  useEffect(() => {
+    setCurrentHandSaved(false);
+  }, [input, fields, h1, h2]);
 
   // NEW: Interactive Preflop Action Builder
   interface PreflopAction {
@@ -1095,25 +1221,102 @@ export default function HomeClient() {
     }
   }
 
-  // ************** NEW: save to Supabase via /api/hands **************
-  async function saveToDb() {
-    if (!fields) return;
+  // Check if we have enough data to save (either fields from analysis OR hero cards from Hand Builder)
+  const canSave = () => {
+    // Can save if we have analysis results
+    if (fields) return true;
+    // Can save if we have hero cards from Hand Builder
+    if (h1 && h2) return true;
+    return false;
+  };
+
+  // ************** Session-aware save to Supabase **************
+  async function saveToDb(isQuickSave = false) {
+    if (!canSave()) return;
     setSaving(true); setStatus(null);
     try {
+      // Build save payload - use fields if available, otherwise use Hand Builder state
+      const today = new Date().toISOString().slice(0, 10);
+      const heroCards = h1 && h2 ? `${h1} ${h2}` : (fields?.cards || '');
+      const boardStr = [f1, f2, f3, tr, rv].filter(Boolean).join(' ') || (fields?.board || '');
+
+      const savePayload = fields ? {
+        ...fields,
+        source: isQuickSave ? 'quick_save' : (activeSession ? 'manual' : 'quick_save'),
+        session_id: isQuickSave ? null : activeSession?.id || null,
+      } : {
+        // Build from Hand Builder state when no analysis
+        date: today,
+        stakes: stakes || null,
+        position: position || null,
+        cards: heroCards || null,
+        board: boardStr || null,
+        hand_class: null,
+        source_used: 'HAND_BUILDER',
+        gto_strategy: null,
+        exploit_deviation: null,
+        exploit_signals: null,
+        learning_tag: null,
+        source: isQuickSave ? 'quick_save' : (activeSession ? 'manual' : 'quick_save'),
+        session_id: isQuickSave ? null : activeSession?.id || null,
+      };
+
       const r = await fetch('/api/hands', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(fields),
+        body: JSON.stringify(savePayload),
       });
       const data = await r.json();
       if (!r.ok || !data?.ok) throw new Error(data?.error || 'Save failed');
-      setStatus('Saved to Supabase ✓');
+
+      // Update state and show feedback
+      setCurrentHandSaved(true);
+      if (activeSession) {
+        setSessionHandCount(c => c + 1);
+        showToast(`✓ Saved to ${activeSession.name}`);
+      } else {
+        showToast('✓ Quick saved');
+      }
     } catch (e: any) {
       setStatus(e?.message || 'Failed to save');
     } finally {
       setSaving(false);
     }
   }
+
+  // Quick save handler (no session)
+  const handleQuickSave = () => saveToDb(true);
+
+  // Handle Note button click
+  const handleNoteClick = () => {
+    if (activeSession) {
+      // Session active - one-click save
+      saveToDb(false);
+    } else {
+      // No session - show modal
+      fetchRecentSessions();
+      setShowSessionModal(true);
+    }
+  };
+
+  // Keyboard shortcut: Cmd+S / Ctrl+S to save
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        if (fields && !saving && !currentHandSaved) {
+          if (activeSession) {
+            saveToDb(false);
+          } else {
+            fetchRecentSessions();
+            setShowSessionModal(true);
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [fields, saving, currentHandSaved, activeSession]);
   // *******************************************************************
   const suitColor = (suit: string) => (isRed(suit) ? '#ef4444' : '#e5e7eb'); // Platinum for black suits
 
@@ -1143,6 +1346,95 @@ export default function HomeClient() {
               <span className="preview-badge-pill">Preview</span>
               <span className="user-avatar">{userEmail.charAt(0)}</span>
               <span className="user-email-text">{userEmail}</span>
+            </div>
+          )}
+
+          {/* Session Bar - shows when session is active */}
+          {activeSession && (
+            <div className="session-bar">
+              <div className="session-bar-left">
+                <span className="session-icon">📁</span>
+                <span className="session-name">{activeSession.name}</span>
+              </div>
+              <div className="session-bar-center">
+                <span className="session-timer-icon">🕐</span>
+                <span className="session-timer">{sessionElapsed}</span>
+                <span className="session-divider">•</span>
+                <span className="session-count">{sessionHandCount} hands</span>
+              </div>
+              <button className="session-exit-btn" onClick={exitSession}>
+                Exit Session
+              </button>
+            </div>
+          )}
+
+          {/* Toast notification */}
+          {toast.visible && (
+            <div className="toast-notification">
+              {toast.message}
+            </div>
+          )}
+
+          {/* Session Modal */}
+          {showSessionModal && (
+            <div className="session-modal-overlay" onClick={() => setShowSessionModal(false)}>
+              <div className="session-modal" onClick={(e) => e.stopPropagation()}>
+                <div className="session-modal-header">
+                  <h3>Save Hand</h3>
+                  <button className="session-modal-close" onClick={() => setShowSessionModal(false)}>×</button>
+                </div>
+
+                <div className="session-modal-options">
+                  <button className="session-option quick-save" onClick={() => { handleQuickSave(); setShowSessionModal(false); }}>
+                    <span className="option-icon">⚡</span>
+                    <span className="option-label">Quick Save</span>
+                    <span className="option-hint">One-off save, no session</span>
+                  </button>
+
+                  <div className="session-option-divider">or</div>
+
+                  <div className="session-start-new">
+                    <span className="option-icon">📁</span>
+                    <input
+                      type="text"
+                      className="session-name-input"
+                      value={newSessionName}
+                      onChange={(e) => setNewSessionName(e.target.value)}
+                      placeholder="Session name (e.g., Sunday Grind)"
+                      onKeyDown={(e) => e.key === 'Enter' && newSessionName.trim() && startSession(newSessionName.trim())}
+                    />
+                    <button
+                      className="session-start-btn"
+                      onClick={() => newSessionName.trim() && startSession(newSessionName.trim())}
+                      disabled={!newSessionName.trim()}
+                    >
+                      Start
+                    </button>
+                  </div>
+                </div>
+
+                {recentSessions.length > 0 && (
+                  <div className="session-recent">
+                    <div className="session-recent-header">Recent Sessions</div>
+                    <div className="session-recent-list">
+                      {recentSessions.slice(0, 5).map((session) => (
+                        <button
+                          key={session.id}
+                          className="session-recent-item"
+                          onClick={() => resumeSession(session)}
+                        >
+                          <span className="recent-name">{session.name}</span>
+                          <span className="recent-count">{session.hand_count || 0} hands</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {loadingSessions && (
+                  <div className="session-loading">Loading sessions...</div>
+                )}
+              </div>
             </div>
           )}
 
@@ -2241,25 +2533,37 @@ Turn K♦ — ...`}
                   <div style={{ display: 'flex', gap: '12px', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #3a3a3a' }}>
                     <button
                       className="btn btn-platinum-premium btn-analyze-premium"
-                      style={{ flex: 1, padding: '14px 24px' }}
+                      style={{ flex: 2, padding: '14px 24px', whiteSpace: 'nowrap' }}
                       onClick={analyze}
                       disabled={aiLoading || !(h1 && h2 && preflopActions.length > 0)}
                     >
                       <span className="btn-text">{aiLoading ? 'Analyzing…' : '✨ Analyze Hand'}</span>
                     </button>
                     <button
-                      className="btn btn-ony btn-ony--sm"
-                      style={{ flex: 0.5 }}
-                      onClick={() => {
-                        // TODO: Add note functionality
-                        console.log('Note button clicked');
-                      }}
+                      className={`btn-session-save ${currentHandSaved
+                        ? 'btn-saved'
+                        : activeSession
+                          ? 'btn-save-active'
+                          : 'btn-note'
+                        }`}
+                      style={{ flex: 1 }}
+                      onClick={handleNoteClick}
+                      disabled={!canSave() || saving || currentHandSaved}
                     >
-                      📝 Note
+                      <span className="save-icon">
+                        {currentHandSaved ? '✓' : '📝'}
+                      </span>
+                      {saving
+                        ? 'Saving…'
+                        : currentHandSaved
+                          ? 'Saved'
+                          : activeSession
+                            ? 'Save'
+                            : 'Note'}
                     </button>
                     <button
-                      className="btn btn-ony btn-ony--sm"
-                      style={{ flex: 0.5 }}
+                      className="btn-session-save btn-note"
+                      style={{ flex: 1 }}
                       onClick={() => {
                         setFields(null); setStatus(null); setError(null);
                         setStakes(''); setEff(''); setPosition('');
@@ -2377,13 +2681,31 @@ Turn K♦ — ...`}
                             <span className="sparkle-icon">✨</span>
                             Quick Insight
                           </button>
+
+                          {/* Smart Note/Save Button */}
                           <button
-                            className="btn-study-list"
-                            onClick={saveToDb}
-                            disabled={!fields || saving}
+                            className={`btn-session-save ${currentHandSaved
+                              ? 'btn-saved'
+                              : activeSession
+                                ? 'btn-save-active'
+                                : 'btn-note'
+                              }`}
+                            onClick={handleNoteClick}
+                            disabled={!canSave() || saving || currentHandSaved}
                           >
-                            <span className="list-icon">📝</span>
-                            {saving ? 'Adding…' : 'Add to Study List'}
+                            <span className="save-icon">
+                              {currentHandSaved ? '✓' : '📝'}
+                            </span>
+                            {saving
+                              ? 'Saving…'
+                              : currentHandSaved
+                                ? 'Saved'
+                                : activeSession
+                                  ? 'Save'
+                                  : 'Note'}
+                            {!activeSession && !currentHandSaved && (
+                              <span className="keyboard-hint">⌘S</span>
+                            )}
                           </button>
                         </div>
                         {status && <div className="play-review-status">{status}</div>}

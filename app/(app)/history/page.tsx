@@ -2,15 +2,19 @@
 // app/(app)/history/page.tsx
 'use client';
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { Bot, User, Target } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
+import { Bot, User, Target, Upload, Zap, FolderOpen, Clock, Layers, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { EnhancedGTOTooltip } from './components/EnhancedGTOTooltip';
 import "@/styles/onlypoker-theme.css";
 import "@/app/globals.css";
+
+type Session = {
+  id: string;
+  name: string;
+  created_at: string;
+};
 
 type Hand = {
   id: string;
@@ -22,40 +26,52 @@ type Hand = {
   gto_strategy: string | null;
   exploit_deviation: string | null;
   exploit_signals: any;
-  // Phase 12-14.5: Enhanced coaching data
   hero_classification?: any;
   spr_analysis?: any;
   mistake_analysis?: any;
+  session_id?: string | null;
+  session?: { id: string; name: string } | null;
+  source?: string | null;
 };
 
-// Helper to render cards with proper suit colors
-function renderCards(cards: string | null) {
-  if (!cards) return '—';
+type FilterType = 'all' | 'quick' | 'upload' | string;
+
+// Large card rendering with proper suit colors
+function renderHeroCards(cards: string | null, size: 'normal' | 'large' = 'normal') {
+  if (!cards) return <span className="hand-card-empty">—</span>;
   return cards.split(' ').map((card, i) => {
     const suit = card.slice(-1);
     const isRed = suit === '♥' || suit === '♦';
     return (
-      <span key={i} style={{
-        color: isRed ? '#ef4444' : '#E2E8F0',
-        marginRight: 4,
-        fontWeight: 600
-      }}>
+      <span key={i} className={`hero-card ${isRed ? 'red' : 'black'} ${size === 'large' ? 'large' : ''}`}>
         {card}
       </span>
     );
   });
 }
 
-// Helper to render simple markdown (bolding)
+function getRelativeTime(dateStr: string | null): string {
+  if (!dateStr) return '—';
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return 'just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString();
+}
+
+// Simple markdown bolding
 function renderMarkdown(text: string | null) {
-  if (!text) return '—';
-
-  // Split by ** delimiters
+  if (!text) return null;
   const parts = text.split(/(\*\*.*?\*\*)/g);
-
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
-      // Remove asterisks and render bold
       return <strong key={i} className="text-white font-bold">{part.slice(2, -2)}</strong>;
     }
     return <span key={i}>{part}</span>;
@@ -69,8 +85,14 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [hands, setHands] = useState<Hand[]>([]);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [uploadBusy, setUploadBusy] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<string | null>(null);
+  const [uploadExpanded, setUploadExpanded] = useState(false);
+
+  // Modal state
+  const [selectedHand, setSelectedHand] = useState<Hand | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -79,134 +101,96 @@ export default function HistoryPage() {
       setLoading(true);
       setErr(null);
 
-      const {
-        data: { user },
-        error: userErr,
-      } = await supabase.auth.getUser();
+      const { data: { user }, error: userErr } = await supabase.auth.getUser();
 
       if (userErr) {
         console.error(userErr);
-        if (!cancelled) {
-          setErr('Could not load user session.');
-          setLoading(false);
-        }
+        if (!cancelled) { setErr('Could not load user session.'); setLoading(false); }
         return;
       }
 
-      if (!user) {
-        if (!cancelled) {
-          router.push('/');
-        }
-        return;
-      }
+      if (!user) { if (!cancelled) router.push('/'); return; }
 
-      // Fetch hands with backward compatibility
-      // Phase 12-14.5 columns are optional (might not exist yet)
-      const { data, error } = await supabase
+      const { data: handsData, error: handsErr } = await supabase
         .from('hands')
-        .select('*')  // Select all columns (handles missing columns gracefully)
+        .select('*, session:note_sessions(id, name)')
         .eq('user_id', user.id)
-        .order('date', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false })
         .limit(200);
 
-      if (error) {
-        console.error(error);
-        if (!cancelled) {
-          setErr('Failed to load hands.');
-          setLoading(false);
-        }
+      const { data: sessionsData } = await supabase
+        .from('note_sessions')
+        .select('id, name, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (handsErr) {
+        console.error(handsErr);
+        if (!cancelled) { setErr('Failed to load hands.'); setLoading(false); }
         return;
       }
 
       if (!cancelled) {
-        setHands((data || []) as Hand[]);
+        setHands((handsData || []) as Hand[]);
+        setSessions((sessionsData || []) as Session[]);
         setLoading(false);
       }
     }
 
     load();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [router, supabase]);
 
-  // --- NEW: upload that both uploads to S3 and enqueues in hand_files ----
+  const filteredHands = useMemo(() => {
+    if (activeFilter === 'all') return hands;
+    if (activeFilter === 'quick') return hands.filter(h => h.source === 'quick_save');
+    if (activeFilter === 'upload') return hands.filter(h => h.source === 'upload');
+    return hands.filter(h => h.session_id === activeFilter || h.session?.id === activeFilter);
+  }, [hands, activeFilter]);
+
+  const stats = useMemo(() => {
+    const uniqueSessions = new Set(hands.map(h => h.session_id).filter(Boolean));
+    const lastHand = hands[0];
+    return {
+      total: hands.length,
+      sessionCount: uniqueSessions.size,
+      lastActivity: lastHand ? getRelativeTime(lastHand.created_at) : '—'
+    };
+  }, [hands]);
+
   async function handleUploadChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setUploadMsg(null);
     setUploadBusy(true);
 
     try {
-      // 1) ensure user is logged in
-      const {
-        data: { user },
-        error: uerr,
-      } = await supabase.auth.getUser();
-
-      if (uerr) throw new Error(`Supabase getUser error: ${uerr.message} `);
+      const { data: { user }, error: uerr } = await supabase.auth.getUser();
+      if (uerr) throw new Error(`Supabase getUser error: ${uerr.message}`);
       if (!user) throw new Error('Please sign in.');
 
-      // 2) Direct upload to our API (server will put to S3)
       const fd = new FormData();
       fd.append('file', file);
 
-      const upRes = await fetch('/api/uploads/direct', {
-        method: 'POST',
-        body: fd,
-      });
-
+      const upRes = await fetch('/api/uploads/direct', { method: 'POST', body: fd });
       const upJson = await upRes.json().catch(() => ({}));
-      if (!upRes.ok) {
-        const msg =
-          upJson?.error ||
-          upJson?.message ||
-          `Upload failed with status ${upRes.status} `;
-        throw new Error(msg);
-      }
+      if (!upRes.ok) throw new Error(upJson?.error || `Upload failed with status ${upRes.status}`);
 
-      const { key, contentType } = upJson as {
-        key: string;
-        contentType: string;
-      };
-
-      // 3) Enqueue into hand_files so worker.py can claim it
+      const { key, contentType } = upJson;
       const bucket = process.env.NEXT_PUBLIC_AWS_S3_BUCKET;
-      if (!bucket) {
-        throw new Error(
-          'NEXT_PUBLIC_AWS_S3_BUCKET is not set in the frontend env.'
-        );
-      }
-
-      const s3Path = `s3://${bucket}/${key}`;
+      if (!bucket) throw new Error('NEXT_PUBLIC_AWS_S3_BUCKET is not set.');
 
       const enqueueRes = await fetch('/api/hand-files/enqueue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          storage_path: s3Path,
-          original_filename: file.name,
-          file_size_bytes: file.size,
-          mime_type: contentType || file.type || 'text/plain',
-        }),
+        body: JSON.stringify({ storage_path: `s3://${bucket}/${key}`, original_filename: file.name, file_size_bytes: file.size, mime_type: contentType || file.type }),
       });
 
       const enqueueJson = await enqueueRes.json().catch(() => ({}));
-      if (!enqueueRes.ok || !enqueueJson?.ok) {
-        const msg =
-          enqueueJson?.error ||
-          enqueueJson?.message ||
-          `Enqueue failed with status ${enqueueRes.status}`;
-        throw new Error(msg);
-      }
+      if (!enqueueRes.ok || !enqueueJson?.ok) throw new Error(enqueueJson?.error || `Enqueue failed`);
 
-      setUploadMsg(
-        'Uploaded & queued ✓  The robot will parse it and new hands will show up here soon.'
-      );
-
-      // allow selecting the same file again
+      setUploadMsg('✓ Uploaded! New hands will appear soon.');
       e.target.value = '';
     } catch (error: any) {
       console.error('upload error', error);
@@ -216,376 +200,392 @@ export default function HistoryPage() {
     }
   }
 
-  const hasHands = hands.length > 0;
+  // Handle card click - open modal instead of navigating
+  const handleCardClick = (h: Hand, e: React.MouseEvent) => {
+    e.preventDefault();
+    setSelectedHand(h);
+  };
 
   return (
-    <main className="op-surface history-page">
-      <div className="history-wrap">
-        <header className="history-header">
-          <div>
-            <h1 className="history-title platinum-text-gradient">My Hands</h1>
-            <p className="history-sub">
-              Recent hands you&apos;ve sent to Only Poker. New uploads will
-              appear here after the background parser finishes.
-            </p>
-          </div>
+    <main className="op-surface mh-page">
+      <div className="mh-container">
+        {/* Header */}
+        <header className="mh-header">
+          <h1 className="mh-title platinum-text-gradient">My Hands</h1>
+          <p className="mh-subtitle">Your poker hand history with GTO analysis and coaching insights.</p>
         </header>
 
-        {/* Upload block */}
-        <section className="history-card history-upload platinum-container-frame">
-          <div className="history-upload-main">
-            <div>
-              <div className="history-upload-title">Upload hand history (.txt)</div>
-              <div className="history-upload-sub">
-                Choose a hand history file from your poker site. We&apos;ll
-                store it in S3 and queue it for parsing.
-              </div>
+        {/* Filter Bar */}
+        <section className="mh-filter-bar">
+          <button className={`mh-filter-pill ${activeFilter === 'all' ? 'active' : ''}`} onClick={() => setActiveFilter('all')}>
+            <Layers className="w-4 h-4" /> All Hands
+          </button>
+          {sessions.map(s => (
+            <button key={s.id} className={`mh-filter-pill ${activeFilter === s.id ? 'active' : ''}`} onClick={() => setActiveFilter(s.id)}>
+              <FolderOpen className="w-4 h-4" /> {s.name}
+            </button>
+          ))}
+          <button className={`mh-filter-pill ${activeFilter === 'quick' ? 'active' : ''}`} onClick={() => setActiveFilter('quick')}>
+            <Zap className="w-4 h-4" /> Quick Saves
+          </button>
+          <button className={`mh-filter-pill ${activeFilter === 'upload' ? 'active' : ''}`} onClick={() => setActiveFilter('upload')}>
+            <Upload className="w-4 h-4" /> Uploads
+          </button>
+        </section>
+
+        {/* Stats Bar + Upload Toggle */}
+        <section className="mh-stats-upload-row">
+          <div className="mh-stats-bar platinum-inner-border">
+            <div className="mh-stat">
+              <span className="mh-stat-value">{stats.total}</span>
+              <span className="mh-stat-label">hands</span>
             </div>
-            <div>
-              <label className="history-file-btn btn-platinum-premium">
-                <input
-                  type="file"
-                  accept=".txt"
-                  onChange={handleUploadChange}
-                  disabled={uploadBusy}
-                  style={{ display: 'none' }}
-                />
+            <div className="mh-stat-divider" />
+            <div className="mh-stat">
+              <span className="mh-stat-value">{stats.sessionCount}</span>
+              <span className="mh-stat-label">sessions</span>
+            </div>
+            <div className="mh-stat-divider" />
+            <div className="mh-stat">
+              <Clock className="w-4 h-4 opacity-60" />
+              <span className="mh-stat-label">Last: {stats.lastActivity}</span>
+            </div>
+          </div>
+
+          <button className="mh-upload-toggle" onClick={() => setUploadExpanded(!uploadExpanded)}>
+            <Upload className="w-4 h-4" />
+            Import
+            {uploadExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+        </section>
+
+        {/* Collapsible Upload Section */}
+        {uploadExpanded && (
+          <section className="mh-upload platinum-container-frame">
+            <div className="mh-upload-content">
+              <div>
+                <div className="mh-upload-title">📂 Import Hand History</div>
+                <div className="mh-upload-sub">Drag & drop or click to upload .txt files from your poker client</div>
+              </div>
+              <label className="mh-upload-btn btn-platinum-premium">
+                <input type="file" accept=".txt" onChange={handleUploadChange} disabled={uploadBusy} style={{ display: 'none' }} />
                 {uploadBusy ? 'Uploading…' : 'Choose File'}
               </label>
             </div>
-          </div>
-          {uploadMsg && <div className="history-upload-msg">{uploadMsg}</div>}
-        </section>
+            {uploadMsg && <div className="mh-upload-msg">{uploadMsg}</div>}
+          </section>
+        )}
 
-        {loading && <div className="history-muted">Loading hands…</div>}
-        {err && !loading && <div className="history-error">{err}</div>}
+        {/* Loading / Error States */}
+        {loading && <div className="mh-loading">Loading hands…</div>}
+        {err && !loading && <div className="mh-error">{err}</div>}
 
+        {/* Hand Cards Grid */}
         {!loading && !err && (
           <>
-            {!hasHands && (
-              <div className="history-muted">
-                No hands found yet. Upload a .txt history file to get started.
-              </div>
-            )}
+            {filteredHands.length === 0 ? (
+              <div className="mh-empty">{activeFilter === 'all' ? 'No hands found yet. Upload a .txt history file or save hands from the Hand Builder.' : 'No hands match this filter.'}</div>
+            ) : (
+              <section className="mh-hands-grid">
+                {filteredHands.map((h) => {
+                  const hasGto = !!h.gto_strategy;
+                  const hasExploit = h.exploit_signals && h.exploit_signals.length > 0;
+                  const hasReview = !!h.exploit_deviation;
+                  const dateStr = h.date || h.created_at?.slice(0, 10);
 
-            {hasHands && (
-              <section className="history-card platinum-container-frame">
-                <div className="history-table-header">
-                  <span>Date</span>
-                  <span>Stakes</span>
-                  <span>Position</span>
-                  <span>Cards</span>
-                  <span className="flex items-center justify-center gap-1">
-                    <Bot className="w-4 h-4 text-[#737373]" />
-                  </span>
-                  <span className="flex items-center justify-center gap-1">
-                    <Target className="w-4 h-4 text-[#737373]" />
-                  </span>
-                  <span className="flex items-center justify-center gap-1">
-                    <User className="w-4 h-4 text-[#737373]" />
-                  </span>
-                </div>
-                <div className="history-divider" />
-                <ul className="history-table-body">
-                  {hands.map((h) => {
-                    const d = h.date || h.created_at?.slice(0, 10);
-                    const gto = h.gto_strategy;
-                    const exploit = h.exploit_deviation;
+                  return (
+                    <div key={h.id} className="mh-hand-card platinum-inner-border" onClick={(e) => handleCardClick(h, e)}>
+                      <div className="mh-card-top">
+                        <div className="mh-hero-cards">{renderHeroCards(h.cards)}</div>
+                        {h.position && <span className="mh-position-badge">{h.position}</span>}
+                      </div>
 
-                    return (
-                      <li key={h.id}>
-                        <Link href={`/hand/${h.id}`} className="history-row" style={{ textDecoration: 'none' }}>
-                          <span>{d || '—'}</span>
-                          <span>{h.stakes || '—'}</span>
-                          <span>{h.position || '—'}</span>
-                          <span>{renderCards(h.cards)}</span>
+                      <div className="mh-card-meta">
+                        <span className="mh-stakes">{h.stakes || '—'}</span>
+                        <span className="mh-date">{dateStr || '—'}</span>
+                      </div>
 
-                          {/* GTO / Robot Column */}
-                          <span className="flex items-center justify-center">
-                            {gto ? (
-                              <EnhancedGTOTooltip
-                                gtoStrategy={gto}
-                                heroClassification={h.hero_classification}
-                                spr={h.spr_analysis}
-                                mistakes={h.mistake_analysis}
-                              />
-                            ) : (
-                              <Bot className="w-5 h-5 text-[#333] opacity-30" />
-                            )}
-                          </span>
+                      <div className="mh-card-footer">
+                        {/* GTO Icon with Tooltip */}
+                        <div className="mh-status-wrapper group">
+                          <div className={`mh-status-icon ${hasGto ? 'active' : ''}`}>
+                            <Bot className="w-4 h-4" />
+                          </div>
+                          {hasGto && (
+                            <div className="mh-tooltip platinum-container-frame">
+                              <div className="mh-tooltip-header">🤖 GTO Strategy</div>
+                              <div className="mh-tooltip-body">{h.gto_strategy?.slice(0, 200)}...</div>
+                            </div>
+                          )}
+                        </div>
 
-                          {/* Exploit Signals Column - NEW! */}
-                          <span className="flex items-center justify-center">
-                            {h.exploit_signals && h.exploit_signals.length > 0 ? (
-                              <div className="group relative">
-                                <Target
-                                  className="w-5 h-5 text-[#737373] transition-all duration-300 hover:text-[#fde047] hover:drop-shadow-[0_0_8px_rgba(253,224,71,0.5)] cursor-help"
-                                />
-                                <div className="absolute right-full top-1/2 -translate-y-1/2 mr-3 w-80 p-5 platinum-container-frame shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[9999]">
-                                  <div className="mb-3 border-b border-[#444] pb-2">
-                                    <span className="font-bold uppercase tracking-wider text-[11px] platinum-text-gradient">🎯 Exploit Signals</span>
-                                  </div>
-                                  <div className="flex gap-2 mb-3">
-                                    {h.exploit_signals.map((arch: any) => (
-                                      <span key={arch.id} className="text-lg" title={arch.name}>{arch.icon}</span>
-                                    ))}
-                                  </div>
-                                  {h.exploit_signals.map((arch: any) => (
-                                    <div key={arch.id} className="mb-3 text-xs">
-                                      <div className="font-bold text-[#e2e8f0] mb-1">{arch.icon} vs {arch.name}</div>
-                                      {arch.streets?.slice(0, 2).map((st: any, i: number) => (
-                                        <div key={i} className="text-[#94a3b8]">
-                                          <strong>{st.street}:</strong> {st.adjustedAction} {st.adjustedFreq}%
-                                          <span className={st.direction === 'increase' ? ' text-green-400' : st.direction === 'decrease' ? ' text-red-400' : ''}>
-                                            {st.direction === 'increase' ? ' ↑' : st.direction === 'decrease' ? ' ↓' : ' →'}
-                                          </span>
-                                        </div>
-                                      ))}
-                                      <div className="text-[#fde047] mt-1">💡 {arch.overallAdvice}</div>
-                                    </div>
-                                  ))}
-                                </div>
+                        {/* Exploit Icon with Tooltip */}
+                        <div className="mh-status-wrapper group">
+                          <div className={`mh-status-icon ${hasExploit ? 'active exploit' : ''}`}>
+                            <Target className="w-4 h-4" />
+                          </div>
+                          {hasExploit && (
+                            <div className="mh-tooltip platinum-container-frame">
+                              <div className="mh-tooltip-header">🎯 Exploit Signals</div>
+                              <div className="mh-tooltip-body">
+                                {h.exploit_signals.slice(0, 2).map((sig: any, i: number) => (
+                                  <div key={i}>{sig.icon} {sig.name}</div>
+                                ))}
                               </div>
-                            ) : (
-                              <Target className="w-5 h-5 text-[#333] opacity-30" />
-                            )}
-                          </span>
+                            </div>
+                          )}
+                        </div>
 
-                          {/* Exploit / Human Column */}
-                          <span className="flex items-center justify-center">
-                            {exploit ? (
-                              <div className="group relative">
-                                <User
-                                  className="w-5 h-5 text-[#737373] transition-all duration-300 hover:text-[#e2e8f0] hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] cursor-help"
-                                />
-                                <div className="absolute right-full top-1/2 -translate-y-1/2 mr-3 w-96 p-5 platinum-container-frame shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[9999]">
-                                  <div className="mb-3 border-b border-[#444] pb-2">
-                                    <span className="font-bold uppercase tracking-wider text-[11px] platinum-text-gradient">Play Review</span>
-                                  </div>
-                                  <div className="text-xs leading-relaxed whitespace-pre-wrap platinum-text-gradient font-medium">
-                                    {renderMarkdown(exploit)}
-                                  </div>
-                                </div>
-                              </div>
-                            ) : (
-                              <User className="w-5 h-5 text-[#333] opacity-30" />
-                            )}
-                          </span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
+                        {/* Review Icon with Tooltip */}
+                        <div className="mh-status-wrapper group">
+                          <div className={`mh-status-icon ${hasReview ? 'active review' : ''}`}>
+                            <User className="w-4 h-4" />
+                          </div>
+                          {hasReview && (
+                            <div className="mh-tooltip platinum-container-frame">
+                              <div className="mh-tooltip-header">👤 Play Review</div>
+                              <div className="mh-tooltip-body">{renderMarkdown(h.exploit_deviation?.slice(0, 200) ?? '')}...</div>
+                            </div>
+                          )}
+                        </div>
+
+                        {h.session?.name && <span className="mh-session-badge">📁 {h.session.name}</span>}
+                        {!h.session?.name && h.source === 'quick_save' && <span className="mh-quick-badge">⚡</span>}
+                      </div>
+                    </div>
+                  );
+                })}
               </section>
             )}
           </>
         )}
       </div>
 
+      {/* Hand Detail Modal */}
+      {selectedHand && (
+        <div className="mh-modal-overlay" onClick={() => setSelectedHand(null)}>
+          <div className="mh-modal platinum-container-frame" onClick={(e) => e.stopPropagation()}>
+            <button className="mh-modal-close" onClick={() => setSelectedHand(null)}>
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="mh-modal-header">
+              <div className="mh-modal-cards">{renderHeroCards(selectedHand.cards, 'large')}</div>
+              <div className="mh-modal-meta">
+                {selectedHand.position && <span className="mh-position-badge large">{selectedHand.position}</span>}
+                <span className="mh-modal-stakes">{selectedHand.stakes || '—'}</span>
+                <span className="mh-modal-date">{selectedHand.date || selectedHand.created_at?.slice(0, 10)}</span>
+              </div>
+            </div>
+
+            {selectedHand.session?.name && (
+              <div className="mh-modal-session">📁 Session: {selectedHand.session.name}</div>
+            )}
+
+            <div className="mh-modal-sections">
+              {selectedHand.gto_strategy && (
+                <div className="mh-modal-section">
+                  <div className="mh-modal-section-title">🤖 GTO Strategy</div>
+                  <div className="mh-modal-section-body">{selectedHand.gto_strategy}</div>
+                </div>
+              )}
+
+              {selectedHand.exploit_signals && selectedHand.exploit_signals.length > 0 && (
+                <div className="mh-modal-section">
+                  <div className="mh-modal-section-title">🎯 Exploit Signals</div>
+                  <div className="mh-modal-section-body">
+                    {selectedHand.exploit_signals.map((sig: any, i: number) => (
+                      <div key={i} className="mh-exploit-item">
+                        <span className="mh-exploit-icon">{sig.icon}</span>
+                        <span className="mh-exploit-name">{sig.name}</span>
+                        {sig.overallAdvice && <div className="mh-exploit-advice">💡 {sig.overallAdvice}</div>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedHand.exploit_deviation && (
+                <div className="mh-modal-section">
+                  <div className="mh-modal-section-title">👤 Play Review</div>
+                  <div className="mh-modal-section-body">{renderMarkdown(selectedHand.exploit_deviation)}</div>
+                </div>
+              )}
+
+              {!selectedHand.gto_strategy && !selectedHand.exploit_deviation && (
+                <div className="mh-modal-empty">
+                  No analysis available yet. Run "Analyze Hand" to get GTO strategy and play review.
+                </div>
+              )}
+            </div>
+
+            <div className="mh-modal-actions">
+              <Link href={`/hand/${selectedHand.id}`} className="mh-modal-btn btn-platinum-premium">
+                View Full Details →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx global>{`
-        /* Dark Mode Platinum Theme for History Page */
-        .history-page {
-          padding: 28px 18px;
-          min-height: 100vh;
-          background: #1c1c1c !important;
+        /* ============================================
+           MY HANDS - PREMIUM REDESIGN V2
+           ============================================ */
+        
+        .mh-page { padding: 24px 20px; min-height: 100vh; background: #1c1c1c !important; }
+        .mh-container { max-width: 1200px; margin: 0 auto; }
+        
+        .mh-header { margin-bottom: 24px; }
+        .mh-title { font-size: 36px; font-weight: 800; margin: 0 0 8px; text-transform: uppercase; letter-spacing: 2px; }
+        .mh-subtitle { margin: 0; font-size: 14px; opacity: 0.7; }
+        
+        /* Filter Bar */
+        .mh-filter-bar { display: flex; gap: 10px; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
+        .mh-filter-bar::-webkit-scrollbar { display: none; }
+        
+        .mh-filter-pill {
+          display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 20px;
+          border: 1px solid #444; background: #1a1a1a; color: #888; font-size: 13px;
+          font-weight: 600; white-space: nowrap; cursor: pointer; transition: all 0.2s ease;
         }
-        .history-wrap {
-          max-width: 1100px;
-          margin: 0 auto;
-        }
-        .history-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          margin-bottom: 24px;
+        .mh-filter-pill:hover { border-color: #666; color: #ccc; }
+        .mh-filter-pill.active {
+          background: linear-gradient(145deg, #333, #222); border-color: #888; color: #fff;
+          box-shadow: 0 0 12px rgba(200, 200, 200, 0.15), inset 0 1px 0 rgba(255,255,255,0.1);
         }
         
-        /* Title - Metallic Gradient */
-        .history-title {
-          font-size: 32px;
-          font-weight: 800;
-          margin: 0 0 8px;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-        }
+        /* Stats + Upload Row */
+        .mh-stats-upload-row { display: flex; gap: 12px; margin-bottom: 20px; align-items: stretch; }
         
-        /* Subtitle - Metallic gradient text */
-        .history-sub {
-          margin: 0;
-          font-size: 14px;
-          background: linear-gradient(to right, #6b7280 0%, #94A3B8 40%, #94A3B8 60%, #6b7280 100%) !important;
-          -webkit-background-clip: text !important;
-          background-clip: text !important;
-          color: transparent !important;
-          -webkit-text-fill-color: transparent !important;
-        }
+        .mh-stats-bar { display: flex; align-items: center; gap: 20px; padding: 12px 20px; flex: 1; }
+        .mh-stat { display: flex; align-items: center; gap: 6px; }
+        .mh-stat-value { font-size: 18px; font-weight: 700; color: #fff !important; -webkit-text-fill-color: #fff !important; background: none !important; }
+        .mh-stat-label { font-size: 13px; opacity: 0.6; }
+        .mh-stat-divider { width: 1px; height: 20px; background: linear-gradient(transparent, #555, transparent); }
         
-        /* Back Button - Using btn-platinum-premium */
-        .history-back {
-          font-size: 14px;
-          border-radius: 12px;
-          padding: 10px 20px;
-          text-decoration: none;
-          display: inline-flex;
-          align-items: center;
+        .mh-upload-toggle {
+          display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-radius: 12px;
+          border: 1px solid #555; background: #1a1a1a; color: #888; font-size: 13px;
+          font-weight: 600; cursor: pointer; transition: all 0.2s ease;
         }
-        
-        /* Cards - Dark grey container with platinum border */
-        .history-card {
-          padding: 18px 20px;
-          margin-bottom: 20px;
-        }
+        .mh-upload-toggle:hover { border-color: #888; color: #fff; background: #252525; }
         
         /* Upload Section */
-        .history-upload {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
+        .mh-upload { padding: 16px 20px; margin-bottom: 20px; animation: slideDown 0.2s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .mh-upload-content { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+        .mh-upload-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+        .mh-upload-sub { font-size: 13px; opacity: 0.6; }
+        .mh-upload-btn { display: inline-flex; align-items: center; padding: 10px 20px; border-radius: 12px; font-size: 14px; cursor: pointer; }
+        .mh-upload-msg { margin-top: 12px; font-size: 13px; color: #22c55e !important; -webkit-text-fill-color: #22c55e !important; background: none !important; }
+        
+        .mh-loading, .mh-empty { text-align: center; padding: 40px 20px; font-size: 14px; opacity: 0.6; }
+        .mh-error { text-align: center; padding: 40px 20px; font-size: 14px; color: #ef4444 !important; -webkit-text-fill-color: #ef4444 !important; background: none !important; }
+        
+        /* Hands Grid */
+        .mh-hands-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        
+        /* Hand Card - Uses platinum-inner-border class (same as stats bar) */
+        .mh-hand-card {
+          display: flex; flex-direction: column; padding: 16px; cursor: pointer; transition: all 0.2s ease;
         }
-        .history-upload-main {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          flex-wrap: wrap;
-        }
-        .history-upload-title {
-          font-weight: 700;
-          font-size: 15px;
-          margin-bottom: 6px;
-          background: linear-gradient(to right, #6b7280 0%, #ffffff 40%, #ffffff 60%, #6b7280 100%) !important;
-          -webkit-background-clip: text !important;
-          background-clip: text !important;
-          color: transparent !important;
-          -webkit-text-fill-color: transparent !important;
-        }
-        .history-upload-sub {
-          font-size: 13px;
-          background: linear-gradient(to right, #6b7280 0%, #94A3B8 40%, #94A3B8 60%, #6b7280 100%) !important;
-          -webkit-background-clip: text !important;
-          background-clip: text !important;
-          color: transparent !important;
-          -webkit-text-fill-color: transparent !important;
+        .mh-hand-card:hover { 
+          transform: translateY(-2px); 
         }
         
-        /* File Upload Button - Using btn-platinum-premium */
-        .history-file-btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          padding: 10px 20px;
-          border-radius: 12px;
-          font-size: 14px;
-          cursor: pointer;
-          color: #1a1a1a !important;
-          -webkit-text-fill-color: #1a1a1a !important;
+        .mh-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .mh-hero-cards { display: flex; gap: 6px; }
+        
+        .hero-card { font-size: 24px; font-weight: 700; letter-spacing: -1px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .hero-card.large { font-size: 36px; }
+        .hero-card.red { color: #ef4444 !important; -webkit-text-fill-color: #ef4444 !important; background: none !important; }
+        .hero-card.black { color: #E2E8F0 !important; -webkit-text-fill-color: #E2E8F0 !important; background: none !important; }
+        .hand-card-empty { font-size: 24px; opacity: 0.3; }
+        
+        .mh-position-badge { padding: 4px 10px; border-radius: 6px; background: rgba(255,255,255,0.08) !important; font-size: 12px; font-weight: 700; color: #E2E8F0 !important; -webkit-text-fill-color: #E2E8F0 !important; }
+        .mh-position-badge.large { padding: 6px 14px; font-size: 14px; }
+        
+        .mh-card-meta { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px; opacity: 0.7; }
+        .mh-stakes, .mh-date { color: #94a3b8 !important; -webkit-text-fill-color: #94a3b8 !important; background: none !important; }
+        
+        .mh-card-footer { display: flex; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+        
+        /* Status Icons with Tooltips */
+        .mh-status-wrapper { position: relative; }
+        
+        .mh-status-icon {
+          width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+          border-radius: 6px; background: rgba(255,255,255,0.03); color: #444; transition: all 0.2s ease;
+        }
+        .mh-status-icon.active { background: rgba(200,200,200,0.1); color: #888; }
+        .mh-status-icon.active.exploit { color: #fde047; }
+        .mh-status-icon.active.review { color: #a78bfa; }
+        .mh-status-icon.active:hover { color: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.2); }
+        
+        /* Tooltip */
+        .mh-tooltip {
+          position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+          width: 280px; padding: 12px; margin-bottom: 8px; z-index: 100;
+          opacity: 0; visibility: hidden; transition: all 0.2s ease; pointer-events: none;
+        }
+        .mh-status-wrapper:hover .mh-tooltip { opacity: 1; visibility: visible; }
+        
+        .mh-tooltip-header { font-size: 12px; font-weight: 700; margin-bottom: 8px; color: #fff !important; -webkit-text-fill-color: #fff !important; background: none !important; }
+        .mh-tooltip-body { font-size: 12px; line-height: 1.5; opacity: 0.8; max-height: 120px; overflow: hidden; }
+        
+        .mh-session-badge { margin-left: auto; font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(100,100,255,0.1) !important; color: #a8a8ff !important; -webkit-text-fill-color: #a8a8ff !important; }
+        .mh-quick-badge { margin-left: auto; font-size: 14px; }
+        
+        /* Modal */
+        .mh-modal-overlay {
+          position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
+          display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
         }
         
-        .history-upload-msg {
-          font-size: 13px;
-          color: #22c55e !important;
-          background: none !important;
-          -webkit-text-fill-color: #22c55e !important;
-          margin-top: 4px;
+        .mh-modal {
+          width: 100%; max-width: 600px; max-height: 80vh; overflow-y: auto; padding: 24px; position: relative;
         }
         
-        /* Muted & Error text */
-        .history-muted {
-          font-size: 14px;
-          background: linear-gradient(to right, #6b7280 0%, #94A3B8 40%, #94A3B8 60%, #6b7280 100%) !important;
-          -webkit-background-clip: text !important;
-          background-clip: text !important;
-          color: transparent !important;
-          -webkit-text-fill-color: transparent !important;
-          margin-top: 12px;
+        .mh-modal-close {
+          position: absolute; top: 16px; right: 16px; width: 32px; height: 32px;
+          display: flex; align-items: center; justify-content: center; border-radius: 8px;
+          background: rgba(255,255,255,0.1); border: none; color: #888; cursor: pointer; transition: all 0.2s;
         }
-        .history-error {
-          font-size: 14px;
-          color: #ef4444 !important;
-          background: none !important;
-          -webkit-text-fill-color: #ef4444 !important;
-          margin-top: 12px;
-        }
+        .mh-modal-close:hover { background: rgba(255,255,255,0.2); color: #fff; }
         
-        /* Table Header - Darker background with bright platinum */
-        .history-table-header {
-          display: grid;
-          grid-template-columns: 1.5fr 1.2fr 1fr 2fr 60px 60px 60px;
-          font-size: 13px;
-          font-weight: 700;
-          color: #E2E8F0 !important;
-          background: rgba(0, 0, 0, 0.3);
-          padding: 10px 16px;
-          border-radius: 8px;
-          margin-bottom: 8px;
-          -webkit-text-fill-color: transparent !important;
-        }
-        .history-table-header span {
-          background: linear-gradient(to right, #6b7280 0%, #ffffff 40%, #ffffff 60%, #6b7280 100%) !important;
-          -webkit-background-clip: text !important;
-          background-clip: text !important;
-          color: transparent !important;
-          -webkit-text-fill-color: transparent !important;
-        }
+        .mh-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .mh-modal-cards { display: flex; gap: 8px; }
+        .mh-modal-meta { display: flex; align-items: center; gap: 12px; }
+        .mh-modal-stakes, .mh-modal-date { font-size: 14px; color: #888 !important; -webkit-text-fill-color: #888 !important; background: none !important; }
         
-        /* Divider - Platinum */
-        .history-divider {
-          height: 1px;
-          background: linear-gradient(90deg, transparent, #E2E8F0 20%, #E2E8F0 80%, transparent);
-          margin-bottom: 8px;
-          opacity: 0.3;
-        }
+        .mh-modal-session { font-size: 13px; padding: 8px 12px; border-radius: 8px; background: rgba(100,100,255,0.1); margin-bottom: 20px; color: #a8a8ff !important; -webkit-text-fill-color: #a8a8ff !important; }
         
-        /* Table Body */
-        .history-table-body {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-        }
+        .mh-modal-sections { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
         
-        /* Table Rows - Dark transparent with platinum dividers */
-        .history-row {
-          display: grid;
-          grid-template-columns: 1.5fr 1.2fr 1fr 2fr 60px 60px 60px;
-          font-size: 13px;
-          padding: 10px 16px;
-          border-bottom: 1px solid rgba(226, 232, 240, 0.15);
-          color: #E2E8F0 !important;
-          background: transparent;
-          align-items: center;
-        }
-        .history-row span {
-          background: linear-gradient(to right, #6b7280 0%, #ffffff 40%, #ffffff 60%, #6b7280 100%) !important;
-          -webkit-background-clip: text !important;
-          background-clip: text !important;
-          color: transparent !important;
-          -webkit-text-fill-color: transparent !important;
-        }
-        .history-row:last-child {
-          border-bottom: none;
-        }
-        .history-row:hover {
-          background: rgba(226, 232, 240, 0.05);
-          cursor: pointer;
-        }
+        .mh-modal-section { padding: 16px; border-radius: 10px; background: rgba(0,0,0,0.3); }
+        .mh-modal-section-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; color: #fff !important; -webkit-text-fill-color: #fff !important; background: none !important; }
+        .mh-modal-section-body { font-size: 13px; line-height: 1.6; opacity: 0.85; white-space: pre-wrap; }
+        
+        .mh-exploit-item { margin-bottom: 8px; }
+        .mh-exploit-icon { margin-right: 6px; }
+        .mh-exploit-name { font-weight: 600; }
+        .mh-exploit-advice { margin-top: 4px; padding-left: 24px; font-size: 12px; color: #fde047 !important; -webkit-text-fill-color: #fde047 !important; background: none !important; }
+        
+        .mh-modal-empty { text-align: center; padding: 30px; font-size: 14px; opacity: 0.6; }
+        
+        .mh-modal-actions { display: flex; gap: 12px; }
+        .mh-modal-btn { flex: 1; display: flex; align-items: center; justify-content: center; padding: 12px 20px; border-radius: 12px; font-size: 14px; text-decoration: none; }
         
         @media (max-width: 768px) {
-          .history-page {
-            padding: 18px 12px;
-          }
-          .history-header {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          .history-table-header,
-          .history-row {
-            grid-template-columns: 90px 90px 70px 1fr 50px 50px 50px;
-            font-size: 12px;
-          }
+          .mh-page { padding: 16px 12px; }
+          .mh-title { font-size: 28px; }
+          .mh-hands-grid { grid-template-columns: 1fr; }
+          .mh-stats-upload-row { flex-direction: column; }
+          .mh-modal { max-height: 90vh; }
         }
       `}</style>
     </main>
   );
 }
-

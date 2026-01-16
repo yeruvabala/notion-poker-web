@@ -926,13 +926,115 @@ select {
 .section-header {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     margin-bottom: 16px;
+    position: relative;
+}
+
+/* ============================================
+   HOLOGRAPHIC SECTION ICONS - Premium Animated
+   ============================================ */
+
+/* Keyframes for icon rotation and pulse */
+@keyframes icon-rotate-pulse {
+
+    0%,
+    100% {
+        transform: rotate(0deg) scale(1);
+    }
+
+    25% {
+        transform: rotate(5deg) scale(1.05);
+    }
+
+    75% {
+        transform: rotate(-5deg) scale(1.05);
+    }
+}
+
+@keyframes holo-shimmer {
+    0% {
+        background-position: -100% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes pulse-glow {
+
+    0%,
+    100% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
 }
 
 .section-header-icon {
-    font-size: 1.2rem;
-    filter: grayscale(0.3);
+    position: relative;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;
+    /* Hide emoji */
+}
+
+/* The holographic diamond shape - Platinum Theme */
+.section-header-icon::before {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    transform: rotate(45deg);
+    background: linear-gradient(135deg,
+            #555555 0%,
+            #d0d0d0 25%,
+            #ffffff 50%,
+            #b0b0b0 75%,
+            #666666 100%);
+    background-size: 200% 200%;
+    border-radius: 2px;
+    box-shadow:
+        0 0 8px rgba(200, 200, 200, 0.25),
+        0 0 16px rgba(180, 180, 180, 0.1),
+        inset 0 0 3px rgba(255, 255, 255, 0.5);
+    animation: holo-shimmer 4s ease-in-out infinite;
+    z-index: 1;
+}
+
+/* Outer glow ring - Platinum */
+.section-header-icon::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    transform: rotate(45deg);
+    border: 1px solid rgba(180, 180, 180, 0.3);
+    border-radius: 3px;
+    opacity: 0.3;
+    animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Hover animation - Brighter platinum */
+.section-header:hover .section-header-icon::before {
+    animation: holo-shimmer 2s ease-in-out infinite;
+    box-shadow:
+        0 0 12px rgba(220, 220, 220, 0.4),
+        0 0 20px rgba(200, 200, 200, 0.2),
+        inset 0 0 5px rgba(255, 255, 255, 0.7);
+}
+
+.section-header:hover .section-header-icon::after {
+    border-color: rgba(200, 200, 200, 0.5);
+    opacity: 0.5;
 }
 
 .section-header-title {
@@ -2018,4 +2120,542 @@ button:active:not(:disabled) {
 
 .card-display-item.black {
     color: #1a1a1a;
+}
+
+/* ============================================
+   HAND NOTES INPUT - Premium Styling
+   ============================================ */
+
+.hand-notes-container {
+    margin-top: 16px;
+    padding: 16px;
+    background: rgba(26, 26, 26, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
+.hand-notes-container:hover {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(36, 36, 36, 0.7);
+}
+
+.hand-notes-container:focus-within {
+    border-color: rgba(192, 192, 192, 0.25);
+    box-shadow: 0 0 16px rgba(192, 192, 192, 0.08);
+}
+
+.hand-notes-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.hand-notes-header .notes-icon {
+    font-size: 0.9rem;
+    filter: grayscale(0.2);
+}
+
+.hand-notes-header .notes-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #c0c0c0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.hand-notes-header .notes-hint {
+    font-size: 0.7rem;
+    color: #6b7280;
+    font-weight: 400;
+}
+
+.hand-notes-input {
+    width: 100%;
+    min-height: 60px;
+    padding: 12px;
+    background: rgba(15, 15, 15, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    color: #e5e7eb;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    resize: vertical;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.hand-notes-input::placeholder {
+    color: #6b7280;
+    font-style: italic;
+}
+
+.hand-notes-input:hover {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.hand-notes-input:focus {
+    outline: none;
+    border-color: rgba(192, 192, 192, 0.3);
+    background: rgba(20, 20, 20, 0.9);
+    box-shadow: 0 0 0 3px rgba(192, 192, 192, 0.1);
+}
+
+/* ============================================
+   SESSION MODE STYLES
+   Premium session tracking UI components
+   ============================================ */
+
+/* Session Bar - Fixed bar showing active session info */
+.session-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(25, 25, 25, 0.95) 100%);
+    border: 1px solid rgba(180, 180, 180, 0.15);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.session-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.session-icon {
+    font-size: 18px;
+}
+
+.session-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #e2e8f0 !important;
+    -webkit-text-fill-color: #e2e8f0 !important;
+    background: none !important;
+}
+
+.session-bar-center {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
+    background: none !important;
+}
+
+.session-timer-icon {
+    font-size: 14px;
+}
+
+.session-timer {
+    font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+    font-weight: 600;
+    color: #fbbf24 !important;
+    -webkit-text-fill-color: #fbbf24 !important;
+    background: none !important;
+}
+
+.session-divider {
+    opacity: 0.5;
+}
+
+.session-count {
+    color: #86efac !important;
+    -webkit-text-fill-color: #86efac !important;
+    background: none !important;
+}
+
+.session-exit-btn {
+    padding: 6px 14px;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 6px;
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171 !important;
+    -webkit-text-fill-color: #f87171 !important;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.session-exit-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.5);
+}
+
+/* Toast Notification - Non-blocking feedback */
+.toast-notification {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #1f1f1f 0%, #2a2a2a 100%);
+    border: 1px solid rgba(134, 239, 172, 0.3);
+    border-radius: 12px;
+    color: #86efac !important;
+    -webkit-text-fill-color: #86efac !important;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(134, 239, 172, 0.1);
+    z-index: 9999;
+    animation: toast-slide-in 0.3s ease;
+}
+
+@keyframes toast-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* Session Modal - Overlay for creating/selecting sessions */
+.session-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: modal-fade-in 0.2s ease;
+}
+
+@keyframes modal-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.session-modal {
+    width: 100%;
+    max-width: 420px;
+    margin: 16px;
+    padding: 24px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #222222 100%);
+    border: 1px solid rgba(180, 180, 180, 0.2);
+    border-radius: 16px;
+    box-shadow:
+        0 24px 48px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    animation: modal-scale-in 0.2s ease;
+}
+
+@keyframes modal-scale-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.session-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.session-modal-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    background: linear-gradient(to right, #ffffff 0%, #e0e0e0 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+}
+
+.session-modal-close {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.session-modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0 !important;
+    -webkit-text-fill-color: #e2e8f0 !important;
+}
+
+.session-modal-options {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.session-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.02);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.session-option:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.session-option.quick-save:hover {
+    border-color: rgba(251, 191, 36, 0.3);
+    background: rgba(251, 191, 36, 0.05);
+}
+
+.option-icon {
+    font-size: 20px;
+}
+
+.option-label {
+    font-weight: 600;
+    font-size: 14px;
+    color: #e2e8f0 !important;
+    -webkit-text-fill-color: #e2e8f0 !important;
+    background: none !important;
+}
+
+.option-hint {
+    font-size: 12px;
+    color: #6b7280 !important;
+    -webkit-text-fill-color: #6b7280 !important;
+    background: none !important;
+    margin-left: auto;
+}
+
+.session-option-divider {
+    text-align: center;
+    font-size: 12px;
+    color: #4b5563 !important;
+    -webkit-text-fill-color: #4b5563 !important;
+    background: none !important;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.session-start-new {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.session-name-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.3) !important;
+    color: #e2e8f0 !important;
+    -webkit-text-fill-color: #e2e8f0 !important;
+    font-size: 14px;
+}
+
+.session-name-input:focus {
+    outline: none;
+    border-color: rgba(251, 191, 36, 0.4);
+}
+
+.session-start-btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #1a1a1a !important;
+    -webkit-text-fill-color: #1a1a1a !important;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.session-start-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+}
+
+.session-start-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.session-recent {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.session-recent-header {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280 !important;
+    -webkit-text-fill-color: #6b7280 !important;
+    background: none !important;
+    margin-bottom: 12px;
+}
+
+.session-recent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.session-recent-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: left;
+}
+
+.session-recent-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.recent-name {
+    font-size: 14px;
+    color: #e2e8f0 !important;
+    -webkit-text-fill-color: #e2e8f0 !important;
+    background: none !important;
+}
+
+.recent-count {
+    font-size: 12px;
+    color: #6b7280 !important;
+    -webkit-text-fill-color: #6b7280 !important;
+    background: none !important;
+}
+
+.session-loading {
+    text-align: center;
+    padding: 16px;
+    color: #6b7280 !important;
+    -webkit-text-fill-color: #6b7280 !important;
+    background: none !important;
+    font-size: 13px;
+}
+
+/* Smart Save Button States */
+.btn-session-save {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Note state - subtle dark style matching Analyze Hand */
+.btn-session-save.btn-note {
+    border: 1px solid #3a3a3a;
+    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+    color: #a0a0a0 !important;
+    -webkit-text-fill-color: #a0a0a0 !important;
+}
+
+.btn-session-save.btn-note:hover {
+    background: linear-gradient(180deg, #353535 0%, #252525 100%);
+    border-color: #505050;
+    color: #e2e8f0 !important;
+    -webkit-text-fill-color: #e2e8f0 !important;
+    transform: translateY(-1px);
+}
+
+/* Save active state - gold filled */
+.btn-session-save.btn-save-active {
+    border: none;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #1a1a1a !important;
+    -webkit-text-fill-color: #1a1a1a !important;
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.25);
+}
+
+.btn-session-save.btn-save-active:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(251, 191, 36, 0.35);
+}
+
+/* Saved state - green success */
+.btn-session-save.btn-saved {
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    background: rgba(34, 197, 94, 0.1);
+    color: #86efac !important;
+    -webkit-text-fill-color: #86efac !important;
+    cursor: default;
+}
+
+.btn-session-save:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.save-icon {
+    font-size: 14px;
+}
+
+.keyboard-hint {
+    margin-left: 6px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    font-size: 10px;
+    font-weight: 500;
+    opacity: 0.7;
 }

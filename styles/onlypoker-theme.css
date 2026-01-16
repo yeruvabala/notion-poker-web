@@ -95,7 +95,7 @@
   background-color: #0f0f0f !important;
 }
 
-/* Secondary Button ("Clear", "Edit") - Dark with Silver Border */
+/* Secondary Button (\"Clear\", \"Edit\") - Subtle Dark Border (matching btn-note) */
 .op-surface .btn-ony {
   display: inline-flex;
   align-items: center;
@@ -105,10 +105,10 @@
   padding: 14px 16px;
   border-radius: 12px;
 
-  background: #1a1a1a;
-  color: var(--ink);
-  border: 1px solid #a3a3a3;
-  /* Thin metallic silver border */
+  /* Updated: Subtle dark border matching btn-note */
+  background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+  color: #a0a0a0;
+  border: 1px solid #3a3a3a;
 
   font-weight: 700;
   font-size: 16px;
@@ -119,10 +119,11 @@
 }
 
 .op-surface .btn-ony:hover {
-  background: #252525;
-  border-color: #ffffff;
+  background: linear-gradient(180deg, #353535 0%, #252525 100%);
+  border-color: #505050;
+  color: #e2e8f0;
   transform: translateY(-0.5px);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 }
 
 .op-surface .btn-ony:active {

@@ -174,7 +174,7 @@ export default function StudyPage() {
         </header>
 
         {/* Smart Search Header */}
-        <section className="p-6 platinum-container-frame">
+        <section className="p-6 platinum-inner-border">
           <div className="flex flex-col gap-5">
             {/* Question input */}
             <div>
@@ -188,6 +188,28 @@ export default function StudyPage() {
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
               />
+            </div>
+
+            {/* Quick Topic Buttons */}
+            <div className="flex flex-wrap gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#555] self-center mr-1">Quick topics:</span>
+              {[
+                { label: '3-Betting', query: 'How should I construct my 3-betting range?' },
+                { label: 'C-Bet Strategy', query: 'When should I continuation bet and when should I check?' },
+                { label: 'River Decisions', query: 'How do I make better river decisions with marginal hands?' },
+                { label: 'Bluff Catching', query: 'When should I call down as a bluff catcher?' },
+                { label: 'SB Defense', query: 'How should I defend my small blind vs button opens?' },
+                { label: 'BTN Play', query: 'What are the key strategies for playing from the button?' },
+              ].map((topic) => (
+                <button
+                  key={topic.label}
+                  type="button"
+                  onClick={() => setQuestion(topic.query)}
+                  className="px-3 py-1.5 text-xs font-medium rounded-full border border-[#333] bg-[#1a1a1a] text-[#a3a3a3] hover:bg-[#252525] hover:text-white hover:border-[#444] transition-all"
+                >
+                  {topic.label}
+                </button>
+              ))}
             </div>
 
             {/* Filters + button row */}
@@ -229,16 +251,12 @@ export default function StudyPage() {
                   type="button"
                   onClick={handleAskCoach}
                   disabled={loading}
-                  className="btn-platinum-premium px-6 py-2.5 rounded-xl text-sm min-w-[140px]"
+                  className="btn btn-platinum-premium btn-analyze-premium"
+                  style={{ minWidth: '160px' }}
                 >
-                  {loading ? (
-                    <span className="flex items-center gap-2">
-                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-800 border-t-transparent" />
-                      Thinking…
-                    </span>
-                  ) : (
-                    'Ask Coach'
-                  )}
+                  <span className="btn-text">
+                    {loading ? '✨ Thinking…' : '✨ Ask Coach'}
+                  </span>
                 </button>
               </div>
             </div>
@@ -256,7 +274,7 @@ export default function StudyPage() {
           {/* Left column – AI Coach / RAG output */}
           <div className="flex flex-col gap-4">
             {/* Strategy Snapshot */}
-            <section className="p-6 platinum-container-frame">
+            <section className="p-6 platinum-inner-border">
               <div className="mb-4 flex items-center justify-between gap-2">
                 <h2 className="text-sm font-bold platinum-text-gradient">
                   Strategy Snapshot
@@ -278,7 +296,7 @@ export default function StudyPage() {
             </section>
 
             {/* Key Rules */}
-            <section className="p-6 platinum-container-frame">
+            <section className="p-6 platinum-inner-border">
               <h3 className="mb-4 text-sm font-bold platinum-text-gradient">
                 Key Rules for This Spot
               </h3>
@@ -300,7 +318,7 @@ export default function StudyPage() {
             </section>
 
             {/* Source Context */}
-            <section className="p-6 platinum-container-frame">
+            <section className="p-6 platinum-inner-border">
               <h3 className="mb-4 text-sm font-bold platinum-text-gradient">
                 Source Context
               </h3>
@@ -385,7 +403,7 @@ export default function StudyPage() {
           {/* Right column – Drill Engine */}
           <div className="flex flex-col gap-4">
             {/* Recommended drills */}
-            <section className="p-6 platinum-container-frame">
+            <section className="p-6 platinum-inner-border">
               <div className="mb-4 flex items-center justify-between gap-2">
                 <h2 className="text-sm font-bold platinum-text-gradient">
                   Recommended Drills
@@ -447,7 +465,7 @@ export default function StudyPage() {
             </section>
 
             {/* Drill list */}
-            <section className="p-6 platinum-container-frame">
+            <section className="p-6 platinum-inner-border">
               <h3 className="mb-3 text-sm font-bold platinum-text-gradient">
                 Drill List
               </h3>
@@ -475,7 +493,7 @@ export default function StudyPage() {
             </section>
 
             {/* Add to Plan stub */}
-            <section className="p-6 opacity-60 hover:opacity-100 transition platinum-container-frame">
+            <section className="p-6 opacity-60 hover:opacity-100 transition platinum-inner-border">
               <h3 className="mb-2 text-sm font-bold platinum-text-gradient">
                 Add to Study Plan
               </h3>
