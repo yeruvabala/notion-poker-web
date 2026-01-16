@@ -27,13 +27,6 @@ export default function AuthSync() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ event, session }),
-        }).catch(() => {
-          // Fallback to old endpoint if new one doesn't exist
-          return fetch('/auth/callback', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ event, session }),
-          });
         });
       } catch {
         // best effort; ignore
