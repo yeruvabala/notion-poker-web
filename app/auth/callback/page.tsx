@@ -11,52 +11,52 @@ function CallbackContent() {
   const supabase = createClient();
 
   useEffect(() => {
-    async function handleCallback() {
-      const code = searchParams.get('code');
-      const type = searchParams.get('type');
-      const next = searchParams.get('next') || '/';
+    // Listen for auth state changes - this is the KEY to detecting PASSWORD_RECOVERY
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth event:', event, session);
 
-      // Check for error in URL
+      if (event === 'PASSWORD_RECOVERY') {
+        // This is the password reset flow!
+        setStatus('Verified! Redirecting to set new password...');
+        router.push('/auth/update-password');
+        return;
+      }
+
+      if (event === 'SIGNED_IN' && session) {
+        // Normal sign-in from email confirmation
+        const next = searchParams.get('next') || '/';
+        setStatus('Success! Redirecting...');
+        router.push(next);
+        return;
+      }
+    });
+
+    // Also handle code exchange if there's a code in URL
+    async function handleCodeExchange() {
+      const code = searchParams.get('code');
       const error = searchParams.get('error');
+
       if (error) {
-        setStatus('Authentication failed. Redirecting...');
+        setStatus('Link expired or invalid. Redirecting to login...');
         setTimeout(() => router.push('/login?error=' + error), 2000);
         return;
       }
 
-      // If there's a code, exchange it
       if (code) {
+        // Exchange the code - this will trigger onAuthStateChange with the appropriate event
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
         if (exchangeError) {
           setStatus('Link expired or invalid. Please try again.');
           setTimeout(() => router.push('/login'), 2000);
           return;
         }
+        // After exchange, the onAuthStateChange will fire with PASSWORD_RECOVERY or SIGNED_IN
       }
-
-      // After code exchange (or if already authenticated), check the session
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (session) {
-        // Check if this is a password recovery flow
-        if (type === 'recovery') {
-          setStatus('Verified! Redirecting to set new password...');
-          router.push('/auth/update-password');
-          return;
-        }
-
-        // Normal login/signup - redirect to next or home
-        setStatus('Success! Redirecting...');
-        router.push(next);
-        return;
-      }
-
-      // No session means something went wrong
-      setStatus('Please try again.');
-      setTimeout(() => router.push('/login'), 2000);
     }
 
-    handleCallback();
+    handleCodeExchange();
+
+    return () => subscription.unsubscribe();
   }, [supabase, router, searchParams]);
 
   return (
