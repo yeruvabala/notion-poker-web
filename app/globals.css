@@ -2659,6 +2659,7 @@ button:active:not(:disabled) {
     font-weight: 500;
     opacity: 0.7;
 }
+
 /* ================================================================
    NATIVE APP ONLY STYLES (Capacitor iOS/Android)
    These styles ONLY apply when running in the native mobile app.
@@ -2668,12 +2669,48 @@ button:active:not(:disabled) {
 /* Base native app styles - prevents horizontal scrolling */
 body.native-app {
     overflow-x: hidden !important;
+    overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
+    width: 100vw !important;
+    max-width: 100vw !important;
 }
 
+/* HIDE ALL SCROLLBARS in native app (like Instagram) */
+body.native-app::-webkit-scrollbar,
+body.native-app *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+body.native-app,
 body.native-app * {
-    max-width: 100vw;
-    box-sizing: border-box;
+    -ms-overflow-style: none !important;
+    /* IE and Edge */
+    scrollbar-width: none !important;
+    /* Firefox */
+}
+
+/* Force all elements to fit within viewport */
+body.native-app *,
+body.native-app *::before,
+body.native-app *::after {
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+}
+
+/* Prevent ANY horizontal overflow */
+body.native-app html,
+body.native-app body,
+body.native-app #__next,
+body.native-app main,
+body.native-app .main-content,
+body.native-app [class*="layout"],
+body.native-app [class*="container"],
+body.native-app [class*="wrapper"] {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100vw !important;
 }
 
 /* Hide sidebar in native app - use bottom nav instead */
@@ -2747,7 +2784,8 @@ body.native-app .grid-cols-2-mobile {
 body.native-app button,
 body.native-app .btn,
 body.native-app [class*="btn"] {
-    min-height: 44px !important; /* iOS touch target */
+    min-height: 44px !important;
+    /* iOS touch target */
     font-size: clamp(0.875rem, 3.5vw, 1rem) !important;
 }
 
@@ -2756,7 +2794,8 @@ body.native-app input,
 body.native-app select,
 body.native-app textarea {
     min-height: 44px !important;
-    font-size: 16px !important; /* Prevents iOS zoom on focus */
+    font-size: 16px !important;
+    /* Prevents iOS zoom on focus */
     padding: clamp(10px, 2.5vw, 16px) !important;
 }
 
@@ -2776,16 +2815,37 @@ body.native-app .title {
 }
 
 /* Responsive spacing */
-body.native-app .gap-4 { gap: clamp(12px, 3vw, 16px) !important; }
-body.native-app .gap-6 { gap: clamp(16px, 4vw, 24px) !important; }
-body.native-app .gap-8 { gap: clamp(20px, 5vw, 32px) !important; }
+body.native-app .gap-4 {
+    gap: clamp(12px, 3vw, 16px) !important;
+}
 
-body.native-app .p-4 { padding: clamp(12px, 3vw, 16px) !important; }
-body.native-app .p-6 { padding: clamp(16px, 4vw, 24px) !important; }
-body.native-app .p-8 { padding: clamp(20px, 5vw, 32px) !important; }
+body.native-app .gap-6 {
+    gap: clamp(16px, 4vw, 24px) !important;
+}
 
-body.native-app .m-4 { margin: clamp(12px, 3vw, 16px) !important; }
-body.native-app .m-6 { margin: clamp(16px, 4vw, 24px) !important; }
+body.native-app .gap-8 {
+    gap: clamp(20px, 5vw, 32px) !important;
+}
+
+body.native-app .p-4 {
+    padding: clamp(12px, 3vw, 16px) !important;
+}
+
+body.native-app .p-6 {
+    padding: clamp(16px, 4vw, 24px) !important;
+}
+
+body.native-app .p-8 {
+    padding: clamp(20px, 5vw, 32px) !important;
+}
+
+body.native-app .m-4 {
+    margin: clamp(12px, 3vw, 16px) !important;
+}
+
+body.native-app .m-6 {
+    margin: clamp(16px, 4vw, 24px) !important;
+}
 
 /* Smooth scrolling */
 body.native-app {
@@ -2803,4 +2863,83 @@ body.native-app input,
 body.native-app textarea {
     -webkit-user-select: text;
     user-select: text;
+}
+/* ================================================================
+   HOMELIENT SPECIFIC OVERRIDES FOR NATIVE APP
+   ================================================================ */
+
+/* Override HomeClient .wrap container */
+body.native-app .wrap {
+    max-width: 100vw !important;
+    width: 100% !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    margin: 0 !important;
+}
+
+/* Override grid layouts */
+body.native-app .grid {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+}
+
+/* Override button rows to wrap */
+body.native-app .flex-row,
+body.native-app [style*="display: flex"][style*="flex-direction: row"],
+body.native-app [style*="display:flex"][style*="gap"] {
+    flex-wrap: wrap !important;
+}
+
+/* Ensure all sections are full width */
+body.native-app section,
+body.native-app .section,
+body.native-app .hand-builder-container,
+body.native-app [class*="container"],
+body.native-app [class*="section"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Force inline elements to wrap */
+body.native-app .inline-flex,
+body.native-app [style*="display: inline-flex"] {
+    flex-wrap: wrap !important;
+}
+
+/* Pot input field */
+body.native-app [style*="width: 40px"],
+body.native-app [style*="width:40px"],
+body.native-app [style*="width: 35px"],
+body.native-app [style*="width:35px"] {
+    width: auto !important;
+    min-width: 40px !important;
+}
+
+/* Card selector boxes - make them larger on mobile */
+body.native-app .cardInput,
+body.native-app [class*="card-input"],
+body.native-app [style*="width: 64px"] {
+    width: 100% !important;
+    max-width: 80px !important;
+    min-height: 48px !important;
+}
+
+/* Buttons should wrap and fit content */
+body.native-app .btn-group,
+body.native-app [class*="button-row"],
+body.native-app [class*="btn-row"] {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    width: 100% !important;
+}
+
+body.native-app .btn-group > *,
+body.native-app [class*="button-row"] > *,
+body.native-app [class*="btn-row"] > * {
+    flex: 1 1 auto !important;
+    min-width: 80px !important;
 }
