@@ -3529,80 +3529,124 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   HERO SECTION - Compact & Elegant
+   HERO SECTION - Premium Playing Cards
    ═══════════════════════════════════════════════════════════════════════════════ */
 .hero-section {
     text-align: center;
-    padding: 12px 0;
+    padding: 16px 0 12px;
 }
 
 .hero-cards {
     display: flex;
     justify-content: center;
-    gap: 12px;
-    margin-bottom: 12px;
+    gap: 16px;
+    margin-bottom: 14px;
 }
 
-/* Premium Card Style - Compact Horizontal Chip */
+/* ═══════════════════════════════════════════════════════════════════════════════
+   PREMIUM CARD - Actual Playing Card Look
+   ═══════════════════════════════════════════════════════════════════════════════ */
 .premium-card {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding: 12px 20px;
-    border-radius: 24px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 100%);
+    position: relative;
+    width: 70px;
+    height: 95px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow:
-        0 4px 12px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Gradient border effect */
+    background: linear-gradient(145deg,
+            rgba(255, 255, 255, 0.3) 0%,
+            rgba(255, 255, 255, 0.1) 50%,
+            rgba(255, 255, 255, 0.2) 100%);
+    padding: 2px;
+}
+
+.premium-card::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: 8px;
+    background: linear-gradient(165deg,
+            #2d2d2d 0%,
+            #1a1a1a 40%,
+            #121212 100%);
+    z-index: 0;
 }
 
 .premium-card:active {
     transform: scale(0.95);
 }
 
+/* Hover glow effect */
 .premium-card.filled {
-    border-color: rgba(255, 255, 255, 0.4);
-    background: linear-gradient(145deg, #3a3a3a 0%, #252525 100%);
+    background: linear-gradient(145deg,
+            rgba(255, 255, 255, 0.5) 0%,
+            rgba(255, 255, 255, 0.2) 50%,
+            rgba(255, 255, 255, 0.3) 100%);
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(255, 255, 255, 0.1);
 }
 
-.premium-card.small {
-    padding: 8px 14px;
-    border-radius: 16px;
+/* Card inner content wrapper */
+.premium-card-inner {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
 }
 
+/* Rank - top left corner style */
 .premium-card .card-rank {
-    font-size: 22px;
+    position: absolute;
+    top: 6px;
+    left: 8px;
+    font-size: 18px;
     font-weight: 800;
-    color: #fff;
-    line-height: 1;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    z-index: 2;
+}
+
+/* Suit - centered and large */
+.premium-card .card-suit {
+    font-size: 32px;
+    z-index: 2;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+/* Placeholder for empty card */
+.premium-card .card-placeholder {
+    font-size: 28px;
+    color: rgba(255, 255, 255, 0.25);
+    font-weight: 300;
+    z-index: 2;
+}
+
+/* Small card variant (for community cards) */
+.premium-card.small {
+    width: 52px;
+    height: 70px;
 }
 
 .premium-card.small .card-rank {
-    font-size: 16px;
-}
-
-.premium-card .card-suit {
-    font-size: 20px;
-    line-height: 1;
+    font-size: 14px;
+    top: 4px;
+    left: 6px;
 }
 
 .premium-card.small .card-suit {
-    font-size: 14px;
-}
-
-.premium-card .card-placeholder {
     font-size: 22px;
-    color: rgba(255, 255, 255, 0.3);
-    font-weight: 300;
 }
 
 .premium-card.small .card-placeholder {
-    font-size: 16px;
+    font-size: 20px;
 }
 
 /* Hero Meta Row */
