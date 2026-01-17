@@ -3982,7 +3982,15 @@ body.native-app [class*="btn-row"]>* {
 .picker-card span:last-child {
     font-size: 18px;
     font-weight: 700;
-    /* Color set via inline style - red for hearts/diamonds, white for spades/clubs */
+}
+
+/* Suit colors for card picker - red hearts/diamonds, white spades/clubs */
+.picker-suit-red {
+    color: #ef4444 !important;
+}
+
+.picker-suit-white {
+    color: #ffffff !important;
 }
 
 .picker-clear {
