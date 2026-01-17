@@ -3984,12 +3984,14 @@ body.native-app [class*="btn-row"]>* {
     font-weight: 700;
 }
 
-/* Suit colors for card picker - red hearts/diamonds, white spades/clubs */
-.picker-suit-red {
+/* Suit colors for card picker - MUST override inherited colors */
+.picker-card span.picker-suit-red,
+.picker-card .picker-suit-red {
     color: #ef4444 !important;
 }
 
-.picker-suit-white {
+.picker-card span.picker-suit-white,
+.picker-card .picker-suit-white {
     color: #ffffff !important;
 }
 
