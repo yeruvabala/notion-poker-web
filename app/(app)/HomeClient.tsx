@@ -1346,6 +1346,24 @@ export default function HomeClient() {
           setHeroCard1={setH1}
           heroCard2={h2}
           setHeroCard2={setH2}
+          flop1={f1}
+          setFlop1={setF1}
+          flop2={f2}
+          setFlop2={setF2}
+          flop3={f3}
+          setFlop3={setF3}
+          turn={tr}
+          setTurn={setTr}
+          river={rv}
+          setRiver={setRv}
+          preflopActions={preflopActions}
+          setPreflopActions={setPreflopActions}
+          flopActions={flopActions}
+          setFlopActions={setFlopActions}
+          turnActions={turnActions}
+          setTurnActions={setTurnActions}
+          riverActions={riverActions}
+          setRiverActions={setRiverActions}
           onAnalyze={analyze}
           isLoading={aiLoading}
         />

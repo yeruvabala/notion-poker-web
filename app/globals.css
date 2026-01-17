@@ -3234,3 +3234,279 @@ body.native-app [class*="btn-row"] > * {
 .mobile-card-selector select.diamond {
     color: #ef4444;
 }
+
+/* ================================================================
+   MOBILE HAND BUILDER - COMPLETE STYLES
+   ================================================================ */
+
+.mobile-hand-builder {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Section container */
+.mobile-section {
+    background: rgba(38, 38, 38, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.mobile-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mobile-section-icon {
+    font-size: 18px;
+}
+
+.mobile-section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #e5e7eb;
+    flex: 1;
+}
+
+.mobile-pot-badge {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+/* Row layout for settings */
+.mobile-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mobile-row:last-child {
+    border-bottom: none;
+}
+
+.mobile-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #9ca3af;
+}
+
+.mobile-select-inline,
+.mobile-input-inline {
+    background: #1f1f1f;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #e5e7eb;
+    font-size: 14px;
+    font-weight: 500;
+    min-width: 120px;
+    text-align: right;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* Card selector boxes */
+.mobile-cards-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.mobile-cards-row.three {
+    justify-content: space-between;
+}
+
+.mobile-cards-row.single {
+    justify-content: flex-start;
+}
+
+.mobile-card-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    background: #1f1f1f;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 12px 16px;
+    min-width: 80px;
+}
+
+.mobile-rank-select,
+.mobile-suit-select {
+    background: transparent;
+    border: none;
+    color: #e5e7eb;
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    padding: 0;
+    width: 35px;
+}
+
+.mobile-suit-select.red {
+    color: #ef4444;
+}
+
+/* Action chips */
+.mobile-action-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+    min-height: 32px;
+}
+
+.mobile-action-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.mobile-action-chip.hero {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #fff;
+}
+
+.mobile-action-chip.villain {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #fff;
+}
+
+.mobile-chip-remove {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #fff;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Add action buttons */
+.mobile-add-action-row {
+    display: flex;
+    gap: 8px;
+}
+
+.mobile-add-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 2px dashed;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mobile-add-btn.hero {
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.mobile-add-btn.hero:active {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.mobile-add-btn.villain {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.mobile-add-btn.villain:active {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* Action picker */
+.mobile-action-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mobile-action-picker-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.mobile-action-option {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: #2a2a2a;
+    color: #e5e7eb;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.mobile-action-option:active {
+    background: #3a3a3a;
+    transform: scale(0.98);
+}
+
+.mobile-cancel-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    border: none;
+    background: #333;
+    color: #9ca3af;
+    cursor: pointer;
+}
+
+/* Analyze button */
+.mobile-analyze-btn {
+    width: 100%;
+    padding: 18px 24px;
+    background: linear-gradient(180deg, #ffffff 0%, #e0e0e0 20%, #bfbfbf 60%, #999999 100%);
+    border: none;
+    border-radius: 14px;
+    color: #1a1a1a;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2),
+        0 6px 16px rgba(0, 0, 0, 0.4);
+    margin-top: 8px;
+}
+
+.mobile-analyze-btn:active {
+    transform: scale(0.98);
+}
+
+.mobile-analyze-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
