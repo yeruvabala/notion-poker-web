@@ -1,5 +1,6 @@
 import './globals.css';
 import AuthSync from '@/components/AuthSync';
+import NativeAppDetector from '@/components/NativeAppDetector';
 import { Inter } from 'next/font/google';
 
 const inter = Inter({
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={inter.variable}>
       <body className="min-h-screen bg-[#1c1c1c] text-[#E2E8F0] antialiased">
         <AuthSync />
+        <NativeAppDetector />
         {children}
       </body>
     </html>
