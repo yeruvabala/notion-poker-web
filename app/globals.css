@@ -2994,7 +2994,7 @@ body.native-app [class*="btn-row"]>* {
 
 /* Mobile-specific overrides for suit decoration */
 .mobile-suit-decoration {
-    margin-top: 0px !important;
+    margin-top: -2px !important;
     /* Closer to title */
     gap: 10px !important;
     font-size: 0.9rem !important;
