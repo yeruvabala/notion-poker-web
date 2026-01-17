@@ -2981,8 +2981,8 @@ body.native-app [class*="btn-row"]>* {
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* More top padding to push title lower */
-    padding: 30px 16px 18px;
+    /* More top padding to push title lower, less bottom padding for tighter border */
+    padding: 30px 16px 10px;
 }
 
 /* Mobile-specific overrides for homepage-title */
