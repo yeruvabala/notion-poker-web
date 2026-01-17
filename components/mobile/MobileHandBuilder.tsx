@@ -164,7 +164,7 @@ export default function MobileHandBuilder({
                                     }}
                                 >
                                     <span>{rank}</span>
-                                    <span className={suit.isRed ? 'picker-suit-red' : 'picker-suit-white'}>{suit.value}</span>
+                                    <span style={{ color: suit.isRed ? '#ef4444' : '#ffffff' }}>{suit.value}</span>
                                 </button>
                             ))}
                         </div>
