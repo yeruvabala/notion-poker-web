@@ -2943,3 +2943,294 @@ body.native-app [class*="btn-row"] > * {
     flex: 1 1 auto !important;
     min-width: 80px !important;
 }
+
+/* ================================================================
+   MOBILE APP LAYOUT COMPONENTS
+   ================================================================ */
+
+/* Mobile App Container - Full screen with fixed header/nav */
+.mobile-app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100vw;
+    max-width: 100vw;
+    overflow-x: hidden;
+    background: #1c1c1c;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE HEADER (Fixed)
+   ═══════════════════════════════════════════════════════════════ */
+.mobile-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(28, 28, 28, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: env(safe-area-inset-top, 0);
+}
+
+.mobile-header-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 16px 16px;
+}
+
+.mobile-title {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    background: linear-gradient(180deg, #ffffff 0%, #e0e0e0 30%, #bfbfbf 60%, #999999 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+    text-align: center;
+}
+
+.mobile-suits {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.mobile-suits .suit {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.mobile-suits .suit.spade,
+.mobile-suits .suit.club {
+    color: #e5e7eb;
+}
+
+.mobile-suits .suit.heart,
+.mobile-suits .suit.diamond {
+    color: #ef4444;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE MAIN CONTENT (Scrollable)
+   ═══════════════════════════════════════════════════════════════ */
+.mobile-main-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-top: calc(env(safe-area-inset-top, 0) + 90px); /* Header height */
+    padding-bottom: calc(env(safe-area-inset-bottom, 0) + 80px); /* Nav height */
+    padding-left: 16px;
+    padding-right: 16px;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbar but keep scroll functionality */
+.mobile-main-content::-webkit-scrollbar {
+    display: none;
+}
+
+.mobile-main-content {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE BOTTOM NAVIGATION (Fixed)
+   ═══════════════════════════════════════════════════════════════ */
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: rgba(28, 28, 28, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    height: calc(56px + env(safe-area-inset-bottom, 0));
+}
+
+.mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    padding: 8px 4px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-nav-item:active {
+    transform: scale(0.95);
+}
+
+.mobile-nav-icon {
+    font-size: 22px;
+    margin-bottom: 2px;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.mobile-nav-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: #9ca3af;
+    transition: color 0.2s ease;
+}
+
+.mobile-nav-item.active .mobile-nav-icon {
+    opacity: 1;
+}
+
+.mobile-nav-item.active .mobile-nav-label {
+    color: #e5e7eb;
+    font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE CARD STYLES (For Hand Builder, etc.)
+   ═══════════════════════════════════════════════════════════════ */
+.mobile-card {
+    background: rgba(38, 38, 38, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
+.mobile-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mobile-card-icon {
+    font-size: 20px;
+}
+
+.mobile-card-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin: 0;
+}
+
+/* Mobile Form Inputs */
+.mobile-input-group {
+    margin-bottom: 16px;
+}
+
+.mobile-input-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: #9ca3af;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mobile-input,
+.mobile-select {
+    width: 100%;
+    padding: 14px 16px;
+    background: #1f1f1f;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    color: #e5e7eb;
+    font-size: 16px;
+    font-weight: 500;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color 0.2s ease;
+}
+
+.mobile-input:focus,
+.mobile-select:focus {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.mobile-input::placeholder {
+    color: #6b7280;
+}
+
+/* Mobile Button */
+.mobile-button {
+    width: 100%;
+    padding: 16px 24px;
+    background: linear-gradient(180deg, #ffffff 0%, #e0e0e0 20%, #bfbfbf 60%, #999999 100%);
+    border: none;
+    border-radius: 12px;
+    color: #1a1a1a;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2),
+        0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-button:active {
+    transform: scale(0.98);
+}
+
+/* Two-column grid for mobile (for card selectors) */
+.mobile-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* Card Selector Box for Hero Hand */
+.mobile-card-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 16px;
+    background: #1f1f1f;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    min-height: 60px;
+}
+
+.mobile-card-selector select {
+    background: transparent;
+    border: none;
+    color: #e5e7eb;
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.mobile-card-selector select.heart,
+.mobile-card-selector select.diamond {
+    color: #ef4444;
+}

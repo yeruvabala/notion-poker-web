@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import "@/styles/onlypoker-theme.css";
 import { createClient } from '@/lib/supabase/client';
 import { Capacitor } from '@capacitor/core';
+import { MobileLayout, MobileHandBuilder } from '@/components/mobile';
 
 /* ====================== Types & helpers ====================== */
 
@@ -1324,6 +1325,62 @@ export default function HomeClient() {
   // *******************************************************************
   const suitColor = (suit: string) => (isRed(suit) ? '#ef4444' : '#e5e7eb'); // Platinum for black suits
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MOBILE NATIVE APP LAYOUT
+  // ═══════════════════════════════════════════════════════════════════════════
+  if (isNativeApp) {
+    return (
+      <MobileLayout>
+        <MobileHandBuilder
+          tableFormat={tableFormat}
+          setTableFormat={(v) => setTableFormat(v as 'HU' | '6max' | '9max')}
+          heroPosition={position}
+          setHeroPosition={setPosition}
+          villainPosition={villainPosition}
+          setVillainPosition={setVillainPosition}
+          actionType={actionType}
+          setActionType={setActionType}
+          effectiveStack={eff}
+          setEffectiveStack={setEff}
+          heroCard1={h1}
+          setHeroCard1={setH1}
+          heroCard2={h2}
+          setHeroCard2={setH2}
+          onAnalyze={analyze}
+          isLoading={aiLoading}
+        />
+
+        {/* Show results if available */}
+        {fields && (
+          <div className="mobile-card">
+            <div className="mobile-card-header">
+              <span className="mobile-card-icon">🎯</span>
+              <h2 className="mobile-card-title">GTO Strategy</h2>
+            </div>
+            <p style={{ color: '#e5e7eb', fontSize: '14px', lineHeight: 1.6 }}>
+              {fields.gto_strategy || 'Analysis will appear here...'}
+            </p>
+          </div>
+        )}
+
+        {fields?.exploit_deviation && (
+          <div className="mobile-card">
+            <div className="mobile-card-header">
+              <span className="mobile-card-icon">🎭</span>
+              <h2 className="mobile-card-title">Exploitative Play</h2>
+            </div>
+            <p style={{ color: '#e5e7eb', fontSize: '14px', lineHeight: 1.6 }}>
+              {fields.exploit_deviation}
+            </p>
+          </div>
+        )}
+      </MobileLayout>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DESKTOP WEB LAYOUT (Unchanged)
+  // ═══════════════════════════════════════════════════════════════════════════
   return (
     <div className="op-surface">
       {/* Subtle background pattern */}
