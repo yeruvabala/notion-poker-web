@@ -3,7 +3,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import "@/styles/onlypoker-theme.css";
-import { createClient } from '@/lib/supabase/client'; // ← ADDED
+import { createClient } from '@/lib/supabase/client';
+import { Capacitor } from '@capacitor/core';
 
 /* ====================== Types & helpers ====================== */
 
@@ -549,6 +550,9 @@ export default function HomeClient() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Native app detection for mobile-specific layouts
+  const isNativeApp = typeof window !== 'undefined' && Capacitor.isNativePlatform();
 
   // ════════════════════════════════════════════════════════════════════════════
   // SESSION MODE STATE
@@ -1556,7 +1560,7 @@ Turn K♦ — ...`}
                 </div>
                 <div className="hand-content">
                   {/* Row 1: Table Format + Position */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isNativeApp ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                     <div className="ibox platinum-inner-border">
                       <div className="lblSmall">Table Format</div>
                       <div style={{ display: 'flex', alignItems: 'center', background: '#1f1f1f', borderRadius: '8px', padding: '6px 10px', border: '1px solid #3a3a3a' }}>
@@ -1592,7 +1596,7 @@ Turn K♦ — ...`}
                   </div>
 
                   {/* Row 2: Action Type + Effective Stack */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isNativeApp ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                     <div className="ibox platinum-inner-border">
                       <div className="lblSmall">Action Type</div>
                       <div style={{ display: 'flex', alignItems: 'center', background: '#1f1f1f', borderRadius: '8px', padding: '6px 10px', border: '1px solid #3a3a3a' }}>
@@ -1624,7 +1628,7 @@ Turn K♦ — ...`}
                   </div>
 
                   {/* Row 3: Hero Hand + Hero Position */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isNativeApp ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                     {/* Hero Hand - Card selectors */}
                     <div className="ibox platinum-inner-border">
                       <div className="lblSmall">Hero Hand</div>
