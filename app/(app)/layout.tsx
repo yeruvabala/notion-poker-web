@@ -1,9 +1,10 @@
 // app/(app)/layout.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import MobileHeader from '@/components/MobileHeader';
+import { Capacitor } from '@capacitor/core';
 
 export default function AppLayout({
   children,
@@ -11,7 +12,19 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isNativeApp, setIsNativeApp] = useState(false);
 
+  // Detect if running in Capacitor native app
+  useEffect(() => {
+    setIsNativeApp(Capacitor.isNativePlatform());
+  }, []);
+
+  // Native app: just render children (HomeClient handles its own layout)
+  if (isNativeApp) {
+    return <>{children}</>;
+  }
+
+  // Web: normal layout with sidebar
   return (
     <div className="min-h-screen bg-[#1c1c1c] text-[#E2E8F0]">
       {/* Mobile Header with Hamburger */}
