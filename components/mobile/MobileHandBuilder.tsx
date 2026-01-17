@@ -14,10 +14,10 @@ const TABLE_FORMATS = {
 
 const RANKS = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
 const SUITS = [
-    { value: '♠', color: '#e5e7eb' },
-    { value: '♥', color: '#ef4444' },
-    { value: '♦', color: '#ef4444' },
-    { value: '♣', color: '#e5e7eb' }
+    { value: '♠', color: '#ffffff', isRed: false },  // White/platinum - spades
+    { value: '♥', color: '#ef4444', isRed: true },   // Red - hearts
+    { value: '♦', color: '#ef4444', isRed: true },   // Red - diamonds
+    { value: '♣', color: '#ffffff', isRed: false }   // White/platinum - clubs
 ];
 
 interface PreflopAction {

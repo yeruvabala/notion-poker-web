@@ -3980,17 +3980,9 @@ body.native-app [class*="btn-row"]>* {
 }
 
 .picker-card span:last-child {
-    font-size: 16px;
-    font-weight: 600;
-}
-
-/* Suit colors for picker - explicitly set */
-.picker-card .suit-red {
-    color: #ef4444 !important;
-}
-
-.picker-card .suit-black {
-    color: #e5e7eb !important;
+    font-size: 18px;
+    font-weight: 700;
+    /* Color set via inline style - red for hearts/diamonds, white for spades/clubs */
 }
 
 .picker-clear {
