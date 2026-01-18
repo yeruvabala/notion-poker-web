@@ -398,68 +398,66 @@ const InlineActionBuilder = ({
                     />
                 ))}
 
-                {/* Add action flow */}
-                {!isEnded && (
-                    <>
-                        {!isAdding ? (
-                            <button
-                                className="add-action-btn"
-                                onClick={startAdding}
-                            >
-                                {actions.length === 0 ? '?' : '+'}
-                            </button>
-                        ) : pendingPlayer && (
-                            /* Player already determined - show context-aware action options */
-                            <div className="action-selector">
-                                <span className={`selected-player ${pendingPlayer === 'H' ? 'hero' : 'villain'}`}>
-                                    {pendingPlayer}:
-                                </span>
-
-                                {/* Postflop: Toggle between % and bb mode */}
-                                {street !== 'preflop' && (
-                                    <button
-                                        className="mode-toggle"
-                                        onClick={() => setPostflopMode(postflopMode === '%' ? 'bb' : '%')}
-                                    >
-                                        {postflopMode === '%' ? '% pot' : 'bb'}
-                                    </button>
-                                )}
-
-                                <div className="action-options">
-                                    {contextOptions.map(opt => (
-                                        <button
-                                            key={opt.value}
-                                            className="action-option"
-                                            onClick={() => handleAddAction(opt.value, opt.amount)}
-                                        >
-                                            {opt.label}
-                                        </button>
-                                    ))}
-
-                                    {/* Custom amount input */}
-                                    <div className="custom-amount-wrapper">
-                                        <input
-                                            type="number"
-                                            className="custom-amount-input"
-                                            placeholder={street === 'preflop' ? 'bb' : (postflopMode === '%' ? '%' : 'bb')}
-                                            value={customAmount}
-                                            onChange={(e) => setCustomAmount(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && handleCustomAmount()}
-                                        />
-                                        <button
-                                            className="custom-amount-btn"
-                                            onClick={handleCustomAmount}
-                                        >
-                                            ✓
-                                        </button>
-                                    </div>
-                                </div>
-                                <button className="cancel-btn" onClick={cancelAdding}>✕</button>
-                            </div>
-                        )}
-                    </>
+                {/* Add button - inside scroll to stay with actions */}
+                {!isEnded && !isAdding && (
+                    <button
+                        className="add-action-btn"
+                        onClick={startAdding}
+                    >
+                        {actions.length === 0 ? '?' : '+'}
+                    </button>
                 )}
             </div>
+
+            {/* Action options - OUTSIDE scroll container for full visibility */}
+            {!isEnded && isAdding && pendingPlayer && (
+                <div className="action-selector">
+                    <span className={`selected-player ${pendingPlayer === 'H' ? 'hero' : 'villain'}`}>
+                        {pendingPlayer}:
+                    </span>
+
+                    {/* Postflop: Toggle between % and bb mode */}
+                    {street !== 'preflop' && (
+                        <button
+                            className="mode-toggle"
+                            onClick={() => setPostflopMode(postflopMode === '%' ? 'bb' : '%')}
+                        >
+                            {postflopMode === '%' ? '% pot' : 'bb'}
+                        </button>
+                    )}
+
+                    <div className="action-options">
+                        {contextOptions.map(opt => (
+                            <button
+                                key={opt.value}
+                                className="action-option"
+                                onClick={() => handleAddAction(opt.value, opt.amount)}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+
+                        {/* Custom amount input */}
+                        <div className="custom-amount-wrapper">
+                            <input
+                                type="number"
+                                className="custom-amount-input"
+                                placeholder={street === 'preflop' ? 'bb' : (postflopMode === '%' ? '%' : 'bb')}
+                                value={customAmount}
+                                onChange={(e) => setCustomAmount(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleCustomAmount()}
+                            />
+                            <button
+                                className="custom-amount-btn"
+                                onClick={handleCustomAmount}
+                            >
+                                ✓
+                            </button>
+                        </div>
+                    </div>
+                    <button className="cancel-btn" onClick={cancelAdding}>✕</button>
+                </div>
+            )}
         </div>
     );
 };
