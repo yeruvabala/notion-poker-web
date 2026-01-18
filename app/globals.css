@@ -3847,6 +3847,9 @@ body.native-app [class*="btn-row"]>* {
     border-radius: 16px;
     padding: 16px;
     border: 1px solid rgba(255, 255, 255, 0.06);
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .street-header {
@@ -4115,6 +4118,8 @@ body.native-app [class*="btn-row"]>* {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .action-flow-container {
