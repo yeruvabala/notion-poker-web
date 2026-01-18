@@ -64,13 +64,17 @@ const ActionChip = ({
 const InlineActionBuilder = ({
     actions,
     setActions,
-    actionOptions,
-    street
+    street,
+    heroPosition,
+    villainPosition,
+    tableFormat
 }: {
     actions: (PreflopAction | PostflopAction)[];
     setActions: (actions: any[]) => void;
-    actionOptions: string[];
     street: 'preflop' | 'flop' | 'turn' | 'river';
+    heroPosition?: string;
+    villainPosition?: string;
+    tableFormat?: string;
 }) => {
     const [isAdding, setIsAdding] = useState(false);
     const [pendingPlayer, setPendingPlayer] = useState<'H' | 'V' | null>(null);
@@ -83,32 +87,163 @@ const InlineActionBuilder = ({
         lastAction?.action === 'fold' ||
         (lastAction?.action === 'check' && secondLastAction?.action === 'check');
 
+    // ═════════════════════════════════════════════════════════════════════════
+    // POSITION-BASED FIRST ACTOR LOGIC
+    // ═════════════════════════════════════════════════════════════════════════
+    const getFirstActorPreflop = (): 'H' | 'V' => {
+        // Preflop order: UTG → UTG+1 → MP → HJ → CO → BTN → SB → BB
+        // The player in earlier position acts first
+        const preflopOrder = ['UTG', 'UTG+1', 'UTG+2', 'MP', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
+
+        if (tableFormat === 'HU') {
+            // HU: BTN/SB acts first preflop, BB acts second
+            const heroPos = heroPosition || 'BTN';
+            const villainPos = villainPosition || 'BB';
+            // BTN (index 0) acts first in HU preflop
+            const huOrder = ['BTN', 'SB', 'BB'];
+            const heroIndex = huOrder.indexOf(heroPos) >= 0 ? huOrder.indexOf(heroPos) : 0;
+            const villainIndex = huOrder.indexOf(villainPos) >= 0 ? huOrder.indexOf(villainPos) : 1;
+            return heroIndex < villainIndex ? 'H' : 'V';
+        }
+
+        const heroPos = heroPosition || 'BTN';
+        const villainPos = villainPosition || 'BB';
+        const heroIndex = preflopOrder.indexOf(heroPos) >= 0 ? preflopOrder.indexOf(heroPos) : 6;
+        const villainIndex = preflopOrder.indexOf(villainPos) >= 0 ? preflopOrder.indexOf(villainPos) : 8;
+        return heroIndex < villainIndex ? 'H' : 'V';
+    };
+
+    const getFirstActorPostflop = (): 'H' | 'V' => {
+        // Postflop order: SB → BB → UTG → ... → BTN (OOP acts first)
+        const postflopOrder = ['SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 'MP', 'HJ', 'CO', 'BTN'];
+
+        if (tableFormat === 'HU') {
+            // HU: BB acts first postflop (BB is OOP)
+            const heroPos = heroPosition || 'BTN';
+            const villainPos = villainPosition || 'BB';
+            const huOrder = ['BB', 'BTN', 'SB']; // BB acts first postflop
+            const heroIndex = huOrder.indexOf(heroPos) >= 0 ? huOrder.indexOf(heroPos) : 1;
+            const villainIndex = huOrder.indexOf(villainPos) >= 0 ? huOrder.indexOf(villainPos) : 0;
+            return heroIndex < villainIndex ? 'H' : 'V';
+        }
+
+        const heroPos = heroPosition || 'BTN';
+        const villainPos = villainPosition || 'BB';
+        const heroIndex = postflopOrder.indexOf(heroPos) >= 0 ? postflopOrder.indexOf(heroPos) : 8;
+        const villainIndex = postflopOrder.indexOf(villainPos) >= 0 ? postflopOrder.indexOf(villainPos) : 1;
+        return heroIndex < villainIndex ? 'H' : 'V';
+    };
+
     // Determine next player based on last action (for auto-alternation)
-    const getNextPlayer = (): 'H' | 'V' | null => {
-        if (actions.length === 0) return null; // First action - show both
+    const getNextPlayer = (): 'H' | 'V' => {
+        if (actions.length === 0) {
+            // First action - use position-based logic
+            return street === 'preflop' ? getFirstActorPreflop() : getFirstActorPostflop();
+        }
         return lastAction?.player === 'H' ? 'V' : 'H';
     };
 
-    const handleAddAction = (player: 'H' | 'V', actionName: string) => {
-        const actionLower = actionName.toLowerCase();
-        const needsAmount = actionLower.includes('bet') ||
-            actionLower.includes('raise') ||
-            actionLower.includes('3bet') ||
-            actionLower.includes('4bet');
-        const amount = needsAmount ? (street === 'preflop' ? 3 : 5) : undefined;
+    // ═════════════════════════════════════════════════════════════════════════
+    // CONTEXT-AWARE ACTION OPTIONS
+    // ═════════════════════════════════════════════════════════════════════════
+    const getContextAwareOptions = (): { label: string; value: string; amount?: number }[] => {
+        if (street === 'preflop') {
+            const raises = actions.filter(a =>
+                a.action === 'raise' || a.action === '3bet' || a.action === '4bet'
+            );
+            const raiseCount = raises.length;
 
-        setActions([...actions, { player, action: actionLower as any, amount }]);
+            // First action (no prior raises) - limp, raise presets
+            if (raiseCount === 0) {
+                return [
+                    { label: 'Fold', value: 'fold' },
+                    { label: 'Limp', value: 'limp', amount: 1 },
+                    { label: 'Raise 2bb', value: 'raise_2', amount: 2 },
+                    { label: 'Raise 2.5bb', value: 'raise_2.5', amount: 2.5 },
+                    { label: 'Raise 3bb', value: 'raise_3', amount: 3 },
+                    { label: 'Raise 4bb', value: 'raise_4', amount: 4 },
+                ];
+            }
+            // After open (1 raise) - call or 3bet presets
+            else if (raiseCount === 1) {
+                const openAmount = raises[0]?.amount || 2.5;
+                return [
+                    { label: 'Fold', value: 'fold' },
+                    { label: `Call ${openAmount}bb`, value: 'call', amount: openAmount },
+                    { label: '3bet 7bb', value: '3bet_7', amount: 7 },
+                    { label: '3bet 9bb', value: '3bet_9', amount: 9 },
+                    { label: '3bet 10bb', value: '3bet_10', amount: 10 },
+                    { label: '3bet 12bb', value: '3bet_12', amount: 12 },
+                ];
+            }
+            // After 3bet (2 raises) - call or 4bet presets
+            else if (raiseCount === 2) {
+                const threeBetAmount = raises[1]?.amount || 9;
+                return [
+                    { label: 'Fold', value: 'fold' },
+                    { label: `Call ${threeBetAmount}bb`, value: 'call', amount: threeBetAmount },
+                    { label: '4bet 20bb', value: '4bet_20', amount: 20 },
+                    { label: '4bet 22bb', value: '4bet_22', amount: 22 },
+                    { label: '4bet 25bb', value: '4bet_25', amount: 25 },
+                ];
+            }
+            // After 4bet - just call or fold
+            else {
+                const fourBetAmount = raises[2]?.amount || 22;
+                return [
+                    { label: 'Fold', value: 'fold' },
+                    { label: `Call ${fourBetAmount}bb`, value: 'call', amount: fourBetAmount },
+                ];
+            }
+        }
 
-        // Smart auto-advance: if raise/3bet/4bet/bet, auto-advance to next player
-        // If call/fold, close the form
-        if (actionLower === 'call' || actionLower === 'fold') {
+        // Postflop - simpler options
+        const bets = actions.filter(a => a.action === 'bet' || a.action === 'raise');
+        if (bets.length === 0) {
+            return [
+                { label: 'Check', value: 'check' },
+                { label: 'Bet', value: 'bet', amount: 5 },
+                { label: 'Fold', value: 'fold' },
+            ];
+        } else {
+            const lastBet = bets[bets.length - 1];
+            return [
+                { label: 'Fold', value: 'fold' },
+                { label: `Call ${lastBet?.amount || 5}bb`, value: 'call', amount: lastBet?.amount },
+                { label: 'Raise', value: 'raise', amount: (lastBet?.amount || 5) * 2.5 },
+            ];
+        }
+    };
+
+    const handleAddAction = (optionValue: string, optionAmount?: number) => {
+        let actionType = optionValue;
+        let amount = optionAmount;
+
+        // Parse action type from value
+        if (optionValue.startsWith('raise_')) {
+            actionType = 'raise';
+            amount = parseFloat(optionValue.replace('raise_', ''));
+        } else if (optionValue.startsWith('3bet_')) {
+            actionType = '3bet';
+            amount = parseFloat(optionValue.replace('3bet_', ''));
+        } else if (optionValue.startsWith('4bet_')) {
+            actionType = '4bet';
+            amount = parseFloat(optionValue.replace('4bet_', ''));
+        } else if (optionValue === 'limp') {
+            actionType = 'limp';
+            amount = 1;
+        }
+
+        const player = pendingPlayer!;
+        setActions([...actions, { player, action: actionType as any, amount }]);
+
+        // Smart auto-advance
+        if (actionType === 'call' || actionType === 'fold') {
             setIsAdding(false);
             setPendingPlayer(null);
-        } else if (actionLower === 'check') {
-            // After check, alternate to other player
+        } else if (actionType === 'check') {
             setPendingPlayer(player === 'H' ? 'V' : 'H');
         } else {
-            // Raise/3bet/4bet/bet - auto-advance to other player
             setPendingPlayer(player === 'H' ? 'V' : 'H');
         }
     };
@@ -119,18 +254,16 @@ const InlineActionBuilder = ({
 
     const startAdding = () => {
         setIsAdding(true);
-        const nextPlayer = getNextPlayer();
-        if (nextPlayer) {
-            // Auto-set the alternating player (1 tap saved!)
-            setPendingPlayer(nextPlayer);
-        }
-        // If no next player (first action), pendingPlayer stays null → show both H and V
+        // Auto-set player based on position (no need to choose!)
+        setPendingPlayer(getNextPlayer());
     };
 
     const cancelAdding = () => {
         setIsAdding(false);
         setPendingPlayer(null);
     };
+
+    const contextOptions = getContextAwareOptions();
 
     return (
         <div className="inline-action-builder">
@@ -154,27 +287,20 @@ const InlineActionBuilder = ({
                         >
                             {actions.length === 0 ? '?' : '+'}
                         </button>
-                    ) : !pendingPlayer ? (
-                        /* First action - show both H and V */
-                        <div className="player-selector">
-                            <button className="player-btn hero" onClick={() => setPendingPlayer('H')}>H</button>
-                            <button className="player-btn villain" onClick={() => setPendingPlayer('V')}>V</button>
-                            <button className="cancel-btn" onClick={cancelAdding}>✕</button>
-                        </div>
-                    ) : (
-                        /* Player already determined - show action options */
+                    ) : pendingPlayer && (
+                        /* Player already determined - show context-aware action options */
                         <div className="action-selector">
                             <span className={`selected-player ${pendingPlayer === 'H' ? 'hero' : 'villain'}`}>
                                 {pendingPlayer}:
                             </span>
                             <div className="action-options">
-                                {actionOptions.map(opt => (
+                                {contextOptions.map(opt => (
                                     <button
-                                        key={opt}
+                                        key={opt.value}
                                         className="action-option"
-                                        onClick={() => handleAddAction(pendingPlayer, opt)}
+                                        onClick={() => handleAddAction(opt.value, opt.amount)}
                                     >
-                                        {opt}
+                                        {opt.label}
                                     </button>
                                 ))}
                             </div>
@@ -332,8 +458,6 @@ export default function MobileHandBuilder({
         </div>
     );
 
-    const preflopActionOptions = ['Raise', 'Call', '3bet', '4bet', 'Fold'];
-    const postflopActionOptions = ['Check', 'Bet', 'Call', 'Raise', 'Fold'];
 
     // Handle card selection
     const handleCardSelect = (card: string) => {
@@ -425,8 +549,10 @@ export default function MobileHandBuilder({
                 <InlineActionBuilder
                     actions={preflopActions}
                     setActions={setPreflopActions}
-                    actionOptions={preflopActionOptions}
                     street="preflop"
+                    heroPosition={heroPosition}
+                    villainPosition={villainPosition}
+                    tableFormat={tableFormat}
                 />
             </div>
 
@@ -448,8 +574,10 @@ export default function MobileHandBuilder({
                     <InlineActionBuilder
                         actions={flopActions}
                         setActions={setFlopActions}
-                        actionOptions={postflopActionOptions}
                         street="flop"
+                        heroPosition={heroPosition}
+                        villainPosition={villainPosition}
+                        tableFormat={tableFormat}
                     />
                 )}
             </div>
@@ -470,8 +598,10 @@ export default function MobileHandBuilder({
                     <InlineActionBuilder
                         actions={turnActions}
                         setActions={setTurnActions}
-                        actionOptions={postflopActionOptions}
                         street="turn"
+                        heroPosition={heroPosition}
+                        villainPosition={villainPosition}
+                        tableFormat={tableFormat}
                     />
                 )}
             </div>
@@ -492,8 +622,10 @@ export default function MobileHandBuilder({
                     <InlineActionBuilder
                         actions={riverActions}
                         setActions={setRiverActions}
-                        actionOptions={postflopActionOptions}
                         street="river"
+                        heroPosition={heroPosition}
+                        villainPosition={villainPosition}
+                        tableFormat={tableFormat}
                     />
                 )}
             </div>
