@@ -240,7 +240,7 @@ const InlineActionBuilder = ({
     const getContextAwareOptions = (): { label: string; value: string; amount?: number }[] => {
         if (street === 'preflop') {
             const raises = actions.filter(a =>
-                a.action === 'raise' || a.action === '3bet' || a.action === '4bet'
+                a.action === 'raise' || a.action === '3bet' || a.action === '4bet' || (a.action as string) === '5bet'
             );
             const limps = actions.filter(a => a.action === 'limp');
             const raiseCount = raises.length;
@@ -295,12 +295,23 @@ const InlineActionBuilder = ({
                     { label: '4bet 25bb', value: '4bet_25', amount: 25 },
                 ];
             }
-            // After 4bet - just call or fold
-            else {
+            // After 4bet (3 raises) - call or 5bet presets
+            else if (raiseCount === 3) {
                 const fourBetAmount = raises[2]?.amount || 22;
                 return [
                     { label: 'Fold', value: 'fold' },
                     { label: `Call ${fourBetAmount}bb`, value: 'call', amount: fourBetAmount },
+                    { label: '5bet 45bb', value: '5bet_45', amount: 45 },
+                    { label: '5bet 50bb', value: '5bet_50', amount: 50 },
+                    { label: '5bet All-in', value: '5bet_100', amount: 100 },
+                ];
+            }
+            // After 5bet - just call or fold
+            else {
+                const fiveBetAmount = raises[3]?.amount || 50;
+                return [
+                    { label: 'Fold', value: 'fold' },
+                    { label: `Call ${fiveBetAmount}bb`, value: 'call', amount: fiveBetAmount },
                 ];
             }
         }
@@ -346,9 +357,16 @@ const InlineActionBuilder = ({
         let amount = optionAmount;
 
         // Parse action type from value
-        // Preflop raises - but not 'custom' which uses passed amount
+        // For preflop custom raises, determine correct action type based on raise count
         if (optionValue === 'raise_custom') {
-            actionType = 'raise';
+            const raises = actions.filter(a =>
+                a.action === 'raise' || a.action === '3bet' || a.action === '4bet' || (a.action as string) === '5bet'
+            );
+            const raiseCount = raises.length;
+            if (raiseCount === 0) actionType = 'raise';
+            else if (raiseCount === 1) actionType = '3bet';
+            else if (raiseCount === 2) actionType = '4bet';
+            else actionType = '5bet';
             // amount is already passed from optionAmount
         } else if (optionValue.startsWith('raise_') && !optionValue.includes('x') && !optionValue.includes('custom')) {
             actionType = 'raise';
@@ -359,6 +377,9 @@ const InlineActionBuilder = ({
         } else if (optionValue.startsWith('4bet_')) {
             actionType = '4bet';
             amount = parseFloat(optionValue.replace('4bet_', ''));
+        } else if (optionValue.startsWith('5bet_')) {
+            actionType = '5bet';
+            amount = parseFloat(optionValue.replace('5bet_', ''));
         } else if (optionValue === 'limp') {
             actionType = 'limp';
             amount = 1;
