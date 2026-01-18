@@ -101,8 +101,10 @@ const InlineActionBuilder = ({
     const [customAmount, setCustomAmount] = useState<string>('');
     const [postflopMode, setPostflopMode] = useState<'%' | 'bb'>('%'); // % of pot or bb
 
-    // Ref for auto-scroll to end
+    // Ref for scroll container
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const touchStartX = useRef<number>(0);
+    const scrollStartX = useRef<number>(0);
 
     // Auto-scroll to end when actions change or adding new action
     useEffect(() => {
@@ -110,6 +112,22 @@ const InlineActionBuilder = ({
             scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
         }
     }, [actions.length, isAdding]);
+
+    // Touch handlers for horizontal scroll (iOS Safari fix)
+    const handleTouchStart = (e: React.TouchEvent) => {
+        if (scrollContainerRef.current) {
+            touchStartX.current = e.touches[0].clientX;
+            scrollStartX.current = scrollContainerRef.current.scrollLeft;
+        }
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (scrollContainerRef.current) {
+            const touchX = e.touches[0].clientX;
+            const diff = touchStartX.current - touchX;
+            scrollContainerRef.current.scrollLeft = scrollStartX.current + diff;
+        }
+    };
 
     const lastAction = actions[actions.length - 1];
     const secondLastAction = actions[actions.length - 2];
@@ -385,8 +403,13 @@ const InlineActionBuilder = ({
 
     return (
         <div className="inline-action-builder-v2">
-            {/* Action flow - horizontal scroll with auto-scroll to end */}
-            <div className="action-flow-container" ref={scrollContainerRef}>
+            {/* Action flow - horizontal scroll with touch support */}
+            <div
+                className="action-flow-container"
+                ref={scrollContainerRef}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+            >
                 {/* Existing actions as chips - click to edit from that point */}
                 {actions.map((action, i) => (
                     <ActionChip
