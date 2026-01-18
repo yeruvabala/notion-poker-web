@@ -266,8 +266,11 @@ const InlineActionBuilder = ({
         let amount = optionAmount;
 
         // Parse action type from value
-        // Preflop raises
-        if (optionValue.startsWith('raise_') && !optionValue.includes('x')) {
+        // Preflop raises - but not 'custom' which uses passed amount
+        if (optionValue === 'raise_custom') {
+            actionType = 'raise';
+            // amount is already passed from optionAmount
+        } else if (optionValue.startsWith('raise_') && !optionValue.includes('x') && !optionValue.includes('custom')) {
             actionType = 'raise';
             amount = parseFloat(optionValue.replace('raise_', ''));
         } else if (optionValue.startsWith('3bet_')) {
@@ -280,10 +283,10 @@ const InlineActionBuilder = ({
             actionType = 'limp';
             amount = 1;
         }
-        // Postflop bets (pot-based)
-        else if (optionValue.startsWith('bet_')) {
+        // Postflop bets (pot-based or custom)
+        else if (optionValue === 'bet_custom' || optionValue.startsWith('bet_')) {
             actionType = 'bet';
-            // amount is already passed from option
+            // amount is already passed from optionAmount
         }
         // Postflop raises (multiplier-based)
         else if (optionValue.startsWith('raise_') && optionValue.includes('x')) {
@@ -335,7 +338,7 @@ const InlineActionBuilder = ({
     const handleCustomAmount = () => {
         if (!customAmount || parseFloat(customAmount) <= 0) return;
         const amount = parseFloat(customAmount);
-        
+
         if (street === 'preflop') {
             // Preflop custom = raise with that amount
             handleAddAction('raise_custom', amount);
@@ -380,17 +383,17 @@ const InlineActionBuilder = ({
                             <span className={`selected-player ${pendingPlayer === 'H' ? 'hero' : 'villain'}`}>
                                 {pendingPlayer}:
                             </span>
-                            
+
                             {/* Postflop: Toggle between % and bb mode */}
                             {street !== 'preflop' && (
-                                <button 
+                                <button
                                     className="mode-toggle"
                                     onClick={() => setPostflopMode(postflopMode === '%' ? 'bb' : '%')}
                                 >
                                     {postflopMode === '%' ? '% pot' : 'bb'}
                                 </button>
                             )}
-                            
+
                             <div className="action-options">
                                 {contextOptions.map(opt => (
                                     <button
@@ -401,7 +404,7 @@ const InlineActionBuilder = ({
                                         {opt.label}
                                     </button>
                                 ))}
-                                
+
                                 {/* Custom amount input */}
                                 <div className="custom-amount-wrapper">
                                     <input
@@ -412,7 +415,7 @@ const InlineActionBuilder = ({
                                         onChange={(e) => setCustomAmount(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && handleCustomAmount()}
                                     />
-                                    <button 
+                                    <button
                                         className="custom-amount-btn"
                                         onClick={handleCustomAmount}
                                     >
