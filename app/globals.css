@@ -3561,44 +3561,37 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   HERO SECTION - Cards + Matchup
+   HERO ROW - Cards + Villain on Same Line
    ═══════════════════════════════════════════════════════════════════════════════ */
-.hero-section {
-    text-align: center;
-    padding: 12px 0 8px;
-}
-
-.hero-cards {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 8px;
-}
-
-/* Matchup Row - vs Villain */
-.matchup-row {
+.hero-row {
     display: flex;
     justify-content: center;
     align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+}
+
+.hero-row .hero-cards {
+    display: flex;
     gap: 8px;
 }
 
-.matchup-vs {
+.hero-vs {
     color: rgba(255, 255, 255, 0.4);
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 11px;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
-.matchup-row .villain-select {
+.villain-select-inline {
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 8px;
-    padding: 6px 12px;
+    padding: 8px 14px;
     color: #fff;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     -webkit-appearance: none;
     appearance: none;
