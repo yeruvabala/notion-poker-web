@@ -105,6 +105,10 @@ const InlineActionBuilder = ({
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const touchStartX = useRef<number>(0);
     const scrollStartX = useRef<number>(0);
+    const lastTouchX = useRef<number>(0);
+    const lastTouchTime = useRef<number>(0);
+    const velocity = useRef<number>(0);
+    const animationRef = useRef<number>(0);
 
     // Auto-scroll to end when actions change or adding new action
     useEffect(() => {
@@ -113,11 +117,18 @@ const InlineActionBuilder = ({
         }
     }, [actions.length, isAdding]);
 
-    // Touch handlers for horizontal scroll (iOS Safari fix)
+    // Touch handlers for smooth horizontal scroll with momentum
     const handleTouchStart = (e: React.TouchEvent) => {
         if (scrollContainerRef.current) {
+            // Stop any ongoing momentum animation
+            if (animationRef.current) {
+                cancelAnimationFrame(animationRef.current);
+            }
             touchStartX.current = e.touches[0].clientX;
             scrollStartX.current = scrollContainerRef.current.scrollLeft;
+            lastTouchX.current = e.touches[0].clientX;
+            lastTouchTime.current = Date.now();
+            velocity.current = 0;
         }
     };
 
@@ -126,6 +137,29 @@ const InlineActionBuilder = ({
             const touchX = e.touches[0].clientX;
             const diff = touchStartX.current - touchX;
             scrollContainerRef.current.scrollLeft = scrollStartX.current + diff;
+
+            // Calculate velocity for momentum
+            const now = Date.now();
+            const dt = now - lastTouchTime.current;
+            if (dt > 0) {
+                velocity.current = (lastTouchX.current - touchX) / dt;
+            }
+            lastTouchX.current = touchX;
+            lastTouchTime.current = now;
+        }
+    };
+
+    const handleTouchEnd = () => {
+        if (scrollContainerRef.current && Math.abs(velocity.current) > 0.1) {
+            // Apply momentum with deceleration
+            const decelerate = () => {
+                if (scrollContainerRef.current && Math.abs(velocity.current) > 0.01) {
+                    scrollContainerRef.current.scrollLeft += velocity.current * 16;
+                    velocity.current *= 0.95; // Friction
+                    animationRef.current = requestAnimationFrame(decelerate);
+                }
+            };
+            animationRef.current = requestAnimationFrame(decelerate);
         }
     };
 
@@ -403,12 +437,13 @@ const InlineActionBuilder = ({
 
     return (
         <div className="inline-action-builder-v2">
-            {/* Action flow - horizontal scroll with touch support */}
+            {/* Action flow - horizontal scroll with momentum */}
             <div
                 className="action-flow-container"
                 ref={scrollContainerRef}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
             >
                 {/* Existing actions as chips - click to edit from that point */}
                 {actions.map((action, i) => (
