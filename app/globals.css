@@ -4008,6 +4008,191 @@ body.native-app [class*="btn-row"]>* {
     transform: scale(0.95);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   INLINE ACTION BUILDER - Web-style Action Flow
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.inline-action-builder {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+}
+
+/* Action Chip - Web-style pill */
+.action-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 5px 10px;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    animation: chip-appear 0.2s ease;
+}
+
+@keyframes chip-appear {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.action-chip.hero {
+    background: #1a365d;
+    color: #e5e7eb;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
+}
+
+.action-chip.villain {
+    background: #4a1d1d;
+    color: #e5e7eb;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25);
+}
+
+.action-chip:active {
+    transform: scale(0.95);
+}
+
+.chip-player {
+    font-weight: 700;
+}
+
+.chip-colon {
+    opacity: 0.6;
+}
+
+.chip-amount {
+    font-weight: 600;
+}
+
+.chip-action {
+    opacity: 0.9;
+}
+
+/* Arrow between actions */
+.action-arrow {
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 11px;
+    margin: 0 2px;
+}
+
+/* Add Action Button */
+.add-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed rgba(255, 255, 255, 0.25);
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.add-action-btn:active {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #fff;
+    transform: scale(0.95);
+}
+
+/* Player Selector */
+.player-selector {
+    display: flex;
+    gap: 4px;
+    animation: chip-appear 0.15s ease;
+}
+
+.player-btn {
+    padding: 5px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.player-btn.hero {
+    background: #1a365d;
+    color: #93c5fd;
+}
+
+.player-btn.villain {
+    background: #4a1d1d;
+    color: #fca5a5;
+}
+
+.player-btn:active {
+    transform: scale(0.95);
+}
+
+.cancel-btn {
+    padding: 4px 8px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+/* Action Selector */
+.action-selector {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: chip-appear 0.15s ease;
+}
+
+.selected-player {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.selected-player.hero {
+    color: #93c5fd;
+}
+
+.selected-player.villain {
+    color: #fca5a5;
+}
+
+.action-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.action-option {
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.action-option:active {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(0.95);
+}
+
 /* Villain Position Row */
 .villain-position-row {
     display: flex;

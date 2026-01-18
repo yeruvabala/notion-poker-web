@@ -177,68 +177,123 @@ export default function MobileHandBuilder({
         </div>
     );
 
-    // Action Pill Component
-    const ActionPill = ({
+    // ═════════════════════════════════════════════════════════════════════════
+    // ACTION CHIP - Web-style inline pill with player color
+    // ═════════════════════════════════════════════════════════════════════════
+    const ActionChip = ({
         action,
-        onRemove
+        onRemove,
+        showArrow = false
     }: {
         action: PreflopAction | PostflopAction;
         onRemove: () => void;
+        showArrow?: boolean;
     }) => (
-        <div className={`action-pill ${action.player === 'H' ? 'hero' : 'villain'}`}>
-            <span className="action-icon">{action.player === 'H' ? '🎯' : '👤'}</span>
-            <span className="action-text">
-                {action.action.toUpperCase()}
-                {action.amount ? ` ${action.amount}bb` : ''}
-            </span>
-            <button className="action-remove" onClick={onRemove}>×</button>
-        </div>
+        <>
+            <div
+                className={`action-chip ${action.player === 'H' ? 'hero' : 'villain'}`}
+                onClick={onRemove}
+            >
+                <span className="chip-player">{action.player}</span>
+                <span className="chip-colon">:</span>
+                {action.amount && <span className="chip-amount">{action.amount}bb</span>}
+                <span className="chip-action">{action.action}</span>
+            </div>
+            {showArrow && <span className="action-arrow">→</span>}
+        </>
     );
 
-    // Quick Action Buttons
-    const ActionButtons = ({
-        street,
+    // ═════════════════════════════════════════════════════════════════════════
+    // INLINE ACTION BUILDER - Compact add action flow
+    // ═════════════════════════════════════════════════════════════════════════
+    const InlineActionBuilder = ({
         actions,
-        addAction
+        setActions,
+        actionOptions,
+        street
     }: {
+        actions: (PreflopAction | PostflopAction)[];
+        setActions: (actions: any[]) => void;
+        actionOptions: string[];
         street: 'preflop' | 'flop' | 'turn' | 'river';
-        actions: string[];
-        addAction: (player: 'H' | 'V', action: string) => void;
-    }) => (
-        <div className="action-buttons-row">
-            <div className="action-group hero-actions">
-                {actions.map(act => (
-                    <button key={`h-${act}`} className="quick-action hero" onClick={() => addAction('H', act)}>
-                        {act}
-                    </button>
+    }) => {
+        const [isAdding, setIsAdding] = useState(false);
+        const [selectedPlayer, setSelectedPlayer] = useState<'H' | 'V' | null>(null);
+
+        const lastAction = actions[actions.length - 1];
+        const isEnded = lastAction?.action === 'call' || lastAction?.action === 'fold' ||
+            (lastAction?.action === 'check' && actions.length >= 2 && actions[actions.length - 2]?.action === 'check');
+
+        const handleAddAction = (player: 'H' | 'V', actionName: string) => {
+            const amount = actionName.toLowerCase().includes('bet') ||
+                actionName.toLowerCase().includes('raise') ||
+                actionName.toLowerCase().includes('3bet') ||
+                actionName.toLowerCase().includes('4bet') ?
+                (street === 'preflop' ? 3 : 5) : undefined;
+            setActions([...actions, { player, action: actionName.toLowerCase() as any, amount }]);
+            setIsAdding(false);
+            setSelectedPlayer(null);
+        };
+
+        const removeAction = (index: number) => {
+            setActions(actions.filter((_, i) => i !== index));
+        };
+
+        return (
+            <div className="inline-action-builder">
+                {/* Existing actions as chips */}
+                {actions.map((action, i) => (
+                    <ActionChip
+                        key={i}
+                        action={action}
+                        onRemove={() => removeAction(i)}
+                        showArrow={i < actions.length - 1 || (!isEnded && !isAdding)}
+                    />
                 ))}
+
+                {/* Add action flow */}
+                {!isEnded && (
+                    <>
+                        {!isAdding ? (
+                            <button
+                                className="add-action-btn"
+                                onClick={() => setIsAdding(true)}
+                            >
+                                {actions.length === 0 ? '?' : '+'}
+                            </button>
+                        ) : !selectedPlayer ? (
+                            <div className="player-selector">
+                                <button className="player-btn hero" onClick={() => setSelectedPlayer('H')}>H</button>
+                                <button className="player-btn villain" onClick={() => setSelectedPlayer('V')}>V</button>
+                                <button className="cancel-btn" onClick={() => setIsAdding(false)}>✕</button>
+                            </div>
+                        ) : (
+                            <div className="action-selector">
+                                <span className={`selected-player ${selectedPlayer === 'H' ? 'hero' : 'villain'}`}>
+                                    {selectedPlayer}:
+                                </span>
+                                <div className="action-options">
+                                    {actionOptions.map(opt => (
+                                        <button
+                                            key={opt}
+                                            className="action-option"
+                                            onClick={() => handleAddAction(selectedPlayer, opt)}
+                                        >
+                                            {opt}
+                                        </button>
+                                    ))}
+                                </div>
+                                <button className="cancel-btn" onClick={() => { setSelectedPlayer(null); setIsAdding(false); }}>✕</button>
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
-            <div className="action-divider">vs</div>
-            <div className="action-group villain-actions">
-                {actions.map(act => (
-                    <button key={`v-${act}`} className="quick-action villain" onClick={() => addAction('V', act)}>
-                        {act}
-                    </button>
-                ))}
-            </div>
-        </div>
-    );
+        );
+    };
 
     const preflopActionOptions = ['Raise', 'Call', '3bet', '4bet', 'Fold'];
     const postflopActionOptions = ['Check', 'Bet', 'Call', 'Raise', 'Fold'];
-
-    const addPreflopAction = (player: 'H' | 'V', action: string) => {
-        const amount = action.toLowerCase().includes('raise') || action.toLowerCase().includes('bet') ? 3 : undefined;
-        setPreflopActions([...preflopActions, { player, action: action.toLowerCase() as any, amount }]);
-    };
-
-    const addPostflopAction = (street: 'flop' | 'turn' | 'river', player: 'H' | 'V', action: string) => {
-        const amount = action.toLowerCase().includes('bet') || action.toLowerCase().includes('raise') ? 5 : undefined;
-        const newAction = { player, action: action.toLowerCase() as any, amount };
-        if (street === 'flop') setFlopActions([...flopActions, newAction]);
-        else if (street === 'turn') setTurnActions([...turnActions, newAction]);
-        else setRiverActions([...riverActions, newAction]);
-    };
 
     // Handle card selection
     const handleCardSelect = (card: string) => {
@@ -320,37 +375,23 @@ export default function MobileHandBuilder({
             </div>
 
             {/* ═══════════════════════════════════════════════════════════════════════
-          PREFLOP ACTIONS - Interactive Timeline
+          PREFLOP - Inline Action Builder
           ═══════════════════════════════════════════════════════════════════════ */}
             <div className="street-section preflop">
                 <div className="street-header">
                     <span className="street-name">Preflop</span>
                     <span className="pot-badge">{calculatePot().toFixed(1)}bb</span>
                 </div>
-
-                {/* Action Pills */}
-                {preflopActions.length > 0 && (
-                    <div className="action-timeline">
-                        {preflopActions.map((action, i) => (
-                            <ActionPill
-                                key={i}
-                                action={action}
-                                onRemove={() => setPreflopActions(preflopActions.filter((_, idx) => idx !== i))}
-                            />
-                        ))}
-                    </div>
-                )}
-
-                {/* Quick Add */}
-                <ActionButtons
+                <InlineActionBuilder
+                    actions={preflopActions}
+                    setActions={setPreflopActions}
+                    actionOptions={preflopActionOptions}
                     street="preflop"
-                    actions={preflopActionOptions}
-                    addAction={addPreflopAction}
                 />
             </div>
 
             {/* ═══════════════════════════════════════════════════════════════════════
-          FLOP - Community Cards
+          FLOP - Community Cards + Actions
           ═══════════════════════════════════════════════════════════════════════ */}
             <div className="street-section flop">
                 <div className="street-header">
@@ -364,24 +405,12 @@ export default function MobileHandBuilder({
                 </div>
 
                 {(flop1 && flop2 && flop3) && (
-                    <>
-                        {flopActions.length > 0 && (
-                            <div className="action-timeline">
-                                {flopActions.map((action, i) => (
-                                    <ActionPill
-                                        key={i}
-                                        action={action}
-                                        onRemove={() => setFlopActions(flopActions.filter((_, idx) => idx !== i))}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                        <ActionButtons
-                            street="flop"
-                            actions={postflopActionOptions}
-                            addAction={(p, a) => addPostflopAction('flop', p, a)}
-                        />
-                    </>
+                    <InlineActionBuilder
+                        actions={flopActions}
+                        setActions={setFlopActions}
+                        actionOptions={postflopActionOptions}
+                        street="flop"
+                    />
                 )}
             </div>
 
@@ -398,24 +427,12 @@ export default function MobileHandBuilder({
                 </div>
 
                 {turn && (
-                    <>
-                        {turnActions.length > 0 && (
-                            <div className="action-timeline">
-                                {turnActions.map((action, i) => (
-                                    <ActionPill
-                                        key={i}
-                                        action={action}
-                                        onRemove={() => setTurnActions(turnActions.filter((_, idx) => idx !== i))}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                        <ActionButtons
-                            street="turn"
-                            actions={postflopActionOptions}
-                            addAction={(p, a) => addPostflopAction('turn', p, a)}
-                        />
-                    </>
+                    <InlineActionBuilder
+                        actions={turnActions}
+                        setActions={setTurnActions}
+                        actionOptions={postflopActionOptions}
+                        street="turn"
+                    />
                 )}
             </div>
 
@@ -432,24 +449,12 @@ export default function MobileHandBuilder({
                 </div>
 
                 {river && (
-                    <>
-                        {riverActions.length > 0 && (
-                            <div className="action-timeline">
-                                {riverActions.map((action, i) => (
-                                    <ActionPill
-                                        key={i}
-                                        action={action}
-                                        onRemove={() => setRiverActions(riverActions.filter((_, idx) => idx !== i))}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                        <ActionButtons
-                            street="river"
-                            actions={postflopActionOptions}
-                            addAction={(p, a) => addPostflopAction('river', p, a)}
-                        />
-                    </>
+                    <InlineActionBuilder
+                        actions={riverActions}
+                        setActions={setRiverActions}
+                        actionOptions={postflopActionOptions}
+                        street="river"
+                    />
                 )}
             </div>
 
