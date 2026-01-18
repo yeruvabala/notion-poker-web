@@ -204,7 +204,7 @@ export default function MobileHandBuilder({
     );
 
     // ═════════════════════════════════════════════════════════════════════════
-    // INLINE ACTION BUILDER - Compact add action flow
+    // INLINE ACTION BUILDER - Smart auto-alternating player flow
     // ═════════════════════════════════════════════════════════════════════════
     const InlineActionBuilder = ({
         actions,
@@ -218,25 +218,63 @@ export default function MobileHandBuilder({
         street: 'preflop' | 'flop' | 'turn' | 'river';
     }) => {
         const [isAdding, setIsAdding] = useState(false);
-        const [selectedPlayer, setSelectedPlayer] = useState<'H' | 'V' | null>(null);
+        const [pendingPlayer, setPendingPlayer] = useState<'H' | 'V' | null>(null);
 
         const lastAction = actions[actions.length - 1];
-        const isEnded = lastAction?.action === 'call' || lastAction?.action === 'fold' ||
-            (lastAction?.action === 'check' && actions.length >= 2 && actions[actions.length - 2]?.action === 'check');
+        const secondLastAction = actions[actions.length - 2];
+
+        // Determine if action sequence is complete
+        const isEnded = lastAction?.action === 'call' ||
+            lastAction?.action === 'fold' ||
+            (lastAction?.action === 'check' && secondLastAction?.action === 'check');
+
+        // Determine next player based on last action (for auto-alternation)
+        const getNextPlayer = (): 'H' | 'V' | null => {
+            if (actions.length === 0) return null; // First action - show both
+            return lastAction?.player === 'H' ? 'V' : 'H';
+        };
 
         const handleAddAction = (player: 'H' | 'V', actionName: string) => {
-            const amount = actionName.toLowerCase().includes('bet') ||
-                actionName.toLowerCase().includes('raise') ||
-                actionName.toLowerCase().includes('3bet') ||
-                actionName.toLowerCase().includes('4bet') ?
-                (street === 'preflop' ? 3 : 5) : undefined;
-            setActions([...actions, { player, action: actionName.toLowerCase() as any, amount }]);
-            setIsAdding(false);
-            setSelectedPlayer(null);
+            const actionLower = actionName.toLowerCase();
+            const needsAmount = actionLower.includes('bet') ||
+                actionLower.includes('raise') ||
+                actionLower.includes('3bet') ||
+                actionLower.includes('4bet');
+            const amount = needsAmount ? (street === 'preflop' ? 3 : 5) : undefined;
+
+            setActions([...actions, { player, action: actionLower as any, amount }]);
+
+            // Smart auto-advance: if raise/3bet/4bet/bet, auto-advance to next player
+            // If call/fold/check, close the form
+            if (actionLower === 'call' || actionLower === 'fold') {
+                setIsAdding(false);
+                setPendingPlayer(null);
+            } else if (actionLower === 'check') {
+                // After check, alternate to other player
+                setPendingPlayer(player === 'H' ? 'V' : 'H');
+            } else {
+                // Raise/3bet/4bet/bet - auto-advance to other player
+                setPendingPlayer(player === 'H' ? 'V' : 'H');
+            }
         };
 
         const removeAction = (index: number) => {
             setActions(actions.filter((_, i) => i !== index));
+        };
+
+        const startAdding = () => {
+            setIsAdding(true);
+            const nextPlayer = getNextPlayer();
+            if (nextPlayer) {
+                // Auto-set the alternating player (1 tap saved!)
+                setPendingPlayer(nextPlayer);
+            }
+            // If no next player (first action), pendingPlayer stays null → show both H and V
+        };
+
+        const cancelAdding = () => {
+            setIsAdding(false);
+            setPendingPlayer(null);
         };
 
         return (
@@ -257,33 +295,35 @@ export default function MobileHandBuilder({
                         {!isAdding ? (
                             <button
                                 className="add-action-btn"
-                                onClick={() => setIsAdding(true)}
+                                onClick={startAdding}
                             >
                                 {actions.length === 0 ? '?' : '+'}
                             </button>
-                        ) : !selectedPlayer ? (
+                        ) : !pendingPlayer ? (
+                            /* First action - show both H and V */
                             <div className="player-selector">
-                                <button className="player-btn hero" onClick={() => setSelectedPlayer('H')}>H</button>
-                                <button className="player-btn villain" onClick={() => setSelectedPlayer('V')}>V</button>
-                                <button className="cancel-btn" onClick={() => setIsAdding(false)}>✕</button>
+                                <button className="player-btn hero" onClick={() => setPendingPlayer('H')}>H</button>
+                                <button className="player-btn villain" onClick={() => setPendingPlayer('V')}>V</button>
+                                <button className="cancel-btn" onClick={cancelAdding}>✕</button>
                             </div>
                         ) : (
+                            /* Player already determined - show action options */
                             <div className="action-selector">
-                                <span className={`selected-player ${selectedPlayer === 'H' ? 'hero' : 'villain'}`}>
-                                    {selectedPlayer}:
+                                <span className={`selected-player ${pendingPlayer === 'H' ? 'hero' : 'villain'}`}>
+                                    {pendingPlayer}:
                                 </span>
                                 <div className="action-options">
                                     {actionOptions.map(opt => (
                                         <button
                                             key={opt}
                                             className="action-option"
-                                            onClick={() => handleAddAction(selectedPlayer, opt)}
+                                            onClick={() => handleAddAction(pendingPlayer, opt)}
                                         >
                                             {opt}
                                         </button>
                                     ))}
                                 </div>
-                                <button className="cancel-btn" onClick={() => { setSelectedPlayer(null); setIsAdding(false); }}>✕</button>
+                                <button className="cancel-btn" onClick={cancelAdding}>✕</button>
                             </div>
                         )}
                     </>
