@@ -32,6 +32,161 @@ interface PostflopAction {
     amount?: number;
 }
 
+// ═════════════════════════════════════════════════════════════════════════
+// ACTION CHIP - Web-style inline pill with player color (TOP-LEVEL)
+// ═════════════════════════════════════════════════════════════════════════
+const ActionChip = ({
+    action,
+    onRemove,
+    showArrow = false
+}: {
+    action: PreflopAction | PostflopAction;
+    onRemove: () => void;
+    showArrow?: boolean;
+}) => (
+    <>
+        <div
+            className={`action-chip ${action.player === 'H' ? 'hero' : 'villain'}`}
+            onClick={onRemove}
+        >
+            <span className="chip-player">{action.player}</span>
+            <span className="chip-colon">:</span>
+            {action.amount && <span className="chip-amount">{action.amount}bb</span>}
+            <span className="chip-action">{action.action}</span>
+        </div>
+        {showArrow && <span className="action-arrow">→</span>}
+    </>
+);
+
+// ═════════════════════════════════════════════════════════════════════════
+// INLINE ACTION BUILDER - Smart auto-alternating player flow (TOP-LEVEL)
+// ═════════════════════════════════════════════════════════════════════════
+const InlineActionBuilder = ({
+    actions,
+    setActions,
+    actionOptions,
+    street
+}: {
+    actions: (PreflopAction | PostflopAction)[];
+    setActions: (actions: any[]) => void;
+    actionOptions: string[];
+    street: 'preflop' | 'flop' | 'turn' | 'river';
+}) => {
+    const [isAdding, setIsAdding] = useState(false);
+    const [pendingPlayer, setPendingPlayer] = useState<'H' | 'V' | null>(null);
+
+    const lastAction = actions[actions.length - 1];
+    const secondLastAction = actions[actions.length - 2];
+
+    // Determine if action sequence is complete
+    const isEnded = lastAction?.action === 'call' ||
+        lastAction?.action === 'fold' ||
+        (lastAction?.action === 'check' && secondLastAction?.action === 'check');
+
+    // Determine next player based on last action (for auto-alternation)
+    const getNextPlayer = (): 'H' | 'V' | null => {
+        if (actions.length === 0) return null; // First action - show both
+        return lastAction?.player === 'H' ? 'V' : 'H';
+    };
+
+    const handleAddAction = (player: 'H' | 'V', actionName: string) => {
+        const actionLower = actionName.toLowerCase();
+        const needsAmount = actionLower.includes('bet') ||
+            actionLower.includes('raise') ||
+            actionLower.includes('3bet') ||
+            actionLower.includes('4bet');
+        const amount = needsAmount ? (street === 'preflop' ? 3 : 5) : undefined;
+
+        setActions([...actions, { player, action: actionLower as any, amount }]);
+
+        // Smart auto-advance: if raise/3bet/4bet/bet, auto-advance to next player
+        // If call/fold, close the form
+        if (actionLower === 'call' || actionLower === 'fold') {
+            setIsAdding(false);
+            setPendingPlayer(null);
+        } else if (actionLower === 'check') {
+            // After check, alternate to other player
+            setPendingPlayer(player === 'H' ? 'V' : 'H');
+        } else {
+            // Raise/3bet/4bet/bet - auto-advance to other player
+            setPendingPlayer(player === 'H' ? 'V' : 'H');
+        }
+    };
+
+    const removeAction = (index: number) => {
+        setActions(actions.filter((_, i) => i !== index));
+    };
+
+    const startAdding = () => {
+        setIsAdding(true);
+        const nextPlayer = getNextPlayer();
+        if (nextPlayer) {
+            // Auto-set the alternating player (1 tap saved!)
+            setPendingPlayer(nextPlayer);
+        }
+        // If no next player (first action), pendingPlayer stays null → show both H and V
+    };
+
+    const cancelAdding = () => {
+        setIsAdding(false);
+        setPendingPlayer(null);
+    };
+
+    return (
+        <div className="inline-action-builder">
+            {/* Existing actions as chips */}
+            {actions.map((action, i) => (
+                <ActionChip
+                    key={i}
+                    action={action}
+                    onRemove={() => removeAction(i)}
+                    showArrow={i < actions.length - 1 || (!isEnded && !isAdding)}
+                />
+            ))}
+
+            {/* Add action flow */}
+            {!isEnded && (
+                <>
+                    {!isAdding ? (
+                        <button
+                            className="add-action-btn"
+                            onClick={startAdding}
+                        >
+                            {actions.length === 0 ? '?' : '+'}
+                        </button>
+                    ) : !pendingPlayer ? (
+                        /* First action - show both H and V */
+                        <div className="player-selector">
+                            <button className="player-btn hero" onClick={() => setPendingPlayer('H')}>H</button>
+                            <button className="player-btn villain" onClick={() => setPendingPlayer('V')}>V</button>
+                            <button className="cancel-btn" onClick={cancelAdding}>✕</button>
+                        </div>
+                    ) : (
+                        /* Player already determined - show action options */
+                        <div className="action-selector">
+                            <span className={`selected-player ${pendingPlayer === 'H' ? 'hero' : 'villain'}`}>
+                                {pendingPlayer}:
+                            </span>
+                            <div className="action-options">
+                                {actionOptions.map(opt => (
+                                    <button
+                                        key={opt}
+                                        className="action-option"
+                                        onClick={() => handleAddAction(pendingPlayer, opt)}
+                                    >
+                                        {opt}
+                                    </button>
+                                ))}
+                            </div>
+                            <button className="cancel-btn" onClick={cancelAdding}>✕</button>
+                        </div>
+                    )}
+                </>
+            )}
+        </div>
+    );
+};
+
 interface MobileHandBuilderProps {
     tableFormat: string;
     setTableFormat: (v: string) => void;
@@ -176,161 +331,6 @@ export default function MobileHandBuilder({
             </div>
         </div>
     );
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // ACTION CHIP - Web-style inline pill with player color
-    // ═════════════════════════════════════════════════════════════════════════
-    const ActionChip = ({
-        action,
-        onRemove,
-        showArrow = false
-    }: {
-        action: PreflopAction | PostflopAction;
-        onRemove: () => void;
-        showArrow?: boolean;
-    }) => (
-        <>
-            <div
-                className={`action-chip ${action.player === 'H' ? 'hero' : 'villain'}`}
-                onClick={onRemove}
-            >
-                <span className="chip-player">{action.player}</span>
-                <span className="chip-colon">:</span>
-                {action.amount && <span className="chip-amount">{action.amount}bb</span>}
-                <span className="chip-action">{action.action}</span>
-            </div>
-            {showArrow && <span className="action-arrow">→</span>}
-        </>
-    );
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // INLINE ACTION BUILDER - Smart auto-alternating player flow
-    // ═════════════════════════════════════════════════════════════════════════
-    const InlineActionBuilder = ({
-        actions,
-        setActions,
-        actionOptions,
-        street
-    }: {
-        actions: (PreflopAction | PostflopAction)[];
-        setActions: (actions: any[]) => void;
-        actionOptions: string[];
-        street: 'preflop' | 'flop' | 'turn' | 'river';
-    }) => {
-        const [isAdding, setIsAdding] = useState(false);
-        const [pendingPlayer, setPendingPlayer] = useState<'H' | 'V' | null>(null);
-
-        const lastAction = actions[actions.length - 1];
-        const secondLastAction = actions[actions.length - 2];
-
-        // Determine if action sequence is complete
-        const isEnded = lastAction?.action === 'call' ||
-            lastAction?.action === 'fold' ||
-            (lastAction?.action === 'check' && secondLastAction?.action === 'check');
-
-        // Determine next player based on last action (for auto-alternation)
-        const getNextPlayer = (): 'H' | 'V' | null => {
-            if (actions.length === 0) return null; // First action - show both
-            return lastAction?.player === 'H' ? 'V' : 'H';
-        };
-
-        const handleAddAction = (player: 'H' | 'V', actionName: string) => {
-            const actionLower = actionName.toLowerCase();
-            const needsAmount = actionLower.includes('bet') ||
-                actionLower.includes('raise') ||
-                actionLower.includes('3bet') ||
-                actionLower.includes('4bet');
-            const amount = needsAmount ? (street === 'preflop' ? 3 : 5) : undefined;
-
-            setActions([...actions, { player, action: actionLower as any, amount }]);
-
-            // Smart auto-advance: if raise/3bet/4bet/bet, auto-advance to next player
-            // If call/fold/check, close the form
-            if (actionLower === 'call' || actionLower === 'fold') {
-                setIsAdding(false);
-                setPendingPlayer(null);
-            } else if (actionLower === 'check') {
-                // After check, alternate to other player
-                setPendingPlayer(player === 'H' ? 'V' : 'H');
-            } else {
-                // Raise/3bet/4bet/bet - auto-advance to other player
-                setPendingPlayer(player === 'H' ? 'V' : 'H');
-            }
-        };
-
-        const removeAction = (index: number) => {
-            setActions(actions.filter((_, i) => i !== index));
-        };
-
-        const startAdding = () => {
-            setIsAdding(true);
-            const nextPlayer = getNextPlayer();
-            if (nextPlayer) {
-                // Auto-set the alternating player (1 tap saved!)
-                setPendingPlayer(nextPlayer);
-            }
-            // If no next player (first action), pendingPlayer stays null → show both H and V
-        };
-
-        const cancelAdding = () => {
-            setIsAdding(false);
-            setPendingPlayer(null);
-        };
-
-        return (
-            <div className="inline-action-builder">
-                {/* Existing actions as chips */}
-                {actions.map((action, i) => (
-                    <ActionChip
-                        key={i}
-                        action={action}
-                        onRemove={() => removeAction(i)}
-                        showArrow={i < actions.length - 1 || (!isEnded && !isAdding)}
-                    />
-                ))}
-
-                {/* Add action flow */}
-                {!isEnded && (
-                    <>
-                        {!isAdding ? (
-                            <button
-                                className="add-action-btn"
-                                onClick={startAdding}
-                            >
-                                {actions.length === 0 ? '?' : '+'}
-                            </button>
-                        ) : !pendingPlayer ? (
-                            /* First action - show both H and V */
-                            <div className="player-selector">
-                                <button className="player-btn hero" onClick={() => setPendingPlayer('H')}>H</button>
-                                <button className="player-btn villain" onClick={() => setPendingPlayer('V')}>V</button>
-                                <button className="cancel-btn" onClick={cancelAdding}>✕</button>
-                            </div>
-                        ) : (
-                            /* Player already determined - show action options */
-                            <div className="action-selector">
-                                <span className={`selected-player ${pendingPlayer === 'H' ? 'hero' : 'villain'}`}>
-                                    {pendingPlayer}:
-                                </span>
-                                <div className="action-options">
-                                    {actionOptions.map(opt => (
-                                        <button
-                                            key={opt}
-                                            className="action-option"
-                                            onClick={() => handleAddAction(pendingPlayer, opt)}
-                                        >
-                                            {opt}
-                                        </button>
-                                    ))}
-                                </div>
-                                <button className="cancel-btn" onClick={cancelAdding}>✕</button>
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
-        );
-    };
 
     const preflopActionOptions = ['Raise', 'Call', '3bet', '4bet', 'Fold'];
     const postflopActionOptions = ['Check', 'Bet', 'Call', 'Raise', 'Fold'];
