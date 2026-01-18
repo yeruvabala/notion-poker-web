@@ -3589,6 +3589,7 @@ body.native-app [class*="btn-row"]>* {
     letter-spacing: 1px;
     padding: 0 8px;
     align-self: center;
+    margin-top: -4px;
 }
 
 .villain-select-inline {
@@ -3605,7 +3606,7 @@ body.native-app [class*="btn-row"]>* {
     min-width: 70px;
     text-align: center;
     align-self: center;
-    height: auto;
+    margin-top: -4px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
