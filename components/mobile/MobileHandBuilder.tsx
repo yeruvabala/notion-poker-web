@@ -84,10 +84,17 @@ const InlineActionBuilder = ({
     const lastAction = actions[actions.length - 1];
     const secondLastAction = actions[actions.length - 2];
 
+    // Check if there are limps but no raises (for BB check detection)
+    const hasLimps = actions.some(a => a.action === 'limp');
+    const hasRaises = actions.some(a => a.action === 'raise' || a.action === '3bet' || a.action === '4bet');
+
     // Determine if action sequence is complete
+    // Preflop: call, fold, or BB check after limps ends action
+    // Postflop: call, fold, or check-check ends action
     const isEnded = lastAction?.action === 'call' ||
         lastAction?.action === 'fold' ||
-        (lastAction?.action === 'check' && secondLastAction?.action === 'check');
+        (street === 'preflop' && lastAction?.action === 'check' && hasLimps && !hasRaises) ||
+        (street !== 'preflop' && lastAction?.action === 'check' && secondLastAction?.action === 'check');
 
     // ═════════════════════════════════════════════════════════════════════════
     // POSITION-BASED FIRST ACTOR LOGIC
@@ -153,10 +160,27 @@ const InlineActionBuilder = ({
             const raises = actions.filter(a =>
                 a.action === 'raise' || a.action === '3bet' || a.action === '4bet'
             );
+            const limps = actions.filter(a => a.action === 'limp');
             const raiseCount = raises.length;
+            const hasLimps = limps.length > 0;
 
-            // First action (no prior raises) - limp, raise presets
+            // Determine if pending player is BB
+            const isBB = (pendingPlayer === 'H' && heroPosition === 'BB') ||
+                (pendingPlayer === 'V' && villainPosition === 'BB');
+
+            // No raises - different options based on BB or not
             if (raiseCount === 0) {
+                // BB facing limps - can CHECK (closes action) or RAISE
+                if (isBB && hasLimps) {
+                    return [
+                        { label: 'Check', value: 'check' }, // Closes action!
+                        { label: 'Raise 3bb', value: 'raise_3', amount: 3 },
+                        { label: 'Raise 4bb', value: 'raise_4', amount: 4 },
+                        { label: 'Raise 5bb', value: 'raise_5', amount: 5 },
+                        { label: 'Raise 6bb', value: 'raise_6', amount: 6 },
+                    ];
+                }
+                // Non-BB or first action - standard open options
                 return [
                     { label: 'Fold', value: 'fold' },
                     { label: 'Limp', value: 'limp', amount: 1 },
