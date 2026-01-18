@@ -3548,8 +3548,12 @@ body.native-app [class*="btn-row"]>* {
    ═══════════════════════════════════════════════════════════════════════════════ */
 .premium-card {
     position: relative;
-    width: 38px;
-    height: 68px;
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    height: 68px !important;
+    flex-shrink: 0;
+    flex-grow: 0;
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.2s ease;
