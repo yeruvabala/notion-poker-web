@@ -258,6 +258,45 @@ export default function MobileHandBuilder({
         <div className="premium-hand-builder">
 
             {/* ═══════════════════════════════════════════════════════════════════════
+          SETUP BAR - Position, Stack, Format
+          ═══════════════════════════════════════════════════════════════════════ */}
+            <div className="setup-bar">
+                <select
+                    className="setup-select"
+                    value={heroPosition}
+                    onChange={(e) => setHeroPosition(e.target.value)}
+                >
+                    <option value="">Position</option>
+                    {positions.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+
+                <div className="setup-divider">•</div>
+
+                <div className="stack-input-wrap">
+                    <input
+                        type="number"
+                        className="stack-input"
+                        placeholder="100"
+                        value={effectiveStack}
+                        onChange={(e) => setEffectiveStack(e.target.value)}
+                    />
+                    <span className="stack-label">bb</span>
+                </div>
+
+                <div className="setup-divider">•</div>
+
+                <select
+                    className="setup-select"
+                    value={tableFormat}
+                    onChange={(e) => setTableFormat(e.target.value)}
+                >
+                    {Object.entries(TABLE_FORMATS).map(([key, val]) => (
+                        <option key={key} value={key}>{val.label}</option>
+                    ))}
+                </select>
+            </div>
+
+            {/* ═══════════════════════════════════════════════════════════════════════
           HERO HAND - The Star of the Show
           ═══════════════════════════════════════════════════════════════════════ */}
             <div className="hero-section">
@@ -266,40 +305,16 @@ export default function MobileHandBuilder({
                     <CardDisplay card={heroCard2} cardKey="hero2" />
                 </div>
 
-                {/* Inline Position & Stack */}
-                <div className="hero-meta">
+                {/* Matchup Indicator */}
+                <div className="matchup-row">
+                    <span className="matchup-vs">vs</span>
                     <select
-                        className="meta-select"
-                        value={heroPosition}
-                        onChange={(e) => setHeroPosition(e.target.value)}
+                        className="villain-select"
+                        value={villainPosition}
+                        onChange={(e) => setVillainPosition(e.target.value)}
                     >
-                        <option value="">Position</option>
+                        <option value="">Villain</option>
                         {positions.map(p => <option key={p} value={p}>{p}</option>)}
-                    </select>
-
-                    <div className="meta-divider">•</div>
-
-                    <div className="stack-input-wrap">
-                        <input
-                            type="number"
-                            className="stack-input"
-                            placeholder="100"
-                            value={effectiveStack}
-                            onChange={(e) => setEffectiveStack(e.target.value)}
-                        />
-                        <span className="stack-label">bb</span>
-                    </div>
-
-                    <div className="meta-divider">•</div>
-
-                    <select
-                        className="meta-select table-select"
-                        value={tableFormat}
-                        onChange={(e) => setTableFormat(e.target.value)}
-                    >
-                        {Object.entries(TABLE_FORMATS).map(([key, val]) => (
-                            <option key={key} value={key}>{val.label}</option>
-                        ))}
                     </select>
                 </div>
             </div>
@@ -332,19 +347,6 @@ export default function MobileHandBuilder({
                     actions={preflopActionOptions}
                     addAction={addPreflopAction}
                 />
-
-                {/* Villain Position (subtle) */}
-                <div className="villain-position-row">
-                    <span className="villain-label">vs</span>
-                    <select
-                        className="villain-select"
-                        value={villainPosition}
-                        onChange={(e) => setVillainPosition(e.target.value)}
-                    >
-                        <option value="">Villain</option>
-                        {positions.map(p => <option key={p} value={p}>{p}</option>)}
-                    </select>
-                </div>
             </div>
 
             {/* ═══════════════════════════════════════════════════════════════════════
