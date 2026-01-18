@@ -769,7 +769,7 @@ export default function MobileHandBuilder({
             {/* ═══════════════════════════════════════════════════════════════════════
           PREFLOP - Inline Action Builder
           ═══════════════════════════════════════════════════════════════════════ */}
-            <div className="street-section preflop">
+            <div className={`street-section preflop ${preflopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active'}`}>
                 <div className="street-header">
                     <span className="street-name">Preflop</span>
                     <span className="pot-badge">{calculatePot().toFixed(1)}bb</span>
@@ -787,7 +787,10 @@ export default function MobileHandBuilder({
             {/* ═══════════════════════════════════════════════════════════════════════
           FLOP - Community Cards + Actions
           ═══════════════════════════════════════════════════════════════════════ */}
-            <div className="street-section flop">
+            <div className={`street-section flop ${(flop1 && flop2 && flop3)
+                    ? (flopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                    : 'pending'
+                }`}>
                 <div className="street-header">
                     <span className="street-name">Flop</span>
                 </div>
@@ -814,7 +817,10 @@ export default function MobileHandBuilder({
             {/* ═══════════════════════════════════════════════════════════════════════
           TURN
           ═══════════════════════════════════════════════════════════════════════ */}
-            <div className="street-section turn">
+            <div className={`street-section turn ${turn
+                    ? (turnActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                    : 'pending'
+                }`}>
                 <div className="street-header">
                     <span className="street-name">Turn</span>
                 </div>
@@ -839,7 +845,10 @@ export default function MobileHandBuilder({
             {/* ═══════════════════════════════════════════════════════════════════════
           RIVER
           ═══════════════════════════════════════════════════════════════════════ */}
-            <div className="street-section river">
+            <div className={`street-section river ${river
+                    ? (riverActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                    : 'pending'
+                }`}>
                 <div className="street-header">
                     <span className="street-name">River</span>
                 </div>

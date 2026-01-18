@@ -3849,6 +3849,34 @@ body.native-app [class*="btn-row"]>* {
     border: 1px solid rgba(255, 255, 255, 0.06);
     width: 100%;
     box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+/* Premium Active State - Glowing border */
+.street-section.active {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(100, 180, 255, 0.3);
+    box-shadow:
+        0 0 20px rgba(100, 180, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Completed State - Subtle checkmark feel */
+.street-section.completed {
+    background: rgba(34, 197, 94, 0.05);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+/* Pending State - Collapsed and dimmed */
+.street-section.pending {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    padding: 12px 16px;
+    opacity: 0.6;
+}
+
+.street-section.pending:hover {
+    opacity: 0.8;
 }
 
 .street-header {
@@ -3858,14 +3886,42 @@ body.native-app [class*="btn-row"]>* {
     margin-bottom: 12px;
 }
 
-.street-name {
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #9ca3af;
+.street-section.pending .street-header {
+    margin-bottom: 0;
 }
 
+/* Premium Street Name Badge */
+.street-name {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.6);
+    transition: all 0.3s ease;
+}
+
+.street-section.active .street-name {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.street-section.completed .street-name {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: #fff;
+    position: relative;
+}
+
+.street-section.completed .street-name::after {
+    content: '✓';
+    margin-left: 6px;
+    font-size: 10px;
+}
+
+/* Pot Badge - Enhanced */
 .pot-badge {
     background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
     color: #fff;
@@ -3873,9 +3929,10 @@ body.native-app [class*="btn-row"]>* {
     font-weight: 700;
     padding: 4px 10px;
     border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
 }
 
-/* Community Cards */
+/* Community Cards - Premium styling */
 .community-cards {
     display: flex;
     justify-content: center;
@@ -3885,6 +3942,12 @@ body.native-app [class*="btn-row"]>* {
 
 .community-cards.flop-cards {
     gap: 6px;
+}
+
+/* Hide cards area in pending state */
+.street-section.pending .community-cards,
+.street-section.pending .inline-action-builder-v2 {
+    display: none;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
