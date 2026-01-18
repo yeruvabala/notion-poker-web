@@ -3847,7 +3847,6 @@ body.native-app [class*="btn-row"]>* {
     border-radius: 16px;
     padding: 16px;
     border: 1px solid rgba(255, 255, 255, 0.06);
-    overflow-x: hidden;
     width: 100%;
     box-sizing: border-box;
 }
