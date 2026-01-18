@@ -4125,18 +4125,21 @@ body.native-app [class*="btn-row"]>* {
     display: flex;
     align-items: center;
     gap: 4px;
-    overflow-x: auto;
+    overflow-x: scroll;
+    overflow-y: hidden;
     padding: 4px 0;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    /* Natural left-to-right flow, JS will auto-scroll to end when overflow */
+    /* Enable touch horizontal scroll */
+    touch-action: pan-x;
+    min-height: 40px;
 }
 
 .action-flow-container::-webkit-scrollbar {
     display: none;
 }
 
-/* Reset direction for children so text/order is correct */
+/* Ensure chips don't shrink and can be scrolled */
 .action-flow-container>* {
     flex-shrink: 0;
 }
