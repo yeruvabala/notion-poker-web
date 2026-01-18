@@ -3587,22 +3587,25 @@ body.native-app [class*="btn-row"]>* {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
-    padding: 0 10px;
+    padding: 0 8px;
+    align-self: center;
 }
 
 .villain-select-inline {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 8px;
-    padding: 10px 16px;
+    padding: 8px 14px;
     color: #fff;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     -webkit-appearance: none;
     appearance: none;
-    min-width: 80px;
+    min-width: 70px;
     text-align: center;
+    align-self: center;
+    height: auto;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
