@@ -3547,19 +3547,25 @@ body.native-app [class*="btn-row"]>* {
    PREMIUM CARD - Narrow Vertical Design
    ═══════════════════════════════════════════════════════════════════════════════ */
 .premium-card {
+    /* EXPLICIT sizing - no stretch */
+    display: inline-block;
+    box-sizing: border-box;
+    width: 42px;
+    height: 62px;
+    min-width: 42px;
+    max-width: 42px;
+    min-height: 62px;
+    max-height: 62px;
+    flex: 0 0 42px;
+
+    /* Appearance */
     position: relative;
-    width: 38px !important;
-    min-width: 38px !important;
-    max-width: 38px !important;
-    height: 68px !important;
-    flex-shrink: 0;
-    flex-grow: 0;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
     overflow: hidden;
 
-    /* Shimmer border effect */
+    /* Shimmer border */
     background: linear-gradient(135deg,
             #555555 0%,
             #888888 25%,
@@ -3675,8 +3681,13 @@ body.native-app [class*="btn-row"]>* {
    SMALL VARIANT - Community Cards
    ═══════════════════════════════════════════════════════════════════════════════ */
 .premium-card.small {
-    width: 30px;
-    height: 50px;
+    width: 34px;
+    height: 48px;
+    min-width: 34px;
+    max-width: 34px;
+    min-height: 48px;
+    max-height: 48px;
+    flex: 0 0 34px;
     border-radius: 4px;
 }
 
