@@ -3566,14 +3566,18 @@ body.native-app [class*="btn-row"]>* {
 .hero-row {
     display: flex;
     justify-content: center;
-    align-items: center;
-    padding: 6px 0;
+    padding: 8px 0;
 }
 
-/* Inner wrapper to keep cards + vs + villain together as a group */
-.hero-row .hero-cards {
+/* Inner group keeps everything together */
+.hero-group {
     display: flex;
     align-items: center;
+    gap: 12px;
+}
+
+.hero-group .hero-cards {
+    display: flex;
     gap: 6px;
 }
 

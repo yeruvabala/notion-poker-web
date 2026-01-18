@@ -297,24 +297,26 @@ export default function MobileHandBuilder({
             </div>
 
             {/* ═══════════════════════════════════════════════════════════════════════
-          HERO ROW - Cards + Villain on same line
+          HERO ROW - Cards + Villain grouped together
           ═══════════════════════════════════════════════════════════════════════ */}
             <div className="hero-row">
-                <div className="hero-cards">
-                    <CardDisplay card={heroCard1} cardKey="hero1" />
-                    <CardDisplay card={heroCard2} cardKey="hero2" />
+                <div className="hero-group">
+                    <div className="hero-cards">
+                        <CardDisplay card={heroCard1} cardKey="hero1" />
+                        <CardDisplay card={heroCard2} cardKey="hero2" />
+                    </div>
+
+                    <span className="hero-vs">vs</span>
+
+                    <select
+                        className="villain-select-inline"
+                        value={villainPosition}
+                        onChange={(e) => setVillainPosition(e.target.value)}
+                    >
+                        <option value="">Villain</option>
+                        {positions.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
                 </div>
-
-                <span className="hero-vs">vs</span>
-
-                <select
-                    className="villain-select-inline"
-                    value={villainPosition}
-                    onChange={(e) => setVillainPosition(e.target.value)}
-                >
-                    <option value="">Villain</option>
-                    {positions.map(p => <option key={p} value={p}>{p}</option>)}
-                </select>
             </div>
 
             {/* ═══════════════════════════════════════════════════════════════════════
