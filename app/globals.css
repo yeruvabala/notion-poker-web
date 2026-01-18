@@ -4130,10 +4130,17 @@ body.native-app [class*="btn-row"]>* {
     padding: 4px 0;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    /* Push content to right edge, old actions overflow left */
+    justify-content: flex-end;
 }
 
 .action-flow-container::-webkit-scrollbar {
     display: none;
+}
+
+/* Reset direction for children so text/order is correct */
+.action-flow-container>* {
+    flex-shrink: 0;
 }
 
 /* Premium Action Chip V2 - Compact icon design */
