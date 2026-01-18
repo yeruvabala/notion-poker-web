@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PREMIUM MOBILE HAND BUILDER - World-class UI
@@ -100,6 +100,16 @@ const InlineActionBuilder = ({
     const [pendingPlayer, setPendingPlayer] = useState<'H' | 'V' | null>(null);
     const [customAmount, setCustomAmount] = useState<string>('');
     const [postflopMode, setPostflopMode] = useState<'%' | 'bb'>('%'); // % of pot or bb
+
+    // Ref for auto-scroll to end
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll to end when actions change or adding new action
+    useEffect(() => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
+        }
+    }, [actions.length, isAdding]);
 
     const lastAction = actions[actions.length - 1];
     const secondLastAction = actions[actions.length - 2];
@@ -375,8 +385,8 @@ const InlineActionBuilder = ({
 
     return (
         <div className="inline-action-builder-v2">
-            {/* Action flow - horizontal scroll */}
-            <div className="action-flow-container">
+            {/* Action flow - horizontal scroll with auto-scroll to end */}
+            <div className="action-flow-container" ref={scrollContainerRef}>
                 {/* Existing actions as chips - click to edit from that point */}
                 {actions.map((action, i) => (
                     <ActionChip
