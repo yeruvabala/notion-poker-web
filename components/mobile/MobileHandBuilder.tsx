@@ -80,6 +80,8 @@ const InlineActionBuilder = ({
 }) => {
     const [isAdding, setIsAdding] = useState(false);
     const [pendingPlayer, setPendingPlayer] = useState<'H' | 'V' | null>(null);
+    const [customAmount, setCustomAmount] = useState<string>('');
+    const [postflopMode, setPostflopMode] = useState<'%' | 'bb'>('%'); // % of pot or bb
 
     const lastAction = actions[actions.length - 1];
     const secondLastAction = actions[actions.length - 2];
@@ -303,31 +305,61 @@ const InlineActionBuilder = ({
         }
     };
 
-    const removeAction = (index: number) => {
-        setActions(actions.filter((_, i) => i !== index));
+    // Edit from a specific action - removes that action and all after, opens edit mode
+    const editFromAction = (index: number) => {
+        const actionToEdit = actions[index];
+        // Remove this action and all subsequent ones
+        setActions(actions.slice(0, index));
+        // Open edit mode for this player
+        setIsAdding(true);
+        setPendingPlayer(actionToEdit.player);
+        setCustomAmount('');
     };
 
     const startAdding = () => {
         setIsAdding(true);
         // Auto-set player based on position (no need to choose!)
         setPendingPlayer(getNextPlayer());
+        setCustomAmount('');
     };
 
     const cancelAdding = () => {
         setIsAdding(false);
         setPendingPlayer(null);
+        setCustomAmount('');
     };
 
     const contextOptions = getContextAwareOptions();
 
+    // Handle custom amount submission
+    const handleCustomAmount = () => {
+        if (!customAmount || parseFloat(customAmount) <= 0) return;
+        const amount = parseFloat(customAmount);
+        
+        if (street === 'preflop') {
+            // Preflop custom = raise with that amount
+            handleAddAction('raise_custom', amount);
+        } else {
+            // Postflop: depends on mode
+            if (postflopMode === '%') {
+                // Convert % to bb
+                const bbAmount = Math.round((pot || 10) * (amount / 100) * 10) / 10;
+                handleAddAction('bet_custom', bbAmount);
+            } else {
+                handleAddAction('bet_custom', amount);
+            }
+        }
+        setCustomAmount('');
+    };
+
     return (
         <div className="inline-action-builder">
-            {/* Existing actions as chips */}
+            {/* Existing actions as chips - click to edit from that point */}
             {actions.map((action, i) => (
                 <ActionChip
                     key={i}
                     action={action}
-                    onRemove={() => removeAction(i)}
+                    onRemove={() => editFromAction(i)}
                     showArrow={i < actions.length - 1 || (!isEnded && !isAdding)}
                 />
             ))}
@@ -348,6 +380,17 @@ const InlineActionBuilder = ({
                             <span className={`selected-player ${pendingPlayer === 'H' ? 'hero' : 'villain'}`}>
                                 {pendingPlayer}:
                             </span>
+                            
+                            {/* Postflop: Toggle between % and bb mode */}
+                            {street !== 'preflop' && (
+                                <button 
+                                    className="mode-toggle"
+                                    onClick={() => setPostflopMode(postflopMode === '%' ? 'bb' : '%')}
+                                >
+                                    {postflopMode === '%' ? '% pot' : 'bb'}
+                                </button>
+                            )}
+                            
                             <div className="action-options">
                                 {contextOptions.map(opt => (
                                     <button
@@ -358,6 +401,24 @@ const InlineActionBuilder = ({
                                         {opt.label}
                                     </button>
                                 ))}
+                                
+                                {/* Custom amount input */}
+                                <div className="custom-amount-wrapper">
+                                    <input
+                                        type="number"
+                                        className="custom-amount-input"
+                                        placeholder={street === 'preflop' ? 'bb' : (postflopMode === '%' ? '%' : 'bb')}
+                                        value={customAmount}
+                                        onChange={(e) => setCustomAmount(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleCustomAmount()}
+                                    />
+                                    <button 
+                                        className="custom-amount-btn"
+                                        onClick={handleCustomAmount}
+                                    >
+                                        ✓
+                                    </button>
+                                </div>
                             </div>
                             <button className="cancel-btn" onClick={cancelAdding}>✕</button>
                         </div>
