@@ -33,30 +33,48 @@ interface PostflopAction {
 }
 
 // ═════════════════════════════════════════════════════════════════════════
-// ACTION CHIP - Web-style inline pill with player color (TOP-LEVEL)
+// ACTION CHIP - Premium compact design with icons (TOP-LEVEL)
 // ═════════════════════════════════════════════════════════════════════════
+const getActionIcon = (action: string): string => {
+    switch (action) {
+        case 'raise': case '3bet': case '4bet': return '↑';
+        case 'fold': return '✕';
+        case 'call': return '→';
+        case 'check': return '✓';
+        case 'limp': return '•';
+        case 'bet': return '◆';
+        default: return '';
+    }
+};
+
 const ActionChip = ({
     action,
     onRemove,
-    showArrow = false
+    showArrow = false,
+    isLast = false
 }: {
     action: PreflopAction | PostflopAction;
     onRemove: () => void;
     showArrow?: boolean;
-}) => (
-    <>
-        <div
-            className={`action-chip ${action.player === 'H' ? 'hero' : 'villain'}`}
-            onClick={onRemove}
-        >
-            <span className="chip-player">{action.player}</span>
-            <span className="chip-colon">:</span>
-            {action.amount && <span className="chip-amount">{action.amount}bb</span>}
-            <span className="chip-action">{action.action}</span>
-        </div>
-        {showArrow && <span className="action-arrow">→</span>}
-    </>
-);
+    isLast?: boolean;
+}) => {
+    const icon = getActionIcon(action.action);
+    const isHero = action.player === 'H';
+
+    return (
+        <>
+            <div
+                className={`action-chip-v2 ${isHero ? 'hero' : 'villain'} ${isLast ? 'last' : ''}`}
+                onClick={onRemove}
+            >
+                <span className="chip-player-v2">{action.player}</span>
+                {action.amount && <span className="chip-amount-v2">{action.amount}</span>}
+                <span className="chip-icon-v2">{icon}</span>
+            </div>
+            {showArrow && <span className="action-flow-arrow">›</span>}
+        </>
+    );
+};
 
 // ═════════════════════════════════════════════════════════════════════════
 // INLINE ACTION BUILDER - Smart auto-alternating player flow (TOP-LEVEL)
@@ -356,78 +374,82 @@ const InlineActionBuilder = ({
     };
 
     return (
-        <div className="inline-action-builder">
-            {/* Existing actions as chips - click to edit from that point */}
-            {actions.map((action, i) => (
-                <ActionChip
-                    key={i}
-                    action={action}
-                    onRemove={() => editFromAction(i)}
-                    showArrow={i < actions.length - 1 || (!isEnded && !isAdding)}
-                />
-            ))}
+        <div className="inline-action-builder-v2">
+            {/* Action flow - horizontal scroll */}
+            <div className="action-flow-container">
+                {/* Existing actions as chips - click to edit from that point */}
+                {actions.map((action, i) => (
+                    <ActionChip
+                        key={i}
+                        action={action}
+                        onRemove={() => editFromAction(i)}
+                        showArrow={i < actions.length - 1}
+                        isLast={i === actions.length - 1 && isEnded}
+                    />
+                ))}
 
-            {/* Add action flow */}
-            {!isEnded && (
-                <>
-                    {!isAdding ? (
-                        <button
-                            className="add-action-btn"
-                            onClick={startAdding}
-                        >
-                            {actions.length === 0 ? '?' : '+'}
-                        </button>
-                    ) : pendingPlayer && (
-                        /* Player already determined - show context-aware action options */
-                        <div className="action-selector">
-                            <span className={`selected-player ${pendingPlayer === 'H' ? 'hero' : 'villain'}`}>
-                                {pendingPlayer}:
-                            </span>
+                {/* Add action flow */}
+                {!isEnded && (
+                    <>
+                        {!isAdding ? (
+                            <button
+                                className="add-action-btn"
+                                onClick={startAdding}
+                            >
+                                {actions.length === 0 ? '?' : '+'}
+                            </button>
+                        ) : pendingPlayer && (
+                            /* Player already determined - show context-aware action options */
+                            <div className="action-selector">
+                                <span className={`selected-player ${pendingPlayer === 'H' ? 'hero' : 'villain'}`}>
+                                    {pendingPlayer}:
+                                </span>
 
-                            {/* Postflop: Toggle between % and bb mode */}
-                            {street !== 'preflop' && (
-                                <button
-                                    className="mode-toggle"
-                                    onClick={() => setPostflopMode(postflopMode === '%' ? 'bb' : '%')}
-                                >
-                                    {postflopMode === '%' ? '% pot' : 'bb'}
-                                </button>
-                            )}
-
-                            <div className="action-options">
-                                {contextOptions.map(opt => (
+                                {/* Postflop: Toggle between % and bb mode */}
+                                {street !== 'preflop' && (
                                     <button
-                                        key={opt.value}
-                                        className="action-option"
-                                        onClick={() => handleAddAction(opt.value, opt.amount)}
+                                        className="mode-toggle"
+                                        onClick={() => setPostflopMode(postflopMode === '%' ? 'bb' : '%')}
                                     >
-                                        {opt.label}
+                                        {postflopMode === '%' ? '% pot' : 'bb'}
                                     </button>
-                                ))}
+                                )}
 
-                                {/* Custom amount input */}
-                                <div className="custom-amount-wrapper">
-                                    <input
-                                        type="number"
-                                        className="custom-amount-input"
-                                        placeholder={street === 'preflop' ? 'bb' : (postflopMode === '%' ? '%' : 'bb')}
-                                        value={customAmount}
-                                        onChange={(e) => setCustomAmount(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleCustomAmount()}
-                                    />
-                                    <button
-                                        className="custom-amount-btn"
-                                        onClick={handleCustomAmount}
-                                    >
-                                        ✓
-                                    </button>
+                                <div className="action-options">
+                                    {contextOptions.map(opt => (
+                                        <button
+                                            key={opt.value}
+                                            className="action-option"
+                                            onClick={() => handleAddAction(opt.value, opt.amount)}
+                                        >
+                                            {opt.label}
+                                        </button>
+                                    ))}
+
+                                    {/* Custom amount input */}
+                                    <div className="custom-amount-wrapper">
+                                        <input
+                                            type="number"
+                                            className="custom-amount-input"
+                                            placeholder={street === 'preflop' ? 'bb' : (postflopMode === '%' ? '%' : 'bb')}
+                                            value={customAmount}
+                                            onChange={(e) => setCustomAmount(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleCustomAmount()}
+                                        />
+                                        <button
+                                            className="custom-amount-btn"
+                                            onClick={handleCustomAmount}
+                                        >
+                                            ✓
+                                        </button>
+                                    </div>
                                 </div>
+                                <button className="cancel-btn" onClick={cancelAdding}>✕</button>
                             </div>
-                            <button className="cancel-btn" onClick={cancelAdding}>✕</button>
-                        </div>
-                    )}
-                </>
-            )}
+                        )}
+                    </>
+                )}
+            </div>
         </div>
     );
 };
