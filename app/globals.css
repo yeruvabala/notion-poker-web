@@ -4265,8 +4265,10 @@ body.native-app [class*="btn-row"]>* {
 /* Action Selector */
 .action-selector {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 6px;
+    max-width: 100%;
     animation: chip-appear 0.15s ease;
 }
 
@@ -4287,6 +4289,7 @@ body.native-app [class*="btn-row"]>* {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
+    max-width: 100%;
 }
 
 .action-option {
