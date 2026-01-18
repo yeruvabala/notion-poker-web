@@ -67,7 +67,8 @@ const InlineActionBuilder = ({
     street,
     heroPosition,
     villainPosition,
-    tableFormat
+    tableFormat,
+    pot
 }: {
     actions: (PreflopAction | PostflopAction)[];
     setActions: (actions: any[]) => void;
@@ -75,6 +76,7 @@ const InlineActionBuilder = ({
     heroPosition?: string;
     villainPosition?: string;
     tableFormat?: string;
+    pot?: number;
 }) => {
     const [isAdding, setIsAdding] = useState(false);
     const [pendingPlayer, setPendingPlayer] = useState<'H' | 'V' | null>(null);
@@ -197,20 +199,38 @@ const InlineActionBuilder = ({
             }
         }
 
-        // Postflop - simpler options
+        // Postflop - pot-based bet sizing
         const bets = actions.filter(a => a.action === 'bet' || a.action === 'raise');
+        const currentPot = pot || 10; // Default pot if not provided
+
+        // No bet yet - show check, fold, and pot-based bet options
         if (bets.length === 0) {
+            const bet33 = Math.round(currentPot * 0.33 * 10) / 10;
+            const bet50 = Math.round(currentPot * 0.5 * 10) / 10;
+            const bet75 = Math.round(currentPot * 0.75 * 10) / 10;
+            const betPot = Math.round(currentPot * 10) / 10;
             return [
                 { label: 'Check', value: 'check' },
-                { label: 'Bet', value: 'bet', amount: 5 },
                 { label: 'Fold', value: 'fold' },
+                { label: `Bet 33% (${bet33}bb)`, value: 'bet_33', amount: bet33 },
+                { label: `Bet 50% (${bet50}bb)`, value: 'bet_50', amount: bet50 },
+                { label: `Bet 75% (${bet75}bb)`, value: 'bet_75', amount: bet75 },
+                { label: `Bet Pot (${betPot}bb)`, value: 'bet_100', amount: betPot },
             ];
-        } else {
+        }
+        // Facing a bet - show fold, call, and raise options
+        else {
             const lastBet = bets[bets.length - 1];
+            const facingAmount = lastBet?.amount || 5;
+            const raise2x = Math.round(facingAmount * 2 * 10) / 10;
+            const raise3x = Math.round(facingAmount * 3 * 10) / 10;
+            const raise4x = Math.round(facingAmount * 4 * 10) / 10;
             return [
                 { label: 'Fold', value: 'fold' },
-                { label: `Call ${lastBet?.amount || 5}bb`, value: 'call', amount: lastBet?.amount },
-                { label: 'Raise', value: 'raise', amount: (lastBet?.amount || 5) * 2.5 },
+                { label: `Call (${facingAmount}bb)`, value: 'call', amount: facingAmount },
+                { label: `Raise 2x (${raise2x}bb)`, value: 'raise_2x', amount: raise2x },
+                { label: `Raise 3x (${raise3x}bb)`, value: 'raise_3x', amount: raise3x },
+                { label: `Raise 4x (${raise4x}bb)`, value: 'raise_4x', amount: raise4x },
             ];
         }
     };
@@ -220,7 +240,8 @@ const InlineActionBuilder = ({
         let amount = optionAmount;
 
         // Parse action type from value
-        if (optionValue.startsWith('raise_')) {
+        // Preflop raises
+        if (optionValue.startsWith('raise_') && !optionValue.includes('x')) {
             actionType = 'raise';
             amount = parseFloat(optionValue.replace('raise_', ''));
         } else if (optionValue.startsWith('3bet_')) {
@@ -232,6 +253,16 @@ const InlineActionBuilder = ({
         } else if (optionValue === 'limp') {
             actionType = 'limp';
             amount = 1;
+        }
+        // Postflop bets (pot-based)
+        else if (optionValue.startsWith('bet_')) {
+            actionType = 'bet';
+            // amount is already passed from option
+        }
+        // Postflop raises (multiplier-based)
+        else if (optionValue.startsWith('raise_') && optionValue.includes('x')) {
+            actionType = 'raise';
+            // amount is already passed from option
         }
 
         const player = pendingPlayer!;
@@ -578,6 +609,7 @@ export default function MobileHandBuilder({
                         heroPosition={heroPosition}
                         villainPosition={villainPosition}
                         tableFormat={tableFormat}
+                        pot={calculatePot()}
                     />
                 )}
             </div>
@@ -602,6 +634,7 @@ export default function MobileHandBuilder({
                         heroPosition={heroPosition}
                         villainPosition={villainPosition}
                         tableFormat={tableFormat}
+                        pot={calculatePot()}
                     />
                 )}
             </div>
@@ -626,6 +659,7 @@ export default function MobileHandBuilder({
                         heroPosition={heroPosition}
                         villainPosition={villainPosition}
                         tableFormat={tableFormat}
+                        pot={calculatePot()}
                     />
                 )}
             </div>
