@@ -5399,6 +5399,114 @@ body.native-app [class*="btn-row"]>* {
     }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   DECISION BREAKDOWN CHIPS - Inline styled decision results
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.gto-decision-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin: 6px 0;
+    font-size: 13px;
+}
+
+.gto-decision-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.gto-decision-street {
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.gto-decision-action {
+    color: #e5e7eb;
+    font-weight: 500;
+}
+
+.gto-decision-arrow {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.gto-decision-result {
+    font-weight: 700;
+    text-transform: capitalize;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+/* Optimal decision */
+.gto-decision-chip.optimal {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.gto-decision-chip.optimal .gto-decision-indicator {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.gto-decision-chip.optimal .gto-decision-street {
+    color: #6ee7b7;
+}
+
+.gto-decision-chip.optimal .gto-decision-result {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+}
+
+/* Acceptable decision */
+.gto-decision-chip.acceptable {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.gto-decision-chip.acceptable .gto-decision-indicator {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+.gto-decision-chip.acceptable .gto-decision-street {
+    color: #fcd34d;
+}
+
+.gto-decision-chip.acceptable .gto-decision-result {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+/* Mistake decision */
+.gto-decision-chip.mistake {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.gto-decision-chip.mistake .gto-decision-indicator {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+.gto-decision-chip.mistake .gto-decision-street {
+    color: #fca5a5;
+}
+
+.gto-decision-chip.mistake .gto-decision-result {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}
+
 /* Fallback badge line styling */
 .gto-mobile-badge-line {
     font-size: 13px;

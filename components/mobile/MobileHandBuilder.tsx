@@ -669,6 +669,29 @@ function renderMobileGTO(text: string | null | undefined): React.ReactNode {
                 );
             }
 
+            // Check for decision breakdown lines (🟢 PREFLOP (initial_action): raise → optimal)
+            const decisionMatch = trimmed.match(/^[🟢🟡🔴]\s*(PREFLOP|FLOP|TURN|RIVER)\s*\([^)]+\):\s*(.+?)\s*→\s*(\w+)/i);
+            if (decisionMatch) {
+                const street = decisionMatch[1].toUpperCase();
+                const action = decisionMatch[2];
+                const result = decisionMatch[3].toLowerCase();
+
+                let chipClass = 'gto-decision-chip';
+                if (result === 'optimal') chipClass += ' optimal';
+                else if (result === 'acceptable') chipClass += ' acceptable';
+                else if (result === 'mistake') chipClass += ' mistake';
+
+                return (
+                    <div key={key} className={chipClass}>
+                        <span className="gto-decision-indicator" />
+                        <span className="gto-decision-street">{street}</span>
+                        <span className="gto-decision-action">{action}</span>
+                        <span className="gto-decision-arrow">→</span>
+                        <span className="gto-decision-result">{result}</span>
+                    </div>
+                );
+            }
+
             // Fallback for other emoji lines
             return (
                 <div key={key} className="gto-mobile-badge-line">
