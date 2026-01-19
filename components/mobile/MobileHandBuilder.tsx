@@ -868,22 +868,25 @@ export default function MobileHandBuilder({
 
             {/* ═══════════════════════════════════════════════════════════════════════
           PREFLOP - Inline Action Builder
+          Only show when both positions are selected
           ═══════════════════════════════════════════════════════════════════════ */}
-            <div className={`street-section preflop ${preflopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active'}`}>
-                <div className="street-header">
-                    <span className="street-name">Preflop</span>
-                    <span className="pot-badge">{calculatePot('preflop').toFixed(1)}bb</span>
+            {heroPosition && villainPosition && (
+                <div className={`street-section preflop ${preflopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active'}`}>
+                    <div className="street-header">
+                        <span className="street-name">Preflop</span>
+                        <span className="pot-badge">{calculatePot('preflop').toFixed(1)}bb</span>
+                    </div>
+                    <InlineActionBuilder
+                        actions={preflopActions}
+                        setActions={setPreflopActions}
+                        street="preflop"
+                        heroPosition={heroPosition}
+                        villainPosition={villainPosition}
+                        tableFormat={tableFormat}
+                        onClearForward={clearFromPreflop}
+                    />
                 </div>
-                <InlineActionBuilder
-                    actions={preflopActions}
-                    setActions={setPreflopActions}
-                    street="preflop"
-                    heroPosition={heroPosition}
-                    villainPosition={villainPosition}
-                    tableFormat={tableFormat}
-                    onClearForward={clearFromPreflop}
-                />
-            </div>
+            )}
 
             {/* ═══════════════════════════════════════════════════════════════════════
           FLOP - Always show bar, expand when preflop completes
@@ -1030,15 +1033,13 @@ export default function MobileHandBuilder({
                 </div>
             )}
 
-            <div className={`premium-action-bar ${(heroCard1 && heroCard2) ? 'ready' : ''}`}>
-                {/* Save Button */}
+            <div className="premium-action-bar">
+                {/* Save Button - Quick save for now */}
                 <button
                     className={`action-bar-button save-button ${activeSession ? 'has-session' : ''}`}
                     onClick={() => {
-                        if (activeSession && onSave) {
-                            onSave(false); // Save to session
-                        } else if (onStartSession) {
-                            onStartSession(); // Open session modal
+                        if (onSave) {
+                            onSave(true); // Quick save (no session required)
                         }
                     }}
                     disabled={savingHand || !heroCard1 || !heroCard2}
