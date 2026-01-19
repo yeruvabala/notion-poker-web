@@ -5100,42 +5100,37 @@ body.native-app [class*="btn-row"]>* {
 
 /* Loading state - Animated rotating wave border */
 .gto-inline-card.loading {
-    overflow: visible;
+    position: relative;
+    overflow: hidden;
 }
 
+/* Remove the static border during loading */
 .gto-inline-card.loading::before {
     content: '';
     position: absolute;
-    inset: -2px;
-    border-radius: 22px;
+    inset: 0;
+    border-radius: 20px;
+    padding: 2px;
     background: conic-gradient(from 0deg,
             #3b82f6 0deg,
             #8b5cf6 90deg,
             #ec4899 180deg,
-            #8b5cf6 270deg,
+            #f59e0b 270deg,
             #3b82f6 360deg);
-    animation: gto-border-rotate 2s linear infinite;
-    z-index: -1;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: gto-wave-flow 3s linear infinite;
 }
 
-.gto-inline-card.loading::after {
-    content: '';
-    position: absolute;
-    inset: 2px;
-    border-radius: 18px;
-    background: linear-gradient(180deg,
-            rgba(40, 40, 45, 0.98) 0%,
-            rgba(25, 25, 30, 0.99) 100%);
-    z-index: -1;
-}
-
-@keyframes gto-border-rotate {
+@keyframes gto-wave-flow {
     0% {
-        transform: rotate(0deg);
+        filter: hue-rotate(0deg);
     }
 
     100% {
-        transform: rotate(360deg);
+        filter: hue-rotate(360deg);
     }
 }
 
