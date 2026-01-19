@@ -5124,6 +5124,56 @@ body.native-app [class*="btn-row"]>* {
     }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   MOBILE GTO TEXT FORMATTING - Parsed markdown styling
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.gto-mobile-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.gto-mobile-line {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #d1d5db;
+}
+
+.gto-mobile-header {
+    font-weight: 700;
+    color: #f59e0b;
+}
+
+.gto-mobile-header.street {
+    color: #34d399;
+}
+
+.gto-mobile-header.metric {
+    color: #a5b4fc;
+}
+
+.gto-mobile-value {
+    color: #e5e7eb;
+}
+
+.gto-mobile-sub {
+    padding-left: 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #9ca3af;
+}
+
+/* Hero = Blue, Villain = Red */
+.gto-hero-text {
+    color: #60a5fa;
+    font-weight: 600;
+}
+
+.gto-villain-text {
+    color: #f87171;
+    font-weight: 600;
+}
+
 @keyframes gto-fade-in {
     from {
         opacity: 0;

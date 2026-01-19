@@ -562,6 +562,77 @@ const InlineActionBuilder = ({
     );
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// Helper: Render GTO text with markdown parsing (matches web formatting)
+// ═══════════════════════════════════════════════════════════════════════════════
+function renderMobileGTO(text: string | null | undefined): React.ReactNode {
+    if (!text) return null;
+
+    const lines = text.split(/\r?\n/).filter(l => l.trim().length);
+
+    // Parse a line and return formatted JSX
+    const parseLine = (line: string, key: number): React.ReactNode => {
+        const trimmed = line.trim();
+
+        // Check for section headers: **PREFLOP (3-bet):** or **EQUITY:**
+        const headerMatch = trimmed.match(/^\*\*([^*]+)\*\*:?\s*(.*)/);
+        if (headerMatch) {
+            const header = headerMatch[1];
+            const rest = headerMatch[2];
+
+            // Determine header type for coloring
+            const isStreet = /^(PREFLOP|FLOP|TURN|RIVER)/i.test(header);
+            const isMetric = /^(EQUITY|POT ODDS|SITUATION)/i.test(header);
+
+            return (
+                <div key={key} className="gto-mobile-line">
+                    <span className={`gto-mobile-header ${isStreet ? 'street' : ''} ${isMetric ? 'metric' : ''}`}>
+                        {header}:
+                    </span>
+                    {rest && <span className="gto-mobile-value"> {colorizeHeroVillain(rest)}</span>}
+                </div>
+            );
+        }
+
+        // Check for sub-bullets: └─ or ├─ 
+        if (trimmed.startsWith('└') || trimmed.startsWith('├') || trimmed.startsWith('—')) {
+            return (
+                <div key={key} className="gto-mobile-sub">
+                    {colorizeHeroVillain(trimmed)}
+                </div>
+            );
+        }
+
+        // Regular line
+        return (
+            <div key={key} className="gto-mobile-line">
+                {colorizeHeroVillain(trimmed)}
+            </div>
+        );
+    };
+
+    // Colorize Hero (blue) and Villain (red)
+    const colorizeHeroVillain = (text: string): React.ReactNode => {
+        const parts = text.split(/(Hero|Villain)/gi);
+        return parts.map((part, idx) => {
+            const lower = part.toLowerCase();
+            if (lower === 'hero') {
+                return <span key={idx} className="gto-hero-text">{part}</span>;
+            }
+            if (lower === 'villain') {
+                return <span key={idx} className="gto-villain-text">{part}</span>;
+            }
+            return part;
+        });
+    };
+
+    return (
+        <div className="gto-mobile-content">
+            {lines.map((line, i) => parseLine(line, i))}
+        </div>
+    );
+}
+
 interface MobileHandBuilderProps {
     tableFormat: string;
     setTableFormat: (v: string) => void;
@@ -1096,7 +1167,7 @@ export default function MobileHandBuilder({
                         </div>
                     ) : (
                         <div className="gto-inline-content">
-                            <div className="gto-inline-text">{gtoStrategy}</div>
+                            {renderMobileGTO(gtoStrategy)}
 
                             {exploitDeviation && (
                                 <div className="gto-exploit-section">
@@ -1104,7 +1175,7 @@ export default function MobileHandBuilder({
                                         <span>📊</span>
                                         <span>Play Review</span>
                                     </div>
-                                    <div className="gto-inline-text">{exploitDeviation}</div>
+                                    {renderMobileGTO(exploitDeviation)}
                                 </div>
                             )}
                         </div>
