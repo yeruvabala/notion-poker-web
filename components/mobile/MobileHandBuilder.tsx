@@ -797,25 +797,28 @@ export default function MobileHandBuilder({
             </div>
 
             {/* ═══════════════════════════════════════════════════════════════════════
-          FLOP - Community Cards + Actions
-          Only show if preflop action is complete AND not folded
+          FLOP - Always show bar, expand when preflop completes
           ═══════════════════════════════════════════════════════════════════════ */}
-            {/* Preflop must have actions AND last action must be call/check (hand continues) */}
-            {preflopActions.length > 0 && !preflopActions.some(a => a.action === 'fold') && (
-                <div className={`street-section flop ${(flop1 && flop2 && flop3)
-                    ? (flopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
-                    : 'active'
+            {/* Hide completely only if preflop ended with fold */}
+            {!preflopActions.some(a => a.action === 'fold') && (
+                <div className={`street-section flop ${preflopActions.length === 0 ? 'collapsed' :
+                        (flop1 && flop2 && flop3)
+                            ? (flopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                            : 'active'
                     }`}>
                     <div className="street-header">
                         <span className="street-name">Flop</span>
                         {(flop1 && flop2 && flop3) && <span className="pot-badge">{calculatePot('flop').toFixed(1)}bb</span>}
                     </div>
 
-                    <div className="community-cards flop-cards">
-                        <CardDisplay card={flop1} cardKey="flop1" size="small" />
-                        <CardDisplay card={flop2} cardKey="flop2" size="small" />
-                        <CardDisplay card={flop3} cardKey="flop3" size="small" />
-                    </div>
+                    {/* Only show cards when preflop has actions */}
+                    {preflopActions.length > 0 && (
+                        <div className="community-cards flop-cards">
+                            <CardDisplay card={flop1} cardKey="flop1" size="small" />
+                            <CardDisplay card={flop2} cardKey="flop2" size="small" />
+                            <CardDisplay card={flop3} cardKey="flop3" size="small" />
+                        </div>
+                    )}
 
                     {(flop1 && flop2 && flop3) && (
                         <InlineActionBuilder
@@ -832,21 +835,25 @@ export default function MobileHandBuilder({
             )}
 
             {/* ═══════════════════════════════════════════════════════════════════════
-          TURN - Only show if flop action is complete AND not folded
+          TURN - Always show bar (if flop not folded), expand when flop completes
           ═══════════════════════════════════════════════════════════════════════ */}
-            {(flop1 && flop2 && flop3) && flopActions.length > 0 && !flopActions.some(a => a.action === 'fold') && (
-                <div className={`street-section turn ${turn
-                    ? (turnActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
-                    : 'active'
+            {!preflopActions.some(a => a.action === 'fold') && !flopActions.some(a => a.action === 'fold') && (
+                <div className={`street-section turn ${!(flop1 && flop2 && flop3) || flopActions.length === 0 ? 'collapsed' :
+                        turn
+                            ? (turnActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                            : 'active'
                     }`}>
                     <div className="street-header">
                         <span className="street-name">Turn</span>
                         {turn && <span className="pot-badge">{calculatePot('turn').toFixed(1)}bb</span>}
                     </div>
 
-                    <div className="community-cards">
-                        <CardDisplay card={turn} cardKey="turn" size="small" />
-                    </div>
+                    {/* Only show card when flop is complete */}
+                    {(flop1 && flop2 && flop3) && flopActions.length > 0 && (
+                        <div className="community-cards">
+                            <CardDisplay card={turn} cardKey="turn" size="small" />
+                        </div>
+                    )}
 
                     {turn && (
                         <InlineActionBuilder
@@ -863,21 +870,25 @@ export default function MobileHandBuilder({
             )}
 
             {/* ═══════════════════════════════════════════════════════════════════════
-          RIVER - Only show if turn action is complete AND not folded
+          RIVER - Always show bar (if turn not folded), expand when turn completes
           ═══════════════════════════════════════════════════════════════════════ */}
-            {turn && turnActions.length > 0 && !turnActions.some(a => a.action === 'fold') && (
-                <div className={`street-section river ${river
-                    ? (riverActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
-                    : 'active'
+            {!preflopActions.some(a => a.action === 'fold') && !flopActions.some(a => a.action === 'fold') && !turnActions.some(a => a.action === 'fold') && (
+                <div className={`street-section river ${!turn || turnActions.length === 0 ? 'collapsed' :
+                        river
+                            ? (riverActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                            : 'active'
                     }`}>
                     <div className="street-header">
                         <span className="street-name">River</span>
                         {river && <span className="pot-badge">{calculatePot('river').toFixed(1)}bb</span>}
                     </div>
 
-                    <div className="community-cards">
-                        <CardDisplay card={river} cardKey="river" size="small" />
-                    </div>
+                    {/* Only show card when turn is complete */}
+                    {turn && turnActions.length > 0 && (
+                        <div className="community-cards">
+                            <CardDisplay card={river} cardKey="river" size="small" />
+                        </div>
+                    )}
 
                     {river && (
                         <InlineActionBuilder
