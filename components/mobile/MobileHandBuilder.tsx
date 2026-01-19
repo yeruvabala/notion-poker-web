@@ -105,6 +105,7 @@ const InlineActionBuilder = ({
 
     // Ref for scroll container
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const actionSelectorRef = useRef<HTMLDivElement>(null);
     const touchStartX = useRef<number>(0);
     const scrollStartX = useRef<number>(0);
     const lastTouchX = useRef<number>(0);
@@ -118,6 +119,19 @@ const InlineActionBuilder = ({
             scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
         }
     }, [actions.length, isAdding]);
+
+    // Auto-scroll action selector into view when it opens
+    useEffect(() => {
+        if (isAdding && actionSelectorRef.current) {
+            // Small delay to ensure element is rendered
+            setTimeout(() => {
+                actionSelectorRef.current?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'end'
+                });
+            }, 100);
+        }
+    }, [isAdding]);
 
     // Touch handlers for smooth horizontal scroll with momentum
     const handleTouchStart = (e: React.TouchEvent) => {
@@ -497,7 +511,7 @@ const InlineActionBuilder = ({
 
             {/* Action options - OUTSIDE scroll container for full visibility */}
             {!isEnded && isAdding && pendingPlayer && (
-                <div className="action-selector">
+                <div className="action-selector" ref={actionSelectorRef}>
                     <span className={`selected-player ${pendingPlayer === 'H' ? 'hero' : 'villain'}`}>
                         {pendingPlayer}:
                     </span>
