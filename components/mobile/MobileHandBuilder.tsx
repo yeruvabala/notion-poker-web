@@ -1081,7 +1081,7 @@ export default function MobileHandBuilder({
 
             {/* GTO Strategy Box - Inline below buttons */}
             {(isLoading || gtoStrategy) && (
-                <div className="gto-inline-card">
+                <div className={`gto-inline-card ${isLoading ? 'loading' : ''}`}>
                     <div className="gto-inline-header">
                         <span className="gto-inline-icon">🎯</span>
                         <span className="gto-inline-title">GTO Strategy</span>

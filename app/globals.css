@@ -5089,21 +5089,51 @@ body.native-app [class*="btn-row"]>* {
     border-radius: 20px;
     padding: 1px;
     background: linear-gradient(135deg,
-            rgba(59, 130, 246, 0.5) 0%,
-            rgba(139, 92, 246, 0.5) 50%,
-            rgba(236, 72, 153, 0.5) 100%);
+            rgba(59, 130, 246, 0.4) 0%,
+            rgba(139, 92, 246, 0.4) 50%,
+            rgba(236, 72, 153, 0.4) 100%);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
-    animation: gto-border-glow 3s ease-in-out infinite;
 }
 
-@keyframes gto-border-glow {
+/* Loading state - Animated rotating wave border */
+.gto-inline-card.loading::before {
+    background: conic-gradient(from var(--angle, 0deg),
+            rgba(59, 130, 246, 0.8) 0deg,
+            rgba(139, 92, 246, 0.8) 120deg,
+            rgba(236, 72, 153, 0.8) 240deg,
+            rgba(59, 130, 246, 0.8) 360deg);
+    animation: gto-border-rotate 2s linear infinite;
+}
+
+@keyframes gto-border-rotate {
+    0% {
+        --angle: 0deg;
+    }
+
+    100% {
+        --angle: 360deg;
+    }
+}
+
+/* Fallback for browsers without @property support */
+@supports not (background: conic-gradient(from 0deg, red, blue)) {
+    .gto-inline-card.loading::before {
+        background: linear-gradient(135deg,
+                rgba(59, 130, 246, 0.7) 0%,
+                rgba(139, 92, 246, 0.7) 50%,
+                rgba(236, 72, 153, 0.7) 100%);
+        animation: gto-border-pulse 1.5s ease-in-out infinite;
+    }
+}
+
+@keyframes gto-border-pulse {
 
     0%,
     100% {
-        opacity: 0.6;
+        opacity: 0.5;
     }
 
     50% {
