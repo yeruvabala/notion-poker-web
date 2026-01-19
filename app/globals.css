@@ -3692,32 +3692,23 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   FACE UP - Classic White Playing Card
+   FACE UP - Classic White Playing Card (Hero Cards)
    ═══════════════════════════════════════════════════════════════════════════════ */
 .premium-card.filled {
+    /* Override the shimmer border completely */
     background: linear-gradient(145deg, #ffffff 0%, #f5f5f5 50%, #fafafa 100%);
     animation: none;
+    padding: 0;
+    border: 2px solid rgba(0, 0, 0, 0.15);
     box-shadow:
         0 4px 16px rgba(0, 0, 0, 0.4),
         0 1px 4px rgba(0, 0, 0, 0.2),
         inset 0 1px 0 rgba(255, 255, 255, 1);
-    position: relative;
 }
 
-/* Glossy shine effect for all filled cards - MUST override base ::before */
+/* Remove ::before for filled cards - no overlay needed */
 .premium-card.filled::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: unset;
-    height: 40%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 100%);
-    border-radius: 6px 6px 0 0;
-    z-index: 1;
-    pointer-events: none;
+    display: none;
 }
 
 /* Rank - top-left, black for white background */
