@@ -1506,31 +1506,6 @@ export default function HomeClient() {
             onStartSession={() => setShowSessionModal(true)}
             onEndSession={exitSession}
           />
-
-          {/* Show results if available */}
-          {fields && (
-            <div className="mobile-card">
-              <div className="mobile-card-header">
-                <span className="mobile-card-icon">🎯</span>
-                <h2 className="mobile-card-title">GTO Strategy</h2>
-              </div>
-              <p style={{ color: '#e5e7eb', fontSize: '14px', lineHeight: 1.6 }}>
-                {fields.gto_strategy || 'Analysis will appear here...'}
-              </p>
-            </div>
-          )}
-
-          {fields?.exploit_deviation && (
-            <div className="mobile-card">
-              <div className="mobile-card-header">
-                <span className="mobile-card-icon">🎭</span>
-                <h2 className="mobile-card-title">Exploitative Play</h2>
-              </div>
-              <p style={{ color: '#e5e7eb', fontSize: '14px', lineHeight: 1.6 }}>
-                {fields.exploit_deviation}
-              </p>
-            </div>
-          )}
         </PullToRefresh>
 
         {/* Session Selection Modal */}
