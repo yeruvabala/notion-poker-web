@@ -4899,6 +4899,23 @@ body.native-app [class*="btn-row"]>* {
     border-radius: 10px;
 }
 
+.session-end-btn {
+    margin-left: auto;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.session-end-btn:hover {
+    background: rgba(255, 0, 0, 0.3);
+    color: #ff6b6b;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════════
    PREMIUM ACTION BAR - Save + Analyze Buttons
    ═══════════════════════════════════════════════════════════════════════════════ */

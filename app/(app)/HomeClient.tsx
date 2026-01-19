@@ -1502,6 +1502,7 @@ export default function HomeClient() {
             onSave={saveHandToSession}
             savingHand={savingHand}
             onStartSession={() => setShowSessionModal(true)}
+            onEndSession={exitSession}
           />
 
           {/* Show results if available */}

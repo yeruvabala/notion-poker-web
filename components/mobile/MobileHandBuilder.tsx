@@ -604,6 +604,7 @@ interface MobileHandBuilderProps {
     onSave?: (quickSave?: boolean) => void;
     savingHand?: boolean;
     onStartSession?: () => void;
+    onEndSession?: () => void;
 }
 
 export default function MobileHandBuilder({
@@ -625,7 +626,7 @@ export default function MobileHandBuilder({
     onAnalyze, isLoading,
     // Session props
     activeSession, sessionHandCount, sessionElapsed,
-    onSave, savingHand, onStartSession
+    onSave, savingHand, onStartSession, onEndSession
 }: MobileHandBuilderProps) {
 
     const [showCardPicker, setShowCardPicker] = useState<string | null>(null);
@@ -1030,6 +1031,13 @@ export default function MobileHandBuilder({
                     <span className="session-indicator-name">{activeSession.name}</span>
                     <span className="session-indicator-timer">{sessionElapsed || '00:00'}</span>
                     <span className="session-indicator-count">{sessionHandCount} hands</span>
+                    <button
+                        className="session-end-btn"
+                        onClick={onEndSession}
+                        title="End Session"
+                    >
+                        ✕
+                    </button>
                 </div>
             )}
 
