@@ -597,6 +597,13 @@ interface MobileHandBuilderProps {
     setRiverActions: (actions: PostflopAction[]) => void;
     onAnalyze: () => void;
     isLoading: boolean;
+    // Session Mode props
+    activeSession?: { id: string; name: string } | null;
+    sessionHandCount?: number;
+    sessionElapsed?: string;
+    onSave?: (quickSave?: boolean) => void;
+    savingHand?: boolean;
+    onStartSession?: () => void;
 }
 
 export default function MobileHandBuilder({
@@ -615,7 +622,10 @@ export default function MobileHandBuilder({
     flopActions, setFlopActions,
     turnActions, setTurnActions,
     riverActions, setRiverActions,
-    onAnalyze, isLoading
+    onAnalyze, isLoading,
+    // Session props
+    activeSession, sessionHandCount, sessionElapsed,
+    onSave, savingHand, onStartSession
 }: MobileHandBuilderProps) {
 
     const [showCardPicker, setShowCardPicker] = useState<string | null>(null);
@@ -1008,16 +1018,48 @@ export default function MobileHandBuilder({
             )}
 
             {/* ═══════════════════════════════════════════════════════════════════════
-          ANALYZE BUTTON - Premium
+          PREMIUM ACTION BAR - Save + Analyze
           ═══════════════════════════════════════════════════════════════════════ */}
-            <button
-                className="analyze-button-premium"
-                onClick={onAnalyze}
-                disabled={isLoading || (!heroCard1 || !heroCard2)}
-            >
-                <span className="analyze-icon">✨</span>
-                <span className="analyze-text">{isLoading ? 'Analyzing...' : 'Analyze Hand'}</span>
-            </button>
+            {/* Session indicator when active */}
+            {activeSession && (
+                <div className="session-indicator-bar">
+                    <span className="session-indicator-icon">📁</span>
+                    <span className="session-indicator-name">{activeSession.name}</span>
+                    <span className="session-indicator-timer">{sessionElapsed || '00:00'}</span>
+                    <span className="session-indicator-count">{sessionHandCount} hands</span>
+                </div>
+            )}
+
+            <div className={`premium-action-bar ${(heroCard1 && heroCard2) ? 'ready' : ''}`}>
+                {/* Save Button */}
+                <button
+                    className={`action-bar-button save-button ${activeSession ? 'has-session' : ''}`}
+                    onClick={() => {
+                        if (activeSession && onSave) {
+                            onSave(false); // Save to session
+                        } else if (onStartSession) {
+                            onStartSession(); // Open session modal
+                        }
+                    }}
+                    disabled={savingHand || !heroCard1 || !heroCard2}
+                >
+                    <span className="action-bar-icon">📝</span>
+                    <span className="action-bar-text">
+                        {savingHand ? 'Saving...' :
+                            activeSession ? `${activeSession.name} (${sessionHandCount})` : 'Save'}
+                    </span>
+                </button>
+
+                {/* Analyze Button */}
+                <button
+                    className="action-bar-button analyze-button"
+                    onClick={onAnalyze}
+                    disabled={isLoading || !heroCard1 || !heroCard2}
+                >
+                    <span className="action-bar-icon">✨</span>
+                    <span className="action-bar-text">{isLoading ? 'Analyzing...' : 'Analyze'}</span>
+                </button>
+            </div>
 
             {/* Card Picker Modal */}
             {showCardPicker && (

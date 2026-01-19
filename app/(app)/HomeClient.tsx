@@ -675,6 +675,84 @@ export default function HomeClient() {
     showToast('Session ended');
   };
 
+  // ════════════════════════════════════════════════════════════════════════════
+  // SAVE HAND TO SESSION (Mobile)
+  // ════════════════════════════════════════════════════════════════════════════
+  const [savingHand, setSavingHand] = useState(false);
+
+  const saveHandToSession = async (quickSave: boolean = false) => {
+    if (savingHand) return;
+    setSavingHand(true);
+
+    try {
+      // Collect current hand data
+      const heroCards = [h1, h2].filter(Boolean).join(' ');
+      const board = [
+        f1 && f2 && f3 ? `Flop: ${f1} ${f2} ${f3}` : '',
+        tr ? `Turn: ${tr}` : '',
+        rv ? `River: ${rv}` : ''
+      ].filter(Boolean).join(' | ');
+
+      // Format action summary
+      const formatActions = (actions: any[], street: string) => {
+        if (!actions.length) return '';
+        const formatted = actions.map(a =>
+          `${a.player}:${a.action}${a.amount ? ` ${a.amount}bb` : ''}`
+        ).join(' → ');
+        return `${street}: ${formatted}`;
+      };
+
+      const actionSummary = [
+        formatActions(preflopActions, 'Preflop'),
+        formatActions(flopActions, 'Flop'),
+        formatActions(turnActions, 'Turn'),
+        formatActions(riverActions, 'River')
+      ].filter(Boolean).join(' | ');
+
+      const handData = {
+        date: new Date().toISOString().slice(0, 10),
+        stakes: stakes || null,
+        position: position || null,
+        cards: heroCards || null,
+        board: board || null,
+        hand_class: null,
+        source_used: 'manual',
+        gto_strategy: fields?.gto_strategy || null,
+        exploit_deviation: fields?.exploit_deviation || null,
+        notes: actionSummary || null,
+        source: activeSession ? 'session' : 'quick_save',
+        session_id: quickSave ? null : (activeSession?.id || null),
+        is_favorited: false
+      };
+
+      const res = await fetch('/api/hands', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(handData)
+      });
+
+      const data = await res.json();
+      if (data.ok) {
+        if (!quickSave && activeSession) {
+          setSessionHandCount(prev => prev + 1);
+          showToast(`✅ Hand saved to "${activeSession.name}"`);
+        } else {
+          showToast('✅ Hand saved!');
+        }
+        setCurrentHandSaved(true);
+        // Reset form after save
+        resetHandForm();
+      } else {
+        showToast('❌ Save failed');
+      }
+    } catch (err) {
+      console.error('Save hand error:', err);
+      showToast('❌ Save failed');
+    } finally {
+      setSavingHand(false);
+    }
+  };
+
   const [risk, setRisk] = useState<string>('');     // bb
   const [reward, setReward] = useState<string>(''); // bb
   const feNeeded = useMemo(() => {
@@ -1411,6 +1489,13 @@ export default function HomeClient() {
             setRiverActions={setRiverActions}
             onAnalyze={analyze}
             isLoading={aiLoading}
+            // Session Mode props
+            activeSession={activeSession}
+            sessionHandCount={sessionHandCount}
+            sessionElapsed={sessionElapsed}
+            onSave={saveHandToSession}
+            savingHand={savingHand}
+            onStartSession={() => setShowSessionModal(true)}
           />
 
           {/* Show results if available */}
