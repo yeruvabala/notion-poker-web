@@ -620,6 +620,41 @@ export default function MobileHandBuilder({
 
     const [showCardPicker, setShowCardPicker] = useState<string | null>(null);
 
+    // Refs for street sections - for auto-scroll
+    const flopSectionRef = useRef<HTMLDivElement>(null);
+    const turnSectionRef = useRef<HTMLDivElement>(null);
+    const riverSectionRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll to FLOP when it expands (preflop has call)
+    const flopIsActive = preflopActions.some(a => a.action === 'call') && !flopActions.some(a => a.action === 'fold');
+    useEffect(() => {
+        if (flopIsActive && flopSectionRef.current) {
+            setTimeout(() => {
+                flopSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 150);
+        }
+    }, [flopIsActive]);
+
+    // Auto-scroll to TURN when it expands (flop has call)
+    const turnIsActive = flopActions.some(a => a.action === 'call') && !turnActions.some(a => a.action === 'fold');
+    useEffect(() => {
+        if (turnIsActive && turnSectionRef.current) {
+            setTimeout(() => {
+                turnSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 150);
+        }
+    }, [turnIsActive]);
+
+    // Auto-scroll to RIVER when it expands (turn has call)
+    const riverIsActive = turnActions.some(a => a.action === 'call');
+    useEffect(() => {
+        if (riverIsActive && riverSectionRef.current) {
+            setTimeout(() => {
+                riverSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 150);
+        }
+    }, [riverIsActive]);
+
     const positions = TABLE_FORMATS[tableFormat as keyof typeof TABLE_FORMATS]?.positions || TABLE_FORMATS['6max'].positions;
 
     // Parse card
@@ -846,7 +881,7 @@ export default function MobileHandBuilder({
           ═══════════════════════════════════════════════════════════════════════ */}
             {/* Hide completely only if preflop ended with fold */}
             {!preflopActions.some(a => a.action === 'fold') && (
-                <div className={`street-section flop ${!preflopActions.some(a => a.action === 'call') ? 'collapsed' :
+                <div ref={flopSectionRef} className={`street-section flop ${!preflopActions.some(a => a.action === 'call') ? 'collapsed' :
                     (flop1 && flop2 && flop3)
                         ? (flopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
                         : 'active'
@@ -886,7 +921,7 @@ export default function MobileHandBuilder({
           Cards fly in with AirDrop-style glow!
           ═══════════════════════════════════════════════════════════════════════ */}
             {!preflopActions.some(a => a.action === 'fold') && !flopActions.some(a => a.action === 'fold') && (
-                <div className={`street-section turn ${!(flop1 && flop2 && flop3) || !flopActions.some(a => a.action === 'call') ? 'collapsed' :
+                <div ref={turnSectionRef} className={`street-section turn ${!(flop1 && flop2 && flop3) || !flopActions.some(a => a.action === 'call') ? 'collapsed' :
                     turn
                         ? (turnActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
                         : 'active'
@@ -930,7 +965,7 @@ export default function MobileHandBuilder({
           Cards fly in with AirDrop-style glow!
           ═══════════════════════════════════════════════════════════════════════ */}
             {!preflopActions.some(a => a.action === 'fold') && !flopActions.some(a => a.action === 'fold') && !turnActions.some(a => a.action === 'fold') && (
-                <div className={`street-section river ${!turn || !turnActions.some(a => a.action === 'call') ? 'collapsed' :
+                <div ref={riverSectionRef} className={`street-section river ${!turn || !turnActions.some(a => a.action === 'call') ? 'collapsed' :
                     river
                         ? (riverActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
                         : 'active'
