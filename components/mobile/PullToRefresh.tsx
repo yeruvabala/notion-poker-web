@@ -146,7 +146,7 @@ export default function PullToRefresh({
             <div
                 className={`pull-refresh-indicator ${isRefreshing ? 'refreshing' : ''} ${pullDistance >= threshold ? 'ready' : ''}`}
                 style={{
-                    transform: `translateY(${pullDistance - 50}px)`,
+                    transform: `translateX(-50%) translateY(${pullDistance - 50}px)`,
                     opacity: indicatorOpacity,
                 }}
             >
