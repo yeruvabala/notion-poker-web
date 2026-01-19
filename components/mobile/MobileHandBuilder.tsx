@@ -86,7 +86,8 @@ const InlineActionBuilder = ({
     heroPosition,
     villainPosition,
     tableFormat,
-    pot
+    pot,
+    onClearForward
 }: {
     actions: (PreflopAction | PostflopAction)[];
     setActions: (actions: any[]) => void;
@@ -95,6 +96,7 @@ const InlineActionBuilder = ({
     villainPosition?: string;
     tableFormat?: string;
     pot?: number;
+    onClearForward?: () => void; // Called when editing in a completed street - clears all future streets
 }) => {
     const [isAdding, setIsAdding] = useState(false);
     const [pendingPlayer, setPendingPlayer] = useState<'H' | 'V' | null>(null);
@@ -410,9 +412,14 @@ const InlineActionBuilder = ({
     };
 
     // Edit from a specific action - removes that action and all after, opens edit mode
+    // Also clears all future streets via onClearForward callback
     const editFromAction = (index: number) => {
         const actionToEdit = actions[index];
-        // Remove this action and all subsequent ones
+        // Clear all future streets first (cascade undo)
+        if (onClearForward) {
+            onClearForward();
+        }
+        // Remove this action and all subsequent ones on this street
         setActions(actions.slice(0, index));
         // Open edit mode for this player
         setIsAdding(true);
@@ -633,6 +640,28 @@ export default function MobileHandBuilder({
         return pot;
     };
 
+    // Cascade clear functions - clear all future streets when editing a past street
+    const clearFromPreflop = () => {
+        setFlopActions([]);
+        setFlop1(''); setFlop2(''); setFlop3('');
+        setTurnActions([]);
+        setTurn('');
+        setRiverActions([]);
+        setRiver('');
+    };
+
+    const clearFromFlop = () => {
+        setTurnActions([]);
+        setTurn('');
+        setRiverActions([]);
+        setRiver('');
+    };
+
+    const clearFromTurn = () => {
+        setRiverActions([]);
+        setRiver('');
+    };
+
     // Premium Card Display Component
     const CardDisplay = ({
         card,
@@ -793,6 +822,7 @@ export default function MobileHandBuilder({
                     heroPosition={heroPosition}
                     villainPosition={villainPosition}
                     tableFormat={tableFormat}
+                    onClearForward={clearFromPreflop}
                 />
             </div>
 
@@ -802,19 +832,19 @@ export default function MobileHandBuilder({
           ═══════════════════════════════════════════════════════════════════════ */}
             {/* Hide completely only if preflop ended with fold */}
             {!preflopActions.some(a => a.action === 'fold') && (
-                <div className={`street-section flop ${preflopActions.length === 0 ? 'collapsed' :
+                <div className={`street-section flop ${!preflopActions.some(a => a.action === 'call') ? 'collapsed' :
                     (flop1 && flop2 && flop3)
                         ? (flopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
                         : 'active'
                     }`}>
                     <div className="street-header">
                         <span className="street-name">Flop</span>
-                        {(flop1 && flop2 && flop3) && <span className="pot-badge">{calculatePot('flop').toFixed(1)}bb</span>}
+                        {(flop1 && flop2 && flop3) && preflopActions.some(a => a.action === 'call') && <span className="pot-badge">{calculatePot('flop').toFixed(1)}bb</span>}
                     </div>
 
                     {/* Show cards ONLY when preflop done but flop action NOT done yet */}
                     {/* Once flop action is done, cards migrate to turn section */}
-                    {preflopActions.length > 0 && !flopActions.some(a => a.action === 'fold' || a.action === 'call') && (
+                    {preflopActions.some(a => a.action === 'call') && !flopActions.some(a => a.action === 'fold' || a.action === 'call') && (
                         <div className="community-cards flop-cards">
                             <CardDisplay card={flop1} cardKey="flop1" size="small" />
                             <CardDisplay card={flop2} cardKey="flop2" size="small" />
@@ -822,7 +852,7 @@ export default function MobileHandBuilder({
                         </div>
                     )}
 
-                    {(flop1 && flop2 && flop3) && (
+                    {(flop1 && flop2 && flop3) && preflopActions.some(a => a.action === 'call') && (
                         <InlineActionBuilder
                             actions={flopActions}
                             setActions={setFlopActions}
@@ -831,6 +861,7 @@ export default function MobileHandBuilder({
                             villainPosition={villainPosition}
                             tableFormat={tableFormat}
                             pot={calculatePot()}
+                            onClearForward={clearFromFlop}
                         />
                     )}
                 </div>
@@ -874,6 +905,7 @@ export default function MobileHandBuilder({
                             villainPosition={villainPosition}
                             tableFormat={tableFormat}
                             pot={calculatePot('flop')}
+                            onClearForward={clearFromTurn}
                         />
                     )}
                 </div>
