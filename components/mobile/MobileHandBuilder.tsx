@@ -1104,8 +1104,8 @@ export default function MobileHandBuilder({
                             {exploitDeviation && (
                                 <div className="gto-exploit-section">
                                     <div className="gto-exploit-header">
-                                        <span>🎭</span>
-                                        <span>Exploitative Play</span>
+                                        <span>📊</span>
+                                        <span>Play Review</span>
                                     </div>
                                     <div className="gto-inline-text">{exploitDeviation}</div>
                                 </div>
