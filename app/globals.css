@@ -3655,7 +3655,7 @@ body.native-app [class*="btn-row"]>* {
     }
 }
 
-.premium-card::before {
+.premium-card.empty::before {
     content: '';
     position: absolute;
     inset: 2px;
@@ -3704,15 +3704,17 @@ body.native-app [class*="btn-row"]>* {
     position: relative;
 }
 
-/* Glossy shine effect for all filled cards */
+/* Glossy shine effect for all filled cards - MUST override base ::before */
 .premium-card.filled::before {
     content: '';
     position: absolute;
+    inset: 0;
     top: 0;
     left: 0;
     right: 0;
+    bottom: unset;
     height: 40%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 100%);
     border-radius: 6px 6px 0 0;
     z-index: 1;
     pointer-events: none;
