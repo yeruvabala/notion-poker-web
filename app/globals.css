@@ -3700,6 +3700,7 @@ body.native-app [class*="btn-row"]>* {
     animation: none;
     padding: 0;
     border: 2px solid rgba(0, 0, 0, 0.15);
+    overflow: visible;
     box-shadow:
         0 4px 16px rgba(0, 0, 0, 0.4),
         0 1px 4px rgba(0, 0, 0, 0.2),
