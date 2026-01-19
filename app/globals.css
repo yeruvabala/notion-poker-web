@@ -3944,8 +3944,7 @@ body.native-app [class*="btn-row"]>* {
     gap: 6px;
 }
 
-/* Hide cards area in pending state */
-.street-section.pending .community-cards,
+/* In pending state, only hide action builder - keep cards visible for tapping */
 .street-section.pending .inline-action-builder-v2 {
     display: none;
 }
