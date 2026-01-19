@@ -3525,7 +3525,7 @@ body.native-app [class*="btn-row"]>* {
 .premium-hand-builder {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 6px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -3536,10 +3536,10 @@ body.native-app [class*="btn-row"]>* {
     justify-content: center;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;
+    padding: 6px 16px;
     background: rgba(255, 255, 255, 0.03);
     border-radius: 12px;
-    margin: 0 8px;
+    margin: 0 8px 4px;
 }
 
 .setup-select {
@@ -3566,7 +3566,7 @@ body.native-app [class*="btn-row"]>* {
 .hero-row {
     display: flex;
     justify-content: center;
-    padding: 8px 0;
+    padding: 2px 0;
 }
 
 /* Inner group keeps everything together */
@@ -3923,7 +3923,7 @@ body.native-app [class*="btn-row"]>* {
 .street-section {
     background: rgba(255, 255, 255, 0.03);
     border-radius: 16px;
-    padding: 16px;
+    padding: 12px;
     border: 1px solid rgba(255, 255, 255, 0.06);
     width: 100%;
     box-sizing: border-box;
