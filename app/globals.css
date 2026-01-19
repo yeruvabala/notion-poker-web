@@ -4862,8 +4862,10 @@ body.native-app [class*="btn-row"]>* {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 16px;
-    margin: 0 -16px;
+    padding: 12px 20px;
+    /* Extend to full width */
+    margin: 0 -20px;
+    width: calc(100% + 40px);
     background: linear-gradient(180deg,
             rgba(245, 158, 11, 0.15) 0%,
             rgba(245, 158, 11, 0.05) 100%);
