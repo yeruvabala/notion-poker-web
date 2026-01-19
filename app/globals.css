@@ -5098,20 +5098,29 @@ body.native-app [class*="btn-row"]>* {
     mask-composite: exclude;
 }
 
-/* Loading state - Simple pulsing border */
+/* Loading state - Visible sweeping light on border */
 .gto-inline-card.loading::before {
-    animation: gto-border-pulse 1.5s ease-in-out infinite;
+    background: linear-gradient(90deg,
+            rgba(59, 130, 246, 0.3) 0%,
+            rgba(139, 92, 246, 0.3) 25%,
+            rgba(139, 92, 246, 1) 45%,
+            rgba(236, 72, 153, 1) 50%,
+            rgba(245, 158, 11, 1) 55%,
+            rgba(59, 130, 246, 0.3) 75%,
+            rgba(139, 92, 246, 0.3) 100%);
+    background-size: 200% 100%;
+    animation: gto-border-sweep 2s ease-in-out infinite;
 }
 
-@keyframes gto-border-pulse {
+@keyframes gto-border-sweep {
 
     0%,
     100% {
-        opacity: 0.5;
+        background-position: 200% 0;
     }
 
     50% {
-        opacity: 1;
+        background-position: 0% 0;
     }
 }
 
