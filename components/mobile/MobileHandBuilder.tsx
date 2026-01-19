@@ -868,15 +868,15 @@ export default function MobileHandBuilder({
             </div>
 
             {/* ═══════════════════════════════════════════════════════════════════════
-          PREFLOP - Inline Action Builder
-          Only show when both positions are selected
+          PREFLOP - Always visible, but action builder only shows when positions set
           ═══════════════════════════════════════════════════════════════════════ */}
-            {heroPosition && villainPosition && (
-                <div className={`street-section preflop ${preflopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active'}`}>
-                    <div className="street-header">
-                        <span className="street-name">Preflop</span>
-                        <span className="pot-badge">{calculatePot('preflop').toFixed(1)}bb</span>
-                    </div>
+            <div className={`street-section preflop ${preflopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active'}`}>
+                <div className="street-header">
+                    <span className="street-name">Preflop</span>
+                    <span className="pot-badge">{calculatePot('preflop').toFixed(1)}bb</span>
+                </div>
+                {/* Only show action builder when both positions are set */}
+                {heroPosition && villainPosition ? (
                     <InlineActionBuilder
                         actions={preflopActions}
                         setActions={setPreflopActions}
@@ -886,8 +886,10 @@ export default function MobileHandBuilder({
                         tableFormat={tableFormat}
                         onClearForward={clearFromPreflop}
                     />
-                </div>
-            )}
+                ) : (
+                    <div className="position-hint">Select positions to add actions</div>
+                )}
+            </div>
 
             {/* ═══════════════════════════════════════════════════════════════════════
           FLOP - Always show bar, expand when preflop completes

@@ -4856,18 +4856,45 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   SESSION INDICATOR BAR - Shows active session
+   SESSION INDICATOR BAR - Shows active session (Vibrant Amber Theme)
    ═══════════════════════════════════════════════════════════════════════════════ */
 .session-indicator-bar {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 12px;
     padding: 10px 16px;
     margin: 0 -16px;
-    background: linear-gradient(180deg, rgba(255, 215, 0, 0.08) 0%, rgba(255, 215, 0, 0.02) 100%);
-    border-top: 1px solid rgba(255, 215, 0, 0.2);
-    border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+    background: linear-gradient(180deg,
+            rgba(245, 158, 11, 0.15) 0%,
+            rgba(245, 158, 11, 0.05) 100%);
+    border-top: 1px solid rgba(245, 158, 11, 0.3);
+    border-bottom: 1px solid rgba(245, 158, 11, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle shine sweep */
+.session-indicator-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: session-shine 4s ease-in-out infinite;
+}
+
+@keyframes session-shine {
+
+    0%,
+    100% {
+        left: -100%;
+    }
+
+    50% {
+        left: 150%;
+    }
 }
 
 .session-indicator-icon {
@@ -4877,11 +4904,12 @@ body.native-app [class*="btn-row"]>* {
 .session-indicator-name {
     font-size: 14px;
     font-weight: 700;
-    color: #ffd700;
-    max-width: 120px;
+    color: #f59e0b;
+    max-width: 100px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
 }
 
 .session-indicator-timer {
@@ -4901,19 +4929,20 @@ body.native-app [class*="btn-row"]>* {
 
 .session-end-btn {
     margin-left: auto;
-    padding: 4px 8px;
+    padding: 4px 10px;
     background: rgba(255, 255, 255, 0.1);
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 6px;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.6);
     font-size: 14px;
     cursor: pointer;
     transition: all 0.2s;
 }
 
-.session-end-btn:hover {
-    background: rgba(255, 0, 0, 0.3);
-    color: #ff6b6b;
+.session-end-btn:active {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #ef4444;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -4990,14 +5019,25 @@ body.native-app [class*="btn-row"]>* {
 
 .action-bar-button.save-button.has-session {
     background: linear-gradient(180deg,
-            rgba(255, 215, 0, 0.2) 0%,
-            rgba(255, 215, 0, 0.1) 50%,
-            rgba(255, 215, 0, 0.05) 100%);
-    border: 1px solid rgba(255, 215, 0, 0.3);
+            rgba(245, 158, 11, 0.25) 0%,
+            rgba(245, 158, 11, 0.15) 50%,
+            rgba(245, 158, 11, 0.08) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
 }
 
 .action-bar-button.save-button.has-session .action-bar-text {
-    color: #ffd700;
+    color: #f59e0b;
+    text-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
+/* Position hint for preflop */
+.position-hint {
+    padding: 12px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 13px;
+    font-style: italic;
 }
 
 /* Analyze Button */
