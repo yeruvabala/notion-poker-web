@@ -620,6 +620,12 @@ export default function HomeClient() {
   }, [activeSession, sessionStartTime, sessionHandCount]);
 
   // Fetch recent sessions when modal opens
+  useEffect(() => {
+    if (showSessionModal) {
+      fetchRecentSessions();
+    }
+  }, [showSessionModal]);
+
   const fetchRecentSessions = async () => {
     setLoadingSessions(true);
     try {
@@ -1523,6 +1529,84 @@ export default function HomeClient() {
             </div>
           )}
         </PullToRefresh>
+
+        {/* Session Selection Modal */}
+        {showSessionModal && (
+          <div className="session-modal-overlay" onClick={() => setShowSessionModal(false)}>
+            <div className="session-modal" onClick={e => e.stopPropagation()}>
+              <div className="session-modal-header">
+                <h3>Save Hand</h3>
+                <button onClick={() => setShowSessionModal(false)}>✕</button>
+              </div>
+
+              {/* Quick Save Option */}
+              <button
+                className="session-quick-save-btn"
+                onClick={() => {
+                  saveHandToSession(true);
+                  setShowSessionModal(false);
+                }}
+              >
+                <span>⚡</span>
+                <div>
+                  <strong>Quick Save</strong>
+                  <span>No session, just save the hand</span>
+                </div>
+              </button>
+
+              {/* Start New Session */}
+              <div className="session-new-section">
+                <h4>Start New Session</h4>
+                <div className="session-new-input-row">
+                  <input
+                    type="text"
+                    placeholder="Session name (e.g., Vegas Trip)"
+                    value={newSessionName}
+                    onChange={(e) => setNewSessionName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newSessionName.trim()) {
+                        startSession(newSessionName.trim());
+                      }
+                    }}
+                  />
+                  <button
+                    disabled={!newSessionName.trim()}
+                    onClick={() => {
+                      if (newSessionName.trim()) {
+                        startSession(newSessionName.trim());
+                      }
+                    }}
+                  >
+                    Start
+                  </button>
+                </div>
+              </div>
+
+              {/* Recent Sessions */}
+              {recentSessions.length > 0 && (
+                <div className="session-recent-section">
+                  <h4>Recent Sessions</h4>
+                  <div className="session-list">
+                    {recentSessions.slice(0, 5).map(session => (
+                      <button
+                        key={session.id}
+                        className="session-list-item"
+                        onClick={() => resumeSession(session)}
+                      >
+                        <span className="session-list-name">{session.name}</span>
+                        <span className="session-list-count">{session.hand_count || 0} hands</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {loadingSessions && (
+                <div className="session-loading">Loading sessions...</div>
+              )}
+            </div>
+          </div>
+        )}
       </MobileLayout>
     );
   }

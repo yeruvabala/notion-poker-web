@@ -5012,6 +5012,220 @@ body.native-app [class*="btn-row"]>* {
     transform: none;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   SESSION MODAL - For selecting/creating sessions
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.session-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.session-modal {
+    width: 100%;
+    max-width: 500px;
+    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+    border-radius: 20px 20px 0 0;
+    padding: 20px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    animation: slide-up 0.3s ease;
+}
+
+@keyframes slide-up {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+.session-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.session-modal-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+}
+
+.session-modal-header button {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+}
+
+/* Quick Save Button */
+.session-quick-save-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: all 0.2s;
+}
+
+.session-quick-save-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.session-quick-save-btn span:first-child {
+    font-size: 24px;
+}
+
+.session-quick-save-btn div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+.session-quick-save-btn strong {
+    color: #ffffff;
+    font-size: 15px;
+}
+
+.session-quick-save-btn div span {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+}
+
+/* New Session Section */
+.session-new-section {
+    margin-bottom: 20px;
+}
+
+.session-new-section h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 0 10px 0;
+}
+
+.session-new-input-row {
+    display: flex;
+    gap: 8px;
+}
+
+.session-new-input-row input {
+    flex: 1;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 14px;
+    outline: none;
+}
+
+.session-new-input-row input:focus {
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+.session-new-input-row input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.session-new-input-row button {
+    padding: 12px 20px;
+    background: linear-gradient(180deg, #ffd700 0%, #ffb700 100%);
+    border: none;
+    border-radius: 10px;
+    color: #1a1a1a;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.session-new-input-row button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Recent Sessions */
+.session-recent-section h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 0 10px 0;
+}
+
+.session-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.session-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.session-list-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 215, 0, 0.3);
+}
+
+.session-list-name {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.session-list-count {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+}
+
+.session-loading {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 20px;
+    font-size: 14px;
+}
+
 /* Legacy analyze button (keep for compatibility) */
 .analyze-button-premium {
     display: flex;

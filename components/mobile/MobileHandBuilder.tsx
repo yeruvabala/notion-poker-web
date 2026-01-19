@@ -1034,12 +1034,14 @@ export default function MobileHandBuilder({
             )}
 
             <div className="premium-action-bar">
-                {/* Save Button - Quick save for now */}
+                {/* Save Button - Opens session modal or saves to active session */}
                 <button
                     className={`action-bar-button save-button ${activeSession ? 'has-session' : ''}`}
                     onClick={() => {
-                        if (onSave) {
-                            onSave(true); // Quick save (no session required)
+                        if (activeSession && onSave) {
+                            onSave(false); // Save to active session
+                        } else if (onStartSession) {
+                            onStartSession(); // Open session modal
                         }
                     }}
                     disabled={savingHand || !heroCard1 || !heroCard2}
