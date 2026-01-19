@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PREMIUM MOBILE HAND BUILDER - World-class UI
@@ -670,7 +670,8 @@ function renderMobileGTO(text: string | null | undefined): React.ReactNode {
             }
 
             // Check for decision breakdown lines (🟢 PREFLOP (initial_action): raise → optimal)
-            const decisionMatch = trimmed.match(/^[🟢🟡🔴]\s*(PREFLOP|FLOP|TURN|RIVER)\s*\([^)]+\):\s*(.+?)\s*→\s*(\w+)/i);
+            // Match both arrow types: → and ->
+            const decisionMatch = trimmed.match(/^[🟢🟡🔴]\s*(PREFLOP|FLOP|TURN|RIVER)\s*\([^)]+\):\s*(.+?)\s*(?:→|->)\s*(\w+)/i);
             if (decisionMatch) {
                 const street = decisionMatch[1].toUpperCase();
                 const action = decisionMatch[2];
@@ -802,6 +803,16 @@ export default function MobileHandBuilder({
     const flopSectionRef = useRef<HTMLDivElement>(null);
     const turnSectionRef = useRef<HTMLDivElement>(null);
     const riverSectionRef = useRef<HTMLDivElement>(null);
+    const gtoCardRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll to GTO results when they appear
+    useEffect(() => {
+        if (gtoStrategy && gtoCardRef.current) {
+            setTimeout(() => {
+                gtoCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 200);
+        }
+    }, [gtoStrategy]);
 
     // Auto-scroll to FLOP when it expands (preflop has call)
     const flopIsActive = preflopActions.some(a => a.action === 'call') && !flopActions.some(a => a.action === 'fold');
@@ -1243,7 +1254,7 @@ export default function MobileHandBuilder({
 
             {/* GTO Strategy Box - Inline below buttons */}
             {(isLoading || gtoStrategy) && (
-                <div className={`gto-inline-card ${isLoading ? 'loading' : ''}`}>
+                <div ref={gtoCardRef} className={`gto-inline-card ${isLoading ? 'loading' : ''}`}>
                     <div className="gto-inline-header">
                         <span className="gto-inline-icon">🎯</span>
                         <span className="gto-inline-title">GTO Strategy</span>
