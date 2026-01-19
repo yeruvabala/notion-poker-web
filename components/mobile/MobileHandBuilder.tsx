@@ -798,21 +798,23 @@ export default function MobileHandBuilder({
 
             {/* ═══════════════════════════════════════════════════════════════════════
           FLOP - Always show bar, expand when preflop completes
+          Cards MIGRATE to turn when flop action completes!
           ═══════════════════════════════════════════════════════════════════════ */}
             {/* Hide completely only if preflop ended with fold */}
             {!preflopActions.some(a => a.action === 'fold') && (
                 <div className={`street-section flop ${preflopActions.length === 0 ? 'collapsed' :
-                        (flop1 && flop2 && flop3)
-                            ? (flopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
-                            : 'active'
+                    (flop1 && flop2 && flop3)
+                        ? (flopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                        : 'active'
                     }`}>
                     <div className="street-header">
                         <span className="street-name">Flop</span>
                         {(flop1 && flop2 && flop3) && <span className="pot-badge">{calculatePot('flop').toFixed(1)}bb</span>}
                     </div>
 
-                    {/* Only show cards when preflop has actions */}
-                    {preflopActions.length > 0 && (
+                    {/* Show cards ONLY when preflop done but flop action NOT done yet */}
+                    {/* Once flop action is done, cards migrate to turn section */}
+                    {preflopActions.length > 0 && !flopActions.some(a => a.action === 'fold' || a.action === 'call') && (
                         <div className="community-cards flop-cards">
                             <CardDisplay card={flop1} cardKey="flop1" size="small" />
                             <CardDisplay card={flop2} cardKey="flop2" size="small" />
@@ -835,22 +837,30 @@ export default function MobileHandBuilder({
             )}
 
             {/* ═══════════════════════════════════════════════════════════════════════
-          TURN - Always show bar (if flop not folded), expand when flop completes
+          TURN - Shows FLOP CARDS + TURN CARD when active/expanded
+          Cards fly in with AirDrop-style glow!
           ═══════════════════════════════════════════════════════════════════════ */}
             {!preflopActions.some(a => a.action === 'fold') && !flopActions.some(a => a.action === 'fold') && (
                 <div className={`street-section turn ${!(flop1 && flop2 && flop3) || flopActions.length === 0 ? 'collapsed' :
-                        turn
-                            ? (turnActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
-                            : 'active'
+                    turn
+                        ? (turnActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                        : 'active'
                     }`}>
                     <div className="street-header">
                         <span className="street-name">Turn</span>
-                        {turn && <span className="pot-badge">{calculatePot('turn').toFixed(1)}bb</span>}
+                        {(flop1 && flop2 && flop3) && flopActions.length > 0 && <span className="pot-badge">{calculatePot('turn').toFixed(1)}bb</span>}
                     </div>
 
-                    {/* Only show card when flop is complete */}
-                    {(flop1 && flop2 && flop3) && flopActions.length > 0 && (
-                        <div className="community-cards">
+                    {/* Show FLOP cards (migrated) + TURN card when flop action is complete */}
+                    {(flop1 && flop2 && flop3) && flopActions.length > 0 && !turnActions.some(a => a.action === 'fold' || a.action === 'call') && (
+                        <div className="community-cards migrated-cards">
+                            {/* Flop cards that flew in */}
+                            <CardDisplay card={flop1} cardKey="flop1-turn" size="small" />
+                            <CardDisplay card={flop2} cardKey="flop2-turn" size="small" />
+                            <CardDisplay card={flop3} cardKey="flop3-turn" size="small" />
+                            {/* Divider */}
+                            <span className="street-divider">│</span>
+                            {/* Turn card slot */}
                             <CardDisplay card={turn} cardKey="turn" size="small" />
                         </div>
                     )}
@@ -870,22 +880,34 @@ export default function MobileHandBuilder({
             )}
 
             {/* ═══════════════════════════════════════════════════════════════════════
-          RIVER - Always show bar (if turn not folded), expand when turn completes
+          RIVER - Shows ALL CARDS (FLOP + TURN + RIVER) when active
+          Cards fly in with AirDrop-style glow!
           ═══════════════════════════════════════════════════════════════════════ */}
             {!preflopActions.some(a => a.action === 'fold') && !flopActions.some(a => a.action === 'fold') && !turnActions.some(a => a.action === 'fold') && (
                 <div className={`street-section river ${!turn || turnActions.length === 0 ? 'collapsed' :
-                        river
-                            ? (riverActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
-                            : 'active'
+                    river
+                        ? (riverActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                        : 'active'
                     }`}>
                     <div className="street-header">
                         <span className="street-name">River</span>
-                        {river && <span className="pot-badge">{calculatePot('river').toFixed(1)}bb</span>}
+                        {turn && turnActions.length > 0 && <span className="pot-badge">{calculatePot('river').toFixed(1)}bb</span>}
                     </div>
 
-                    {/* Only show card when turn is complete */}
+                    {/* Show ALL cards - FLOP + TURN (migrated) + RIVER when turn action is complete */}
                     {turn && turnActions.length > 0 && (
-                        <div className="community-cards">
+                        <div className="community-cards migrated-cards">
+                            {/* Flop cards */}
+                            <CardDisplay card={flop1} cardKey="flop1-river" size="small" />
+                            <CardDisplay card={flop2} cardKey="flop2-river" size="small" />
+                            <CardDisplay card={flop3} cardKey="flop3-river" size="small" />
+                            {/* Divider */}
+                            <span className="street-divider">│</span>
+                            {/* Turn card */}
+                            <CardDisplay card={turn} cardKey="turn-river" size="small" />
+                            {/* Divider */}
+                            <span className="street-divider">│</span>
+                            {/* River card slot */}
                             <CardDisplay card={river} cardKey="river" size="small" />
                         </div>
                     )}

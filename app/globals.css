@@ -4049,6 +4049,72 @@ body.native-app [class*="btn-row"]>* {
     gap: 6px;
 }
 
+/* Migrated cards - flew in from previous street */
+.community-cards.migrated-cards {
+    gap: 4px;
+    animation: cards-fly-in 0.5s ease-out;
+    position: relative;
+}
+
+/* AirDrop-style glow on migrated cards */
+.community-cards.migrated-cards::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -20px;
+    right: -20px;
+    bottom: -10px;
+    background: radial-gradient(ellipse at center,
+            rgba(59, 130, 246, 0.15) 0%,
+            rgba(59, 130, 246, 0.05) 40%,
+            transparent 70%);
+    border-radius: 20px;
+    z-index: -1;
+    animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Street divider between card groups */
+.street-divider {
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 20px;
+    font-weight: 100;
+    margin: 0 2px;
+    user-select: none;
+    display: flex;
+    align-items: center;
+}
+
+/* Cards flying in animation */
+@keyframes cards-fly-in {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.8);
+        filter: blur(4px);
+    }
+
+    50% {
+        opacity: 1;
+        filter: blur(0);
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Subtle glow pulse */
+@keyframes glow-pulse {
+
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
 /* In pending state, only hide action builder - keep cards visible for tapping */
 .street-section.pending .inline-action-builder-v2 {
     display: none;
