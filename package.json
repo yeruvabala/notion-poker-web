@@ -20,6 +20,7 @@
     "@capacitor/android": "^8.0.0",
     "@capacitor/cli": "^8.0.0",
     "@capacitor/core": "^8.0.0",
+    "@capacitor/haptics": "^8.0.0",
     "@capacitor/ios": "^8.0.0",
     "@notionhq/client": "2.2.15",
     "@supabase/auth-helpers-nextjs": "^0.10.0",

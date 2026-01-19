@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import "@/styles/onlypoker-theme.css";
 import { createClient } from '@/lib/supabase/client';
 import { Capacitor } from '@capacitor/core';
-import { MobileLayout, MobileHandBuilder } from '@/components/mobile';
+import { MobileLayout, MobileHandBuilder, PullToRefresh } from '@/components/mobile';
 
 /* ====================== Types & helpers ====================== */
 
@@ -1020,6 +1020,50 @@ export default function HomeClient() {
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
+  // ════════════════════════════════════════════════════════════════════════════
+  // PULL-TO-REFRESH: Reset all hand data (keeps table format and stack size)
+  // ════════════════════════════════════════════════════════════════════════════
+  const resetHandForm = () => {
+    // Clear hero cards
+    setH1('');
+    setH2('');
+
+    // Clear board cards
+    setF1('');
+    setF2('');
+    setF3('');
+    setTr('');
+    setRv('');
+
+    // Clear positions
+    setPosition('');
+    setVillainPosition('');
+    setActionType('RFI');
+
+    // Clear all street actions
+    setPreflopActions([]);
+    setFlopActions([]);
+    setTurnActions([]);
+    setRiverActions([]);
+
+    // Clear AI results
+    setFields(null);
+    setTransparencyData(null);
+
+    // Clear input text
+    setInput('');
+    setStakes('');
+
+    // Clear error/status
+    setError(null);
+    setStatus(null);
+
+    // Reset current hand saved state
+    setCurrentHandSaved(false);
+
+    // Keep: tableFormat, eff (user defaults)
+  };
+
   const heroCardsStr = useMemo(() => {
     if (sourceUsed === 'SUMMARY') {
       const a = suitifyToken(h1); const b = suitifyToken(h2);
@@ -1331,67 +1375,69 @@ export default function HomeClient() {
   if (isNativeApp) {
     return (
       <MobileLayout>
-        <MobileHandBuilder
-          tableFormat={tableFormat}
-          setTableFormat={(v) => setTableFormat(v as 'HU' | '6max' | '9max')}
-          heroPosition={position}
-          setHeroPosition={setPosition}
-          villainPosition={villainPosition}
-          setVillainPosition={setVillainPosition}
-          actionType={actionType}
-          setActionType={setActionType}
-          effectiveStack={eff}
-          setEffectiveStack={setEff}
-          heroCard1={h1}
-          setHeroCard1={setH1}
-          heroCard2={h2}
-          setHeroCard2={setH2}
-          flop1={f1}
-          setFlop1={setF1}
-          flop2={f2}
-          setFlop2={setF2}
-          flop3={f3}
-          setFlop3={setF3}
-          turn={tr}
-          setTurn={setTr}
-          river={rv}
-          setRiver={setRv}
-          preflopActions={preflopActions}
-          setPreflopActions={setPreflopActions}
-          flopActions={flopActions}
-          setFlopActions={setFlopActions}
-          turnActions={turnActions}
-          setTurnActions={setTurnActions}
-          riverActions={riverActions}
-          setRiverActions={setRiverActions}
-          onAnalyze={analyze}
-          isLoading={aiLoading}
-        />
+        <PullToRefresh onRefresh={resetHandForm}>
+          <MobileHandBuilder
+            tableFormat={tableFormat}
+            setTableFormat={(v) => setTableFormat(v as 'HU' | '6max' | '9max')}
+            heroPosition={position}
+            setHeroPosition={setPosition}
+            villainPosition={villainPosition}
+            setVillainPosition={setVillainPosition}
+            actionType={actionType}
+            setActionType={setActionType}
+            effectiveStack={eff}
+            setEffectiveStack={setEff}
+            heroCard1={h1}
+            setHeroCard1={setH1}
+            heroCard2={h2}
+            setHeroCard2={setH2}
+            flop1={f1}
+            setFlop1={setF1}
+            flop2={f2}
+            setFlop2={setF2}
+            flop3={f3}
+            setFlop3={setF3}
+            turn={tr}
+            setTurn={setTr}
+            river={rv}
+            setRiver={setRv}
+            preflopActions={preflopActions}
+            setPreflopActions={setPreflopActions}
+            flopActions={flopActions}
+            setFlopActions={setFlopActions}
+            turnActions={turnActions}
+            setTurnActions={setTurnActions}
+            riverActions={riverActions}
+            setRiverActions={setRiverActions}
+            onAnalyze={analyze}
+            isLoading={aiLoading}
+          />
 
-        {/* Show results if available */}
-        {fields && (
-          <div className="mobile-card">
-            <div className="mobile-card-header">
-              <span className="mobile-card-icon">🎯</span>
-              <h2 className="mobile-card-title">GTO Strategy</h2>
+          {/* Show results if available */}
+          {fields && (
+            <div className="mobile-card">
+              <div className="mobile-card-header">
+                <span className="mobile-card-icon">🎯</span>
+                <h2 className="mobile-card-title">GTO Strategy</h2>
+              </div>
+              <p style={{ color: '#e5e7eb', fontSize: '14px', lineHeight: 1.6 }}>
+                {fields.gto_strategy || 'Analysis will appear here...'}
+              </p>
             </div>
-            <p style={{ color: '#e5e7eb', fontSize: '14px', lineHeight: 1.6 }}>
-              {fields.gto_strategy || 'Analysis will appear here...'}
-            </p>
-          </div>
-        )}
+          )}
 
-        {fields?.exploit_deviation && (
-          <div className="mobile-card">
-            <div className="mobile-card-header">
-              <span className="mobile-card-icon">🎭</span>
-              <h2 className="mobile-card-title">Exploitative Play</h2>
+          {fields?.exploit_deviation && (
+            <div className="mobile-card">
+              <div className="mobile-card-header">
+                <span className="mobile-card-icon">🎭</span>
+                <h2 className="mobile-card-title">Exploitative Play</h2>
+              </div>
+              <p style={{ color: '#e5e7eb', fontSize: '14px', lineHeight: 1.6 }}>
+                {fields.exploit_deviation}
+              </p>
             </div>
-            <p style={{ color: '#e5e7eb', fontSize: '14px', lineHeight: 1.6 }}>
-              {fields.exploit_deviation}
-            </p>
-          </div>
-        )}
+          )}
+        </PullToRefresh>
       </MobileLayout>
     );
   }

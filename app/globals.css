@@ -4904,3 +4904,311 @@ body.native-app [class*="btn-row"]>* {
     color: #1a1a1a;
     letter-spacing: 0.5px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   PULL-TO-REFRESH - Card Cascade Animation
+   Epic visual effect for resetting the hand builder
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Container */
+.pull-to-refresh-container {
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Pull Indicator - Holographic refresh icon */
+.pull-refresh-indicator {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 1000;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.refresh-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg,
+            rgba(30, 30, 30, 0.95) 0%,
+            rgba(40, 40, 40, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.refresh-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #a0a0a0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Refresh Spinner */
+.refresh-spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Refreshing state - pulsing glow */
+.pull-refresh-indicator.refreshing .refresh-icon {
+    animation: pulse-glow 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-glow {
+    from {
+        box-shadow:
+            0 4px 20px rgba(0, 0, 0, 0.5),
+            0 0 20px rgba(255, 255, 255, 0.1);
+    }
+
+    to {
+        box-shadow:
+            0 4px 20px rgba(0, 0, 0, 0.5),
+            0 0 40px rgba(255, 255, 255, 0.3);
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   CARD CASCADE OVERLAY - The Epic Animation
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.card-cascade-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+/* Scattered Cards - Flying out from center */
+.cascade-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 64px;
+    opacity: 0;
+    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.5));
+}
+
+.cascade-card-1 {
+    animation: card-scatter-1 0.6s ease-out forwards;
+}
+
+.cascade-card-2 {
+    animation: card-scatter-2 0.6s ease-out 0.05s forwards;
+}
+
+.cascade-card-3 {
+    animation: card-scatter-3 0.6s ease-out 0.1s forwards;
+}
+
+.cascade-card-4 {
+    animation: card-scatter-4 0.6s ease-out 0.15s forwards;
+}
+
+.cascade-card-5 {
+    animation: card-scatter-5 0.6s ease-out 0.2s forwards;
+}
+
+/* Card scatter keyframes - physics-based outward explosion */
+@keyframes card-scatter-1 {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) rotate(0deg) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-200%, -300%) rotate(-45deg) scale(0.3);
+    }
+}
+
+@keyframes card-scatter-2 {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) rotate(0deg) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(150%, -250%) rotate(60deg) scale(0.3);
+    }
+}
+
+@keyframes card-scatter-3 {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) rotate(0deg) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-180%, 200%) rotate(-90deg) scale(0.3);
+    }
+}
+
+@keyframes card-scatter-4 {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) rotate(0deg) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(200%, 180%) rotate(120deg) scale(0.3);
+    }
+}
+
+@keyframes card-scatter-5 {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) rotate(0deg) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(50%, -350%) rotate(30deg) scale(0.3);
+    }
+}
+
+/* Particle Trails - Glowing dust behind cards */
+.particle-trail {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0%, transparent 70%);
+    filter: blur(2px);
+}
+
+.particle-1 {
+    top: 40%;
+    left: 30%;
+    animation: particle-fade 0.5s ease-out forwards;
+}
+
+.particle-2 {
+    top: 50%;
+    left: 60%;
+    animation: particle-fade 0.5s ease-out 0.1s forwards;
+}
+
+.particle-3 {
+    top: 60%;
+    left: 45%;
+    animation: particle-fade 0.5s ease-out 0.2s forwards;
+}
+
+@keyframes particle-fade {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(3);
+    }
+}
+
+/* Vortex Center - Spiral collapse point */
+.vortex-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100px;
+    height: 100px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle,
+            rgba(255, 255, 255, 0.3) 0%,
+            rgba(255, 255, 255, 0.1) 30%,
+            transparent 70%);
+    animation: vortex-pulse 0.6s ease-out forwards;
+}
+
+@keyframes vortex-pulse {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0);
+    }
+
+    50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.5);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0);
+    }
+}
+
+/* Reset Flash - Quick white overlay */
+.reset-flash {
+    position: absolute;
+    inset: 0;
+    background: white;
+    animation: flash 0.3s ease-out 0.4s forwards;
+    opacity: 0;
+}
+
+@keyframes flash {
+    0% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+/* Content during cascade - slight shrink */
+.pull-content.cascading {
+    animation: content-shrink 0.6s ease-out forwards;
+}
+
+@keyframes content-shrink {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.3;
+        transform: scale(0.95);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
