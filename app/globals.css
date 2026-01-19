@@ -5109,7 +5109,7 @@ body.native-app [class*="btn-row"]>* {
             rgba(59, 130, 246, 0.3) 75%,
             rgba(139, 92, 246, 0.3) 100%);
     background-size: 200% 100%;
-    animation: gto-border-sweep 2s ease-in-out infinite;
+    animation: gto-border-sweep 3.5s ease-in-out infinite;
 }
 
 @keyframes gto-border-sweep {
