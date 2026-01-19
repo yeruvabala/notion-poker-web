@@ -798,92 +798,100 @@ export default function MobileHandBuilder({
 
             {/* ═══════════════════════════════════════════════════════════════════════
           FLOP - Community Cards + Actions
+          Only show if preflop action is complete AND not folded
           ═══════════════════════════════════════════════════════════════════════ */}
-            <div className={`street-section flop ${(flop1 && flop2 && flop3)
-                ? (flopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
-                : 'pending'
-                }`}>
-                <div className="street-header">
-                    <span className="street-name">Flop</span>
-                    {(flop1 && flop2 && flop3) && <span className="pot-badge">{calculatePot('flop').toFixed(1)}bb</span>}
-                </div>
+            {/* Preflop must have actions AND last action must be call/check (hand continues) */}
+            {preflopActions.length > 0 && !preflopActions.some(a => a.action === 'fold') && (
+                <div className={`street-section flop ${(flop1 && flop2 && flop3)
+                    ? (flopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                    : 'active'
+                    }`}>
+                    <div className="street-header">
+                        <span className="street-name">Flop</span>
+                        {(flop1 && flop2 && flop3) && <span className="pot-badge">{calculatePot('flop').toFixed(1)}bb</span>}
+                    </div>
 
-                <div className="community-cards flop-cards">
-                    <CardDisplay card={flop1} cardKey="flop1" size="small" />
-                    <CardDisplay card={flop2} cardKey="flop2" size="small" />
-                    <CardDisplay card={flop3} cardKey="flop3" size="small" />
-                </div>
+                    <div className="community-cards flop-cards">
+                        <CardDisplay card={flop1} cardKey="flop1" size="small" />
+                        <CardDisplay card={flop2} cardKey="flop2" size="small" />
+                        <CardDisplay card={flop3} cardKey="flop3" size="small" />
+                    </div>
 
-                {(flop1 && flop2 && flop3) && (
-                    <InlineActionBuilder
-                        actions={flopActions}
-                        setActions={setFlopActions}
-                        street="flop"
-                        heroPosition={heroPosition}
-                        villainPosition={villainPosition}
-                        tableFormat={tableFormat}
-                        pot={calculatePot()}
-                    />
-                )}
-            </div>
+                    {(flop1 && flop2 && flop3) && (
+                        <InlineActionBuilder
+                            actions={flopActions}
+                            setActions={setFlopActions}
+                            street="flop"
+                            heroPosition={heroPosition}
+                            villainPosition={villainPosition}
+                            tableFormat={tableFormat}
+                            pot={calculatePot()}
+                        />
+                    )}
+                </div>
+            )}
 
             {/* ═══════════════════════════════════════════════════════════════════════
-          TURN
+          TURN - Only show if flop action is complete AND not folded
           ═══════════════════════════════════════════════════════════════════════ */}
-            <div className={`street-section turn ${turn
-                ? (turnActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
-                : 'pending'
-                }`}>
-                <div className="street-header">
-                    <span className="street-name">Turn</span>
-                    {turn && <span className="pot-badge">{calculatePot('turn').toFixed(1)}bb</span>}
-                </div>
+            {(flop1 && flop2 && flop3) && flopActions.length > 0 && !flopActions.some(a => a.action === 'fold') && (
+                <div className={`street-section turn ${turn
+                    ? (turnActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                    : 'active'
+                    }`}>
+                    <div className="street-header">
+                        <span className="street-name">Turn</span>
+                        {turn && <span className="pot-badge">{calculatePot('turn').toFixed(1)}bb</span>}
+                    </div>
 
-                <div className="community-cards">
-                    <CardDisplay card={turn} cardKey="turn" size="small" />
-                </div>
+                    <div className="community-cards">
+                        <CardDisplay card={turn} cardKey="turn" size="small" />
+                    </div>
 
-                {turn && (
-                    <InlineActionBuilder
-                        actions={turnActions}
-                        setActions={setTurnActions}
-                        street="turn"
-                        heroPosition={heroPosition}
-                        villainPosition={villainPosition}
-                        tableFormat={tableFormat}
-                        pot={calculatePot('flop')}
-                    />
-                )}
-            </div>
+                    {turn && (
+                        <InlineActionBuilder
+                            actions={turnActions}
+                            setActions={setTurnActions}
+                            street="turn"
+                            heroPosition={heroPosition}
+                            villainPosition={villainPosition}
+                            tableFormat={tableFormat}
+                            pot={calculatePot('flop')}
+                        />
+                    )}
+                </div>
+            )}
 
             {/* ═══════════════════════════════════════════════════════════════════════
-          RIVER
+          RIVER - Only show if turn action is complete AND not folded
           ═══════════════════════════════════════════════════════════════════════ */}
-            <div className={`street-section river ${river
-                ? (riverActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
-                : 'pending'
-                }`}>
-                <div className="street-header">
-                    <span className="street-name">River</span>
-                    {river && <span className="pot-badge">{calculatePot('river').toFixed(1)}bb</span>}
-                </div>
+            {turn && turnActions.length > 0 && !turnActions.some(a => a.action === 'fold') && (
+                <div className={`street-section river ${river
+                    ? (riverActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                    : 'active'
+                    }`}>
+                    <div className="street-header">
+                        <span className="street-name">River</span>
+                        {river && <span className="pot-badge">{calculatePot('river').toFixed(1)}bb</span>}
+                    </div>
 
-                <div className="community-cards">
-                    <CardDisplay card={river} cardKey="river" size="small" />
-                </div>
+                    <div className="community-cards">
+                        <CardDisplay card={river} cardKey="river" size="small" />
+                    </div>
 
-                {river && (
-                    <InlineActionBuilder
-                        actions={riverActions}
-                        setActions={setRiverActions}
-                        street="river"
-                        heroPosition={heroPosition}
-                        villainPosition={villainPosition}
-                        tableFormat={tableFormat}
-                        pot={calculatePot('turn')}
-                    />
-                )}
-            </div>
+                    {river && (
+                        <InlineActionBuilder
+                            actions={riverActions}
+                            setActions={setRiverActions}
+                            street="river"
+                            heroPosition={heroPosition}
+                            villainPosition={villainPosition}
+                            tableFormat={tableFormat}
+                            pot={calculatePot('turn')}
+                        />
+                    )}
+                </div>
+            )}
 
             {/* ═══════════════════════════════════════════════════════════════════════
           ANALYZE BUTTON - Premium
