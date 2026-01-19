@@ -634,16 +634,17 @@ export default function MobileHandBuilder({
     }) => {
         const parsed = parseCard(card);
         const isSmall = size === 'small';
+        const isRedSuit = parsed.suit === '♥' || parsed.suit === '♦';
 
         return (
             <button
-                className={`premium-card ${isSmall ? 'small' : ''} ${card ? 'filled' : 'empty'}`}
+                className={`premium-card ${isSmall ? 'small' : ''} ${card ? 'filled' : 'empty'} ${card && isRedSuit ? 'suit-red' : ''}`}
                 onClick={() => setShowCardPicker(cardKey)}
             >
                 {card ? (
                     <>
                         <span className="card-rank">{parsed.rank}</span>
-                        <span className="card-suit" style={{ color: getSuitColor(parsed.suit) }}>{parsed.suit}</span>
+                        <span className="card-suit" style={{ color: isRedSuit ? '#dc2626' : '#1a1a1a' }}>{parsed.suit}</span>
                     </>
                 ) : (
                     <span className="card-placeholder">?</span>
@@ -788,11 +789,12 @@ export default function MobileHandBuilder({
           FLOP - Community Cards + Actions
           ═══════════════════════════════════════════════════════════════════════ */}
             <div className={`street-section flop ${(flop1 && flop2 && flop3)
-                    ? (flopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
-                    : 'pending'
+                ? (flopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                : 'pending'
                 }`}>
                 <div className="street-header">
                     <span className="street-name">Flop</span>
+                    {(flop1 && flop2 && flop3) && <span className="pot-badge">{calculatePot().toFixed(1)}bb</span>}
                 </div>
 
                 <div className="community-cards flop-cards">
@@ -818,11 +820,12 @@ export default function MobileHandBuilder({
           TURN
           ═══════════════════════════════════════════════════════════════════════ */}
             <div className={`street-section turn ${turn
-                    ? (turnActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
-                    : 'pending'
+                ? (turnActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                : 'pending'
                 }`}>
                 <div className="street-header">
                     <span className="street-name">Turn</span>
+                    {turn && <span className="pot-badge">{calculatePot().toFixed(1)}bb</span>}
                 </div>
 
                 <div className="community-cards">
@@ -846,11 +849,12 @@ export default function MobileHandBuilder({
           RIVER
           ═══════════════════════════════════════════════════════════════════════ */}
             <div className={`street-section river ${river
-                    ? (riverActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
-                    : 'pending'
+                ? (riverActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                : 'pending'
                 }`}>
                 <div className="street-header">
                     <span className="street-name">River</span>
+                    {river && <span className="pot-badge">{calculatePot().toFixed(1)}bb</span>}
                 </div>
 
                 <div className="community-cards">
