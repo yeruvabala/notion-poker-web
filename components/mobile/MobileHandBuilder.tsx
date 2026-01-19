@@ -1092,10 +1092,7 @@ export default function MobileHandBuilder({
                             <div className="gto-shimmer-line long"></div>
                             <div className="gto-shimmer-line medium"></div>
                             <div className="gto-shimmer-line short"></div>
-                            <div className="gto-loading-status">
-                                <div className="gto-loading-spinner-small" />
-                                <span>Analyzing hand...</span>
-                            </div>
+                            <div className="gto-shimmer-line medium"></div>
                         </div>
                     ) : (
                         <div className="gto-inline-content">

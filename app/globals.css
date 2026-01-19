@@ -5099,45 +5099,43 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* Loading state - Animated rotating wave border */
+.gto-inline-card.loading {
+    overflow: visible;
+}
+
 .gto-inline-card.loading::before {
-    background: conic-gradient(from var(--angle, 0deg),
-            rgba(59, 130, 246, 0.8) 0deg,
-            rgba(139, 92, 246, 0.8) 120deg,
-            rgba(236, 72, 153, 0.8) 240deg,
-            rgba(59, 130, 246, 0.8) 360deg);
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 22px;
+    background: conic-gradient(from 0deg,
+            #3b82f6 0deg,
+            #8b5cf6 90deg,
+            #ec4899 180deg,
+            #8b5cf6 270deg,
+            #3b82f6 360deg);
     animation: gto-border-rotate 2s linear infinite;
+    z-index: -1;
+}
+
+.gto-inline-card.loading::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: 18px;
+    background: linear-gradient(180deg,
+            rgba(40, 40, 45, 0.98) 0%,
+            rgba(25, 25, 30, 0.99) 100%);
+    z-index: -1;
 }
 
 @keyframes gto-border-rotate {
     0% {
-        --angle: 0deg;
+        transform: rotate(0deg);
     }
 
     100% {
-        --angle: 360deg;
-    }
-}
-
-/* Fallback for browsers without @property support */
-@supports not (background: conic-gradient(from 0deg, red, blue)) {
-    .gto-inline-card.loading::before {
-        background: linear-gradient(135deg,
-                rgba(59, 130, 246, 0.7) 0%,
-                rgba(139, 92, 246, 0.7) 50%,
-                rgba(236, 72, 153, 0.7) 100%);
-        animation: gto-border-pulse 1.5s ease-in-out infinite;
-    }
-}
-
-@keyframes gto-border-pulse {
-
-    0%,
-    100% {
-        opacity: 0.5;
-    }
-
-    50% {
-        opacity: 1;
+        transform: rotate(360deg);
     }
 }
 
