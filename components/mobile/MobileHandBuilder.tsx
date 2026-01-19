@@ -761,8 +761,8 @@ export default function MobileHandBuilder({
             <div className="hero-row">
                 <div className="hero-group">
                     <div className="hero-cards">
-                        <CardDisplay card={heroCard1} cardKey="hero1" />
-                        <CardDisplay card={heroCard2} cardKey="hero2" />
+                        <CardDisplay card={heroCard1} cardKey="hero1" size="small" />
+                        <CardDisplay card={heroCard2} cardKey="hero2" size="small" />
                     </div>
 
                     <span className="hero-vs">vs</span>
