@@ -1495,6 +1495,8 @@ export default function HomeClient() {
             setRiverActions={setRiverActions}
             onAnalyze={analyze}
             isLoading={aiLoading}
+            gtoStrategy={fields?.gto_strategy}
+            exploitDeviation={fields?.exploit_deviation}
             // Session Mode props
             activeSession={activeSession}
             sessionHandCount={sessionHandCount}

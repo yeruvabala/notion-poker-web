@@ -597,6 +597,9 @@ interface MobileHandBuilderProps {
     setRiverActions: (actions: PostflopAction[]) => void;
     onAnalyze: () => void;
     isLoading: boolean;
+    // GTO Results for popup
+    gtoStrategy?: string | null;
+    exploitDeviation?: string | null;
     // Session Mode props
     activeSession?: { id: string; name: string } | null;
     sessionHandCount?: number;
@@ -624,6 +627,8 @@ export default function MobileHandBuilder({
     turnActions, setTurnActions,
     riverActions, setRiverActions,
     onAnalyze, isLoading,
+    // GTO results
+    gtoStrategy, exploitDeviation,
     // Session props
     activeSession, sessionHandCount, sessionElapsed,
     onSave, savingHand, onStartSession, onEndSession
@@ -1043,7 +1048,7 @@ export default function MobileHandBuilder({
                 </div>
             )}
 
-            <div className="premium-action-bar">
+            <div className={`premium-action-bar ${(heroCard1 && heroCard2) ? 'ready' : ''}`}>
                 {/* Save Button - Opens session modal or saves to active session */}
                 <button
                     className={`action-bar-button save-button ${activeSession ? 'has-session' : ''}`}
@@ -1073,6 +1078,51 @@ export default function MobileHandBuilder({
                     <span className="action-bar-text">{isLoading ? 'Analyzing...' : 'Analyze'}</span>
                 </button>
             </div>
+
+            {/* GTO Results Popup - Shows after analysis */}
+            {(isLoading || gtoStrategy) && (
+                <div className="gto-results-popup">
+                    <div className="gto-popup-header">
+                        <div className="gto-popup-title">
+                            <span className="gto-popup-title-icon">🎯</span>
+                            GTO Strategy
+                        </div>
+                        {!isLoading && (
+                            <button className="gto-popup-close" onClick={() => {/* Will clear via parent */ }}>
+                                ✕
+                            </button>
+                        )}
+                    </div>
+
+                    {isLoading ? (
+                        <div className="gto-popup-loading">
+                            <div className="gto-loading-spinner" />
+                            <div className="gto-loading-text">
+                                Analyzing hand
+                                <span className="gto-loading-dots">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </span>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="gto-popup-content">
+                            <div className="gto-popup-text">{gtoStrategy}</div>
+                            {exploitDeviation && (
+                                <>
+                                    <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: '#f59e0b', fontWeight: 700 }}>
+                                            <span>🎭</span> Exploitative Play
+                                        </div>
+                                        <div className="gto-popup-text">{exploitDeviation}</div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Card Picker Modal */}
             {showCardPicker && (
