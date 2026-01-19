@@ -5134,29 +5134,21 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   GTO RESULTS POPUP - Slides up after analysis
+   GTO INLINE CARD - Appears below action buttons (like web page)
    ═══════════════════════════════════════════════════════════════════════════════ */
-.gto-results-popup {
-    position: fixed;
-    bottom: 80px;
-    left: 16px;
-    right: 16px;
-    max-height: 60vh;
+.gto-inline-card {
+    margin-top: 16px;
+    padding: 16px;
     background: linear-gradient(180deg, #252525 0%, #1a1a1a 100%);
-    border-radius: 20px;
+    border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow:
-        0 -10px 40px rgba(0, 0, 0, 0.6),
-        0 0 0 1px rgba(255, 255, 255, 0.05);
-    z-index: 1500;
-    overflow: hidden;
-    animation: gto-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: gto-fade-in 0.3s ease;
 }
 
-@keyframes gto-slide-up {
+@keyframes gto-fade-in {
     from {
         opacity: 0;
-        transform: translateY(100%);
+        transform: translateY(10px);
     }
 
     to {
@@ -5165,70 +5157,104 @@ body.native-app [class*="btn-row"]>* {
     }
 }
 
-.gto-popup-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.03);
-}
-
-.gto-popup-title {
+.gto-inline-header {
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-bottom: 16px;
+}
+
+.gto-inline-icon {
+    font-size: 20px;
+}
+
+.gto-inline-title {
     font-size: 16px;
     font-weight: 700;
     color: #ffffff;
 }
 
-.gto-popup-title-icon {
-    font-size: 20px;
-}
-
-.gto-popup-close {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 16px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.gto-popup-close:active {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.gto-popup-content {
-    padding: 20px;
-    max-height: calc(60vh - 80px);
-    overflow-y: auto;
-}
-
-.gto-popup-text {
+.gto-inline-content {
     color: #e5e7eb;
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.7;
+}
+
+.gto-inline-text {
     white-space: pre-wrap;
 }
 
-/* Loading state */
-.gto-popup-loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    padding: 40px 20px;
+/* Exploitative section */
+.gto-exploit-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.gto-loading-spinner {
-    width: 48px;
-    height: 48px;
-    border: 3px solid rgba(255, 255, 255, 0.1);
+.gto-exploit-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: #f59e0b;
+    font-weight: 700;
+    font-size: 15px;
+}
+
+/* Shimmer skeleton loading */
+.gto-shimmer-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.gto-shimmer-line {
+    height: 16px;
+    background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0.05) 0%,
+            rgba(255, 255, 255, 0.15) 50%,
+            rgba(255, 255, 255, 0.05) 100%);
+    background-size: 200% 100%;
+    border-radius: 8px;
+    animation: gto-shimmer 1.5s ease-in-out infinite;
+}
+
+.gto-shimmer-line.long {
+    width: 100%;
+}
+
+.gto-shimmer-line.medium {
+    width: 75%;
+}
+
+.gto-shimmer-line.short {
+    width: 50%;
+}
+
+@keyframes gto-shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.gto-loading-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 8px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 13px;
+}
+
+.gto-loading-spinner-small {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
     border-top-color: #f59e0b;
     border-radius: 50%;
     animation: gto-spin 1s linear infinite;
@@ -5237,47 +5263,6 @@ body.native-app [class*="btn-row"]>* {
 @keyframes gto-spin {
     to {
         transform: rotate(360deg);
-    }
-}
-
-.gto-loading-text {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 14px;
-}
-
-.gto-loading-dots {
-    display: inline-flex;
-    gap: 4px;
-}
-
-.gto-loading-dots span {
-    width: 6px;
-    height: 6px;
-    background: #f59e0b;
-    border-radius: 50%;
-    animation: gto-dot-pulse 1.4s ease-in-out infinite;
-}
-
-.gto-loading-dots span:nth-child(2) {
-    animation-delay: 0.2s;
-}
-
-.gto-loading-dots span:nth-child(3) {
-    animation-delay: 0.4s;
-}
-
-@keyframes gto-dot-pulse {
-
-    0%,
-    80%,
-    100% {
-        opacity: 0.3;
-        transform: scale(0.8);
-    }
-
-    40% {
-        opacity: 1;
-        transform: scale(1);
     }
 }
 

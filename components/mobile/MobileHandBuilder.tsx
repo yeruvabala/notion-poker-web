@@ -1079,45 +1079,36 @@ export default function MobileHandBuilder({
                 </button>
             </div>
 
-            {/* GTO Results Popup - Shows after analysis */}
+            {/* GTO Strategy Box - Inline below buttons */}
             {(isLoading || gtoStrategy) && (
-                <div className="gto-results-popup">
-                    <div className="gto-popup-header">
-                        <div className="gto-popup-title">
-                            <span className="gto-popup-title-icon">🎯</span>
-                            GTO Strategy
-                        </div>
-                        {!isLoading && (
-                            <button className="gto-popup-close" onClick={() => {/* Will clear via parent */ }}>
-                                ✕
-                            </button>
-                        )}
+                <div className="gto-inline-card">
+                    <div className="gto-inline-header">
+                        <span className="gto-inline-icon">🎯</span>
+                        <span className="gto-inline-title">GTO Strategy</span>
                     </div>
 
                     {isLoading ? (
-                        <div className="gto-popup-loading">
-                            <div className="gto-loading-spinner" />
-                            <div className="gto-loading-text">
-                                Analyzing hand
-                                <span className="gto-loading-dots">
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                </span>
+                        <div className="gto-shimmer-container">
+                            <div className="gto-shimmer-line long"></div>
+                            <div className="gto-shimmer-line medium"></div>
+                            <div className="gto-shimmer-line short"></div>
+                            <div className="gto-loading-status">
+                                <div className="gto-loading-spinner-small" />
+                                <span>Analyzing hand...</span>
                             </div>
                         </div>
                     ) : (
-                        <div className="gto-popup-content">
-                            <div className="gto-popup-text">{gtoStrategy}</div>
+                        <div className="gto-inline-content">
+                            <div className="gto-inline-text">{gtoStrategy}</div>
+
                             {exploitDeviation && (
-                                <>
-                                    <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: '#f59e0b', fontWeight: 700 }}>
-                                            <span>🎭</span> Exploitative Play
-                                        </div>
-                                        <div className="gto-popup-text">{exploitDeviation}</div>
+                                <div className="gto-exploit-section">
+                                    <div className="gto-exploit-header">
+                                        <span>🎭</span>
+                                        <span>Exploitative Play</span>
                                     </div>
-                                </>
+                                    <div className="gto-inline-text">{exploitDeviation}</div>
+                                </div>
                             )}
                         </div>
                     )}
