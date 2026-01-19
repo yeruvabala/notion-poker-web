@@ -4975,10 +4975,10 @@ body.native-app [class*="btn-row"]>* {
 
 /* Refreshing state - pulsing glow */
 .pull-refresh-indicator.refreshing .refresh-icon {
-    animation: pulse-glow 0.6s ease-in-out infinite alternate;
+    animation: refresh-pulse-glow 0.6s ease-in-out infinite alternate;
 }
 
-@keyframes pulse-glow {
+@keyframes refresh-pulse-glow {
     from {
         box-shadow:
             0 4px 20px rgba(0, 0, 0, 0.5),
