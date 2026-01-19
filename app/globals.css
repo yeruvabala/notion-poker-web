@@ -5125,12 +5125,12 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   MOBILE GTO TEXT FORMATTING - Parsed markdown styling
+   MOBILE GTO TEXT FORMATTING - Premium parsed markdown styling
    ═══════════════════════════════════════════════════════════════════════════════ */
 .gto-mobile-content {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
 }
 
 .gto-mobile-line {
@@ -5139,28 +5139,87 @@ body.native-app [class*="btn-row"]>* {
     color: #d1d5db;
 }
 
+/* Street lines get extra emphasis */
+.gto-mobile-line.street-line {
+    margin-top: 4px;
+}
+
+/* Metric lines (EQUITY, POT ODDS) */
+.gto-mobile-line.metric-line {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+/* Headers - base styling */
 .gto-mobile-header {
     font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     color: #f59e0b;
 }
 
+/* Street headers - larger, green */
 .gto-mobile-header.street {
+    font-size: 14px;
     color: #34d399;
+    display: block;
+    margin-bottom: 4px;
 }
 
+/* Metric headers - purple/indigo */
 .gto-mobile-header.metric {
     color: #a5b4fc;
+    font-size: 12px;
+}
+
+/* Situation header - subtle gray */
+.gto-mobile-header.situation {
+    color: #9ca3af;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Play classification headers */
+.gto-mobile-header.play-class {
+    color: #fcd34d;
+    font-size: 13px;
 }
 
 .gto-mobile-value {
     color: #e5e7eb;
+    font-size: 14px;
 }
 
+/* Sub-bullets with nice indentation */
 .gto-mobile-sub {
     padding-left: 16px;
     font-size: 13px;
-    line-height: 1.5;
+    line-height: 1.6;
     color: #9ca3af;
+    border-left: 2px solid rgba(59, 130, 246, 0.3);
+    margin-left: 4px;
+}
+
+/* Section dividers */
+.gto-section-divider {
+    height: 1px;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.1) 20%,
+            rgba(255, 255, 255, 0.1) 80%,
+            transparent 100%);
+    margin: 8px 0;
+}
+
+/* Badge lines (🟢 Optimal: 1) */
+.gto-mobile-badge-line {
+    font-size: 13px;
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 /* Hero = Blue, Villain = Red */
@@ -5171,6 +5230,18 @@ body.native-app [class*="btn-row"]>* {
 
 .gto-villain-text {
     color: #f87171;
+    font-weight: 600;
+}
+
+/* Percentage highlights */
+.gto-highlight-pct {
+    color: #fbbf24;
+    font-weight: 700;
+}
+
+/* BB highlights */
+.gto-highlight-bb {
+    color: #34d399;
     font-weight: 600;
 }
 
