@@ -1086,14 +1086,16 @@ export default function MobileHandBuilder({
                     </div>
 
                     {/* Show cards ONLY when preflop done but flop action NOT done yet */}
-                    {/* Once flop action is done, cards migrate to turn section */}
-                    {preflopActions.some(a => a.action === 'call') && !flopActions.some(a => a.action === 'fold' || a.action === 'call') && (
-                        <div className="community-cards flop-cards">
-                            <CardDisplay card={flop1} cardKey="flop1" size="small" />
-                            <CardDisplay card={flop2} cardKey="flop2" size="small" />
-                            <CardDisplay card={flop3} cardKey="flop3" size="small" />
-                        </div>
-                    )}
+                    {/* OR when action ENDED at flop (fold at flop) - cards stay visible */}
+                    {preflopActions.some(a => a.action === 'call') && (
+                        !flopActions.some(a => a.action === 'call') || flopActions.some(a => a.action === 'fold')
+                    ) && (
+                            <div className="community-cards flop-cards">
+                                <CardDisplay card={flop1} cardKey="flop1" size="small" />
+                                <CardDisplay card={flop2} cardKey="flop2" size="small" />
+                                <CardDisplay card={flop3} cardKey="flop3" size="small" />
+                            </div>
+                        )}
 
                     {(flop1 && flop2 && flop3) && preflopActions.some(a => a.action === 'call') && (
                         <InlineActionBuilder
@@ -1126,18 +1128,21 @@ export default function MobileHandBuilder({
                     </div>
 
                     {/* Show FLOP cards (migrated) + TURN card when flop action is complete */}
-                    {(flop1 && flop2 && flop3) && flopActions.some(a => a.action === 'call') && !turnActions.some(a => a.action === 'fold' || a.action === 'call') && (
-                        <div className="community-cards migrated-cards">
-                            {/* Flop cards that flew in */}
-                            <CardDisplay card={flop1} cardKey="flop1-turn" size="small" />
-                            <CardDisplay card={flop2} cardKey="flop2-turn" size="small" />
-                            <CardDisplay card={flop3} cardKey="flop3-turn" size="small" />
-                            {/* Divider */}
-                            <span className="street-divider">│</span>
-                            {/* Turn card slot */}
-                            <CardDisplay card={turn} cardKey="turn" size="small" />
-                        </div>
-                    )}
+                    {/* OR when action ENDED at turn (fold at turn) - cards stay visible */}
+                    {(flop1 && flop2 && flop3) && flopActions.some(a => a.action === 'call') && (
+                        !turnActions.some(a => a.action === 'call') || turnActions.some(a => a.action === 'fold')
+                    ) && (
+                            <div className="community-cards migrated-cards">
+                                {/* Flop cards that flew in */}
+                                <CardDisplay card={flop1} cardKey="flop1-turn" size="small" />
+                                <CardDisplay card={flop2} cardKey="flop2-turn" size="small" />
+                                <CardDisplay card={flop3} cardKey="flop3-turn" size="small" />
+                                {/* Divider */}
+                                <span className="street-divider">│</span>
+                                {/* Turn card slot */}
+                                <CardDisplay card={turn} cardKey="turn" size="small" />
+                            </div>
+                        )}
 
                     {turn && (
                         <InlineActionBuilder
