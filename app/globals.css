@@ -4052,25 +4052,46 @@ body.native-app [class*="btn-row"]>* {
 /* Migrated cards - flew in from previous street */
 .community-cards.migrated-cards {
     gap: 4px;
-    animation: cards-fly-in 0.5s ease-out;
+    animation: cards-fly-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
 }
 
-/* AirDrop-style glow on migrated cards */
+/* AirDrop-style glow on migrated cards - more prominent */
 .community-cards.migrated-cards::before {
     content: '';
     position: absolute;
-    top: -10px;
-    left: -20px;
-    right: -20px;
-    bottom: -10px;
+    top: -15px;
+    left: -30px;
+    right: -30px;
+    bottom: -15px;
     background: radial-gradient(ellipse at center,
-            rgba(59, 130, 246, 0.15) 0%,
-            rgba(59, 130, 246, 0.05) 40%,
-            transparent 70%);
-    border-radius: 20px;
+            rgba(59, 130, 246, 0.4) 0%,
+            rgba(59, 130, 246, 0.2) 30%,
+            rgba(59, 130, 246, 0.05) 60%,
+            transparent 80%);
+    border-radius: 30px;
     z-index: -1;
-    animation: glow-pulse 2s ease-in-out infinite;
+    animation: airdrop-glow 0.8s ease-out forwards, glow-pulse 2s ease-in-out 0.8s infinite;
+}
+
+/* Light streak effect - AirDrop style */
+.community-cards.migrated-cards::after {
+    content: '';
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 3px;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(59, 130, 246, 0.8) 30%,
+            rgba(255, 255, 255, 0.9) 50%,
+            rgba(59, 130, 246, 0.8) 70%,
+            transparent 100%);
+    border-radius: 2px;
+    animation: light-streak 0.6s ease-out forwards;
+    opacity: 0;
 }
 
 /* Street divider between card groups */
@@ -4084,16 +4105,21 @@ body.native-app [class*="btn-row"]>* {
     align-items: center;
 }
 
-/* Cards flying in animation */
+/* Cards flying in animation - more dramatic */
 @keyframes cards-fly-in {
     0% {
         opacity: 0;
-        transform: translateY(-20px) scale(0.8);
-        filter: blur(4px);
+        transform: translateY(-40px) scale(0.7);
+        filter: blur(8px);
     }
 
-    50% {
+    40% {
         opacity: 1;
+        filter: blur(2px);
+    }
+
+    70% {
+        transform: translateY(5px) scale(1.02);
         filter: blur(0);
     }
 
@@ -4102,16 +4128,52 @@ body.native-app [class*="btn-row"]>* {
     }
 }
 
-/* Subtle glow pulse */
-@keyframes glow-pulse {
-
-    0%,
-    100% {
-        opacity: 0.6;
+/* AirDrop glow entrance */
+@keyframes airdrop-glow {
+    0% {
+        opacity: 0;
+        transform: scale(0.5);
     }
 
     50% {
         opacity: 1;
+        transform: scale(1.2);
+    }
+
+    100% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+}
+
+/* Light streak animation */
+@keyframes light-streak {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) scaleX(0);
+    }
+
+    30% {
+        opacity: 1;
+        transform: translateX(-50%) scaleX(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateX(-50%) scaleX(1.5);
+    }
+}
+
+/* Subtle glow pulse after entrance */
+@keyframes glow-pulse {
+
+    0%,
+    100% {
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 0.7;
     }
 }
 
