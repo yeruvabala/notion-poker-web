@@ -3712,21 +3712,21 @@ body.native-app [class*="btn-row"]>* {
     display: none;
 }
 
-/* Rank - top-left, black for white background */
+/* Rank - top-left, PURE BLACK for visibility on white */
 .premium-card .card-rank {
     position: absolute;
     top: 5px;
     left: 6px;
     font-size: 16px;
     font-weight: 900;
-    color: #1a1a1a;
+    color: #000000 !important;
     text-shadow: none;
     z-index: 10;
     line-height: 1;
     font-family: 'Georgia', serif;
 }
 
-/* Suit - centered and prominent */
+/* Suit - centered and prominent - PURE BLACK */
 .premium-card .card-suit {
     position: absolute;
     top: 50%;
@@ -3734,13 +3734,13 @@ body.native-app [class*="btn-row"]>* {
     transform: translate(-50%, -25%);
     font-size: 28px;
     z-index: 10;
-    color: #1a1a1a;
+    color: #000000 !important;
     filter: none;
 }
 
-/* Red suits class */
+/* Red suits class - override with RED */
 .premium-card.suit-red .card-rank {
-    color: #dc2626;
+    color: #dc2626 !important;
 }
 
 /* Placeholder - hidden (we use ::after for empty) */

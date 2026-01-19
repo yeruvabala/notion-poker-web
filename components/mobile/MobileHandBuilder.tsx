@@ -655,7 +655,7 @@ export default function MobileHandBuilder({
                 {card ? (
                     <>
                         <span className="card-rank">{parsed.rank}</span>
-                        <span className="card-suit" style={{ color: isRedSuit ? '#dc2626' : '#1a1a1a' }}>{parsed.suit}</span>
+                        <span className="card-suit" style={{ color: isRedSuit ? '#dc2626' : '#000000' }}>{parsed.suit}</span>
                     </>
                 ) : (
                     <span className="card-placeholder">?</span>
