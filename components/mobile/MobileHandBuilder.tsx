@@ -612,12 +612,23 @@ export default function MobileHandBuilder({
         return suit === '♥' || suit === '♦' ? '#ef4444' : '#e5e7eb';
     };
 
-    // Pot calculation
-    const calculatePot = (): number => {
-        let pot = 1.5;
+    // Pot calculation - cumulative up to specified street
+    const calculatePot = (upTo: 'preflop' | 'flop' | 'turn' | 'river' | 'all' = 'all'): number => {
+        let pot = 1.5; // SB + BB
+
+        // Add preflop actions
         preflopActions.forEach(a => { if (a.amount) pot += a.amount; });
+        if (upTo === 'preflop') return pot;
+
+        // Add flop actions
         flopActions.forEach(a => { if (a.amount) pot += a.amount; });
+        if (upTo === 'flop') return pot;
+
+        // Add turn actions
         turnActions.forEach(a => { if (a.amount) pot += a.amount; });
+        if (upTo === 'turn') return pot;
+
+        // Add river actions
         riverActions.forEach(a => { if (a.amount) pot += a.amount; });
         return pot;
     };
@@ -773,7 +784,7 @@ export default function MobileHandBuilder({
             <div className={`street-section preflop ${preflopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active'}`}>
                 <div className="street-header">
                     <span className="street-name">Preflop</span>
-                    <span className="pot-badge">{calculatePot().toFixed(1)}bb</span>
+                    <span className="pot-badge">{calculatePot('preflop').toFixed(1)}bb</span>
                 </div>
                 <InlineActionBuilder
                     actions={preflopActions}
@@ -794,7 +805,7 @@ export default function MobileHandBuilder({
                 }`}>
                 <div className="street-header">
                     <span className="street-name">Flop</span>
-                    {(flop1 && flop2 && flop3) && <span className="pot-badge">{calculatePot().toFixed(1)}bb</span>}
+                    {(flop1 && flop2 && flop3) && <span className="pot-badge">{calculatePot('flop').toFixed(1)}bb</span>}
                 </div>
 
                 <div className="community-cards flop-cards">
@@ -825,7 +836,7 @@ export default function MobileHandBuilder({
                 }`}>
                 <div className="street-header">
                     <span className="street-name">Turn</span>
-                    {turn && <span className="pot-badge">{calculatePot().toFixed(1)}bb</span>}
+                    {turn && <span className="pot-badge">{calculatePot('turn').toFixed(1)}bb</span>}
                 </div>
 
                 <div className="community-cards">
@@ -840,7 +851,7 @@ export default function MobileHandBuilder({
                         heroPosition={heroPosition}
                         villainPosition={villainPosition}
                         tableFormat={tableFormat}
-                        pot={calculatePot()}
+                        pot={calculatePot('flop')}
                     />
                 )}
             </div>
@@ -854,7 +865,7 @@ export default function MobileHandBuilder({
                 }`}>
                 <div className="street-header">
                     <span className="street-name">River</span>
-                    {river && <span className="pot-badge">{calculatePot().toFixed(1)}bb</span>}
+                    {river && <span className="pot-badge">{calculatePot('river').toFixed(1)}bb</span>}
                 </div>
 
                 <div className="community-cards">
@@ -869,7 +880,7 @@ export default function MobileHandBuilder({
                         heroPosition={heroPosition}
                         villainPosition={villainPosition}
                         tableFormat={tableFormat}
-                        pot={calculatePot()}
+                        pot={calculatePot('turn')}
                     />
                 )}
             </div>
