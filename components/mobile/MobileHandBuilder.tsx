@@ -669,9 +669,9 @@ function renderMobileGTO(text: string | null | undefined): React.ReactNode {
                 );
             }
 
-            // Check for decision breakdown lines (🟢 PREFLOP (initial_action): raise → optimal)
-            // Match both arrow types: → and ->
-            const decisionMatch = trimmed.match(/^[🟢🟡🔴]\s*(PREFLOP|FLOP|TURN|RIVER)\s*\([^)]+\):\s*(.+?)\s*(?:→|->)\s*(\w+)/i);
+            // Check for decision breakdown lines (colored circle + STREET (action): action -> result)
+            // Using broad character class to match various circle/emoji representations
+            const decisionMatch = trimmed.match(/^.{1,2}\s*(PREFLOP|FLOP|TURN|RIVER)\s*\([^)]+\):\s*(.+?)\s*(?:→|->)\s*(\w+)/i);
             if (decisionMatch) {
                 const street = decisionMatch[1].toUpperCase();
                 const action = decisionMatch[2];
@@ -805,14 +805,14 @@ export default function MobileHandBuilder({
     const riverSectionRef = useRef<HTMLDivElement>(null);
     const gtoCardRef = useRef<HTMLDivElement>(null);
 
-    // Auto-scroll to GTO results when they appear
+    // Auto-scroll to GTO card when Analyze is clicked (isLoading becomes true)
     useEffect(() => {
-        if (gtoStrategy && gtoCardRef.current) {
+        if (isLoading && gtoCardRef.current) {
             setTimeout(() => {
                 gtoCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 200);
+            }, 100);
         }
-    }, [gtoStrategy]);
+    }, [isLoading]);
 
     // Auto-scroll to FLOP when it expands (preflop has call)
     const flopIsActive = preflopActions.some(a => a.action === 'call') && !flopActions.some(a => a.action === 'fold');
