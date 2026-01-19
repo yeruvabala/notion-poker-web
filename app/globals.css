@@ -5213,7 +5213,193 @@ body.native-app [class*="btn-row"]>* {
     margin: 8px 0;
 }
 
-/* Badge lines (🟢 Optimal: 1) */
+/* ═══════════════════════════════════════════════════════════════════════════════
+   PREMIUM BADGE DESIGN - High-end gradient pills with glow effects
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Base badge styling */
+.gto-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    margin: 4px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Glowing indicator dot */
+.gto-badge-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.gto-badge-indicator::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    opacity: 0.4;
+}
+
+.gto-badge-label {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    flex: 1;
+}
+
+.gto-badge-count {
+    font-size: 18px;
+    font-weight: 800;
+    min-width: 24px;
+    text-align: right;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   OPTIMAL - Emerald green with glow
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.gto-badge.optimal {
+    background: linear-gradient(135deg,
+            rgba(16, 185, 129, 0.15) 0%,
+            rgba(5, 150, 105, 0.08) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    box-shadow:
+        0 0 20px rgba(16, 185, 129, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.gto-badge.optimal .gto-badge-indicator {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+}
+
+.gto-badge.optimal .gto-badge-indicator::after {
+    background: #10b981;
+    animation: badge-pulse-green 2s ease-in-out infinite;
+}
+
+.gto-badge.optimal .gto-badge-label {
+    color: #6ee7b7;
+}
+
+.gto-badge.optimal .gto-badge-count {
+    color: #10b981;
+    text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ACCEPTABLE - Amber/gold with warm glow
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.gto-badge.acceptable {
+    background: linear-gradient(135deg,
+            rgba(245, 158, 11, 0.15) 0%,
+            rgba(217, 119, 6, 0.08) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    box-shadow:
+        0 0 20px rgba(245, 158, 11, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.gto-badge.acceptable .gto-badge-indicator {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+}
+
+.gto-badge.acceptable .gto-badge-indicator::after {
+    background: #f59e0b;
+    animation: badge-pulse-amber 2s ease-in-out infinite;
+}
+
+.gto-badge.acceptable .gto-badge-label {
+    color: #fcd34d;
+}
+
+.gto-badge.acceptable .gto-badge-count {
+    color: #f59e0b;
+    text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   MISTAKE - Red/crimson with intense glow
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.gto-badge.mistake {
+    background: linear-gradient(135deg,
+            rgba(239, 68, 68, 0.15) 0%,
+            rgba(220, 38, 38, 0.08) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    box-shadow:
+        0 0 20px rgba(239, 68, 68, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.gto-badge.mistake .gto-badge-indicator {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+}
+
+.gto-badge.mistake .gto-badge-indicator::after {
+    background: #ef4444;
+    animation: badge-pulse-red 2s ease-in-out infinite;
+}
+
+.gto-badge.mistake .gto-badge-label {
+    color: #fca5a5;
+}
+
+.gto-badge.mistake .gto-badge-count {
+    color: #ef4444;
+    text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+/* Pulse animations for indicator glow */
+@keyframes badge-pulse-green {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.4;
+    }
+
+    50% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+@keyframes badge-pulse-amber {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.4;
+    }
+
+    50% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+@keyframes badge-pulse-red {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.4;
+    }
+
+    50% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Fallback badge line styling */
 .gto-mobile-badge-line {
     font-size: 13px;
     padding: 4px 0;

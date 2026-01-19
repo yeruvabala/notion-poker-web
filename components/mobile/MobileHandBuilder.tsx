@@ -634,8 +634,42 @@ function renderMobileGTO(text: string | null | undefined): React.ReactNode {
             );
         }
 
-        // Check for colored dots/emoji lines (🟢 Optimal: 1)
+        // Check for colored dots/emoji lines (🟢 Optimal: 1) - render as premium badges
         if (trimmed.match(/^[🟢🟡🔴●○]/)) {
+            // Parse the badge content to create premium styling
+            const isOptimal = trimmed.includes('Optimal');
+            const isAcceptable = trimmed.includes('Acceptable');
+            const isMistake = trimmed.includes('Mistake');
+
+            // Extract the number if present
+            const numMatch = trimmed.match(/:\s*(\d+)/);
+            const count = numMatch ? numMatch[1] : '0';
+
+            let badgeClass = 'gto-badge';
+            let label = '';
+
+            if (isOptimal) {
+                badgeClass += ' optimal';
+                label = 'Optimal';
+            } else if (isAcceptable) {
+                badgeClass += ' acceptable';
+                label = 'Acceptable';
+            } else if (isMistake) {
+                badgeClass += ' mistake';
+                label = 'Mistakes';
+            }
+
+            if (label) {
+                return (
+                    <div key={key} className={badgeClass}>
+                        <span className="gto-badge-indicator" />
+                        <span className="gto-badge-label">{label}</span>
+                        <span className="gto-badge-count">{count}</span>
+                    </div>
+                );
+            }
+
+            // Fallback for other emoji lines
             return (
                 <div key={key} className="gto-mobile-badge-line">
                     {formatText(trimmed)}
