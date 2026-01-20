@@ -1046,7 +1046,12 @@ export default function MobileHandBuilder({
                         <CardDisplay card={heroCard2} cardKey="hero2" size="small" />
                     </div>
 
-                    <span className="hero-vs">vs</span>
+                    {/* Premium 3D Rotating VS Badge */}
+                    <div className="vs-badge-3d">
+                        <div className="vs-badge-inner">
+                            <span className="vs-text">VS</span>
+                        </div>
+                    </div>
 
                     <button
                         className="villain-button"
