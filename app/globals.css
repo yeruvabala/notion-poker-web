@@ -3543,24 +3543,16 @@ body.native-app [class*="btn-row"]>* {
 }
 
 .setup-select {
-    background: linear-gradient(180deg,
-            rgba(45, 45, 55, 0.95) 0%,
-            rgba(30, 30, 38, 0.95) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 12px;
-    padding: 10px 16px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 8px 12px;
     color: #fff;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
+    font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
     -webkit-appearance: none;
     appearance: none;
-    box-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    text-align: center;
-    min-width: 85px;
 }
 
 /* Premium Setup Button (replaces native select) */
@@ -4053,26 +4045,20 @@ body.native-app [class*="btn-row"]>* {
 }
 
 .villain-select-inline {
-    background: linear-gradient(180deg,
-            rgba(45, 45, 55, 0.95) 0%,
-            rgba(30, 30, 38, 0.95) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 12px;
-    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 8px 14px;
     color: #fff;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
+    font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
     -webkit-appearance: none;
     appearance: none;
-    min-width: 80px;
+    min-width: 70px;
     text-align: center;
     align-self: center;
     margin-top: -16px;
-    box-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
