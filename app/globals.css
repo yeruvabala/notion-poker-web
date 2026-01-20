@@ -3605,15 +3605,15 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   PREMIUM MODAL - Dark Poker Theme (World-Class Design)
+   PREMIUM MODAL - Platinum & Charcoal Theme (World-Class Design)
    ═══════════════════════════════════════════════════════════════════════════════ */
 .premium-modal-overlay {
     position: fixed;
     inset: 0;
-    /* Deep dark with subtle poker green undertone */
+    /* Pure deep charcoal */
     background: radial-gradient(ellipse at top,
-            rgba(10, 15, 12, 0.95) 0%,
-            rgba(5, 8, 6, 0.98) 100%);
+            rgba(18, 18, 20, 0.96) 0%,
+            rgba(8, 8, 10, 0.98) 100%);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     z-index: 5000;
@@ -3635,22 +3635,22 @@ body.native-app [class*="btn-row"]>* {
 }
 
 .premium-modal {
-    /* Deep charcoal with subtle gradient */
+    /* Deep charcoal gradient */
     background: linear-gradient(180deg,
-            rgba(22, 26, 24, 0.99) 0%,
-            rgba(12, 14, 13, 1) 100%);
-    /* Elegant border with poker green accent */
-    border: 1px solid rgba(34, 197, 94, 0.15);
+            rgba(28, 28, 32, 0.99) 0%,
+            rgba(16, 16, 18, 1) 100%);
+    /* Subtle platinum border */
+    border: 1px solid rgba(200, 200, 210, 0.1);
     border-radius: 24px;
     width: 100%;
     max-width: 340px;
-    max-height: 75vh;
+    /* Increased height for 9-max */
+    max-height: 85vh;
     overflow-y: auto;
-    /* Premium depth and glow */
+    /* Premium depth */
     box-shadow:
-        0 0 0 1px rgba(255, 255, 255, 0.03) inset,
-        0 30px 60px rgba(0, 0, 0, 0.6),
-        0 0 40px rgba(34, 197, 94, 0.05);
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+        0 30px 60px rgba(0, 0, 0, 0.6);
     animation: modal-slide-up 0.3s ease;
 }
 
@@ -3671,18 +3671,22 @@ body.native-app [class*="btn-row"]>* {
     align-items: center;
     gap: 12px;
     padding: 22px 24px 18px;
-    /* Subtle gradient border bottom */
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    /* Subtle platinum shimmer */
     background: linear-gradient(180deg,
-            rgba(34, 197, 94, 0.03) 0%,
+            rgba(255, 255, 255, 0.02) 0%,
             transparent 100%);
 }
 
 .premium-modal-header span:last-child {
     font-size: 17px;
     font-weight: 700;
-    /* Premium text gradient */
-    background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
+    /* Platinum text gradient */
+    background: linear-gradient(135deg,
+            #ffffff 0%,
+            #c4c4c4 40%,
+            #e8e8e8 60%,
+            #a0a0a0 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -3691,27 +3695,24 @@ body.native-app [class*="btn-row"]>* {
 
 .premium-modal-icon {
     font-size: 22px;
-    filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.3));
 }
 
 .premium-modal-options {
-    padding: 16px 16px 20px;
+    padding: 14px 14px 18px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .premium-modal-option {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 16px 18px;
-    /* Subtle dark card background */
-    background: linear-gradient(135deg,
-            rgba(255, 255, 255, 0.02) 0%,
-            rgba(255, 255, 255, 0.01) 100%);
+    padding: 14px 16px;
+    /* Subtle charcoal card background */
+    background: rgba(255, 255, 255, 0.015);
     border: 1px solid rgba(255, 255, 255, 0.04);
-    border-radius: 14px;
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: left;
@@ -3723,64 +3724,67 @@ body.native-app [class*="btn-row"]>* {
 
 .premium-modal-option:hover,
 .premium-modal-option:focus {
-    background: linear-gradient(135deg,
-            rgba(34, 197, 94, 0.06) 0%,
-            rgba(34, 197, 94, 0.02) 100%);
-    border-color: rgba(34, 197, 94, 0.15);
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
 .premium-modal-option.selected {
     background: linear-gradient(135deg,
-            rgba(34, 197, 94, 0.12) 0%,
-            rgba(34, 197, 94, 0.04) 100%);
-    border-color: rgba(34, 197, 94, 0.4);
+            rgba(200, 200, 210, 0.08) 0%,
+            rgba(150, 150, 160, 0.04) 100%);
+    border-color: rgba(200, 200, 210, 0.25);
     box-shadow:
-        0 0 20px rgba(34, 197, 94, 0.15),
+        0 0 20px rgba(200, 200, 210, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* Position badge - premium poker chip style */
+/* Position badge - platinum gradient style */
 .option-badge {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 50px;
-    height: 36px;
-    padding: 0 12px;
-    /* Emerald gradient for Hero positions */
-    background: linear-gradient(145deg, #22c55e 0%, #15803d 100%);
+    min-width: 52px;
+    height: 34px;
+    padding: 0 10px;
+    /* Platinum metallic gradient */
+    background: linear-gradient(145deg,
+            #b8b8c0 0%,
+            #8a8a94 30%,
+            #a0a0aa 70%,
+            #707078 100%);
     border-radius: 8px;
-    color: #fff;
-    font-size: 14px;
+    color: #1a1a1e;
+    font-size: 13px;
     font-weight: 800;
-    letter-spacing: 0.8px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    letter-spacing: 0.5px;
     box-shadow:
-        0 3px 8px rgba(34, 197, 94, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        0 2px 6px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 }
 
-/* Villain badge - rich red */
+/* Villain badge - darker charcoal with red accent */
 .option-badge.villain {
-    background: linear-gradient(145deg, #ef4444 0%, #b91c1c 100%);
+    background: linear-gradient(145deg, #4a4a52 0%, #2a2a30 100%);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
     box-shadow:
-        0 3px 8px rgba(239, 68, 68, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        0 2px 6px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .option-label {
     flex: 1;
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.8);
     font-size: 15px;
     font-weight: 500;
     letter-spacing: 0.2px;
 }
 
 .option-check {
-    color: #22c55e;
-    font-size: 20px;
-    font-weight: 800;
-    text-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    color: #c4c4cc;
+    font-size: 18px;
+    font-weight: 700;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
