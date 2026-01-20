@@ -1046,18 +1046,14 @@ export default function MobileHandBuilder({
                         <CardDisplay card={heroCard2} cardKey="hero2" size="small" />
                     </div>
 
-                    {/* Premium 3D Rotating VS Badge */}
-                    <div className="vs-badge-3d">
-                        <div className="vs-badge-inner">
-                            <span className="vs-text">VS</span>
-                        </div>
-                    </div>
+                    {/* Simple Rotating VS Text with Glow */}
+                    <span className="vs-rotating-text">VS</span>
 
                     <button
-                        className="villain-button"
+                        className="setup-button villain-setup"
                         onClick={() => setShowVillainModal(true)}
                     >
-                        {villainPosition || 'Villain'}
+                        <span>{villainPosition || 'Villain'}</span>
                     </button>
                 </div>
             </div>
@@ -1091,157 +1087,165 @@ export default function MobileHandBuilder({
           Cards MIGRATE to turn when flop action completes!
           ═══════════════════════════════════════════════════════════════════════ */}
             {/* Hide completely only if preflop ended with fold */}
-            {!preflopActions.some(a => a.action === 'fold') && (
-                <div ref={flopSectionRef} className={`street-section flop ${!preflopActions.some(a => a.action === 'call') ? 'collapsed' :
-                    (flop1 && flop2 && flop3)
-                        ? (flopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
-                        : 'active'
-                    }`}>
-                    <div className="street-header">
-                        <span className="street-name">Flop</span>
-                        {(flop1 && flop2 && flop3) && preflopActions.some(a => a.action === 'call') && <span className="pot-badge">{calculatePot('flop').toFixed(1)}bb</span>}
-                    </div>
+            {
+                !preflopActions.some(a => a.action === 'fold') && (
+                    <div ref={flopSectionRef} className={`street-section flop ${!preflopActions.some(a => a.action === 'call') ? 'collapsed' :
+                        (flop1 && flop2 && flop3)
+                            ? (flopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                            : 'active'
+                        }`}>
+                        <div className="street-header">
+                            <span className="street-name">Flop</span>
+                            {(flop1 && flop2 && flop3) && preflopActions.some(a => a.action === 'call') && <span className="pot-badge">{calculatePot('flop').toFixed(1)}bb</span>}
+                        </div>
 
-                    {/* Show cards ONLY when preflop done but flop action NOT done yet */}
-                    {/* OR when action ENDED at flop (fold at flop) - cards stay visible */}
-                    {preflopActions.some(a => a.action === 'call') && (
-                        !flopActions.some(a => a.action === 'call') || flopActions.some(a => a.action === 'fold')
-                    ) && (
-                            <div className="community-cards flop-cards">
-                                <CardDisplay card={flop1} cardKey="flop1" size="small" />
-                                <CardDisplay card={flop2} cardKey="flop2" size="small" />
-                                <CardDisplay card={flop3} cardKey="flop3" size="small" />
-                            </div>
+                        {/* Show cards ONLY when preflop done but flop action NOT done yet */}
+                        {/* OR when action ENDED at flop (fold at flop) - cards stay visible */}
+                        {preflopActions.some(a => a.action === 'call') && (
+                            !flopActions.some(a => a.action === 'call') || flopActions.some(a => a.action === 'fold')
+                        ) && (
+                                <div className="community-cards flop-cards">
+                                    <CardDisplay card={flop1} cardKey="flop1" size="small" />
+                                    <CardDisplay card={flop2} cardKey="flop2" size="small" />
+                                    <CardDisplay card={flop3} cardKey="flop3" size="small" />
+                                </div>
+                            )}
+
+                        {(flop1 && flop2 && flop3) && preflopActions.some(a => a.action === 'call') && (
+                            <InlineActionBuilder
+                                actions={flopActions}
+                                setActions={setFlopActions}
+                                street="flop"
+                                heroPosition={heroPosition}
+                                villainPosition={villainPosition}
+                                tableFormat={tableFormat}
+                                pot={calculatePot()}
+                                onClearForward={clearFromFlop}
+                            />
                         )}
-
-                    {(flop1 && flop2 && flop3) && preflopActions.some(a => a.action === 'call') && (
-                        <InlineActionBuilder
-                            actions={flopActions}
-                            setActions={setFlopActions}
-                            street="flop"
-                            heroPosition={heroPosition}
-                            villainPosition={villainPosition}
-                            tableFormat={tableFormat}
-                            pot={calculatePot()}
-                            onClearForward={clearFromFlop}
-                        />
-                    )}
-                </div>
-            )}
+                    </div>
+                )
+            }
 
             {/* ═══════════════════════════════════════════════════════════════════════
           TURN - Shows FLOP CARDS + TURN CARD when active/expanded
           Cards fly in with AirDrop-style glow!
           ═══════════════════════════════════════════════════════════════════════ */}
-            {!preflopActions.some(a => a.action === 'fold') && !flopActions.some(a => a.action === 'fold') && (
-                <div ref={turnSectionRef} className={`street-section turn ${!(flop1 && flop2 && flop3) || !flopActions.some(a => a.action === 'call') ? 'collapsed' :
-                    turn
-                        ? (turnActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
-                        : 'active'
-                    }`}>
-                    <div className="street-header">
-                        <span className="street-name">Turn</span>
-                        {(flop1 && flop2 && flop3) && flopActions.some(a => a.action === 'call') && <span className="pot-badge">{calculatePot('turn').toFixed(1)}bb</span>}
-                    </div>
+            {
+                !preflopActions.some(a => a.action === 'fold') && !flopActions.some(a => a.action === 'fold') && (
+                    <div ref={turnSectionRef} className={`street-section turn ${!(flop1 && flop2 && flop3) || !flopActions.some(a => a.action === 'call') ? 'collapsed' :
+                        turn
+                            ? (turnActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                            : 'active'
+                        }`}>
+                        <div className="street-header">
+                            <span className="street-name">Turn</span>
+                            {(flop1 && flop2 && flop3) && flopActions.some(a => a.action === 'call') && <span className="pot-badge">{calculatePot('turn').toFixed(1)}bb</span>}
+                        </div>
 
-                    {/* Show FLOP cards (migrated) + TURN card when flop action is complete */}
-                    {/* OR when action ENDED at turn (fold at turn) - cards stay visible */}
-                    {(flop1 && flop2 && flop3) && flopActions.some(a => a.action === 'call') && (
-                        !turnActions.some(a => a.action === 'call') || turnActions.some(a => a.action === 'fold')
-                    ) && (
-                            <div className="community-cards migrated-cards">
-                                {/* Flop cards that flew in */}
-                                <CardDisplay card={flop1} cardKey="flop1-turn" size="small" />
-                                <CardDisplay card={flop2} cardKey="flop2-turn" size="small" />
-                                <CardDisplay card={flop3} cardKey="flop3-turn" size="small" />
-                                {/* Divider */}
-                                <span className="street-divider">│</span>
-                                {/* Turn card slot */}
-                                <CardDisplay card={turn} cardKey="turn" size="small" />
-                            </div>
+                        {/* Show FLOP cards (migrated) + TURN card when flop action is complete */}
+                        {/* OR when action ENDED at turn (fold at turn) - cards stay visible */}
+                        {(flop1 && flop2 && flop3) && flopActions.some(a => a.action === 'call') && (
+                            !turnActions.some(a => a.action === 'call') || turnActions.some(a => a.action === 'fold')
+                        ) && (
+                                <div className="community-cards migrated-cards">
+                                    {/* Flop cards that flew in */}
+                                    <CardDisplay card={flop1} cardKey="flop1-turn" size="small" />
+                                    <CardDisplay card={flop2} cardKey="flop2-turn" size="small" />
+                                    <CardDisplay card={flop3} cardKey="flop3-turn" size="small" />
+                                    {/* Divider */}
+                                    <span className="street-divider">│</span>
+                                    {/* Turn card slot */}
+                                    <CardDisplay card={turn} cardKey="turn" size="small" />
+                                </div>
+                            )}
+
+                        {turn && (
+                            <InlineActionBuilder
+                                actions={turnActions}
+                                setActions={setTurnActions}
+                                street="turn"
+                                heroPosition={heroPosition}
+                                villainPosition={villainPosition}
+                                tableFormat={tableFormat}
+                                pot={calculatePot('flop')}
+                                onClearForward={clearFromTurn}
+                            />
                         )}
-
-                    {turn && (
-                        <InlineActionBuilder
-                            actions={turnActions}
-                            setActions={setTurnActions}
-                            street="turn"
-                            heroPosition={heroPosition}
-                            villainPosition={villainPosition}
-                            tableFormat={tableFormat}
-                            pot={calculatePot('flop')}
-                            onClearForward={clearFromTurn}
-                        />
-                    )}
-                </div>
-            )}
+                    </div>
+                )
+            }
 
             {/* ═══════════════════════════════════════════════════════════════════════
           RIVER - Shows ALL CARDS (FLOP + TURN + RIVER) when active
           Cards fly in with AirDrop-style glow!
           ═══════════════════════════════════════════════════════════════════════ */}
-            {!preflopActions.some(a => a.action === 'fold') && !flopActions.some(a => a.action === 'fold') && !turnActions.some(a => a.action === 'fold') && (
-                <div ref={riverSectionRef} className={`street-section river ${!turn || !turnActions.some(a => a.action === 'call') ? 'collapsed' :
-                    river
-                        ? (riverActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
-                        : 'active'
-                    }`}>
-                    <div className="street-header">
-                        <span className="street-name">River</span>
-                        {turn && turnActions.some(a => a.action === 'call') && <span className="pot-badge">{calculatePot('river').toFixed(1)}bb</span>}
-                    </div>
-
-                    {/* Show ALL cards - FLOP + TURN (migrated) + RIVER when turn action is complete */}
-                    {turn && turnActions.some(a => a.action === 'call') && (
-                        <div className="community-cards migrated-cards">
-                            {/* Flop cards */}
-                            <CardDisplay card={flop1} cardKey="flop1-river" size="small" />
-                            <CardDisplay card={flop2} cardKey="flop2-river" size="small" />
-                            <CardDisplay card={flop3} cardKey="flop3-river" size="small" />
-                            {/* Divider */}
-                            <span className="street-divider">│</span>
-                            {/* Turn card */}
-                            <CardDisplay card={turn} cardKey="turn-river" size="small" />
-                            {/* Divider */}
-                            <span className="street-divider">│</span>
-                            {/* River card slot */}
-                            <CardDisplay card={river} cardKey="river" size="small" />
+            {
+                !preflopActions.some(a => a.action === 'fold') && !flopActions.some(a => a.action === 'fold') && !turnActions.some(a => a.action === 'fold') && (
+                    <div ref={riverSectionRef} className={`street-section river ${!turn || !turnActions.some(a => a.action === 'call') ? 'collapsed' :
+                        river
+                            ? (riverActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                            : 'active'
+                        }`}>
+                        <div className="street-header">
+                            <span className="street-name">River</span>
+                            {turn && turnActions.some(a => a.action === 'call') && <span className="pot-badge">{calculatePot('river').toFixed(1)}bb</span>}
                         </div>
-                    )}
 
-                    {river && (
-                        <InlineActionBuilder
-                            actions={riverActions}
-                            setActions={setRiverActions}
-                            street="river"
-                            heroPosition={heroPosition}
-                            villainPosition={villainPosition}
-                            tableFormat={tableFormat}
-                            pot={calculatePot('turn')}
-                        />
-                    )}
-                </div>
-            )}
+                        {/* Show ALL cards - FLOP + TURN (migrated) + RIVER when turn action is complete */}
+                        {turn && turnActions.some(a => a.action === 'call') && (
+                            <div className="community-cards migrated-cards">
+                                {/* Flop cards */}
+                                <CardDisplay card={flop1} cardKey="flop1-river" size="small" />
+                                <CardDisplay card={flop2} cardKey="flop2-river" size="small" />
+                                <CardDisplay card={flop3} cardKey="flop3-river" size="small" />
+                                {/* Divider */}
+                                <span className="street-divider">│</span>
+                                {/* Turn card */}
+                                <CardDisplay card={turn} cardKey="turn-river" size="small" />
+                                {/* Divider */}
+                                <span className="street-divider">│</span>
+                                {/* River card slot */}
+                                <CardDisplay card={river} cardKey="river" size="small" />
+                            </div>
+                        )}
+
+                        {river && (
+                            <InlineActionBuilder
+                                actions={riverActions}
+                                setActions={setRiverActions}
+                                street="river"
+                                heroPosition={heroPosition}
+                                villainPosition={villainPosition}
+                                tableFormat={tableFormat}
+                                pot={calculatePot('turn')}
+                            />
+                        )}
+                    </div>
+                )
+            }
 
             {/* ═══════════════════════════════════════════════════════════════════════
           PREMIUM ACTION BAR - Save + Analyze
           ═══════════════════════════════════════════════════════════════════════ */}
             {/* Session indicator when active */}
-            {activeSession && (
-                <div className="session-indicator-bar">
-                    <span className="session-indicator-icon">📁</span>
-                    <span className="session-indicator-name">{activeSession.name}</span>
-                    <span className="session-indicator-timer">{sessionElapsed || '00:00'}</span>
-                    <span className="session-indicator-count">{sessionHandCount} hands</span>
-                    <button
-                        className="session-end-btn"
-                        onClick={onEndSession}
-                        title="End Session"
-                    >
-                        ✕
-                    </button>
-                </div>
-            )}
+            {
+                activeSession && (
+                    <div className="session-indicator-bar">
+                        <span className="session-indicator-icon">📁</span>
+                        <span className="session-indicator-name">{activeSession.name}</span>
+                        <span className="session-indicator-timer">{sessionElapsed || '00:00'}</span>
+                        <span className="session-indicator-count">{sessionHandCount} hands</span>
+                        <button
+                            className="session-end-btn"
+                            onClick={onEndSession}
+                            title="End Session"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                )
+            }
 
             <div className={`premium-action-bar ${(heroCard1 && heroCard2) ? 'ready' : ''}`}>
                 {/* Save Button - Opens session modal or saves to active session */}
@@ -1275,132 +1279,142 @@ export default function MobileHandBuilder({
             </div>
 
             {/* GTO Strategy Box - Inline below buttons */}
-            {(isLoading || gtoStrategy) && (
-                <div ref={gtoCardRef} className={`gto-inline-card ${isLoading ? 'loading' : ''}`}>
-                    <div className="gto-inline-header">
-                        <span className="gto-inline-icon">🎯</span>
-                        <span className="gto-inline-title">GTO Strategy</span>
-                    </div>
-
-                    {isLoading ? (
-                        <div className="gto-shimmer-container">
-                            <div className="gto-shimmer-line long"></div>
-                            <div className="gto-shimmer-line medium"></div>
-                            <div className="gto-shimmer-line short"></div>
-                            <div className="gto-shimmer-line medium"></div>
+            {
+                (isLoading || gtoStrategy) && (
+                    <div ref={gtoCardRef} className={`gto-inline-card ${isLoading ? 'loading' : ''}`}>
+                        <div className="gto-inline-header">
+                            <span className="gto-inline-icon">🎯</span>
+                            <span className="gto-inline-title">GTO Strategy</span>
                         </div>
-                    ) : (
-                        <div className="gto-inline-content">
-                            {renderMobileGTO(gtoStrategy)}
 
-                            {exploitDeviation && (
-                                <div className="gto-exploit-section">
-                                    <div className="gto-exploit-header">
-                                        <span>📊</span>
-                                        <span>Play Review</span>
+                        {isLoading ? (
+                            <div className="gto-shimmer-container">
+                                <div className="gto-shimmer-line long"></div>
+                                <div className="gto-shimmer-line medium"></div>
+                                <div className="gto-shimmer-line short"></div>
+                                <div className="gto-shimmer-line medium"></div>
+                            </div>
+                        ) : (
+                            <div className="gto-inline-content">
+                                {renderMobileGTO(gtoStrategy)}
+
+                                {exploitDeviation && (
+                                    <div className="gto-exploit-section">
+                                        <div className="gto-exploit-header">
+                                            <span>📊</span>
+                                            <span>Play Review</span>
+                                        </div>
+                                        {renderMobileGTO(exploitDeviation)}
                                     </div>
-                                    {renderMobileGTO(exploitDeviation)}
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-            )}
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )
+            }
 
             {/* Card Picker Modal */}
-            {showCardPicker && (
-                <CardPicker cardKey={showCardPicker} onSelect={handleCardSelect} />
-            )}
+            {
+                showCardPicker && (
+                    <CardPicker cardKey={showCardPicker} onSelect={handleCardSelect} />
+                )
+            }
 
             {/* ═══════════════════════════════════════════════════════════════════════
               PREMIUM POSITION MODAL
               ═══════════════════════════════════════════════════════════════════════ */}
-            {showPositionModal && (
-                <div className="premium-modal-overlay" onClick={() => setShowPositionModal(false)}>
-                    <div className="premium-modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="premium-modal-header">
-                            <span className="premium-modal-icon">🎯</span>
-                            <span>Select Your Position</span>
-                        </div>
-                        <div className="premium-modal-options">
-                            {positions.map(pos => (
-                                <button
-                                    key={pos}
-                                    className={`premium-modal-option ${heroPosition === pos ? 'selected' : ''}`}
-                                    onClick={() => {
-                                        setHeroPosition(pos);
-                                        setShowPositionModal(false);
-                                    }}
-                                >
-                                    <span className="option-badge">{pos}</span>
-                                    <span className="option-label">{POSITION_NAMES[pos] || pos}</span>
-                                    {heroPosition === pos && <span className="option-check">✓</span>}
-                                </button>
-                            ))}
+            {
+                showPositionModal && (
+                    <div className="premium-modal-overlay" onClick={() => setShowPositionModal(false)}>
+                        <div className="premium-modal" onClick={(e) => e.stopPropagation()}>
+                            <div className="premium-modal-header">
+                                <span className="premium-modal-icon">🎯</span>
+                                <span>Select Your Position</span>
+                            </div>
+                            <div className="premium-modal-options">
+                                {positions.map(pos => (
+                                    <button
+                                        key={pos}
+                                        className={`premium-modal-option ${heroPosition === pos ? 'selected' : ''}`}
+                                        onClick={() => {
+                                            setHeroPosition(pos);
+                                            setShowPositionModal(false);
+                                        }}
+                                    >
+                                        <span className="option-badge">{pos}</span>
+                                        <span className="option-label">{POSITION_NAMES[pos] || pos}</span>
+                                        {heroPosition === pos && <span className="option-check">✓</span>}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* ═══════════════════════════════════════════════════════════════════════
               PREMIUM TABLE FORMAT MODAL
               ═══════════════════════════════════════════════════════════════════════ */}
-            {showTableModal && (
-                <div className="premium-modal-overlay" onClick={() => setShowTableModal(false)}>
-                    <div className="premium-modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="premium-modal-header">
-                            <span className="premium-modal-icon">🎰</span>
-                            <span>Table Format</span>
-                        </div>
-                        <div className="premium-modal-options">
-                            {Object.entries(TABLE_FORMATS).map(([key, val]) => (
-                                <button
-                                    key={key}
-                                    className={`premium-modal-option ${tableFormat === key ? 'selected' : ''}`}
-                                    onClick={() => {
-                                        setTableFormat(key);
-                                        setShowTableModal(false);
-                                    }}
-                                >
-                                    <span className="option-badge">{val.positions.length}</span>
-                                    <span className="option-label">{val.label}</span>
-                                    {tableFormat === key && <span className="option-check">✓</span>}
-                                </button>
-                            ))}
+            {
+                showTableModal && (
+                    <div className="premium-modal-overlay" onClick={() => setShowTableModal(false)}>
+                        <div className="premium-modal" onClick={(e) => e.stopPropagation()}>
+                            <div className="premium-modal-header">
+                                <span className="premium-modal-icon">🎰</span>
+                                <span>Table Format</span>
+                            </div>
+                            <div className="premium-modal-options">
+                                {Object.entries(TABLE_FORMATS).map(([key, val]) => (
+                                    <button
+                                        key={key}
+                                        className={`premium-modal-option ${tableFormat === key ? 'selected' : ''}`}
+                                        onClick={() => {
+                                            setTableFormat(key);
+                                            setShowTableModal(false);
+                                        }}
+                                    >
+                                        <span className="option-badge">{val.positions.length}</span>
+                                        <span className="option-label">{val.label}</span>
+                                        {tableFormat === key && <span className="option-check">✓</span>}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* ═══════════════════════════════════════════════════════════════════════
               PREMIUM VILLAIN POSITION MODAL  
               ═══════════════════════════════════════════════════════════════════════ */}
-            {showVillainModal && (
-                <div className="premium-modal-overlay" onClick={() => setShowVillainModal(false)}>
-                    <div className="premium-modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="premium-modal-header">
-                            <span className="premium-modal-icon">👤</span>
-                            <span>Villain Position</span>
-                        </div>
-                        <div className="premium-modal-options">
-                            {positions.filter(p => p !== heroPosition).map(pos => (
-                                <button
-                                    key={pos}
-                                    className={`premium-modal-option ${villainPosition === pos ? 'selected' : ''}`}
-                                    onClick={() => {
-                                        setVillainPosition(pos);
-                                        setShowVillainModal(false);
-                                    }}
-                                >
-                                    <span className="option-badge villain">{pos}</span>
-                                    <span className="option-label">{POSITION_NAMES[pos] || pos}</span>
-                                    {villainPosition === pos && <span className="option-check">✓</span>}
-                                </button>
-                            ))}
+            {
+                showVillainModal && (
+                    <div className="premium-modal-overlay" onClick={() => setShowVillainModal(false)}>
+                        <div className="premium-modal" onClick={(e) => e.stopPropagation()}>
+                            <div className="premium-modal-header">
+                                <span className="premium-modal-icon">👤</span>
+                                <span>Villain Position</span>
+                            </div>
+                            <div className="premium-modal-options">
+                                {positions.filter(p => p !== heroPosition).map(pos => (
+                                    <button
+                                        key={pos}
+                                        className={`premium-modal-option ${villainPosition === pos ? 'selected' : ''}`}
+                                        onClick={() => {
+                                            setVillainPosition(pos);
+                                            setShowVillainModal(false);
+                                        }}
+                                    >
+                                        <span className="option-badge villain">{pos}</span>
+                                        <span className="option-label">{POSITION_NAMES[pos] || pos}</span>
+                                        {villainPosition === pos && <span className="option-check">✓</span>}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }
