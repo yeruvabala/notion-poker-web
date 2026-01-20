@@ -3645,6 +3645,11 @@ body.native-app [class*="btn-row"]>* {
     padding-bottom: calc(80px + env(safe-area-inset-bottom, 20px));
     box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
     animation: picker-slide-up 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    /* Fix touch scrolling */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
 }
 
 @keyframes picker-slide-up {
@@ -3803,6 +3808,10 @@ body.native-app [class*="btn-row"]>* {
     max-width: 100%;
     max-height: 80vh;
     overflow-y: auto;
+    /* Fix touch scrolling */
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
     /* Charcoal background */
     background: linear-gradient(180deg,
             rgba(26, 26, 30, 0.98) 0%,
@@ -5214,6 +5223,10 @@ body.native-app [class*="btn-row"]>* {
     max-height: calc(100vh - 160px);
     /* Account for top header + nav bar */
     overflow-y: auto;
+    /* Fix touch scrolling */
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
     animation: modal-slide-up 0.3s ease;
 }
 
