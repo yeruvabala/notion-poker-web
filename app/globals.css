@@ -3612,8 +3612,8 @@ body.native-app [class*="btn-row"]>* {
     top: 0;
     left: 0;
     right: 0;
-    bottom: 80px;
-    /* End above nav bar */
+    bottom: 0;
+    /* Full screen */
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -3636,6 +3636,8 @@ body.native-app [class*="btn-row"]>* {
 
 .position-picker-sheet {
     width: 100%;
+    margin-bottom: 80px;
+    /* Sit above nav bar */
     background: linear-gradient(180deg,
             rgba(28, 28, 32, 0.98) 0%,
             rgba(18, 18, 22, 1) 100%);
@@ -3773,8 +3775,8 @@ body.native-app [class*="btn-row"]>* {
     top: 0;
     left: 0;
     right: 0;
-    bottom: 80px;
-    /* End above nav bar */
+    bottom: 0;
+    /* Full screen */
     /* Transparent blur - shows home page underneath */
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(12px);
@@ -3800,6 +3802,8 @@ body.native-app [class*="btn-row"]>* {
 .premium-modal {
     /* Full width bottom sheet */
     width: 100%;
+    margin-bottom: 80px;
+    /* Sit above nav bar */
     max-width: 100%;
     max-height: 80vh;
     overflow-y: auto;
@@ -5182,8 +5186,8 @@ body.native-app [class*="btn-row"]>* {
     top: 0;
     left: 0;
     right: 0;
-    bottom: 80px;
-    /* End above nav bar */
+    bottom: 0;
+    /* Full screen */
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -5210,6 +5214,8 @@ body.native-app [class*="btn-row"]>* {
     padding: 20px;
     padding-bottom: calc(80px + env(safe-area-inset-bottom, 20px));
     width: 100%;
+    margin-bottom: 80px;
+    /* Sit above nav bar */
     max-height: 85vh;
     overflow-y: auto;
     animation: modal-slide-up 0.3s ease;
