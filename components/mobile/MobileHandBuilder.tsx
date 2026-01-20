@@ -20,6 +20,20 @@ const SUITS = [
     { value: '♣', color: '#ffffff', isRed: false }   // White/platinum - clubs
 ];
 
+// Position full names for premium modal display
+const POSITION_NAMES: Record<string, string> = {
+    'BTN': 'Button',
+    'CO': 'Cut-Off',
+    'HJ': 'Hijack',
+    'LJ': 'Lojack',
+    'MP': 'Middle Position',
+    'UTG': 'Under the Gun',
+    'UTG+1': 'UTG +1',
+    'UTG+2': 'UTG +2',
+    'SB': 'Small Blind',
+    'BB': 'Big Blind'
+};
+
 interface PreflopAction {
     player: 'H' | 'V';
     action: 'raise' | 'call' | 'fold' | '3bet' | '4bet' | 'limp';
@@ -798,6 +812,9 @@ export default function MobileHandBuilder({
 }: MobileHandBuilderProps) {
 
     const [showCardPicker, setShowCardPicker] = useState<string | null>(null);
+    const [showPositionModal, setShowPositionModal] = useState(false);
+    const [showTableModal, setShowTableModal] = useState(false);
+    const [showVillainModal, setShowVillainModal] = useState(false);
 
     // Refs for street sections - for auto-scroll
     const flopSectionRef = useRef<HTMLDivElement>(null);
@@ -987,14 +1004,13 @@ export default function MobileHandBuilder({
           SETUP BAR - Position, Stack, Format
           ═══════════════════════════════════════════════════════════════════════ */}
             <div className="setup-bar">
-                <select
-                    className="setup-select"
-                    value={heroPosition}
-                    onChange={(e) => setHeroPosition(e.target.value)}
+                <button
+                    className="setup-button"
+                    onClick={() => setShowPositionModal(true)}
                 >
-                    <option value="">Position</option>
-                    {positions.map(p => <option key={p} value={p}>{p}</option>)}
-                </select>
+                    <span>{heroPosition || 'Position'}</span>
+                    <span className="setup-chevron">▾</span>
+                </button>
 
                 <div className="setup-divider">•</div>
 
@@ -1011,15 +1027,13 @@ export default function MobileHandBuilder({
 
                 <div className="setup-divider">•</div>
 
-                <select
-                    className="setup-select"
-                    value={tableFormat}
-                    onChange={(e) => setTableFormat(e.target.value)}
+                <button
+                    className="setup-button"
+                    onClick={() => setShowTableModal(true)}
                 >
-                    {Object.entries(TABLE_FORMATS).map(([key, val]) => (
-                        <option key={key} value={key}>{val.label}</option>
-                    ))}
-                </select>
+                    <span>{TABLE_FORMATS[tableFormat as keyof typeof TABLE_FORMATS]?.label || '6-Max'}</span>
+                    <span className="setup-chevron">▾</span>
+                </button>
             </div>
 
             {/* ═══════════════════════════════════════════════════════════════════════
@@ -1034,14 +1048,12 @@ export default function MobileHandBuilder({
 
                     <span className="hero-vs">vs</span>
 
-                    <select
-                        className="villain-select-inline"
-                        value={villainPosition}
-                        onChange={(e) => setVillainPosition(e.target.value)}
+                    <button
+                        className="villain-button"
+                        onClick={() => setShowVillainModal(true)}
                     >
-                        <option value="">Villain</option>
-                        {positions.map(p => <option key={p} value={p}>{p}</option>)}
-                    </select>
+                        {villainPosition || 'Villain'}
+                    </button>
                 </div>
             </div>
 
@@ -1293,6 +1305,96 @@ export default function MobileHandBuilder({
             {/* Card Picker Modal */}
             {showCardPicker && (
                 <CardPicker cardKey={showCardPicker} onSelect={handleCardSelect} />
+            )}
+
+            {/* ═══════════════════════════════════════════════════════════════════════
+              PREMIUM POSITION MODAL
+              ═══════════════════════════════════════════════════════════════════════ */}
+            {showPositionModal && (
+                <div className="premium-modal-overlay" onClick={() => setShowPositionModal(false)}>
+                    <div className="premium-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="premium-modal-header">
+                            <span className="premium-modal-icon">🎯</span>
+                            <span>Select Your Position</span>
+                        </div>
+                        <div className="premium-modal-options">
+                            {positions.map(pos => (
+                                <button
+                                    key={pos}
+                                    className={`premium-modal-option ${heroPosition === pos ? 'selected' : ''}`}
+                                    onClick={() => {
+                                        setHeroPosition(pos);
+                                        setShowPositionModal(false);
+                                    }}
+                                >
+                                    <span className="option-badge">{pos}</span>
+                                    <span className="option-label">{POSITION_NAMES[pos] || pos}</span>
+                                    {heroPosition === pos && <span className="option-check">✓</span>}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ═══════════════════════════════════════════════════════════════════════
+              PREMIUM TABLE FORMAT MODAL
+              ═══════════════════════════════════════════════════════════════════════ */}
+            {showTableModal && (
+                <div className="premium-modal-overlay" onClick={() => setShowTableModal(false)}>
+                    <div className="premium-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="premium-modal-header">
+                            <span className="premium-modal-icon">🎰</span>
+                            <span>Table Format</span>
+                        </div>
+                        <div className="premium-modal-options">
+                            {Object.entries(TABLE_FORMATS).map(([key, val]) => (
+                                <button
+                                    key={key}
+                                    className={`premium-modal-option ${tableFormat === key ? 'selected' : ''}`}
+                                    onClick={() => {
+                                        setTableFormat(key);
+                                        setShowTableModal(false);
+                                    }}
+                                >
+                                    <span className="option-badge">{val.positions.length}</span>
+                                    <span className="option-label">{val.label}</span>
+                                    {tableFormat === key && <span className="option-check">✓</span>}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ═══════════════════════════════════════════════════════════════════════
+              PREMIUM VILLAIN POSITION MODAL  
+              ═══════════════════════════════════════════════════════════════════════ */}
+            {showVillainModal && (
+                <div className="premium-modal-overlay" onClick={() => setShowVillainModal(false)}>
+                    <div className="premium-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="premium-modal-header">
+                            <span className="premium-modal-icon">👤</span>
+                            <span>Villain Position</span>
+                        </div>
+                        <div className="premium-modal-options">
+                            {positions.filter(p => p !== heroPosition).map(pos => (
+                                <button
+                                    key={pos}
+                                    className={`premium-modal-option ${villainPosition === pos ? 'selected' : ''}`}
+                                    onClick={() => {
+                                        setVillainPosition(pos);
+                                        setShowVillainModal(false);
+                                    }}
+                                >
+                                    <span className="option-badge villain">{pos}</span>
+                                    <span className="option-label">{POSITION_NAMES[pos] || pos}</span>
+                                    {villainPosition === pos && <span className="option-check">✓</span>}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
