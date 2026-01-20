@@ -3793,7 +3793,7 @@ body.native-app [class*="btn-row"]>* {
     padding: 0 14px;
     /* Vertical centering - move up to align with card centers */
     align-self: center;
-    margin-top: -10px;
+    margin-top: -13px;
     /* 3D globe-surface effect */
     display: inline-block;
     animation: vs-globe-rotate 4s ease-in-out infinite, vs-glow-pulse 2s ease-in-out infinite;
@@ -3841,7 +3841,7 @@ body.native-app [class*="btn-row"]>* {
 /* Villain setup button - matches Position/6-Max style + vertical centering */
 .villain-setup {
     margin-left: 4px;
-    margin-top: -10px;
+    margin-top: -13px;
 }
 
 .villain-select-inline {
