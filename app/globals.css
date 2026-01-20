@@ -3636,8 +3636,6 @@ body.native-app [class*="btn-row"]>* {
 
 .position-picker-sheet {
     width: 100%;
-    margin-bottom: 80px;
-    /* Sit above nav bar */
     background: linear-gradient(180deg,
             rgba(28, 28, 32, 0.98) 0%,
             rgba(18, 18, 22, 1) 100%);
@@ -3802,8 +3800,6 @@ body.native-app [class*="btn-row"]>* {
 .premium-modal {
     /* Full width bottom sheet */
     width: 100%;
-    margin-bottom: 80px;
-    /* Sit above nav bar */
     max-width: 100%;
     max-height: 80vh;
     overflow-y: auto;
@@ -5215,8 +5211,6 @@ body.native-app [class*="btn-row"]>* {
     padding-bottom: 20px;
     /* Just normal padding */
     width: 100%;
-    margin-bottom: 80px;
-    /* Sit above nav bar */
     max-height: calc(100vh - 160px);
     /* Account for top header + nav bar */
     overflow-y: auto;
@@ -5530,6 +5524,38 @@ body.native-app [class*="btn-row"]>* {
     opacity: 0.55;
     cursor: not-allowed;
     transform: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   GTO PLACEHOLDER BOX - Always visible to fill screen
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.gto-placeholder-box {
+    margin: 16px;
+    padding: 24px;
+    background: linear-gradient(180deg,
+            rgba(30, 30, 35, 0.9) 0%,
+            rgba(20, 20, 25, 0.95) 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    min-height: 200px;
+}
+
+.gto-placeholder-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 12px;
+}
+
+.gto-placeholder-text {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+    text-align: center;
+    margin: 0;
+    padding-top: 40px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════

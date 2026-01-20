@@ -1278,6 +1278,17 @@ export default function MobileHandBuilder({
                 </button>
             </div>
 
+            {/* GTO Strategy Placeholder - Always visible to fill screen */}
+            <div className="gto-placeholder-box">
+                <div className="gto-placeholder-header">
+                    <span>🎯</span>
+                    <span>GTO Strategy</span>
+                </div>
+                <p className="gto-placeholder-text">
+                    Select your cards and position to see GTO recommendations
+                </p>
+            </div>
+
             {/* GTO Strategy Box - Inline below buttons */}
             {
                 (isLoading || gtoStrategy) && (
