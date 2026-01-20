@@ -1321,36 +1321,38 @@ export default function MobileHandBuilder({
             }
 
             {/* ═══════════════════════════════════════════════════════════════════════
-              PREMIUM POSITION MODAL
+              POSITION PICKER - Compact Action Sheet with Horizontal Chips
               ═══════════════════════════════════════════════════════════════════════ */}
-            {
-                showPositionModal && (
-                    <div className="premium-modal-overlay" onClick={() => setShowPositionModal(false)}>
-                        <div className="premium-modal" onClick={(e) => e.stopPropagation()}>
-                            <div className="premium-modal-header">
-                                <span className="premium-modal-icon">🎯</span>
-                                <span>Select Your Position</span>
-                            </div>
-                            <div className="premium-modal-options">
+            {showPositionModal && (
+                <div className="position-picker-overlay" onClick={() => setShowPositionModal(false)}>
+                    <div className="position-picker-sheet" onClick={(e) => e.stopPropagation()}>
+                        {/* Drag handle */}
+                        <div className="picker-handle"></div>
+
+                        {/* Title */}
+                        <div className="picker-title">Your Position</div>
+
+                        {/* Horizontal scrolling position chips */}
+                        <div className="position-chips-container">
+                            <div className="position-chips-scroll">
                                 {positions.map(pos => (
                                     <button
                                         key={pos}
-                                        className={`premium-modal-option ${heroPosition === pos ? 'selected' : ''}`}
+                                        className={`position-chip ${heroPosition === pos ? 'selected' : ''}`}
                                         onClick={() => {
                                             setHeroPosition(pos);
                                             setShowPositionModal(false);
                                         }}
                                     >
-                                        <span className="option-badge">{pos}</span>
-                                        <span className="option-label">{POSITION_NAMES[pos] || pos}</span>
-                                        {heroPosition === pos && <span className="option-check">✓</span>}
+                                        <span className="chip-abbrev">{pos}</span>
+                                        <span className="chip-name">{POSITION_NAMES[pos] || pos}</span>
                                     </button>
                                 ))}
                             </div>
                         </div>
                     </div>
-                )
-            }
+                </div>
+            )}
 
             {/* ═══════════════════════════════════════════════════════════════════════
               PREMIUM TABLE FORMAT MODAL
