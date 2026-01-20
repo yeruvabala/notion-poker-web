@@ -3609,7 +3609,11 @@ body.native-app [class*="btn-row"]>* {
    ═══════════════════════════════════════════════════════════════════════════════ */
 .position-picker-overlay {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 80px;
+    /* End above nav bar */
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -3766,7 +3770,11 @@ body.native-app [class*="btn-row"]>* {
    ═══════════════════════════════════════════════════════════════════════════════ */
 .premium-modal-overlay {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 80px;
+    /* End above nav bar */
     /* Transparent blur - shows home page underneath */
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(12px);
@@ -5174,7 +5182,8 @@ body.native-app [class*="btn-row"]>* {
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: 80px;
+    /* End above nav bar */
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
