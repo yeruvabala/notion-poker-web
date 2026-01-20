@@ -3781,36 +3781,42 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   3D ROTATING VS TEXT - Globe/Y-Axis Rotation with Glow
+   3D ROTATING VS TEXT - Globe Surface Rotation with Glow
+   Text appears to rotate on the surface of an invisible globe
    ═══════════════════════════════════════════════════════════════════════════════ */
 .vs-rotating-text {
     font-size: 13px;
     font-weight: 800;
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.9);
     text-transform: uppercase;
     letter-spacing: 2px;
-    padding: 0 12px;
-    /* Vertical centering with hero cards */
+    padding: 0 14px;
+    /* Vertical centering - move up to align with card centers */
     align-self: center;
-    margin-top: 0;
-    /* 3D perspective for globe rotation */
+    margin-top: -10px;
+    /* 3D globe-surface effect */
     display: inline-block;
-    perspective: 100px;
-    animation: vs-rotate-y 3s linear infinite, vs-glow-pulse 2s ease-in-out infinite;
+    animation: vs-globe-rotate 4s ease-in-out infinite, vs-glow-pulse 2s ease-in-out infinite;
     text-shadow:
-        0 0 10px rgba(59, 130, 246, 0.6),
-        0 0 20px rgba(139, 92, 246, 0.4);
-    transform-style: preserve-3d;
+        0 0 10px rgba(59, 130, 246, 0.7),
+        0 0 20px rgba(139, 92, 246, 0.5);
+    /* Hide backface so text doesn't appear reversed */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
-/* Y-axis rotation like text on a globe */
-@keyframes vs-rotate-y {
-    0% {
-        transform: rotateY(0deg);
+/* Globe surface rotation - oscillating Y-axis for realistic globe effect */
+@keyframes vs-globe-rotate {
+
+    0%,
+    100% {
+        transform: rotateY(-25deg) scale(0.95);
+        opacity: 0.7;
     }
 
-    100% {
-        transform: rotateY(360deg);
+    50% {
+        transform: rotateY(25deg) scale(1);
+        opacity: 1;
     }
 }
 
@@ -3835,6 +3841,7 @@ body.native-app [class*="btn-row"]>* {
 /* Villain setup button - matches Position/6-Max style + vertical centering */
 .villain-setup {
     margin-left: 4px;
+    margin-top: -10px;
 }
 
 .villain-select-inline {
