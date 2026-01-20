@@ -3807,8 +3807,8 @@ body.native-app [class*="btn-row"]>* {
     box-shadow:
         0 -10px 40px rgba(0, 0, 0, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    /* Bottom safe area padding */
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    /* Bottom nav bar clearance */
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 20px));
     animation: modal-slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
@@ -5201,7 +5201,7 @@ body.native-app [class*="btn-row"]>* {
     padding: 20px;
     padding-bottom: calc(80px + env(safe-area-inset-bottom, 20px));
     width: 100%;
-    max-height: 70vh;
+    max-height: 85vh;
     overflow-y: auto;
     animation: modal-slide-up 0.3s ease;
 }
