@@ -3605,23 +3605,23 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   PREMIUM MODAL - Glassmorphism Design
+   PREMIUM MODAL - Dark Poker Theme (World-Class Design)
    ═══════════════════════════════════════════════════════════════════════════════ */
 .premium-modal-overlay {
     position: fixed;
     inset: 0;
-    /* Subtle blue/purple tint instead of pure black */
-    background: radial-gradient(ellipse at center,
-            rgba(30, 30, 50, 0.85) 0%,
-            rgba(15, 15, 25, 0.92) 100%);
-    backdrop-filter: blur(12px) saturate(120%);
-    -webkit-backdrop-filter: blur(12px) saturate(120%);
+    /* Deep dark with subtle poker green undertone */
+    background: radial-gradient(ellipse at top,
+            rgba(10, 15, 12, 0.95) 0%,
+            rgba(5, 8, 6, 0.98) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     z-index: 5000;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
-    animation: modal-fade-in 0.2s ease;
+    animation: modal-fade-in 0.25s ease;
 }
 
 @keyframes modal-fade-in {
@@ -3635,26 +3635,29 @@ body.native-app [class*="btn-row"]>* {
 }
 
 .premium-modal {
+    /* Deep charcoal with subtle gradient */
     background: linear-gradient(180deg,
-            rgba(45, 45, 60, 0.98) 0%,
-            rgba(28, 28, 40, 0.99) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 20px;
+            rgba(22, 26, 24, 0.99) 0%,
+            rgba(12, 14, 13, 1) 100%);
+    /* Elegant border with poker green accent */
+    border: 1px solid rgba(34, 197, 94, 0.15);
+    border-radius: 24px;
     width: 100%;
-    max-width: 360px;
-    max-height: 70vh;
+    max-width: 340px;
+    max-height: 75vh;
     overflow-y: auto;
+    /* Premium depth and glow */
     box-shadow:
-        0 25px 50px rgba(0, 0, 0, 0.4),
-        0 0 60px rgba(59, 130, 246, 0.08),
-        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-    animation: modal-slide-up 0.25s ease;
+        0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+        0 30px 60px rgba(0, 0, 0, 0.6),
+        0 0 40px rgba(34, 197, 94, 0.05);
+    animation: modal-slide-up 0.3s ease;
 }
 
 @keyframes modal-slide-up {
     from {
         opacity: 0;
-        transform: translateY(20px) scale(0.95);
+        transform: translateY(30px) scale(0.9);
     }
 
     to {
@@ -3666,85 +3669,118 @@ body.native-app [class*="btn-row"]>* {
 .premium-modal-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 20px 20px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    font-size: 16px;
+    gap: 12px;
+    padding: 22px 24px 18px;
+    /* Subtle gradient border bottom */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: linear-gradient(180deg,
+            rgba(34, 197, 94, 0.03) 0%,
+            transparent 100%);
+}
+
+.premium-modal-header span:last-child {
+    font-size: 17px;
     font-weight: 700;
-    color: #fff;
+    /* Premium text gradient */
+    background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 0.3px;
 }
 
 .premium-modal-icon {
-    font-size: 20px;
+    font-size: 22px;
+    filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.3));
 }
 
 .premium-modal-options {
-    padding: 12px;
+    padding: 16px 16px 20px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
 }
 
 .premium-modal-option {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 12px;
+    gap: 14px;
+    padding: 16px 18px;
+    /* Subtle dark card background */
+    background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.02) 0%,
+            rgba(255, 255, 255, 0.01) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 14px;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.2s ease;
     text-align: left;
 }
 
 .premium-modal-option:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
 }
 
 .premium-modal-option:hover,
 .premium-modal-option:focus {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.08);
+    background: linear-gradient(135deg,
+            rgba(34, 197, 94, 0.06) 0%,
+            rgba(34, 197, 94, 0.02) 100%);
+    border-color: rgba(34, 197, 94, 0.15);
 }
 
 .premium-modal-option.selected {
     background: linear-gradient(135deg,
-            rgba(59, 130, 246, 0.15) 0%,
-            rgba(59, 130, 246, 0.08) 100%);
-    border-color: rgba(59, 130, 246, 0.3);
+            rgba(34, 197, 94, 0.12) 0%,
+            rgba(34, 197, 94, 0.04) 100%);
+    border-color: rgba(34, 197, 94, 0.4);
+    box-shadow:
+        0 0 20px rgba(34, 197, 94, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
+/* Position badge - premium poker chip style */
 .option-badge {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 44px;
-    height: 32px;
-    padding: 0 10px;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    border-radius: 6px;
+    min-width: 50px;
+    height: 36px;
+    padding: 0 12px;
+    /* Emerald gradient for Hero positions */
+    background: linear-gradient(145deg, #22c55e 0%, #15803d 100%);
+    border-radius: 8px;
     color: #fff;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    box-shadow:
+        0 3px 8px rgba(34, 197, 94, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
+/* Villain badge - rich red */
 .option-badge.villain {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    background: linear-gradient(145deg, #ef4444 0%, #b91c1c 100%);
+    box-shadow:
+        0 3px 8px rgba(239, 68, 68, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .option-label {
     flex: 1;
-    color: #e5e7eb;
-    font-size: 14px;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 15px;
     font-weight: 500;
+    letter-spacing: 0.2px;
 }
 
 .option-check {
-    color: #3b82f6;
-    font-size: 18px;
-    font-weight: 700;
+    color: #22c55e;
+    font-size: 20px;
+    font-weight: 800;
+    text-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
