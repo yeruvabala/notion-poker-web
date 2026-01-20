@@ -971,39 +971,84 @@ export default function MobileHandBuilder({
         );
     };
 
-    // Card Picker Modal
-    const CardPicker = ({ cardKey, onSelect }: { cardKey: string; onSelect: (card: string) => void }) => (
-        <div className="card-picker-overlay" onClick={() => setShowCardPicker(null)}>
-            <div className="card-picker-modal" onClick={e => e.stopPropagation()}>
-                <div className="picker-header">
-                    <span>Select Card</span>
-                    <button onClick={() => setShowCardPicker(null)}>✕</button>
+    // Card Picker Modal with Touch Scroll Fix
+    const CardPicker = ({ cardKey, onSelect }: { cardKey: string; onSelect: (card: string) => void }) => {
+        const modalRef = useRef<HTMLDivElement>(null);
+        const startY = useRef(0);
+        const scrollTop = useRef(0);
+
+        // Prevent iOS pull-to-refresh by handling touch events manually
+        const handleTouchStart = (e: React.TouchEvent) => {
+            if (modalRef.current) {
+                startY.current = e.touches[0].clientY;
+                scrollTop.current = modalRef.current.scrollTop;
+            }
+        };
+
+        const handleTouchMove = (e: React.TouchEvent) => {
+            if (!modalRef.current) return;
+
+            const currentY = e.touches[0].clientY;
+            const deltaY = startY.current - currentY;
+            const newScrollTop = scrollTop.current + deltaY;
+
+            const maxScroll = modalRef.current.scrollHeight - modalRef.current.clientHeight;
+
+            // Only prevent default if we're at scroll boundaries
+            // This stops iOS from capturing the gesture for pull-to-refresh
+            if ((newScrollTop <= 0 && deltaY < 0) || (newScrollTop >= maxScroll && deltaY > 0)) {
+                e.preventDefault();
+            }
+        };
+
+        // Prevent overlay touch from triggering pull-to-refresh
+        const handleOverlayTouchMove = (e: React.TouchEvent) => {
+            e.preventDefault();
+        };
+
+        return (
+            <div
+                className="card-picker-overlay"
+                onClick={() => setShowCardPicker(null)}
+                onTouchMove={handleOverlayTouchMove}
+            >
+                <div
+                    ref={modalRef}
+                    className="card-picker-modal"
+                    onClick={e => e.stopPropagation()}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                >
+                    <div className="picker-header">
+                        <span>Select Card</span>
+                        <button onClick={() => setShowCardPicker(null)}>✕</button>
+                    </div>
+                    <div className="picker-grid">
+                        {RANKS.map(rank => (
+                            <div key={rank} className="picker-row">
+                                {SUITS.map(suit => (
+                                    <button
+                                        key={`${rank}${suit.value}`}
+                                        className="picker-card"
+                                        onClick={() => {
+                                            onSelect(`${rank}${suit.value}`);
+                                            setShowCardPicker(null);
+                                        }}
+                                    >
+                                        <span>{rank}</span>
+                                        <span style={{ color: suit.isRed ? '#ef4444' : '#ffffff' }}>{suit.value}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                    <button className="picker-clear" onClick={() => { onSelect(''); setShowCardPicker(null); }}>
+                        Clear
+                    </button>
                 </div>
-                <div className="picker-grid">
-                    {RANKS.map(rank => (
-                        <div key={rank} className="picker-row">
-                            {SUITS.map(suit => (
-                                <button
-                                    key={`${rank}${suit.value}`}
-                                    className="picker-card"
-                                    onClick={() => {
-                                        onSelect(`${rank}${suit.value}`);
-                                        setShowCardPicker(null);
-                                    }}
-                                >
-                                    <span>{rank}</span>
-                                    <span style={{ color: suit.isRed ? '#ef4444' : '#ffffff' }}>{suit.value}</span>
-                                </button>
-                            ))}
-                        </div>
-                    ))}
-                </div>
-                <button className="picker-clear" onClick={() => { onSelect(''); setShowCardPicker(null); }}>
-                    Clear
-                </button>
             </div>
-        </div>
-    );
+        );
+    };
 
 
     // Handle card selection
