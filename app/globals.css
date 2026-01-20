@@ -3776,7 +3776,7 @@ body.native-app [class*="btn-row"]>* {
 .premium-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     z-index: 5000;
@@ -5178,8 +5178,7 @@ body.native-app [class*="btn-row"]>* {
     left: 0;
     right: 0;
     bottom: 0;
-    /* Full screen */
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     z-index: 2000;

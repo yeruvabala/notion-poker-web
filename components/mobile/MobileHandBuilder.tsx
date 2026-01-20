@@ -1004,13 +1004,14 @@ export default function MobileHandBuilder({
           SETUP BAR - Position, Stack, Format
           ═══════════════════════════════════════════════════════════════════════ */}
             <div className="setup-bar">
-                <button
-                    className="setup-button"
-                    onClick={() => setShowPositionModal(true)}
+                <select
+                    className="setup-select"
+                    value={heroPosition}
+                    onChange={(e) => setHeroPosition(e.target.value)}
                 >
-                    <span>{heroPosition || 'Position'}</span>
-                    <span className="setup-chevron">▾</span>
-                </button>
+                    <option value="">Position</option>
+                    {positions.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
 
                 <div className="setup-divider">•</div>
 
@@ -1027,13 +1028,15 @@ export default function MobileHandBuilder({
 
                 <div className="setup-divider">•</div>
 
-                <button
-                    className="setup-button"
-                    onClick={() => setShowTableModal(true)}
+                <select
+                    className="setup-select"
+                    value={tableFormat}
+                    onChange={(e) => setTableFormat(e.target.value)}
                 >
-                    <span>{TABLE_FORMATS[tableFormat as keyof typeof TABLE_FORMATS]?.label || '6-Max'}</span>
-                    <span className="setup-chevron">▾</span>
-                </button>
+                    {Object.entries(TABLE_FORMATS).map(([key, val]) => (
+                        <option key={key} value={key}>{val.label}</option>
+                    ))}
+                </select>
             </div>
 
             {/* ═══════════════════════════════════════════════════════════════════════
@@ -1049,12 +1052,14 @@ export default function MobileHandBuilder({
                     {/* Simple Rotating VS Text with Glow */}
                     <span className="vs-rotating-text">VS</span>
 
-                    <button
-                        className="setup-button villain-setup"
-                        onClick={() => setShowVillainModal(true)}
+                    <select
+                        className="villain-select-inline"
+                        value={villainPosition}
+                        onChange={(e) => setVillainPosition(e.target.value)}
                     >
-                        <span>{villainPosition || 'Villain'}</span>
-                    </button>
+                        <option value="">Villain</option>
+                        {positions.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
                 </div>
             </div>
 
