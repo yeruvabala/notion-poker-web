@@ -5467,6 +5467,162 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
+   TOP DROPDOWN CARD PICKER - Slides from top, all 52 cards visible
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.top-dropdown-picker {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    background: linear-gradient(180deg, #0d0d0d 0%, #141414 100%);
+    display: flex;
+    flex-direction: column;
+    animation: dropdown-slide-in 0.25s ease-out;
+    padding-top: env(safe-area-inset-top, 0);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+@keyframes dropdown-slide-in {
+    from {
+        transform: translateY(-100%);
+        opacity: 0.5;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Header */
+.dropdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dropdown-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+}
+
+.dropdown-clear-btn,
+.dropdown-done-btn {
+    background: transparent;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 4px;
+    min-width: 50px;
+}
+
+.dropdown-clear-btn {
+    color: rgba(255, 255, 255, 0.5);
+    text-align: left;
+}
+
+.dropdown-done-btn {
+    color: #60a5fa;
+    text-align: right;
+}
+
+/* Card Grid - 13 rows × 4 columns - COMPACT to fit all */
+.dropdown-card-grid {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 12px;
+    justify-content: center;
+}
+
+.dropdown-card-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3px;
+    animation: row-cascade 0.2s ease backwards;
+}
+
+@keyframes row-cascade {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-card {
+    aspect-ratio: 1.2;
+    border-radius: 8px;
+    border: 1.5px solid rgba(255, 255, 255, 0.12);
+    background: linear-gradient(180deg,
+            rgba(255, 255, 255, 0.06) 0%,
+            rgba(255, 255, 255, 0.02) 100%);
+    cursor: pointer;
+    transition: all 0.12s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.dropdown-card:active:not(.used) {
+    transform: scale(0.93);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.dropdown-card.black {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-card.black .dc-suit {
+    color: #e0e0e0;
+}
+
+.dropdown-card.red {
+    border-color: rgba(239, 68, 68, 0.25);
+    background: linear-gradient(180deg,
+            rgba(239, 68, 68, 0.06) 0%,
+            rgba(239, 68, 68, 0.02) 100%);
+}
+
+.dropdown-card.red .dc-suit {
+    color: #ef4444;
+}
+
+.dropdown-card.used {
+    opacity: 0.2;
+    cursor: not-allowed;
+}
+
+.dc-rank {
+    font-size: 15px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+}
+
+.dc-suit {
+    font-size: 12px;
+    line-height: 1;
+    margin-top: 1px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
    FULL-SCREEN CARD PICKER - Premium Takeover Experience
    ═══════════════════════════════════════════════════════════════════════════════ */
 

@@ -917,8 +917,17 @@ export default function MobileHandBuilder({
         setRiver('');
     };
 
-    // Note: Body scroll lock removed - two-step picker has no scrolling,
-    // and the fixed positioning was causing modal position to shift based on scroll
+    // Lock body scroll when card picker is open - prevents pull-to-refresh
+    useEffect(() => {
+        if (showCardPicker) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [showCardPicker]);
 
     // Premium Card Display Component
     const CardDisplay = ({
@@ -1002,43 +1011,36 @@ export default function MobileHandBuilder({
         };
 
         return (
-            <div className="fullscreen-picker">
+            <div className="top-dropdown-picker">
                 {/* Header */}
-                <div className="fullscreen-picker-header">
-                    <div style={{ width: 70 }} />
-                    <h2 className="picker-title">{getSelectionLabel()}</h2>
-                    <button className="picker-nav-btn" onClick={handleClose}>
-                        Done
-                    </button>
+                <div className="dropdown-header">
+                    <button className="dropdown-clear-btn" onClick={handleClear}>Clear</button>
+                    <h2 className="dropdown-title">{getSelectionLabel()}</h2>
+                    <button className="dropdown-done-btn" onClick={handleClose}>Done</button>
                 </div>
 
                 {/* 52 Card Grid - 13 rows × 4 columns */}
-                <div className="card-grid-52">
+                <div className="dropdown-card-grid">
                     {RANKS.map((rank, rowIndex) => (
-                        <div key={rank} className="card-grid-row" style={{ animationDelay: `${rowIndex * 0.02}s` }}>
+                        <div key={rank} className="dropdown-card-row" style={{ animationDelay: `${rowIndex * 0.015}s` }}>
                             {SUITS.map(suit => {
                                 const card = `${rank}${suit.value}`;
                                 const isUsed = usedCards.has(card);
                                 return (
                                     <button
                                         key={card}
-                                        className={`card-grid-btn ${suit.isRed ? 'red' : 'black'} ${isUsed ? 'used' : ''}`}
+                                        className={`dropdown-card ${suit.isRed ? 'red' : 'black'} ${isUsed ? 'used' : ''}`}
                                         onClick={() => handleCardTap(card)}
                                         disabled={isUsed}
                                     >
-                                        <span className="card-rank">{rank}</span>
-                                        <span className="card-suit">{suit.value}</span>
+                                        <span className="dc-rank">{rank}</span>
+                                        <span className="dc-suit">{suit.value}</span>
                                     </button>
                                 );
                             })}
                         </div>
                     ))}
                 </div>
-
-                {/* Clear Button */}
-                <button className="fullscreen-clear-btn" onClick={handleClear}>
-                    Clear
-                </button>
             </div>
         );
     };
