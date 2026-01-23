@@ -5467,6 +5467,256 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
+   FULL-SCREEN CARD PICKER - Premium Takeover Experience
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.fullscreen-picker {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    background: linear-gradient(180deg,
+            #0a0a0a 0%,
+            #0f0f0f 30%,
+            #141414 70%,
+            #0a0a0a 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: fullscreen-appear 0.3s ease;
+    padding: env(safe-area-inset-top, 20px) 20px env(safe-area-inset-bottom, 20px);
+}
+
+@keyframes fullscreen-appear {
+    from {
+        opacity: 0;
+        transform: scale(1.05);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Header */
+.fullscreen-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 400px;
+    padding: 16px 0;
+    margin-bottom: 20px;
+}
+
+.picker-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+.picker-nav-btn {
+    background: transparent;
+    border: none;
+    color: #60a5fa;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 4px;
+    min-width: 70px;
+    transition: opacity 0.2s ease;
+}
+
+.picker-nav-btn:active {
+    opacity: 0.6;
+}
+
+/* Selected Rank Display */
+.selected-rank-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 32px;
+    animation: fade-in 0.2s ease;
+}
+
+.rank-preview {
+    font-size: 72px;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
+}
+
+.rank-label {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* Rank Grid - 5 columns */
+.fullscreen-rank-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    width: 100%;
+    max-width: 340px;
+    margin-top: 20px;
+}
+
+.fullscreen-rank-btn {
+    aspect-ratio: 1;
+    border-radius: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    background: linear-gradient(180deg,
+            rgba(255, 255, 255, 0.08) 0%,
+            rgba(255, 255, 255, 0.03) 100%);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: rank-pop-in 0.3s ease backwards;
+}
+
+@keyframes rank-pop-in {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.fullscreen-rank-btn:active {
+    transform: scale(0.92);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.rank-letter {
+    font-size: 26px;
+    font-weight: 800;
+    color: #fff;
+}
+
+/* Suit Grid - 2x2 */
+.fullscreen-suit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    width: 100%;
+    max-width: 300px;
+}
+
+.fullscreen-suit-btn {
+    aspect-ratio: 1;
+    border-radius: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.15);
+    background: linear-gradient(180deg,
+            rgba(255, 255, 255, 0.06) 0%,
+            rgba(255, 255, 255, 0.02) 100%);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    animation: suit-scale-in 0.35s ease backwards;
+}
+
+@keyframes suit-scale-in {
+    from {
+        opacity: 0;
+        transform: scale(0.7) rotateY(30deg);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) rotateY(0);
+    }
+}
+
+.fullscreen-suit-btn:active {
+    transform: scale(0.94);
+}
+
+/* Black suits (spades, clubs) */
+.fullscreen-suit-btn.black {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.fullscreen-suit-btn.black .suit-icon {
+    color: #fff;
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+}
+
+.fullscreen-suit-btn.black:active {
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 40px rgba(255, 255, 255, 0.15);
+}
+
+/* Red suits (hearts, diamonds) */
+.fullscreen-suit-btn.red {
+    border-color: rgba(239, 68, 68, 0.5);
+    background: linear-gradient(180deg,
+            rgba(239, 68, 68, 0.12) 0%,
+            rgba(239, 68, 68, 0.04) 100%);
+}
+
+.fullscreen-suit-btn.red .suit-icon {
+    color: #ef4444;
+    text-shadow: 0 0 30px rgba(239, 68, 68, 0.6);
+}
+
+.fullscreen-suit-btn.red:active {
+    background: rgba(239, 68, 68, 0.2);
+    box-shadow: 0 0 40px rgba(239, 68, 68, 0.25);
+}
+
+.suit-icon {
+    font-size: 56px;
+    line-height: 1;
+}
+
+.suit-card-preview {
+    font-size: 18px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 1px;
+}
+
+/* Clear Button */
+.fullscreen-clear-btn {
+    margin-top: auto;
+    margin-bottom: 20px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 14px 40px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.fullscreen-clear-btn:active {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
    SESSION INDICATOR BAR - Shows active session (Vibrant Amber Theme)
    ═══════════════════════════════════════════════════════════════════════════════ */
 .session-indicator-bar {

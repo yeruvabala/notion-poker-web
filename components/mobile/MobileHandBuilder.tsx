@@ -952,9 +952,8 @@ export default function MobileHandBuilder({
     };
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // TWO-STEP CARD PICKER - Premium Design
-    // Step 1: Select Rank (A, K, Q, J, T, 9, 8, 7, 6, 5, 4, 3, 2)
-    // Step 2: Select Suit (♠ ♥ ♦ ♣)
+    // FULL-SCREEN CARD PICKER - Premium Takeover Experience
+    // The entire screen becomes a beautiful card selection interface
     // ═══════════════════════════════════════════════════════════════════════════════
     const CardPicker = ({ cardKey, onSelect }: { cardKey: string; onSelect: (card: string) => void }) => {
         const [selectedRank, setSelectedRank] = useState<string | null>(null);
@@ -986,67 +985,70 @@ export default function MobileHandBuilder({
             setShowCardPicker(null);
         };
 
-        // Prevent overlay touch from triggering pull-to-refresh
-        const handleOverlayTouchMove = (e: React.TouchEvent) => {
-            e.preventDefault();
-        };
-
         return (
-            <div
-                className="card-picker-overlay"
-                onClick={handleClose}
-                onTouchMove={handleOverlayTouchMove}
-            >
-                <div className="card-picker-modal two-step" onClick={e => e.stopPropagation()}>
-                    {/* Header */}
-                    <div className="picker-header">
-                        {selectedRank ? (
-                            <>
-                                <button className="picker-back" onClick={handleBack}>←</button>
-                                <span>Select Suit for <strong>{selectedRank}</strong></span>
-                            </>
-                        ) : (
-                            <span>Select Rank</span>
-                        )}
-                        <button onClick={handleClose}>✕</button>
-                    </div>
-
-                    {/* Step 1: Rank Selection */}
-                    {!selectedRank && (
-                        <div className="rank-grid">
-                            {RANKS.map(rank => (
-                                <button
-                                    key={rank}
-                                    className="rank-button"
-                                    onClick={() => handleRankSelect(rank)}
-                                >
-                                    {rank}
-                                </button>
-                            ))}
-                        </div>
+            <div className="fullscreen-picker">
+                {/* Header */}
+                <div className="fullscreen-picker-header">
+                    {selectedRank ? (
+                        <button className="picker-nav-btn" onClick={handleBack}>
+                            ← Back
+                        </button>
+                    ) : (
+                        <div style={{ width: 70 }} />
                     )}
-
-                    {/* Step 2: Suit Selection */}
-                    {selectedRank && (
-                        <div className="suit-grid">
-                            {SUITS.map(suit => (
-                                <button
-                                    key={suit.value}
-                                    className={`suit-button ${suit.isRed ? 'red' : 'black'}`}
-                                    onClick={() => handleSuitSelect(suit)}
-                                >
-                                    <span className="suit-symbol">{suit.value}</span>
-                                    <span className="suit-preview">{selectedRank}{suit.value}</span>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Clear Button */}
-                    <button className="picker-clear" onClick={handleClear}>
-                        Clear
+                    <h2 className="picker-title">
+                        {selectedRank ? `Select Suit` : 'Select Card'}
+                    </h2>
+                    <button className="picker-nav-btn" onClick={handleClose}>
+                        Cancel
                     </button>
                 </div>
+
+                {/* Selected Rank Preview */}
+                {selectedRank && (
+                    <div className="selected-rank-display">
+                        <span className="rank-preview">{selectedRank}</span>
+                        <span className="rank-label">Choose a suit</span>
+                    </div>
+                )}
+
+                {/* Step 1: Rank Selection */}
+                {!selectedRank && (
+                    <div className="fullscreen-rank-grid">
+                        {RANKS.map((rank, index) => (
+                            <button
+                                key={rank}
+                                className="fullscreen-rank-btn"
+                                onClick={() => handleRankSelect(rank)}
+                                style={{ animationDelay: `${index * 0.02}s` }}
+                            >
+                                <span className="rank-letter">{rank}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* Step 2: Suit Selection */}
+                {selectedRank && (
+                    <div className="fullscreen-suit-grid">
+                        {SUITS.map((suit, index) => (
+                            <button
+                                key={suit.value}
+                                className={`fullscreen-suit-btn ${suit.isRed ? 'red' : 'black'}`}
+                                onClick={() => handleSuitSelect(suit)}
+                                style={{ animationDelay: `${index * 0.05}s` }}
+                            >
+                                <span className="suit-icon">{suit.value}</span>
+                                <span className="suit-card-preview">{selectedRank}{suit.value}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* Clear Button */}
+                <button className="fullscreen-clear-btn" onClick={handleClear}>
+                    Clear Selection
+                </button>
             </div>
         );
     };
