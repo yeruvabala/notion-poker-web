@@ -987,13 +987,34 @@ export default function MobileHandBuilder({
             setSelectedRank(rank);
         };
 
+        // Auto-continue to next card after selection
+        const getNextCardKey = (current: string): string | null => {
+            switch (current) {
+                case 'hero1': return heroCard2 ? null : 'hero2'; // Go to hero2 if empty
+                case 'hero2': return null; // Done with hero cards
+                case 'flop1': return flop2 ? (flop3 ? null : 'flop3') : 'flop2';
+                case 'flop2': return flop3 ? null : 'flop3';
+                case 'flop3': return null; // Done with flop
+                case 'turn': return null;
+                case 'river': return null;
+                default: return null;
+            }
+        };
+
         const handleSuitSelect = (suit: { value: string; isRed: boolean }) => {
             if (selectedRank) {
                 const card = `${selectedRank}${suit.value}`;
                 if (!usedCards.has(card)) {
                     onSelect(card);
                     setSelectedRank(null);
-                    setShowCardPicker(null);
+
+                    // Auto-continue to next card
+                    const nextCard = getNextCardKey(cardKey);
+                    if (nextCard) {
+                        setShowCardPicker(nextCard);
+                    } else {
+                        setShowCardPicker(null);
+                    }
                 }
             }
         };
@@ -1010,17 +1031,17 @@ export default function MobileHandBuilder({
         const handleClear = () => {
             onSelect('');
             setSelectedRank(null);
-            setShowCardPicker(null);
+            // Stay on same card after clearing
         };
 
-        // Get display name for what we're selecting
+        // Get display name with progress
         const getSelectionLabel = () => {
             switch (cardKey) {
-                case 'hero1': return 'Hero Card 1';
-                case 'hero2': return 'Hero Card 2';
-                case 'flop1': return 'Flop Card 1';
-                case 'flop2': return 'Flop Card 2';
-                case 'flop3': return 'Flop Card 3';
+                case 'hero1': return 'Hero Card 1 of 2';
+                case 'hero2': return 'Hero Card 2 of 2';
+                case 'flop1': return 'Flop Card 1 of 3';
+                case 'flop2': return 'Flop Card 2 of 3';
+                case 'flop3': return 'Flop Card 3 of 3';
                 case 'turn': return 'Turn Card';
                 case 'river': return 'River Card';
                 default: return 'Select Card';
