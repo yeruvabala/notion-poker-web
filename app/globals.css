@@ -5697,6 +5697,98 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* Clear Button */
+/* 52-Card Grid - 13 rows × 4 columns */
+.card-grid-52 {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    max-width: 320px;
+    flex: 1;
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.card-grid-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    animation: row-slide-in 0.3s ease backwards;
+}
+
+@keyframes row-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.card-grid-btn {
+    aspect-ratio: 1.1;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: linear-gradient(180deg,
+            rgba(255, 255, 255, 0.08) 0%,
+            rgba(255, 255, 255, 0.02) 100%);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0px;
+    padding: 4px;
+}
+
+.card-grid-btn:active:not(.used) {
+    transform: scale(0.92);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.card-grid-btn.black {
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.card-grid-btn.black .card-suit {
+    color: #fff;
+}
+
+.card-grid-btn.red {
+    border-color: rgba(239, 68, 68, 0.3);
+    background: linear-gradient(180deg,
+            rgba(239, 68, 68, 0.08) 0%,
+            rgba(239, 68, 68, 0.02) 100%);
+}
+
+.card-grid-btn.red .card-suit {
+    color: #ef4444;
+}
+
+.card-grid-btn.used {
+    opacity: 0.25;
+    cursor: not-allowed;
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.card-rank {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+}
+
+.card-suit {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+}
+
 .fullscreen-clear-btn {
     margin-top: auto;
     margin-bottom: 20px;

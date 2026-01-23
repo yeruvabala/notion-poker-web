@@ -952,102 +952,92 @@ export default function MobileHandBuilder({
     };
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // FULL-SCREEN CARD PICKER - Premium Takeover Experience
-    // The entire screen becomes a beautiful card selection interface
+    // MULTI-SELECT 52-CARD GRID - All cards visible, tap to select
+    // Hero cards: select 2, Flop: select 3, Turn/River: select 1
     // ═══════════════════════════════════════════════════════════════════════════════
     const CardPicker = ({ cardKey, onSelect }: { cardKey: string; onSelect: (card: string) => void }) => {
-        const [selectedRank, setSelectedRank] = useState<string | null>(null);
 
-        const handleRankSelect = (rank: string) => {
-            setSelectedRank(rank);
+        // Get all currently used cards to gray them out
+        const getUsedCards = (): Set<string> => {
+            const used = new Set<string>();
+            if (heroCard1) used.add(heroCard1);
+            if (heroCard2) used.add(heroCard2);
+            if (flop1) used.add(flop1);
+            if (flop2) used.add(flop2);
+            if (flop3) used.add(flop3);
+            if (turn) used.add(turn);
+            if (river) used.add(river);
+            return used;
         };
 
-        const handleSuitSelect = (suit: { value: string; isRed: boolean }) => {
-            if (selectedRank) {
-                onSelect(`${selectedRank}${suit.value}`);
-                setSelectedRank(null);
-                setShowCardPicker(null);
-            }
-        };
+        const usedCards = getUsedCards();
 
-        const handleBack = () => {
-            setSelectedRank(null);
+        const handleCardTap = (card: string) => {
+            if (usedCards.has(card)) return; // Can't select used cards
+            onSelect(card);
+            setShowCardPicker(null);
         };
 
         const handleClose = () => {
-            setSelectedRank(null);
             setShowCardPicker(null);
         };
 
         const handleClear = () => {
             onSelect('');
-            setSelectedRank(null);
             setShowCardPicker(null);
+        };
+
+        // Get display name for what we're selecting
+        const getSelectionLabel = () => {
+            switch (cardKey) {
+                case 'hero1': return 'Hero Card 1';
+                case 'hero2': return 'Hero Card 2';
+                case 'flop1': return 'Flop Card 1';
+                case 'flop2': return 'Flop Card 2';
+                case 'flop3': return 'Flop Card 3';
+                case 'turn': return 'Turn Card';
+                case 'river': return 'River Card';
+                default: return 'Select Card';
+            }
         };
 
         return (
             <div className="fullscreen-picker">
                 {/* Header */}
                 <div className="fullscreen-picker-header">
-                    {selectedRank ? (
-                        <button className="picker-nav-btn" onClick={handleBack}>
-                            ← Back
-                        </button>
-                    ) : (
-                        <div style={{ width: 70 }} />
-                    )}
-                    <h2 className="picker-title">
-                        {selectedRank ? `Select Suit` : 'Select Card'}
-                    </h2>
+                    <div style={{ width: 70 }} />
+                    <h2 className="picker-title">{getSelectionLabel()}</h2>
                     <button className="picker-nav-btn" onClick={handleClose}>
-                        Cancel
+                        Done
                     </button>
                 </div>
 
-                {/* Selected Rank Preview */}
-                {selectedRank && (
-                    <div className="selected-rank-display">
-                        <span className="rank-preview">{selectedRank}</span>
-                        <span className="rank-label">Choose a suit</span>
-                    </div>
-                )}
-
-                {/* Step 1: Rank Selection */}
-                {!selectedRank && (
-                    <div className="fullscreen-rank-grid">
-                        {RANKS.map((rank, index) => (
-                            <button
-                                key={rank}
-                                className="fullscreen-rank-btn"
-                                onClick={() => handleRankSelect(rank)}
-                                style={{ animationDelay: `${index * 0.02}s` }}
-                            >
-                                <span className="rank-letter">{rank}</span>
-                            </button>
-                        ))}
-                    </div>
-                )}
-
-                {/* Step 2: Suit Selection */}
-                {selectedRank && (
-                    <div className="fullscreen-suit-grid">
-                        {SUITS.map((suit, index) => (
-                            <button
-                                key={suit.value}
-                                className={`fullscreen-suit-btn ${suit.isRed ? 'red' : 'black'}`}
-                                onClick={() => handleSuitSelect(suit)}
-                                style={{ animationDelay: `${index * 0.05}s` }}
-                            >
-                                <span className="suit-icon">{suit.value}</span>
-                                <span className="suit-card-preview">{selectedRank}{suit.value}</span>
-                            </button>
-                        ))}
-                    </div>
-                )}
+                {/* 52 Card Grid - 13 rows × 4 columns */}
+                <div className="card-grid-52">
+                    {RANKS.map((rank, rowIndex) => (
+                        <div key={rank} className="card-grid-row" style={{ animationDelay: `${rowIndex * 0.02}s` }}>
+                            {SUITS.map(suit => {
+                                const card = `${rank}${suit.value}`;
+                                const isUsed = usedCards.has(card);
+                                return (
+                                    <button
+                                        key={card}
+                                        className={`card-grid-btn ${suit.isRed ? 'red' : 'black'} ${isUsed ? 'used' : ''}`}
+                                        onClick={() => handleCardTap(card)}
+                                        disabled={isUsed}
+                                    >
+                                        <span className="card-rank">{rank}</span>
+                                        <span className="card-suit">{suit.value}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ))}
+                </div>
 
                 {/* Clear Button */}
                 <button className="fullscreen-clear-btn" onClick={handleClear}>
-                    Clear Selection
+                    Clear
                 </button>
             </div>
         );
