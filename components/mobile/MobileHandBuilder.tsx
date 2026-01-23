@@ -961,12 +961,14 @@ export default function MobileHandBuilder({
     };
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // MULTI-SELECT 52-CARD GRID - All cards visible, tap to select
-    // Hero cards: select 2, Flop: select 3, Turn/River: select 1
+    // TWO-STEP CARD PICKER - Rank then Suit (No scrolling, everything fits)
+    // Step 1: Select Rank (13 buttons in 5 columns)
+    // Step 2: Select Suit (4 buttons in 2x2 grid)
     // ═══════════════════════════════════════════════════════════════════════════════
     const CardPicker = ({ cardKey, onSelect }: { cardKey: string; onSelect: (card: string) => void }) => {
+        const [selectedRank, setSelectedRank] = useState<string | null>(null);
 
-        // Get all currently used cards to gray them out
+        // Get all currently used cards to gray them out suits
         const getUsedCards = (): Set<string> => {
             const used = new Set<string>();
             if (heroCard1) used.add(heroCard1);
@@ -981,18 +983,33 @@ export default function MobileHandBuilder({
 
         const usedCards = getUsedCards();
 
-        const handleCardTap = (card: string) => {
-            if (usedCards.has(card)) return; // Can't select used cards
-            onSelect(card);
-            setShowCardPicker(null);
+        const handleRankSelect = (rank: string) => {
+            setSelectedRank(rank);
+        };
+
+        const handleSuitSelect = (suit: { value: string; isRed: boolean }) => {
+            if (selectedRank) {
+                const card = `${selectedRank}${suit.value}`;
+                if (!usedCards.has(card)) {
+                    onSelect(card);
+                    setSelectedRank(null);
+                    setShowCardPicker(null);
+                }
+            }
+        };
+
+        const handleBack = () => {
+            setSelectedRank(null);
         };
 
         const handleClose = () => {
+            setSelectedRank(null);
             setShowCardPicker(null);
         };
 
         const handleClear = () => {
             onSelect('');
+            setSelectedRank(null);
             setShowCardPicker(null);
         };
 
@@ -1011,36 +1028,57 @@ export default function MobileHandBuilder({
         };
 
         return (
-            <div className="top-dropdown-picker">
+            <div className="twostep-picker">
                 {/* Header */}
-                <div className="dropdown-header">
-                    <button className="dropdown-clear-btn" onClick={handleClear}>Clear</button>
-                    <h2 className="dropdown-title">{getSelectionLabel()}</h2>
-                    <button className="dropdown-done-btn" onClick={handleClose}>Done</button>
+                <div className="twostep-header">
+                    {selectedRank ? (
+                        <button className="twostep-back" onClick={handleBack}>← Back</button>
+                    ) : (
+                        <button className="twostep-clear" onClick={handleClear}>Clear</button>
+                    )}
+                    <h2 className="twostep-title">
+                        {selectedRank ? `Select Suit for ${selectedRank}` : getSelectionLabel()}
+                    </h2>
+                    <button className="twostep-done" onClick={handleClose}>Done</button>
                 </div>
 
-                {/* 52 Card Grid - 13 rows × 4 columns */}
-                <div className="dropdown-card-grid">
-                    {RANKS.map((rank, rowIndex) => (
-                        <div key={rank} className="dropdown-card-row" style={{ animationDelay: `${rowIndex * 0.015}s` }}>
-                            {SUITS.map(suit => {
-                                const card = `${rank}${suit.value}`;
-                                const isUsed = usedCards.has(card);
-                                return (
-                                    <button
-                                        key={card}
-                                        className={`dropdown-card ${suit.isRed ? 'red' : 'black'} ${isUsed ? 'used' : ''}`}
-                                        onClick={() => handleCardTap(card)}
-                                        disabled={isUsed}
-                                    >
-                                        <span className="dc-rank">{rank}</span>
-                                        <span className="dc-suit">{suit.value}</span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    ))}
-                </div>
+                {/* Step 1: Rank Selection - 5 columns */}
+                {!selectedRank && (
+                    <div className="twostep-rank-grid">
+                        {RANKS.map((rank, index) => (
+                            <button
+                                key={rank}
+                                className="twostep-rank-btn"
+                                onClick={() => handleRankSelect(rank)}
+                                style={{ animationDelay: `${index * 0.02}s` }}
+                            >
+                                {rank}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* Step 2: Suit Selection - 2x2 grid */}
+                {selectedRank && (
+                    <div className="twostep-suit-grid">
+                        {SUITS.map((suit, index) => {
+                            const card = `${selectedRank}${suit.value}`;
+                            const isUsed = usedCards.has(card);
+                            return (
+                                <button
+                                    key={suit.value}
+                                    className={`twostep-suit-btn ${suit.isRed ? 'red' : 'black'} ${isUsed ? 'used' : ''}`}
+                                    onClick={() => handleSuitSelect(suit)}
+                                    disabled={isUsed}
+                                    style={{ animationDelay: `${index * 0.05}s` }}
+                                >
+                                    <span className="suit-icon">{suit.value}</span>
+                                    <span className="suit-label">{selectedRank}{suit.value}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         );
     };

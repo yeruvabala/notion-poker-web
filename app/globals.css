@@ -5467,6 +5467,202 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
+   TWO-STEP CARD PICKER - Rank then Suit (No scrolling)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.twostep-picker {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    background: linear-gradient(180deg, #0d0d0d 0%, #141414 100%);
+    display: flex;
+    flex-direction: column;
+    animation: twostep-appear 0.2s ease;
+    padding-top: env(safe-area-inset-top, 0);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+@keyframes twostep-appear {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Header */
+.twostep-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.twostep-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    flex: 1;
+}
+
+.twostep-back,
+.twostep-clear,
+.twostep-done {
+    background: transparent;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px;
+    min-width: 60px;
+}
+
+.twostep-back,
+.twostep-done {
+    color: #60a5fa;
+}
+
+.twostep-clear {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Rank Grid - 5 columns, fits all 13 ranks */
+.twostep-rank-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    padding: 24px 20px;
+    align-content: center;
+    max-width: 360px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.twostep-rank-btn {
+    aspect-ratio: 1;
+    border-radius: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: linear-gradient(180deg,
+            rgba(255, 255, 255, 0.08) 0%,
+            rgba(255, 255, 255, 0.03) 100%);
+    color: #fff;
+    font-size: 24px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    animation: rank-appear 0.25s ease backwards;
+}
+
+@keyframes rank-appear {
+    from {
+        opacity: 0;
+        transform: scale(0.85);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.twostep-rank-btn:active {
+    transform: scale(0.92);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Suit Grid - 2x2, large buttons */
+.twostep-suit-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding: 24px 24px;
+    align-content: center;
+    max-width: 320px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.twostep-suit-btn {
+    aspect-ratio: 1;
+    border-radius: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.15);
+    background: linear-gradient(180deg,
+            rgba(255, 255, 255, 0.06) 0%,
+            rgba(255, 255, 255, 0.02) 100%);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    animation: suit-appear 0.3s ease backwards;
+}
+
+@keyframes suit-appear {
+    from {
+        opacity: 0;
+        transform: scale(0.8) rotateY(20deg);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) rotateY(0);
+    }
+}
+
+.twostep-suit-btn:active:not(.used) {
+    transform: scale(0.94);
+}
+
+.twostep-suit-btn.black {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.twostep-suit-btn.black .suit-icon {
+    color: #fff;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.twostep-suit-btn.red {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: linear-gradient(180deg,
+            rgba(239, 68, 68, 0.1) 0%,
+            rgba(239, 68, 68, 0.03) 100%);
+}
+
+.twostep-suit-btn.red .suit-icon {
+    color: #ef4444;
+    text-shadow: 0 0 25px rgba(239, 68, 68, 0.5);
+}
+
+.twostep-suit-btn.used {
+    opacity: 0.25;
+    cursor: not-allowed;
+}
+
+.twostep-suit-btn .suit-icon {
+    font-size: 52px;
+    line-height: 1;
+}
+
+.twostep-suit-btn .suit-label {
+    font-size: 18px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
    TOP DROPDOWN CARD PICKER - Slides from top, all 52 cards visible
    ═══════════════════════════════════════════════════════════════════════════════ */
 
