@@ -5318,6 +5318,151 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
+   TWO-STEP CARD PICKER - Premium Design
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.card-picker-modal.two-step {
+    padding: 20px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0));
+}
+
+/* Back button */
+.picker-back {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    transition: all 0.2s ease;
+}
+
+.picker-back:active {
+    transform: scale(0.9);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* STEP 1: Rank Grid - 5 columns */
+.rank-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    padding: 16px 0;
+    animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.rank-button {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: linear-gradient(180deg, #2a2a2a 0%, #1f1f1f 100%);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rank-button:active {
+    transform: scale(0.92);
+    background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 100%);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* STEP 2: Suit Grid - 2x2 large buttons */
+.suit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 16px 0;
+    animation: suit-appear 0.25s ease;
+}
+
+@keyframes suit-appear {
+    from {
+        opacity: 0;
+        transform: scale(0.8) rotateY(20deg);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) rotateY(0);
+    }
+}
+
+.suit-button {
+    aspect-ratio: 1.2;
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.suit-button:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.suit-button.black {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.suit-button.black .suit-symbol {
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+}
+
+.suit-button.red {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: linear-gradient(180deg, #3a2525 0%, #2a1a1a 100%);
+}
+
+.suit-button.red .suit-symbol {
+    color: #ef4444;
+    text-shadow: 0 2px 12px rgba(239, 68, 68, 0.5);
+}
+
+.suit-symbol {
+    font-size: 48px;
+    line-height: 1;
+}
+
+.suit-preview {
+    font-size: 16px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 1px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
    SESSION INDICATOR BAR - Shows active session (Vibrant Amber Theme)
    ═══════════════════════════════════════════════════════════════════════════════ */
 .session-indicator-bar {

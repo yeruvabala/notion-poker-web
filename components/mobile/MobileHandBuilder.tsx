@@ -971,34 +971,39 @@ export default function MobileHandBuilder({
         );
     };
 
-    // Card Picker Modal with Touch Scroll Fix
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // TWO-STEP CARD PICKER - Premium Design
+    // Step 1: Select Rank (A, K, Q, J, T, 9, 8, 7, 6, 5, 4, 3, 2)
+    // Step 2: Select Suit (♠ ♥ ♦ ♣)
+    // ═══════════════════════════════════════════════════════════════════════════════
     const CardPicker = ({ cardKey, onSelect }: { cardKey: string; onSelect: (card: string) => void }) => {
-        const modalRef = useRef<HTMLDivElement>(null);
-        const startY = useRef(0);
-        const scrollTop = useRef(0);
+        const [selectedRank, setSelectedRank] = useState<string | null>(null);
 
-        // Prevent iOS pull-to-refresh by handling touch events manually
-        const handleTouchStart = (e: React.TouchEvent) => {
-            if (modalRef.current) {
-                startY.current = e.touches[0].clientY;
-                scrollTop.current = modalRef.current.scrollTop;
+        const handleRankSelect = (rank: string) => {
+            setSelectedRank(rank);
+        };
+
+        const handleSuitSelect = (suit: { value: string; isRed: boolean }) => {
+            if (selectedRank) {
+                onSelect(`${selectedRank}${suit.value}`);
+                setSelectedRank(null);
+                setShowCardPicker(null);
             }
         };
 
-        const handleTouchMove = (e: React.TouchEvent) => {
-            if (!modalRef.current) return;
+        const handleBack = () => {
+            setSelectedRank(null);
+        };
 
-            const currentY = e.touches[0].clientY;
-            const deltaY = startY.current - currentY;
-            const newScrollTop = scrollTop.current + deltaY;
+        const handleClose = () => {
+            setSelectedRank(null);
+            setShowCardPicker(null);
+        };
 
-            const maxScroll = modalRef.current.scrollHeight - modalRef.current.clientHeight;
-
-            // Only prevent default if we're at scroll boundaries
-            // This stops iOS from capturing the gesture for pull-to-refresh
-            if ((newScrollTop <= 0 && deltaY < 0) || (newScrollTop >= maxScroll && deltaY > 0)) {
-                e.preventDefault();
-            }
+        const handleClear = () => {
+            onSelect('');
+            setSelectedRank(null);
+            setShowCardPicker(null);
         };
 
         // Prevent overlay touch from triggering pull-to-refresh
@@ -1009,40 +1014,56 @@ export default function MobileHandBuilder({
         return (
             <div
                 className="card-picker-overlay"
-                onClick={() => setShowCardPicker(null)}
+                onClick={handleClose}
                 onTouchMove={handleOverlayTouchMove}
             >
-                <div
-                    ref={modalRef}
-                    className="card-picker-modal"
-                    onClick={e => e.stopPropagation()}
-                    onTouchStart={handleTouchStart}
-                    onTouchMove={handleTouchMove}
-                >
+                <div className="card-picker-modal two-step" onClick={e => e.stopPropagation()}>
+                    {/* Header */}
                     <div className="picker-header">
-                        <span>Select Card</span>
-                        <button onClick={() => setShowCardPicker(null)}>✕</button>
+                        {selectedRank ? (
+                            <>
+                                <button className="picker-back" onClick={handleBack}>←</button>
+                                <span>Select Suit for <strong>{selectedRank}</strong></span>
+                            </>
+                        ) : (
+                            <span>Select Rank</span>
+                        )}
+                        <button onClick={handleClose}>✕</button>
                     </div>
-                    <div className="picker-grid">
-                        {RANKS.map(rank => (
-                            <div key={rank} className="picker-row">
-                                {SUITS.map(suit => (
-                                    <button
-                                        key={`${rank}${suit.value}`}
-                                        className="picker-card"
-                                        onClick={() => {
-                                            onSelect(`${rank}${suit.value}`);
-                                            setShowCardPicker(null);
-                                        }}
-                                    >
-                                        <span>{rank}</span>
-                                        <span style={{ color: suit.isRed ? '#ef4444' : '#ffffff' }}>{suit.value}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        ))}
-                    </div>
-                    <button className="picker-clear" onClick={() => { onSelect(''); setShowCardPicker(null); }}>
+
+                    {/* Step 1: Rank Selection */}
+                    {!selectedRank && (
+                        <div className="rank-grid">
+                            {RANKS.map(rank => (
+                                <button
+                                    key={rank}
+                                    className="rank-button"
+                                    onClick={() => handleRankSelect(rank)}
+                                >
+                                    {rank}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Step 2: Suit Selection */}
+                    {selectedRank && (
+                        <div className="suit-grid">
+                            {SUITS.map(suit => (
+                                <button
+                                    key={suit.value}
+                                    className={`suit-button ${suit.isRed ? 'red' : 'black'}`}
+                                    onClick={() => handleSuitSelect(suit)}
+                                >
+                                    <span className="suit-symbol">{suit.value}</span>
+                                    <span className="suit-preview">{selectedRank}{suit.value}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Clear Button */}
+                    <button className="picker-clear" onClick={handleClear}>
                         Clear
                     </button>
                 </div>
