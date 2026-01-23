@@ -5182,15 +5182,17 @@ body.native-app [class*="btn-row"]>* {
     top: 0;
     left: 0;
     right: 0;
-    bottom: 80px;
-    /* Clear nav bar */
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     z-index: 2000;
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
+    padding: 20px;
+    padding-bottom: 100px;
+    /* Clearance for nav bar */
     animation: overlay-appear 0.2s ease;
 }
 
@@ -5205,24 +5207,25 @@ body.native-app [class*="btn-row"]>* {
 }
 
 .card-picker-modal {
-    background: #1f1f1f;
-    border-radius: 24px 24px 0 0;
-    padding: 16px;
-    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0));
+    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+    border-radius: 20px;
+    padding: 20px;
     width: 100%;
-    max-height: 85vh;
-    /* No scroll - all 52 cards fit on screen */
+    max-width: 340px;
     overflow: hidden;
-    animation: modal-slide-up 0.3s ease;
+    animation: modal-appear 0.25s ease;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-@keyframes modal-slide-up {
+@keyframes modal-appear {
     from {
-        transform: translateY(100%);
+        opacity: 0;
+        transform: scale(0.9);
     }
 
     to {
-        transform: translateY(0);
+        opacity: 1;
+        transform: scale(1);
     }
 }
 
