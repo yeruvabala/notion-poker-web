@@ -5182,7 +5182,8 @@ body.native-app [class*="btn-row"]>* {
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: 80px;
+    /* Clear nav bar */
     background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
