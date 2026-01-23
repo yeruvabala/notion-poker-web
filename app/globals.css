@@ -5486,7 +5486,10 @@ body.native-app [class*="btn-row"]>* {
     flex-direction: column;
     align-items: center;
     animation: fullscreen-appear 0.3s ease;
-    padding: env(safe-area-inset-top, 20px) 20px env(safe-area-inset-bottom, 20px);
+    padding: env(safe-area-inset-top, 20px) 16px env(safe-area-inset-bottom, 20px);
+    /* Prevent pull-to-refresh */
+    overscroll-behavior: contain;
+    touch-action: none;
 }
 
 @keyframes fullscreen-appear {
@@ -5701,18 +5704,18 @@ body.native-app [class*="btn-row"]>* {
 .card-grid-52 {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     width: 100%;
-    max-width: 320px;
+    max-width: 280px;
     flex: 1;
     justify-content: center;
-    padding: 10px 0;
+    padding: 0;
 }
 
 .card-grid-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
+    gap: 4px;
     animation: row-slide-in 0.3s ease backwards;
 }
 
@@ -5730,8 +5733,8 @@ body.native-app [class*="btn-row"]>* {
 
 .card-grid-btn {
     aspect-ratio: 1.1;
-    border-radius: 10px;
-    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
     background: linear-gradient(180deg,
             rgba(255, 255, 255, 0.08) 0%,
             rgba(255, 255, 255, 0.02) 100%);
@@ -5742,7 +5745,7 @@ body.native-app [class*="btn-row"]>* {
     align-items: center;
     justify-content: center;
     gap: 0px;
-    padding: 4px;
+    padding: 2px;
 }
 
 .card-grid-btn:active:not(.used) {
