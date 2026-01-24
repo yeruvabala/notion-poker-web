@@ -48,50 +48,74 @@ const FILTER_CONFIGS = {
 
 // Helper to format study note content with proper structure
 function formatSourceContent(content: string) {
-    // Split by common delimiters and clean up
-    const parts = content.split(/\s*-\s*(?=\*\*)/);
-
     // Extract metadata line if present (Site: | Stakes: | etc.)
-    const metaMatch = content.match(/^(Site:.*?(?:Coach tags:.*?)?\]?\s*)/);
+    const metaMatch = content.match(/^(Site:.*?(?:Coach tags:.*?\}?\]?)?\s*)/);
     const metadata = metaMatch ? metaMatch[1] : null;
-    const mainContent = metadata ? content.replace(metadata, '') : content;
+    let mainContent = metadata ? content.replace(metadata, '') : content;
 
-    // Parse sections with **Title**: format
+    // Clean up the main content - remove "GTO Strategy:" prefix if present
+    mainContent = mainContent.replace(/^GTO Strategy:\s*/i, '');
+
+    // Try to parse sections with **Title**: format
     const sections: { title: string; content: string }[] = [];
     const sectionRegex = /\*\*([^*]+)\*\*:?\s*([^*]*?)(?=\*\*|$)/g;
     let match;
 
     while ((match = sectionRegex.exec(mainContent)) !== null) {
-        sections.push({
-            title: match[1].trim(),
-            content: match[2].trim()
-        });
+        const title = match[1].trim();
+        const sectionContent = match[2].trim();
+        if (title && sectionContent) {
+            sections.push({ title, content: sectionContent });
+        }
     }
 
-    // If no sections found, just return cleaned content
-    if (sections.length === 0) {
+    // If we found markdown sections, use them
+    if (sections.length > 0) {
         return (
-            <div className="source-text">
-                {content.replace(/\*\*/g, '')}
+            <div className="source-formatted">
+                {metadata && (
+                    <div className="source-meta">
+                        {metadata.split('|').map((item, i) => {
+                            const cleaned = item.replace(/Coach tags:.*$/, '').trim();
+                            if (!cleaned) return null;
+                            return <span key={i} className="meta-tag">{cleaned}</span>;
+                        })}
+                    </div>
+                )}
+                <div className="source-sections">
+                    {sections.map((section, i) => (
+                        <div key={i} className="source-section">
+                            <span className="section-title">{section.title}</span>
+                            <span className="section-content">{section.content}</span>
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }
 
+    // Fallback: Split plain text into paragraphs for better readability
+    // Extract metadata even for plain text
+    const plainMeta = metadata ? metadata.split('|').filter(Boolean).map(s => s.trim()) : [];
+    const cleanContent = mainContent.replace(/\*\*/g, '').trim();
+
+    // Split into sentences for better display
+    const sentences = cleanContent.split(/(?<=\.)\s+/);
+
     return (
         <div className="source-formatted">
-            {metadata && (
+            {plainMeta.length > 0 && (
                 <div className="source-meta">
-                    {metadata.split('|').map((item, i) => (
-                        <span key={i} className="meta-tag">{item.trim()}</span>
-                    ))}
+                    {plainMeta.map((item, i) => {
+                        const cleaned = item.replace(/Coach tags:.*$/, '').trim();
+                        if (!cleaned) return null;
+                        return <span key={i} className="meta-tag">{cleaned}</span>;
+                    })}
                 </div>
             )}
-            <div className="source-sections">
-                {sections.map((section, i) => (
-                    <div key={i} className="source-section">
-                        <span className="section-title">{section.title}</span>
-                        <span className="section-content">{section.content}</span>
-                    </div>
+            <div className="source-prose">
+                {sentences.map((sentence, i) => (
+                    <p key={i} className="prose-paragraph">{sentence.trim()}</p>
                 ))}
             </div>
         </div>

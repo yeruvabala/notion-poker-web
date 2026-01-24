@@ -9908,6 +9908,24 @@ body.native-app [class*="btn-row"]>* {
     color: rgba(255, 255, 255, 0.6);
 }
 
+/* Prose paragraphs for plain text notes */
+.source-prose {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.prose-paragraph {
+    font-size: 12px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+    border-left: 2px solid rgba(255, 255, 255, 0.1);
+}
+
 /* Empty State */
 .study-empty-state {
     display: flex;
