@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { RFI_RANGES, VS_THREE_BET_RANGES } from '@/app/api/coach/utils/gtoRanges';
+import MobileRangesPage from './mobile-page';
 
 // =============================================================================
 // CONSTANTS
@@ -101,6 +103,12 @@ function calculateRangeStats(range: Record<string, number>) {
 // =============================================================================
 
 export default function RangesPage() {
+  // Mobile detection - render mobile page on native platforms
+  const isNative = typeof window !== 'undefined' && Capacitor.isNativePlatform();
+  if (isNative) {
+    return <MobileRangesPage />;
+  }
+
   const [selectedPosition, setSelectedPosition] = useState('BTN');
   const [selectedScenario, setSelectedScenario] = useState('rfi');
   const [hoveredCell, setHoveredCell] = useState<{ row: number; col: number } | null>(null);
