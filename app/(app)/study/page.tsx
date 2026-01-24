@@ -3,7 +3,9 @@
 
 import "@/styles/onlypoker-theme.css";
 import React, { useMemo, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { createClient } from '@/lib/supabase/client';
+import MobileStudyPage from './mobile-page';
 
 type StudyDrill = {
   id?: string;
@@ -68,6 +70,12 @@ const STREET_OPTIONS = [
 ];
 
 export default function StudyPage() {
+  // Mobile detection - render mobile page on native platforms
+  const isNative = typeof window !== 'undefined' && Capacitor.isNativePlatform();
+  if (isNative) {
+    return <MobileStudyPage />;
+  }
+
   // Avoid “Multiple GoTrueClient instances” warning
   const supabase = useMemo(() => createClient(), []);
 
