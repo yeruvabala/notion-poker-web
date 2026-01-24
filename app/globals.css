@@ -7591,14 +7591,27 @@ body.native-app [class*="btn-row"]>* {
     z-index: 9999;
     pointer-events: none;
     overflow: hidden;
+    /* Add semi-transparent backdrop so cards are visible over any content */
+    background: rgba(0, 0, 0, 0.4);
+    animation: backdrop-fade 0.7s ease-out forwards;
+}
+
+@keyframes backdrop-fade {
+    0% {
+        background: rgba(0, 0, 0, 0.4);
+    }
+
+    100% {
+        background: rgba(0, 0, 0, 0);
+    }
 }
 
 /* Scattered Cards - Flying from actual UI positions */
 .cascade-card {
     position: absolute;
-    font-size: 48px;
+    font-size: 56px;
     opacity: 0;
-    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
+    filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.8));
 }
 
 /* ===== HERO CARDS - Start from top area ===== */
