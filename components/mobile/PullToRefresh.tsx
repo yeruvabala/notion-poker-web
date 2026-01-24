@@ -34,11 +34,13 @@ export default function PullToRefresh({
     const startY = useRef(0);
     const currentY = useRef(0);
     const isPulling = useRef(false);
+    const wasAtTopOnStart = useRef(false);
 
-    // Check if at top of scroll
+    // Check if at TOP of scroll - must be very close to 0
     const isAtTop = useCallback(() => {
         if (!containerRef.current) return false;
-        return containerRef.current.scrollTop <= 0;
+        // Allow small tolerance for sub-pixel rounding, but must be essentially at top
+        return containerRef.current.scrollTop <= 5;
     }, []);
 
     // Haptic feedback for iOS
@@ -65,7 +67,10 @@ export default function PullToRefresh({
 
     const handleTouchStart = useCallback((e: React.TouchEvent) => {
         if (disabled || isRefreshing) return;
-        if (!isAtTop()) return;
+
+        // STRICT: Must be at top WHEN touch starts
+        wasAtTopOnStart.current = isAtTop();
+        if (!wasAtTopOnStart.current) return;
 
         startY.current = e.touches[0].clientY;
         isPulling.current = true;
@@ -73,7 +78,9 @@ export default function PullToRefresh({
 
     const handleTouchMove = useCallback((e: React.TouchEvent) => {
         if (!isPulling.current || disabled || isRefreshing) return;
-        if (!isAtTop()) {
+
+        // Must have been at top when touch started AND still be at top
+        if (!wasAtTopOnStart.current || !isAtTop()) {
             isPulling.current = false;
             setPullDistance(0);
             return;
@@ -82,16 +89,20 @@ export default function PullToRefresh({
         currentY.current = e.touches[0].clientY;
         const delta = currentY.current - startY.current;
 
-        if (delta > 0) {
+        // STRICT: Only count as pull if moving DOWN (positive delta)
+        // and ignore small movements (hysteresis to prevent accidental triggers)
+        if (delta > 15) { // Require 15px of intentional downward movement before engaging
             // Resistance factor - pull gets harder as you go
-            const resistance = 0.4;
-            const distance = delta * resistance;
+            const resistance = 0.35; // Slightly more resistance
+            const distance = (delta - 15) * resistance; // Subtract the hysteresis buffer
             setPullDistance(Math.min(distance, threshold * 1.5));
 
             // Light haptic when crossing threshold
             if (distance >= threshold && pullDistance < threshold) {
                 triggerHaptic();
             }
+        } else {
+            setPullDistance(0);
         }
     }, [disabled, isRefreshing, isAtTop, threshold, pullDistance, triggerHaptic]);
 
@@ -182,20 +193,28 @@ export default function PullToRefresh({
             {/* Card Cascade Overlay - Shows during refresh */}
             {showCascade && (
                 <div className="card-cascade-overlay">
-                    {/* Scattered cards animation */}
-                    <div className="cascade-card cascade-card-1">🂡</div>
-                    <div className="cascade-card cascade-card-2">🂮</div>
-                    <div className="cascade-card cascade-card-3">🃂</div>
-                    <div className="cascade-card cascade-card-4">🃇</div>
-                    <div className="cascade-card cascade-card-5">🂢</div>
+                    {/* Hero Cards - fly from top area */}
+                    <div className="cascade-card cascade-hero-1">🂡</div>
+                    <div className="cascade-card cascade-hero-2">🂮</div>
 
-                    {/* Particle dust trails */}
-                    <div className="particle-trail particle-1" />
-                    <div className="particle-trail particle-2" />
-                    <div className="particle-trail particle-3" />
+                    {/* Flop Cards - fly from upper-middle */}
+                    <div className="cascade-card cascade-flop-1">🃁</div>
+                    <div className="cascade-card cascade-flop-2">🃇</div>
+                    <div className="cascade-card cascade-flop-3">🂲</div>
 
-                    {/* Center vortex */}
-                    <div className="vortex-center" />
+                    {/* Turn Card - fly from its position */}
+                    <div className="cascade-card cascade-turn">🂾</div>
+
+                    {/* River Card - fly from its position */}
+                    <div className="cascade-card cascade-river">🃊</div>
+
+                    {/* Particle dust trails distributed */}
+                    <div className="particle-trail particle-hero" />
+                    <div className="particle-trail particle-flop" />
+                    <div className="particle-trail particle-turn" />
+
+                    {/* Position indicator ghost */}
+                    <div className="position-ghost" />
 
                     {/* Reset flash */}
                     <div className="reset-flash" />
