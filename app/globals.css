@@ -4513,7 +4513,7 @@ body.native-app [class*="btn-row"]>* {
 /* Migrated cards - flew in from previous street */
 .community-cards.migrated-cards {
     gap: 4px;
-    animation: cards-fly-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: cards-fly-in 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
 }
 
@@ -4532,7 +4532,7 @@ body.native-app [class*="btn-row"]>* {
             transparent 80%);
     border-radius: 30px;
     z-index: -1;
-    animation: airdrop-glow 0.8s ease-out forwards, glow-pulse 2s ease-in-out 0.8s infinite;
+    animation: airdrop-glow 1.2s ease-out forwards, glow-pulse 2s ease-in-out 1.2s infinite;
 }
 
 /* Light streak effect - AirDrop style */
@@ -4551,7 +4551,7 @@ body.native-app [class*="btn-row"]>* {
             rgba(59, 130, 246, 0.8) 70%,
             transparent 100%);
     border-radius: 2px;
-    animation: light-streak 0.6s ease-out forwards;
+    animation: light-streak 1.0s ease-out forwards;
     opacity: 0;
 }
 
