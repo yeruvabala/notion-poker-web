@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import MobileBottomNav from '@/components/mobile/MobileBottomNav';
+import MobilePageHeader from '@/components/mobile/MobilePageHeader';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MOBILE HANDS PAGE - Premium Card-based Hand History
@@ -175,10 +176,8 @@ export default function MobileHandsPage() {
 
     return (
         <div className="mobile-hands-page">
-            {/* Header */}
-            <div className="mobile-hands-header">
-                <h1 className="mobile-hands-title">MY HANDS</h1>
-            </div>
+            {/* Premium Page Header */}
+            <MobilePageHeader title="MY HANDS" />
 
             {/* Stats Bar */}
             <div className="mobile-hands-stats">

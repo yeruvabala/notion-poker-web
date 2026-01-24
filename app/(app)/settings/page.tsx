@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import MobileBottomNav from '@/components/mobile/MobileBottomNav';
+import MobilePageHeader from '@/components/mobile/MobilePageHeader';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -36,10 +37,8 @@ export default function SettingsPage() {
 
   return (
     <div className="settings-page">
-      {/* Header */}
-      <div className="settings-header">
-        <h1 className="settings-title">Settings</h1>
-      </div>
+      {/* Premium Page Header */}
+      <MobilePageHeader title="SETTINGS" />
 
       {/* Settings Content */}
       <div className="settings-content">
