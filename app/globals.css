@@ -3092,15 +3092,16 @@ body.native-app [class*="btn-row"]>* {
     z-index: 1000;
     display: flex;
     justify-content: space-around;
-    align-items: center;
+    align-items: flex-start;
     /* Premium dark glass background */
     background: linear-gradient(180deg, rgba(18, 18, 20, 0.98) 0%, rgba(12, 12, 14, 0.99) 100%);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-top: 1px solid rgba(255, 255, 255, 0.06);
-    /* Instagram-tight: minimal height, icons low */
-    height: calc(44px + env(safe-area-inset-bottom, 0px));
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    /* Icons positioned higher with space below */
+    padding-top: 10px;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    min-height: calc(50px + env(safe-area-inset-bottom, 0px));
 }
 
 .mobile-nav-item {
