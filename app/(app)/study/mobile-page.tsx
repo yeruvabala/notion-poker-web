@@ -212,27 +212,21 @@ export default function MobileStudyPage() {
                         </div>
                     )}
 
-                    {/* Ask Button */}
+                    {/* Ask Button - Compact pill style */}
                     <button
                         className={`study-ask-btn ${loading ? 'loading' : ''}`}
                         onClick={handleAskCoach}
                         disabled={loading}
                     >
-                        <span className="ask-btn-content">
-                            {loading ? (
-                                <>
-                                    <span className="thinking-dots">
-                                        <span>●</span><span>●</span><span>●</span>
-                                    </span>
-                                    <span>Thinking...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <span className="ask-icon">✨</span>
-                                    <span>Ask Coach</span>
-                                </>
-                            )}
-                        </span>
+                        {loading ? (
+                            <span className="ask-btn-content">
+                                <span className="thinking-dots">
+                                    <span>●</span><span>●</span><span>●</span>
+                                </span>
+                            </span>
+                        ) : (
+                            <span className="ask-btn-content">✨ Ask</span>
+                        )}
                     </button>
 
                     {error && <div className="study-error">{error}</div>}
@@ -350,17 +344,6 @@ export default function MobileStudyPage() {
                             </div>
                         </div>
                     )}
-                </div>
-            )}
-
-            {/* Empty State */}
-            {!coach && !loading && (
-                <div className="study-empty-state">
-                    <div className="empty-icon">🎓</div>
-                    <div className="empty-title">Ask the AI Coach</div>
-                    <div className="empty-subtitle">
-                        Get personalized strategy advice, identify leaks, and practice with custom drills
-                    </div>
                 </div>
             )}
 
