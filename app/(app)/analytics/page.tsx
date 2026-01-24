@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import "@/styles/onlypoker-theme.css";
+import MobileAnalyticsPage from "./mobile-page";
 import {
   LineChart,
   Line,
@@ -49,6 +51,12 @@ function getPositionColor(bb: number): string {
 }
 
 export default function AnalyticsPage() {
+  // Mobile detection - render mobile page on native platforms
+  const isNative = typeof window !== 'undefined' && Capacitor.isNativePlatform();
+  if (isNative) {
+    return <MobileAnalyticsPage />;
+  }
+
   const [month, setMonth] = useState<string>(() => {
     const d = new Date();
     return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
