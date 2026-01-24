@@ -2983,16 +2983,15 @@ body.native-app [class*="btn-row"]>* {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 2px;
+    height: 1px;
     z-index: 10;
     background: linear-gradient(90deg,
             transparent 0%,
-            rgba(100, 150, 255, 0.5) 20%,
-            rgba(255, 255, 255, 0.8) 50%,
-            rgba(100, 150, 255, 0.5) 80%,
+            rgba(192, 192, 192, 0.2) 20%,
+            rgba(255, 255, 255, 0.4) 50%,
+            rgba(192, 192, 192, 0.2) 80%,
             transparent 100%);
-    box-shadow: 0 0 10px rgba(100, 150, 255, 0.5),
-        0 0 20px rgba(100, 150, 255, 0.25);
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.1);
 }
 
 .mobile-header-content {
