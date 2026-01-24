@@ -3081,7 +3081,7 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   MOBILE BOTTOM NAVIGATION (Fixed)
+   MOBILE BOTTOM NAVIGATION - Instagram-style tight design
    ═══════════════════════════════════════════════════════════════ */
 .mobile-bottom-nav {
     position: fixed;
@@ -3092,12 +3092,13 @@ body.native-app [class*="btn-row"]>* {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    background: rgba(28, 28, 28, 0.95);
+    background: rgba(20, 20, 20, 0.98);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    /* Tight Instagram-style: 50px base + safe area */
     padding-bottom: env(safe-area-inset-bottom, 0);
-    height: calc(56px + env(safe-area-inset-bottom, 0));
+    height: calc(50px + env(safe-area-inset-bottom, 0));
 }
 
 .mobile-nav-item {
@@ -3106,30 +3107,30 @@ body.native-app [class*="btn-row"]>* {
     align-items: center;
     justify-content: center;
     flex: 1;
-    padding: 8px 4px;
+    padding: 6px 4px;
     background: transparent;
     border: none;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
     -webkit-tap-highlight-color: transparent;
 }
 
 .mobile-nav-item:active {
-    transform: scale(0.95);
+    transform: scale(0.92);
 }
 
 .mobile-nav-icon {
-    font-size: 22px;
-    margin-bottom: 2px;
-    opacity: 0.6;
-    transition: opacity 0.2s ease;
+    font-size: 20px;
+    margin-bottom: 1px;
+    opacity: 0.5;
+    transition: all 0.15s ease;
 }
 
 .mobile-nav-label {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 500;
-    color: #9ca3af;
-    transition: color 0.2s ease;
+    color: rgba(255, 255, 255, 0.5);
+    transition: all 0.15s ease;
 }
 
 .mobile-nav-item.active .mobile-nav-icon {
@@ -3137,7 +3138,7 @@ body.native-app [class*="btn-row"]>* {
 }
 
 .mobile-nav-item.active .mobile-nav-label {
-    color: #e5e7eb;
+    color: #ffffff;
     font-weight: 600;
 }
 
