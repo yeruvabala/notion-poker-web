@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { Capacitor } from '@capacitor/core';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PREMIUM MOBILE HAND BUILDER - World-class UI
@@ -841,20 +843,28 @@ export default function MobileHandBuilder({
         }
     }, [flopIsActive]);
 
-    // Auto-scroll to TURN when it expands (flop has call)
+    // Auto-scroll to TURN when it expands (flop has call) + HAPTIC FEEDBACK
     const turnIsActive = flopActions.some(a => a.action === 'call') && !turnActions.some(a => a.action === 'fold');
     useEffect(() => {
         if (turnIsActive && turnSectionRef.current) {
+            // Haptic feedback for card migration!
+            if (Capacitor.isNativePlatform()) {
+                Haptics.impact({ style: ImpactStyle.Medium }).catch(() => { });
+            }
             setTimeout(() => {
                 turnSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 150);
         }
     }, [turnIsActive]);
 
-    // Auto-scroll to RIVER when it expands (turn has call)
+    // Auto-scroll to RIVER when it expands (turn has call) + HAPTIC FEEDBACK
     const riverIsActive = turnActions.some(a => a.action === 'call');
     useEffect(() => {
         if (riverIsActive && riverSectionRef.current) {
+            // Haptic feedback for card migration!
+            if (Capacitor.isNativePlatform()) {
+                Haptics.impact({ style: ImpactStyle.Medium }).catch(() => { });
+            }
             setTimeout(() => {
                 riverSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 150);
