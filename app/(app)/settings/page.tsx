@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import MobileBottomNav from '@/components/mobile/MobileBottomNav';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -74,6 +75,9 @@ export default function SettingsPage() {
           </button>
         </div>
       </div>
+
+      {/* Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 }

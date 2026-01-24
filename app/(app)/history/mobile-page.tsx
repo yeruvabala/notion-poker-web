@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import MobileBottomNav from '@/components/mobile/MobileBottomNav';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MOBILE HANDS PAGE - Premium Card-based Hand History
@@ -358,6 +359,9 @@ export default function MobileHandsPage() {
                     </div>
                 </div>
             )}
+
+            {/* Bottom Navigation */}
+            <MobileBottomNav />
         </div>
     );
 }
