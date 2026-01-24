@@ -84,7 +84,8 @@ export default function HistoryPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  // Native app detection - show mobile version
+  // Prevent hydration mismatch - only render after client-side hydration
+  const [mounted, setMounted] = useState(false);
   const [isNative, setIsNative] = useState(false);
 
   // All hooks must be declared before any conditional returns
@@ -98,10 +99,16 @@ export default function HistoryPage() {
   const [uploadExpanded, setUploadExpanded] = useState(false);
   const [selectedHand, setSelectedHand] = useState<Hand | null>(null);
 
-  // Detect native platform
+  // Detect native platform after mount to prevent hydration mismatch
   useEffect(() => {
+    setMounted(true);
     setIsNative(Capacitor.isNativePlatform());
   }, []);
+
+  // Don't render until mounted to prevent hydration mismatch
+  if (!mounted) {
+    return null;
+  }
 
   // For native app, render mobile version
   if (isNative) {
