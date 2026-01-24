@@ -6370,17 +6370,20 @@ body.native-app [class*="btn-row"]>* {
     white-space: nowrap;
 }
 
-/* Save Button - SECONDARY (Subtle glass style) */
+/* Save Button */
 .action-bar-button.save-button {
-    background: rgba(40, 40, 45, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg,
+            #3a3a3a 0%,
+            #2a2a2a 50%,
+            #1a1a1a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.05),
-        0 2px 8px rgba(0, 0, 0, 0.2);
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .action-bar-button.save-button .action-bar-text {
-    color: rgba(255, 255, 255, 0.6);
+    color: #e5e7eb;
 }
 
 .action-bar-button.save-button.has-session {
@@ -6406,17 +6409,16 @@ body.native-app [class*="btn-row"]>* {
     font-style: italic;
 }
 
-/* Analyze Button - PRIMARY (Vibrant gradient with glow) */
+/* Analyze Button - Clean Dark Design */
 .action-bar-button.analyze-button {
-    background: linear-gradient(135deg,
-            rgba(59, 130, 246, 0.9) 0%,
-            rgba(99, 102, 241, 0.9) 50%,
-            rgba(139, 92, 246, 0.9) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: linear-gradient(180deg,
+            rgba(60, 60, 65, 1) 0%,
+            rgba(45, 45, 50, 1) 50%,
+            rgba(35, 35, 40, 1) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.2),
-        0 0 20px rgba(99, 102, 241, 0.4),
-        0 4px 15px rgba(99, 102, 241, 0.3);
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .action-bar-button.analyze-button .action-bar-icon {
@@ -6426,7 +6428,6 @@ body.native-app [class*="btn-row"]>* {
 .action-bar-button.analyze-button .action-bar-text {
     color: #ffffff;
     font-weight: 700;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Button active state */
