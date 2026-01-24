@@ -69,7 +69,6 @@ export default function MobileBottomNav() {
                             <Icon size={24} className="mobile-nav-svg" />
                             {isActive && <div className="nav-glow" />}
                         </div>
-                        <span className="mobile-nav-label">{label}</span>
                     </button>
                 );
             })}
