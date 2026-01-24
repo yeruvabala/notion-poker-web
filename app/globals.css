@@ -8092,7 +8092,8 @@ body.native-app [class*="btn-row"]>* {
    ═══════════════════════════════════════════════════════════════════════════════ */
 .mobile-hands-page {
     min-height: 100vh;
-    padding-top: calc(env(safe-area-inset-top, 0px) + 80px);
+    /* Increased padding to account for premium header with title + suits */
+    padding-top: calc(env(safe-area-inset-top, 0px) + 115px);
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
     padding-left: 16px;
     padding-right: 16px;
