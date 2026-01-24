@@ -249,23 +249,22 @@ export default function MobileHandsPage() {
                                     className="mobile-hand-card"
                                     onClick={() => handleHandTap(hand)}
                                 >
-                                    {/* Fixed Left: Premium Cards */}
+                                    {/* Left: Premium Hero Cards */}
                                     <div className="mobile-hand-cards">
                                         {renderHeroCards(hand.cards)}
                                     </div>
 
-                                    {/* Center: Position & Info */}
+                                    {/* Center: Compact Position + Time */}
                                     <div className="mobile-hand-info">
-                                        <span className={`mobile-position-badge ${(hand.position || 'unknown').toLowerCase()}`}>
-                                            {hand.position || '?'}
-                                        </span>
-                                        <div className="mobile-hand-details">
-                                            <span className="mobile-hand-stakes">{hand.stakes || '—'}</span>
-                                            <span className="mobile-hand-time">{timeAgo}</span>
+                                        <div className="mobile-info-row">
+                                            <span className={`mobile-position-badge ${(hand.position || 'unknown').toLowerCase()}`}>
+                                                {hand.position || '?'}
+                                            </span>
+                                            <span className="mobile-hand-time">— {timeAgo}</span>
                                         </div>
                                     </div>
 
-                                    {/* Fixed Right: GTO Status */}
+                                    {/* Right: GTO Status */}
                                     <div className="mobile-hand-status">
                                         {hasGto ? (
                                             <div className="mobile-gto-indicator">

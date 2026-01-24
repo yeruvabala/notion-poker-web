@@ -8332,23 +8332,29 @@ body.native-app [class*="btn-row"]>* {
 .mobile-hand-info {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    justify-content: center;
     min-width: 0;
+    flex: 1;
 }
 
-/* Color-Coded Position Badges */
+.mobile-info-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Color-Coded Position Badges - Compact */
 .mobile-position-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 3px 10px;
+    padding: 4px 12px;
     border-radius: 6px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    min-width: 40px;
-    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 /* Position Colors */
@@ -8405,20 +8411,11 @@ body.native-app [class*="btn-row"]>* {
     border: 1px solid rgba(100, 116, 139, 0.35);
 }
 
-/* Hand Details */
-.mobile-hand-details {
-    display: flex;
-    gap: 8px;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.45);
-}
-
-.mobile-hand-stakes {
-    color: rgba(255, 255, 255, 0.55);
-}
-
+/* Hand Time */
 .mobile-hand-time {
-    color: rgba(255, 255, 255, 0.35);
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 500;
 }
 
 /* GTO Status Section */
