@@ -17,6 +17,16 @@ body {
     color: #E2E8F0 !important;
 }
 
+/* Hide ALL scrollbars globally for cleaner mobile app appearance */
+* {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+    display: none;
+}
+
 /* Platinum text for all text elements */
 h1,
 h2,
