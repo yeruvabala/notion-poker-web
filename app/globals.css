@@ -4887,7 +4887,8 @@ body.native-app [class*="btn-row"]>* {
     padding: 8px 4px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    touch-action: pan-x;
+    touch-action: pan-x pan-y;
+    /* Allow both horizontal scroll and vertical page scroll */
     min-height: 48px;
     width: 100%;
     max-width: 100%;
