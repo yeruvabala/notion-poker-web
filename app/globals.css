@@ -8347,7 +8347,8 @@ body.native-app [class*="btn-row"]>* {
     font-weight: 800;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    width: fit-content;
+    min-width: 40px;
+    box-sizing: border-box;
 }
 
 /* Position Colors */
