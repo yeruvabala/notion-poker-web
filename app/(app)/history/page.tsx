@@ -7,6 +7,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { Bot, User, Target, Upload, Zap, FolderOpen, Clock, Layers, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { Capacitor } from '@capacitor/core';
+import MobileHandsPage from './mobile-page';
 import "@/styles/onlypoker-theme.css";
 import "@/app/globals.css";
 
@@ -82,6 +84,10 @@ export default function HistoryPage() {
   const router = useRouter();
   const supabase = createClient();
 
+  // Native app detection - show mobile version
+  const [isNative, setIsNative] = useState(false);
+
+  // All hooks must be declared before any conditional returns
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [hands, setHands] = useState<Hand[]>([]);
@@ -90,9 +96,17 @@ export default function HistoryPage() {
   const [uploadBusy, setUploadBusy] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<string | null>(null);
   const [uploadExpanded, setUploadExpanded] = useState(false);
-
-  // Modal state
   const [selectedHand, setSelectedHand] = useState<Hand | null>(null);
+
+  // Detect native platform
+  useEffect(() => {
+    setIsNative(Capacitor.isNativePlatform());
+  }, []);
+
+  // For native app, render mobile version
+  if (isNative) {
+    return <MobileHandsPage />;
+  }
 
   useEffect(() => {
     let cancelled = false;
