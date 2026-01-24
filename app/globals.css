@@ -8916,45 +8916,76 @@ body.native-app [class*="btn-row"]>* {
     letter-spacing: -0.3px;
 }
 
-/* Frequency Color Classes */
+/* Frequency Color Classes - Premium Glossy Effect */
 .matrix-cell.freq-always {
-    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-    box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 40%),
+        linear-gradient(135deg, #34d399 0%, #22c55e 40%, #16a34a 100%);
+    box-shadow:
+        0 0 10px rgba(34, 197, 94, 0.4),
+        inset 0 1px 1px rgba(255, 255, 255, 0.3),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .matrix-cell.freq-always .cell-text {
     color: #052e16;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .matrix-cell.freq-often {
-    background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
-    box-shadow: 0 0 6px rgba(234, 179, 8, 0.25);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, transparent 40%),
+        linear-gradient(135deg, #fcd34d 0%, #eab308 40%, #ca8a04 100%);
+    box-shadow:
+        0 0 8px rgba(234, 179, 8, 0.4),
+        inset 0 1px 1px rgba(255, 255, 255, 0.35),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .matrix-cell.freq-often .cell-text {
     color: #422006;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .matrix-cell.freq-mixed {
-    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-    box-shadow: 0 0 5px rgba(249, 115, 22, 0.2);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 40%),
+        linear-gradient(135deg, #fb923c 0%, #f97316 40%, #ea580c 100%);
+    box-shadow:
+        0 0 8px rgba(249, 115, 22, 0.35),
+        inset 0 1px 1px rgba(255, 255, 255, 0.25),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .matrix-cell.freq-mixed .cell-text {
     color: #431407;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .matrix-cell.freq-rare {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-    box-shadow: 0 0 4px rgba(99, 102, 241, 0.2);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 40%),
+        linear-gradient(135deg, #818cf8 0%, #6366f1 40%, #4f46e5 100%);
+    box-shadow:
+        0 0 8px rgba(99, 102, 241, 0.35),
+        inset 0 1px 1px rgba(255, 255, 255, 0.2),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .matrix-cell.freq-rare .cell-text {
     color: #e0e7ff;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
 .matrix-cell.freq-fold {
-    background: rgba(30, 30, 35, 0.9);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 40%),
+        linear-gradient(145deg, rgba(40, 40, 45, 0.9) 0%, rgba(25, 25, 30, 0.95) 100%);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
 }
 
 .matrix-cell.freq-fold .cell-text {
@@ -9102,27 +9133,42 @@ body.native-app [class*="btn-row"]>* {
     width: 12px;
     height: 12px;
     border-radius: 3px;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25);
 }
 
 .legend-dot.freq-always {
-    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 40%),
+        linear-gradient(135deg, #34d399 0%, #22c55e 40%, #16a34a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .legend-dot.freq-often {
-    background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, transparent 40%),
+        linear-gradient(135deg, #fcd34d 0%, #eab308 40%, #ca8a04 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .legend-dot.freq-mixed {
-    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 40%),
+        linear-gradient(135deg, #fb923c 0%, #f97316 40%, #ea580c 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .legend-dot.freq-rare {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 40%),
+        linear-gradient(135deg, #818cf8 0%, #6366f1 40%, #4f46e5 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .legend-dot.freq-fold {
-    background: rgba(30, 30, 35, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 40%),
+        rgba(30, 30, 35, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .legend-item span {
