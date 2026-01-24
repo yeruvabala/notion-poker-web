@@ -7907,8 +7907,8 @@ body.native-app [class*="btn-row"]>* {
     left: 0;
     right: 0;
     z-index: 100;
-    padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
-    padding-bottom: 12px;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 38px);
+    padding-bottom: 6px;
     text-align: center;
     background: linear-gradient(180deg, rgba(28, 28, 28, 1) 0%, rgba(28, 28, 28, 0.95) 80%, transparent 100%);
 }
