@@ -225,7 +225,7 @@ export default function MobileStudyPage() {
                                 </span>
                             </span>
                         ) : (
-                            <span className="ask-btn-content">✨ Ask</span>
+                            <span className="ask-btn-content">Ask</span>
                         )}
                     </button>
 

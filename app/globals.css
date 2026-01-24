@@ -9441,7 +9441,7 @@ body.native-app [class*="btn-row"]>* {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 12px 28px;
+    padding: 8px 28px;
     margin: 0 auto;
     background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 50%, #0f0f0f 100%);
     border: 1px solid rgba(255, 255, 255, 0.15);
