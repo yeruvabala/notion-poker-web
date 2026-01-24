@@ -36,13 +36,13 @@ type Hand = {
 
 type FilterType = 'all' | 'quick' | string;
 
-// Render premium poker card visuals with overlapping effect
+// Render hero cards with bold text-forward design - no fake card shapes
+// Shows "K♥ Q♦" style with large ranks and colorful glowing suits
 function renderHeroCards(cards: string | null) {
     if (!cards) {
         return (
-            <div className="mini-cards-container">
-                <div className="mini-card empty">?</div>
-                <div className="mini-card empty second">?</div>
+            <div className="hero-hand-display empty">
+                <span className="hero-hand-placeholder">? ?</span>
             </div>
         );
     }
@@ -50,19 +50,16 @@ function renderHeroCards(cards: string | null) {
     const cardArray = cards.split(' ');
 
     return (
-        <div className="mini-cards-container">
+        <div className="hero-hand-display">
             {cardArray.map((card, i) => {
                 const rank = card.slice(0, -1);
                 const suit = card.slice(-1);
-                const isRed = suit === '♥' || suit === '♦';
+                const suitClass = suit === '♥' ? 'hearts' : suit === '♦' ? 'diamonds' : suit === '♣' ? 'clubs' : 'spades';
 
                 return (
-                    <div
-                        key={i}
-                        className={`mini-card ${isRed ? 'red' : 'black'} ${i === 1 ? 'second' : ''}`}
-                    >
-                        <span className="mini-card-rank">{rank}</span>
-                        <span className="mini-card-suit">{suit}</span>
+                    <div key={i} className={`hero-single-card ${suitClass}`}>
+                        <span className="hero-rank">{rank}</span>
+                        <span className="hero-suit">{suit}</span>
                     </div>
                 );
             })}
