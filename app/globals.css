@@ -3081,7 +3081,8 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   MOBILE BOTTOM NAVIGATION - Instagram-style tight design
+   MOBILE BOTTOM NAVIGATION - Premium 5-Tab with Poker Icons
+   Instagram-style positioning with glow effects
    ═══════════════════════════════════════════════════════════════ */
 .mobile-bottom-nav {
     position: fixed;
@@ -3091,50 +3092,93 @@ body.native-app [class*="btn-row"]>* {
     z-index: 1000;
     display: flex;
     justify-content: space-around;
-    align-items: center;
-    background: rgba(20, 20, 20, 0.98);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    /* Tight Instagram-style: 50px base + safe area */
-    padding-bottom: env(safe-area-inset-bottom, 0);
-    height: calc(50px + env(safe-area-inset-bottom, 0));
+    align-items: flex-start;
+    /* Premium dark glass background */
+    background: linear-gradient(180deg, rgba(18, 18, 20, 0.98) 0%, rgba(12, 12, 14, 0.99) 100%);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    /* Tight positioning */
+    padding-top: 8px;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4px);
+    min-height: calc(56px + env(safe-area-inset-bottom, 0px));
 }
 
 .mobile-nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     flex: 1;
-    padding: 6px 4px;
+    gap: 3px;
+    padding: 0;
     background: transparent;
     border: none;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.2s ease;
     -webkit-tap-highlight-color: transparent;
+    position: relative;
 }
 
 .mobile-nav-item:active {
-    transform: scale(0.92);
+    transform: scale(0.9);
 }
 
-.mobile-nav-icon {
-    font-size: 20px;
-    margin-bottom: 1px;
-    opacity: 0.5;
-    transition: all 0.15s ease;
+/* Icon wrapper for positioning glow */
+.mobile-nav-icon-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 28px;
 }
 
+/* SVG icon styling */
+.mobile-nav-svg {
+    color: rgba(255, 255, 255, 0.4);
+    transition: all 0.2s ease;
+}
+
+/* Glow effect behind active icon */
+.nav-glow {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(147, 112, 219, 0.4) 0%, transparent 70%);
+    filter: blur(8px);
+    z-index: -1;
+    animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+
+    0%,
+    100% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.9;
+        transform: scale(1.1);
+    }
+}
+
+/* Label styling */
 .mobile-nav-label {
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.5);
-    transition: all 0.15s ease;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.2px;
+    transition: all 0.2s ease;
 }
 
-.mobile-nav-item.active .mobile-nav-icon {
-    opacity: 1;
+/* Active state - icon and label */
+.mobile-nav-item.active .mobile-nav-svg {
+    color: #ffffff;
+    filter: drop-shadow(0 0 6px rgba(147, 112, 219, 0.6));
 }
 
 .mobile-nav-item.active .mobile-nav-label {
