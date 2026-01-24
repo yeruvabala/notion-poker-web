@@ -22,7 +22,7 @@ type Overview = {
 type SeatRow = { hero_position: string; bb: number; n: number };
 type LeakRow = { learning_tag: string; bb: number; n: number };
 
-const STAKES_OPTIONS = ['2NL', '5NL', '10NL', '25NL', '50NL', '100NL', '200NL'];
+const STAKES_OPTIONS = ['All', '2NL', '5NL', '10NL', '25NL', '50NL', '100NL', '200NL'];
 
 // Color helpers
 function getWinrateColor(bb: number): string {
@@ -50,11 +50,8 @@ function formatLeakName(tag: string | null | undefined): string {
 }
 
 export default function MobileAnalyticsPage() {
-    const [month, setMonth] = useState<string>(() => {
-        const d = new Date();
-        return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
-    });
-    const [stakes, setStakes] = useState('10NL');
+    const [month, setMonth] = useState<string>('all');
+    const [stakes, setStakes] = useState('All');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -74,8 +71,12 @@ export default function MobileAnalyticsPage() {
         setLoading(true);
         setError(null);
 
-        const qs = new URLSearchParams({ month, stakes }).toString();
-        fetch(`/api/analytics?${qs}`)
+        // Build query params - only include if not 'all'
+        const params = new URLSearchParams();
+        if (month !== 'all') params.set('month', month);
+        if (stakes !== 'All') params.set('stakes', stakes);
+
+        fetch(`/api/analytics?${params.toString()}`)
             .then(r => r.json())
             .then(json => {
                 if (json.error) throw new Error(json.error);
@@ -93,9 +94,9 @@ export default function MobileAnalyticsPage() {
         return seats.reduce((best, curr) => curr.bb > best.bb ? curr : best, seats[0]);
     }, [seats]);
 
-    // Generate month options
+    // Generate month options with All Time first
     const monthOptions = useMemo(() => {
-        return Array.from({ length: 12 }).map((_, i) => {
+        const months = Array.from({ length: 24 }).map((_, i) => {
             const d = new Date();
             d.setUTCMonth(d.getUTCMonth() - i);
             return {
@@ -103,6 +104,7 @@ export default function MobileAnalyticsPage() {
                 label: d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
             };
         });
+        return [{ value: 'all', label: 'All Time' }, ...months];
     }, []);
 
     const winrate = overview?.winrate_bb ?? 0;
@@ -162,32 +164,33 @@ export default function MobileAnalyticsPage() {
                                 <div className="stat-subtitle">{totalHands.toLocaleString()} hands</div>
                             </div>
 
+                            {/* Total Hands */}
+                            <div className="stat-card" style={{ '--stat-color': '#3b82f6' } as React.CSSProperties}>
+                                <div className="stat-label">TOTAL HANDS</div>
+                                <div className="stat-value">{totalHands.toLocaleString()}</div>
+                                <div className="stat-detail">analyzed</div>
+                            </div>
+
                             {/* Best Position */}
-                            {bestPosition && (
-                                <div className="stat-card" style={{ '--stat-color': '#22c55e' } as React.CSSProperties}>
-                                    <div className="stat-label">BEST POSITION</div>
-                                    <div className="stat-value">{bestPosition.hero_position}</div>
-                                    <div className="stat-detail">+{fmt(bestPosition.bb)} bb</div>
-                                </div>
-                            )}
+                            <div className="stat-card" style={{ '--stat-color': '#22c55e' } as React.CSSProperties}>
+                                <div className="stat-label">BEST POSITION</div>
+                                <div className="stat-value">{bestPosition?.hero_position ?? '—'}</div>
+                                <div className="stat-detail">{bestPosition ? `+${fmt(bestPosition.bb)} bb` : 'No data'}</div>
+                            </div>
 
                             {/* Weakest Position */}
-                            {overview?.weakest_seat && (
-                                <div className="stat-card" style={{ '--stat-color': '#ef4444' } as React.CSSProperties}>
-                                    <div className="stat-label">WEAKEST SPOT</div>
-                                    <div className="stat-value">{overview.weakest_seat}</div>
-                                    <div className="stat-detail">{fmt(overview.weakest_bb ?? 0)} bb</div>
-                                </div>
-                            )}
+                            <div className="stat-card" style={{ '--stat-color': '#ef4444' } as React.CSSProperties}>
+                                <div className="stat-label">WEAKEST SPOT</div>
+                                <div className="stat-value">{overview?.weakest_seat ?? '—'}</div>
+                                <div className="stat-detail">{overview?.weakest_seat ? `${fmt(overview.weakest_bb ?? 0)} bb` : 'No data'}</div>
+                            </div>
 
                             {/* Primary Leak */}
-                            {overview?.primary_leak && (
-                                <div className="stat-card" style={{ '--stat-color': '#f59e0b' } as React.CSSProperties}>
-                                    <div className="stat-label">TOP LEAK</div>
-                                    <div className="stat-value-sm">{formatLeakName(overview.primary_leak)}</div>
-                                    <div className="stat-detail">{fmt(overview.primary_leak_bb ?? 0)} bb impact</div>
-                                </div>
-                            )}
+                            <div className="stat-card" style={{ '--stat-color': '#f59e0b' } as React.CSSProperties}>
+                                <div className="stat-label">TOP LEAK</div>
+                                <div className="stat-value-sm">{formatLeakName(overview?.primary_leak) || '—'}</div>
+                                <div className="stat-detail">{overview?.primary_leak ? `${fmt(overview.primary_leak_bb ?? 0)} bb` : 'No data'}</div>
+                            </div>
                         </div>
                     </div>
 

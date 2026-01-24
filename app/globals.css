@@ -10048,6 +10048,8 @@ body.native-app [class*="btn-row"]>* {
 .stats-scroll-inner {
     display: flex;
     gap: 12px;
+    min-width: max-content;
+    padding-right: 14px;
 }
 
 /* Stat Cards */
