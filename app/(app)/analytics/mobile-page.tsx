@@ -32,9 +32,9 @@ function getWinrateColor(bb: number): string {
 }
 
 function getPositionColor(bb: number): string {
-    if (bb >= 1) return '#22c55e';
-    if (bb >= 0) return '#eab308';
-    return '#ef4444';
+    if (bb >= 1) return '#22c55e';  // Green for winning
+    if (bb >= 0) return '#06b6d4';  // Cyan for break-even
+    return '#ef4444';  // Red for losing
 }
 
 function fmt(n: number): string {
@@ -152,45 +152,35 @@ export default function MobileAnalyticsPage() {
 
             {!loading && !error && (
                 <>
-                    {/* Hero Stats - Horizontal Scroll */}
-                    <div className="analytics-stats-scroll">
-                        <div className="stats-scroll-inner">
-                            {/* Win Rate - Large Feature Card */}
-                            <div className="stat-card stat-card-hero" style={{ '--stat-color': getWinrateColor(winrate) } as React.CSSProperties}>
-                                <div className="stat-glow" />
-                                <div className="stat-label">WIN RATE</div>
-                                <div className="stat-value-large">{fmt(winrate)}</div>
-                                <div className="stat-unit">bb/100</div>
-                                <div className="stat-subtitle">{totalHands.toLocaleString()} hands</div>
-                            </div>
+                    {/* Stats Grid - 2x2 Layout */}
+                    <div className="analytics-stats-grid">
+                        {/* Win Rate */}
+                        <div className="grid-stat-card" style={{ '--stat-color': getWinrateColor(winrate) } as React.CSSProperties}>
+                            <div className="stat-glow" />
+                            <div className="stat-label">WIN RATE</div>
+                            <div className="stat-value-large">{fmt(winrate)}</div>
+                            <div className="stat-unit">bb/100</div>
+                        </div>
 
-                            {/* Total Hands */}
-                            <div className="stat-card" style={{ '--stat-color': '#3b82f6' } as React.CSSProperties}>
-                                <div className="stat-label">TOTAL HANDS</div>
-                                <div className="stat-value">{totalHands.toLocaleString()}</div>
-                                <div className="stat-detail">analyzed</div>
-                            </div>
+                        {/* Total Hands */}
+                        <div className="grid-stat-card" style={{ '--stat-color': '#8b5cf6' } as React.CSSProperties}>
+                            <div className="stat-label">TOTAL HANDS</div>
+                            <div className="stat-value">{totalHands.toLocaleString()}</div>
+                            <div className="stat-detail">analyzed</div>
+                        </div>
 
-                            {/* Best Position */}
-                            <div className="stat-card" style={{ '--stat-color': '#22c55e' } as React.CSSProperties}>
-                                <div className="stat-label">BEST POSITION</div>
-                                <div className="stat-value">{bestPosition?.hero_position ?? '—'}</div>
-                                <div className="stat-detail">{bestPosition ? `+${fmt(bestPosition.bb)} bb` : 'No data'}</div>
-                            </div>
+                        {/* Best Position */}
+                        <div className="grid-stat-card" style={{ '--stat-color': '#22c55e' } as React.CSSProperties}>
+                            <div className="stat-label">BEST POSITION</div>
+                            <div className="stat-value">{bestPosition?.hero_position ?? '—'}</div>
+                            <div className="stat-detail">{bestPosition ? `+${fmt(bestPosition.bb)} bb` : 'No data'}</div>
+                        </div>
 
-                            {/* Weakest Position */}
-                            <div className="stat-card" style={{ '--stat-color': '#ef4444' } as React.CSSProperties}>
-                                <div className="stat-label">WEAKEST SPOT</div>
-                                <div className="stat-value">{overview?.weakest_seat ?? '—'}</div>
-                                <div className="stat-detail">{overview?.weakest_seat ? `${fmt(overview.weakest_bb ?? 0)} bb` : 'No data'}</div>
-                            </div>
-
-                            {/* Primary Leak */}
-                            <div className="stat-card" style={{ '--stat-color': '#f59e0b' } as React.CSSProperties}>
-                                <div className="stat-label">TOP LEAK</div>
-                                <div className="stat-value-sm">{formatLeakName(overview?.primary_leak) || '—'}</div>
-                                <div className="stat-detail">{overview?.primary_leak ? `${fmt(overview.primary_leak_bb ?? 0)} bb` : 'No data'}</div>
-                            </div>
+                        {/* Top Leak */}
+                        <div className="grid-stat-card" style={{ '--stat-color': '#f97316' } as React.CSSProperties}>
+                            <div className="stat-label">TOP LEAK</div>
+                            <div className="stat-value-sm">{overview?.primary_leak ? formatLeakName(overview.primary_leak) : '—'}</div>
+                            <div className="stat-detail">{overview?.primary_leak ? `${fmt(overview.primary_leak_bb ?? 0)} bb` : 'No data'}</div>
                         </div>
                     </div>
 
