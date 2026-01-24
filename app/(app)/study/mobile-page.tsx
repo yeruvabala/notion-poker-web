@@ -46,6 +46,58 @@ const FILTER_CONFIGS = {
     street: ['Any', 'Preflop', 'Flop', 'Turn', 'River'],
 };
 
+// Helper to format study note content with proper structure
+function formatSourceContent(content: string) {
+    // Split by common delimiters and clean up
+    const parts = content.split(/\s*-\s*(?=\*\*)/);
+
+    // Extract metadata line if present (Site: | Stakes: | etc.)
+    const metaMatch = content.match(/^(Site:.*?(?:Coach tags:.*?)?\]?\s*)/);
+    const metadata = metaMatch ? metaMatch[1] : null;
+    const mainContent = metadata ? content.replace(metadata, '') : content;
+
+    // Parse sections with **Title**: format
+    const sections: { title: string; content: string }[] = [];
+    const sectionRegex = /\*\*([^*]+)\*\*:?\s*([^*]*?)(?=\*\*|$)/g;
+    let match;
+
+    while ((match = sectionRegex.exec(mainContent)) !== null) {
+        sections.push({
+            title: match[1].trim(),
+            content: match[2].trim()
+        });
+    }
+
+    // If no sections found, just return cleaned content
+    if (sections.length === 0) {
+        return (
+            <div className="source-text">
+                {content.replace(/\*\*/g, '')}
+            </div>
+        );
+    }
+
+    return (
+        <div className="source-formatted">
+            {metadata && (
+                <div className="source-meta">
+                    {metadata.split('|').map((item, i) => (
+                        <span key={i} className="meta-tag">{item.trim()}</span>
+                    ))}
+                </div>
+            )}
+            <div className="source-sections">
+                {sections.map((section, i) => (
+                    <div key={i} className="source-section">
+                        <span className="section-title">{section.title}</span>
+                        <span className="section-content">{section.content}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export default function MobileStudyPage() {
     const supabase = useMemo(() => createClient(), []);
 
@@ -338,7 +390,9 @@ export default function MobileStudyPage() {
                                                 {chunk.title || (chunk.source_type === 'hand' ? 'Hand context' : 'Study note')}
                                             </span>
                                         </summary>
-                                        <div className="source-content">{chunk.content}</div>
+                                        <div className="source-content">
+                                            {formatSourceContent(chunk.content)}
+                                        </div>
                                     </details>
                                 ))}
                             </div>
