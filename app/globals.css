@@ -3568,7 +3568,7 @@ body.native-app [class*="btn-row"]>* {
     background: linear-gradient(180deg, rgba(60, 65, 75, 0.9) 0%, rgba(40, 45, 55, 0.95) 100%);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 10px;
-    padding: 10px 28px 10px 14px;
+    padding: 10px 36px 10px 14px;
     color: #fff;
     font-size: 13px;
     font-weight: 700;
