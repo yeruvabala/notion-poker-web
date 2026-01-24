@@ -833,6 +833,16 @@ export default function MobileHandBuilder({
         }
     }, [isLoading]);
 
+    // Haptic feedback when GTO results arrive
+    useEffect(() => {
+        if (gtoStrategy && !isLoading) {
+            // Haptic feedback for GTO results appearing!
+            if (Capacitor.isNativePlatform()) {
+                Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => { });
+            }
+        }
+    }, [gtoStrategy, isLoading]);
+
     // Auto-scroll to FLOP when it expands (preflop has call)
     const flopIsActive = preflopActions.some(a => a.action === 'call') && !flopActions.some(a => a.action === 'fold');
     useEffect(() => {
@@ -1407,7 +1417,13 @@ export default function MobileHandBuilder({
                 {/* Analyze Button */}
                 <button
                     className="action-bar-button analyze-button"
-                    onClick={onAnalyze}
+                    onClick={() => {
+                        // Haptic feedback on Analyze tap!
+                        if (Capacitor.isNativePlatform()) {
+                            Haptics.impact({ style: ImpactStyle.Medium }).catch(() => { });
+                        }
+                        onAnalyze();
+                    }}
                     disabled={isLoading || !heroCard1 || !heroCard2}
                 >
                     <span className="action-bar-icon">✨</span>
