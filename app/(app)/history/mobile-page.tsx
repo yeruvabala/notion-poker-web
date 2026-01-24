@@ -36,18 +36,38 @@ type Hand = {
 
 type FilterType = 'all' | 'quick' | string;
 
-// Render hero cards with proper colors
+// Render premium poker card visuals with overlapping effect
 function renderHeroCards(cards: string | null) {
-    if (!cards) return <span className="mobile-hand-empty">—</span>;
-    return cards.split(' ').map((card, i) => {
-        const suit = card.slice(-1);
-        const isRed = suit === '♥' || suit === '♦';
+    if (!cards) {
         return (
-            <span key={i} className={`mobile-hero-card ${isRed ? 'red' : ''}`}>
-                {card}
-            </span>
+            <div className="mini-cards-container">
+                <div className="mini-card empty">?</div>
+                <div className="mini-card empty second">?</div>
+            </div>
         );
-    });
+    }
+
+    const cardArray = cards.split(' ');
+
+    return (
+        <div className="mini-cards-container">
+            {cardArray.map((card, i) => {
+                const rank = card.slice(0, -1);
+                const suit = card.slice(-1);
+                const isRed = suit === '♥' || suit === '♦';
+
+                return (
+                    <div
+                        key={i}
+                        className={`mini-card ${isRed ? 'red' : 'black'} ${i === 1 ? 'second' : ''}`}
+                    >
+                        <span className="mini-card-rank">{rank}</span>
+                        <span className="mini-card-suit">{suit}</span>
+                    </div>
+                );
+            })}
+        </div>
+    );
 }
 
 // Relative time display
@@ -232,28 +252,33 @@ export default function MobileHandsPage() {
                                     className="mobile-hand-card"
                                     onClick={() => handleHandTap(hand)}
                                 >
-                                    {/* Left: Cards */}
+                                    {/* Fixed Left: Premium Cards */}
                                     <div className="mobile-hand-cards">
                                         {renderHeroCards(hand.cards)}
                                     </div>
 
-                                    {/* Middle: Info */}
+                                    {/* Center: Position & Info */}
                                     <div className="mobile-hand-info">
-                                        <div className="mobile-hand-position">
-                                            {hand.position || 'Unknown'}
-                                        </div>
-                                        <div className="mobile-hand-meta">
-                                            <span>{hand.stakes || '—'}</span>
+                                        <span className={`mobile-position-badge ${(hand.position || 'unknown').toLowerCase()}`}>
+                                            {hand.position || '?'}
+                                        </span>
+                                        <div className="mobile-hand-details">
+                                            <span className="mobile-hand-stakes">{hand.stakes || '—'}</span>
                                             <span className="mobile-hand-time">{timeAgo}</span>
                                         </div>
                                     </div>
 
-                                    {/* Right: Status */}
+                                    {/* Fixed Right: GTO Status */}
                                     <div className="mobile-hand-status">
                                         {hasGto ? (
-                                            <span className="mobile-gto-badge">GTO</span>
+                                            <div className="mobile-gto-indicator">
+                                                <span className="gto-dot"></span>
+                                                <span className="gto-text">GTO</span>
+                                            </div>
                                         ) : (
-                                            <span className="mobile-pending-badge">—</span>
+                                            <div className="mobile-pending-indicator">
+                                                <span className="pending-dot"></span>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
