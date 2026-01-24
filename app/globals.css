@@ -3053,6 +3053,11 @@ body.native-app [class*="btn-row"]>* {
     padding-left: 16px;
     padding-right: 16px;
     -webkit-overflow-scrolling: touch;
+    /* Subtle radial gradient atmosphere - darker center, softer edges */
+    background: radial-gradient(ellipse 120% 100% at 50% 0%,
+            rgba(35, 40, 50, 0.4) 0%,
+            rgba(28, 28, 28, 0.9) 40%,
+            rgba(28, 28, 28, 1) 100%);
 }
 
 /* Hide scrollbar but keep scroll functionality */
