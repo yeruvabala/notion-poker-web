@@ -68,17 +68,10 @@ export default function SettingsPage() {
             onClick={handleSignOut}
             disabled={loading}
           >
-            <span className="logout-icon">🚪</span>
             <span className="logout-text">
               {loading ? 'Signing out...' : 'Sign Out'}
             </span>
           </button>
-        </div>
-
-        {/* Footer */}
-        <div className="settings-footer">
-          <p>Only Poker © 2024</p>
-          <p className="settings-footer-sub">Made with ♥️ for serious players</p>
         </div>
       </div>
     </div>
