@@ -8163,10 +8163,10 @@ body.native-app [class*="btn-row"]>* {
 /* Hand Card - Premium Grid Layout */
 .mobile-hand-card {
     display: grid;
-    grid-template-columns: 70px 1fr 50px;
+    grid-template-columns: 75px 1fr 50px;
     align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
+    gap: 14px;
+    padding: 14px 16px;
     background: linear-gradient(145deg, rgba(45, 50, 60, 0.85) 0%, rgba(30, 35, 45, 0.95) 100%);
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 16px;
@@ -8184,76 +8184,140 @@ body.native-app [class*="btn-row"]>* {
 
 /* Premium Mini Poker Cards Container */
 .mobile-hand-cards {
-    width: 70px;
-    height: 48px;
+    width: 75px;
+    height: 56px;
     display: flex;
     align-items: center;
     justify-content: flex-start;
 }
 
+/* Premium Mini Poker Cards - Vegas Casino Style */
 .mini-cards-container {
     position: relative;
-    width: 62px;
-    height: 44px;
+    width: 68px;
+    height: 52px;
 }
 
-/* Individual Mini Poker Card */
+/* Individual Mini Poker Card - Premium Design */
 .mini-card {
     position: absolute;
-    width: 32px;
-    height: 44px;
-    border-radius: 5px;
-    background: linear-gradient(165deg, #ffffff 0%, #f5f5f5 50%, #e8e8e8 100%);
+    width: 36px;
+    height: 50px;
+    border-radius: 6px;
+    /* Premium card texture with subtle gradient and shine */
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+        linear-gradient(180deg, #fefefe 0%, #f8f8f8 20%, #f0f0f0 80%, #e8e8e8 100%);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0px;
-    font-weight: 800;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 4px 5px;
+    font-weight: 900;
+    /* Premium multi-layer shadow for depth */
     box-shadow:
-        0 3px 8px rgba(0, 0, 0, 0.4),
-        0 1px 2px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease;
+        0 8px 16px rgba(0, 0, 0, 0.35),
+        0 4px 6px rgba(0, 0, 0, 0.2),
+        0 1px 3px rgba(0, 0, 0, 0.15),
+        inset 0 2px 0 rgba(255, 255, 255, 1),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(180, 180, 180, 0.4);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Subtle card texture pattern */
+    background-image:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, transparent 40%),
+        repeating-linear-gradient(90deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, 0.01) 2px,
+            rgba(0, 0, 0, 0.01) 4px),
+        linear-gradient(180deg, #fefefe 0%, #f8f8f8 20%, #f0f0f0 80%, #e8e8e8 100%);
+}
+
+.mini-card::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, transparent 100%);
+    border-radius: 4px 4px 50% 50%;
+    pointer-events: none;
 }
 
 .mini-card:first-child {
     left: 0;
     z-index: 2;
+    transform: rotate(-3deg);
 }
 
 .mini-card.second {
-    left: 28px;
+    left: 30px;
     z-index: 1;
-    transform: rotate(5deg);
+    transform: rotate(6deg);
+}
+
+/* Hover effect for interactive feel */
+.mobile-hand-card:active .mini-card:first-child {
+    transform: rotate(-1deg) scale(1.02);
+}
+
+.mobile-hand-card:active .mini-card.second {
+    transform: rotate(4deg) scale(1.02);
 }
 
 .mini-card.empty {
-    background: linear-gradient(165deg, rgba(80, 85, 95, 0.9) 0%, rgba(60, 65, 75, 0.95) 100%);
-    color: rgba(255, 255, 255, 0.2);
+    background:
+        linear-gradient(135deg, rgba(100, 110, 130, 0.4) 0%, transparent 50%),
+        linear-gradient(180deg, rgba(70, 75, 85, 0.95) 0%, rgba(50, 55, 65, 0.98) 100%);
+    color: rgba(255, 255, 255, 0.25);
     font-size: 18px;
-    border: 1px dashed rgba(255, 255, 255, 0.15);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    font-weight: 700;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1.5px dashed rgba(255, 255, 255, 0.18);
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
+.mini-card.empty::before {
+    display: none;
+}
+
+/* Corner-style rank display like real cards */
 .mini-card-rank {
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1;
-    margin-bottom: -2px;
+    letter-spacing: -0.5px;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
+/* Smaller suit below rank */
 .mini-card-suit {
-    font-size: 14px;
+    font-size: 12px;
     line-height: 1;
+    margin-top: 0px;
 }
 
+/* Black suits - rich dark color */
 .mini-card.black {
     color: #1a1a1a;
 }
 
+.mini-card.black .mini-card-rank {
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Red suits - vibrant crimson */
 .mini-card.red {
-    color: #dc2626;
+    color: #c41e3a;
+}
+
+.mini-card.red .mini-card-rank {
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 /* Hand Info Section */
