@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Capacitor } from '@capacitor/core';
+import { SaveIcon, SparkleIcon } from '@/components/icons/ActionBarIcons';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PREMIUM MOBILE HAND BUILDER - World-class UI
@@ -1407,7 +1408,7 @@ export default function MobileHandBuilder({
                     }}
                     disabled={savingHand || !heroCard1 || !heroCard2}
                 >
-                    <span className="action-bar-icon">📝</span>
+                    <SaveIcon className="action-bar-icon-svg" size={18} />
                     <span className="action-bar-text">
                         {savingHand ? 'Saving...' :
                             activeSession ? `${activeSession.name} (${sessionHandCount})` : 'Save'}
@@ -1426,7 +1427,7 @@ export default function MobileHandBuilder({
                     }}
                     disabled={isLoading || !heroCard1 || !heroCard2}
                 >
-                    <span className="action-bar-icon">✨</span>
+                    <SparkleIcon className="action-bar-icon-svg" size={18} />
                     <span className="action-bar-text">{isLoading ? 'Analyzing...' : 'Analyze'}</span>
                 </button>
             </div>

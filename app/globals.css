@@ -6429,6 +6429,12 @@ body.native-app [class*="btn-row"]>* {
     font-size: 18px;
 }
 
+/* Premium SVG Icons */
+.action-bar-icon-svg {
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 2px rgba(200, 200, 200, 0.3));
+}
+
 .action-bar-text {
     font-size: 15px;
     font-weight: 700;
