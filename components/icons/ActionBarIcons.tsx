@@ -197,6 +197,53 @@ export const FolderSaveIcon: React.FC<IconProps> = ({ className = '', size = 18 
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// UPLOAD ICON - Premium arrow-up with document
+// Clean import/upload design
+// ═══════════════════════════════════════════════════════════════════════════════
+export const UploadIcon: React.FC<IconProps> = ({ className = '', size = 18 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <defs>
+            <linearGradient id="uploadGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="50%" stopColor="#c0c0c0" />
+                <stop offset="100%" stopColor="#a0a0a0" />
+            </linearGradient>
+            <linearGradient id="uploadArrow" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#909090" />
+                <stop offset="100%" stopColor="#ffffff" />
+            </linearGradient>
+        </defs>
+        {/* Document base */}
+        <path
+            d="M6 2C5 2 4 3 4 4V20C4 21 5 22 6 22H18C19 22 20 21 20 20V8L14 2H6Z"
+            fill="url(#uploadGrad)"
+            stroke="#707070"
+            strokeWidth="0.4"
+        />
+        {/* Document corner fold */}
+        <path d="M14 2V8H20" fill="none" stroke="#808080" strokeWidth="0.4" />
+        <path d="M14 2L20 8L14 8Z" fill="#d0d0d0" opacity="0.5" />
+        {/* Upload arrow */}
+        <path
+            d="M12 18V11M12 11L9 14M12 11L15 14"
+            stroke="url(#uploadArrow)"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        {/* Arrow glow effect */}
+        <circle cx="12" cy="11" r="1" fill="#ffffff" opacity="0.6" />
+    </svg>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Export all Action Bar Icons
 // ═══════════════════════════════════════════════════════════════════════════════
 export const ActionBarIcons = {
@@ -204,6 +251,7 @@ export const ActionBarIcons = {
     Analyze: AnalyzeIcon,
     Sparkle: SparkleIcon,
     FolderSave: FolderSaveIcon,
+    Upload: UploadIcon,
 };
 
 export default ActionBarIcons;

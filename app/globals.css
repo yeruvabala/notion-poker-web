@@ -8520,24 +8520,24 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   UPLOAD BUTTON - In stats bar
+   UPLOAD BUTTON - In stats bar, Premium Platinum Style
    ═══════════════════════════════════════════════════════════════════════════════ */
 .mobile-upload-btn {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 14px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(100, 180, 255, 0.3);
-    border-radius: 10px;
+    padding: 6px 12px;
+    /* No border, subtle background */
+    background: rgba(255, 255, 255, 0.06);
+    border: none;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .mobile-upload-btn:hover,
 .mobile-upload-btn:active {
-    background: rgba(100, 180, 255, 0.15);
-    border-color: rgba(100, 180, 255, 0.5);
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .mobile-upload-btn.uploading {
@@ -8546,13 +8546,19 @@ body.native-app [class*="btn-row"]>* {
 }
 
 .mobile-upload-btn .upload-icon {
-    font-size: 14px;
+    display: flex;
+    align-items: center;
+    filter: drop-shadow(0 0 2px rgba(200, 200, 200, 0.3));
 }
 
 .mobile-upload-btn .upload-text {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.8);
+    /* Platinum text gradient */
+    background: linear-gradient(135deg, #ffffff 0%, #b0b0b0 50%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 /* Upload message */

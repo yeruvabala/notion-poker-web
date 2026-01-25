@@ -7,6 +7,7 @@ import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import MobileBottomNav from '@/components/mobile/MobileBottomNav';
 import MobilePageHeader from '@/components/mobile/MobilePageHeader';
+import { UploadIcon } from '@/components/icons/ActionBarIcons';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MOBILE HANDS PAGE - Premium Card-based Hand History
@@ -319,7 +320,7 @@ export default function MobileHandsPage() {
                         disabled={uploadBusy}
                         style={{ display: 'none' }}
                     />
-                    <span className="upload-icon">📤</span>
+                    <UploadIcon className="upload-icon" size={16} />
                     <span className="upload-text">{uploadBusy ? 'Uploading…' : 'Upload'}</span>
                 </label>
             </div>
