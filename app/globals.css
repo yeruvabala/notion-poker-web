@@ -8753,6 +8753,113 @@ body.native-app [class*="btn-row"]>* {
     font-size: 14px;
 }
 
+/* Board Display in Modal */
+.mobile-modal-board {
+    padding: 10px 16px;
+    background: rgba(40, 40, 50, 0.5);
+    border-radius: 8px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 8px;
+}
+
+.mobile-modal-board .board-label {
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.mobile-modal-vs {
+    color: rgba(255, 100, 100, 0.8);
+    font-size: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ACTION TIMELINE - Visual replay of hand actions
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.action-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.action-setup {
+    display: flex;
+    gap: 12px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.6);
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-street {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.action-street-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.action-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.action-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(50, 50, 60, 0.6);
+    color: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Hero actions - blue tint */
+.action-chip.hero {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #93c5fd;
+}
+
+/* Villain actions - red tint */
+.action-chip.villain {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+}
+
+/* Action type colors */
+.action-chip.raise,
+.action-chip.3bet,
+.action-chip.4bet,
+.action-chip.bet {
+    border-color: rgba(251, 191, 36, 0.4);
+}
+
+.action-chip.call {
+    border-color: rgba(34, 197, 94, 0.4);
+}
+
+.action-chip.fold {
+    opacity: 0.6;
+    border-color: rgba(100, 100, 100, 0.4);
+}
+
+.action-chip.check {
+    border-color: rgba(150, 150, 150, 0.4);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════════
    MOBILE RANGES PAGE - Premium Touch-Friendly GTO Range Matrix
    ═══════════════════════════════════════════════════════════════════════════════ */

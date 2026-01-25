@@ -84,6 +84,8 @@ export async function POST(req: Request) {
     source: body?.source ?? 'manual',  // 'upload', 'manual', 'quick_save'
     session_id: body?.session_id ?? null,  // UUID or null for quick saves
     is_favorited: body?.is_favorited ?? false,
+    // NEW: Structured hand actions for replay and display
+    hand_actions: body?.hand_actions ?? null,  // { preflop: [], flop: [], turn: [], river: [], villain_position: string }
   };
 
   const { data, error } = await supabase

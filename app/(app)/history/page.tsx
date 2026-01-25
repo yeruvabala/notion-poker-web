@@ -25,6 +25,7 @@ type Hand = {
   stakes: string | null;
   position: string | null;
   cards: string | null;
+  board: string | null;
   gto_strategy: string | null;
   exploit_deviation: string | null;
   exploit_signals: any;
@@ -34,6 +35,16 @@ type Hand = {
   session_id?: string | null;
   session?: { id: string; name: string } | null;
   source?: string | null;
+  // Structured action data
+  hand_actions?: {
+    villain_position?: string | null;
+    effective_stack?: string | null;
+    table_format?: string | null;
+    preflop?: Array<{ player: string; action: string; amount?: number }> | null;
+    flop?: Array<{ player: string; action: string; amount?: number }> | null;
+    turn?: Array<{ player: string; action: string; amount?: number }> | null;
+    river?: Array<{ player: string; action: string; amount?: number }> | null;
+  } | null;
 };
 
 type FilterType = 'all' | 'quick' | 'upload' | string;
@@ -78,6 +89,43 @@ function renderMarkdown(text: string | null) {
     }
     return <span key={i}>{part}</span>;
   });
+}
+
+// Render action timeline for a hand
+function renderActionTimeline(hand: Hand) {
+  const actions = hand.hand_actions;
+  if (!actions) return null;
+
+  const renderStreetActions = (streetName: string, streetActions: Array<{ player: string; action: string; amount?: number }> | null | undefined) => {
+    if (!streetActions || streetActions.length === 0) return null;
+    return (
+      <div className="web-action-street" key={streetName}>
+        <span className="web-action-street-name">{streetName}</span>
+        <div className="web-action-chips">
+          {streetActions.map((act, i) => (
+            <span key={i} className={`web-action-chip ${act.player === 'H' ? 'hero' : 'villain'}`}>
+              {act.player === 'H' ? '🅗' : '🅥'} {act.action}{act.amount ? ` ${act.amount}bb` : ''}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="web-action-timeline">
+      {(actions.villain_position || actions.effective_stack) && (
+        <div className="web-action-setup">
+          {actions.villain_position && <span>vs {actions.villain_position}</span>}
+          {actions.effective_stack && <span>{actions.effective_stack}bb deep</span>}
+        </div>
+      )}
+      {renderStreetActions('Preflop', actions.preflop)}
+      {renderStreetActions('Flop', actions.flop)}
+      {renderStreetActions('Turn', actions.turn)}
+      {renderStreetActions('River', actions.river)}
+    </div>
+  );
 }
 
 export default function HistoryPage() {
@@ -403,7 +451,22 @@ export default function HistoryPage() {
               <div className="mh-modal-session">📁 Session: {selectedHand.session.name}</div>
             )}
 
+            {/* Board Display */}
+            {selectedHand.board && (
+              <div className="mh-modal-board">
+                <span className="mh-board-label">Board:</span> {selectedHand.board}
+              </div>
+            )}
+
             <div className="mh-modal-sections">
+              {/* Hand Actions - shows what user played */}
+              {selectedHand.hand_actions && (
+                <div className="mh-modal-section">
+                  <div className="mh-modal-section-title">🎲 Hand Actions</div>
+                  <div className="mh-modal-section-body">{renderActionTimeline(selectedHand)}</div>
+                </div>
+              )}
+
               {selectedHand.gto_strategy && (
                 <div className="mh-modal-section">
                   <div className="mh-modal-section-title">🤖 GTO Strategy</div>
@@ -433,9 +496,9 @@ export default function HistoryPage() {
                 </div>
               )}
 
-              {!selectedHand.gto_strategy && !selectedHand.exploit_deviation && (
+              {!selectedHand.gto_strategy && !selectedHand.exploit_deviation && !selectedHand.hand_actions && (
                 <div className="mh-modal-empty">
-                  No analysis available yet. Run "Analyze Hand" to get GTO strategy and play review.
+                  No analysis or actions saved yet.
                 </div>
               )}
             </div>
@@ -606,6 +669,24 @@ export default function HistoryPage() {
           .mh-stats-upload-row { flex-direction: column; }
           .mh-modal { max-height: 90vh; }
         }
+
+        /* Board Display */
+        .mh-modal-board { padding: 10px 14px; border-radius: 8px; background: rgba(40,40,50,0.5); margin-bottom: 16px; font-size: 14px; }
+        .mh-board-label { color: rgba(255,255,255,0.5); font-weight: 600; margin-right: 8px; }
+
+        /* Web Action Timeline */
+        .web-action-timeline { display: flex; flex-direction: column; gap: 10px; }
+        .web-action-setup { display: flex; gap: 12px; font-size: 13px; color: rgba(255,255,255,0.6); padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .web-action-street { display: flex; flex-direction: column; gap: 6px; }
+        .web-action-street-name { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
+        .web-action-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .web-action-chip { 
+          display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 16px;
+          font-size: 12px; font-weight: 600; background: rgba(50,50,60,0.6); color: rgba(255,255,255,0.85);
+          border: 1px solid rgba(255,255,255,0.1);
+        }
+        .web-action-chip.hero { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.3); color: #93c5fd; }
+        .web-action-chip.villain { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
       `}</style>
     </main>
   );

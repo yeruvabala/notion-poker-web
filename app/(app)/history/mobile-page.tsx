@@ -25,6 +25,7 @@ type Hand = {
     stakes: string | null;
     position: string | null;
     cards: string | null;
+    board: string | null;
     gto_strategy: string | null;
     exploit_deviation: string | null;
     exploit_signals: any;
@@ -34,6 +35,16 @@ type Hand = {
     session_id?: string | null;
     session?: { id: string; name: string } | null;
     source?: string | null;
+    // NEW: Structured action data
+    hand_actions?: {
+        villain_position?: string | null;
+        effective_stack?: string | null;
+        table_format?: string | null;
+        preflop?: Array<{ player: string; action: string; amount?: number }> | null;
+        flop?: Array<{ player: string; action: string; amount?: number }> | null;
+        turn?: Array<{ player: string; action: string; amount?: number }> | null;
+        river?: Array<{ player: string; action: string; amount?: number }> | null;
+    } | null;
 };
 
 type FilterType = 'all' | 'quick' | string;
@@ -84,6 +95,50 @@ function getRelativeTime(dateStr: string | null): string {
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString();
+}
+
+// Render action timeline for a hand
+function renderActionTimeline(hand: Hand) {
+    const actions = hand.hand_actions;
+    if (!actions) return null;
+
+    const renderStreetActions = (streetName: string, streetActions: Array<{ player: string; action: string; amount?: number }> | null | undefined) => {
+        if (!streetActions || streetActions.length === 0) return null;
+
+        return (
+            <div className="action-street" key={streetName}>
+                <span className="action-street-name">{streetName}</span>
+                <div className="action-chips">
+                    {streetActions.map((act, i) => (
+                        <span
+                            key={i}
+                            className={`action-chip ${act.player === 'H' ? 'hero' : 'villain'} ${act.action}`}
+                        >
+                            {act.player === 'H' ? '🅗' : '🅥'} {act.action}
+                            {act.amount ? ` ${act.amount}bb` : ''}
+                        </span>
+                    ))}
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <div className="action-timeline">
+            {/* Setup info */}
+            {(actions.villain_position || actions.effective_stack) && (
+                <div className="action-setup">
+                    {actions.villain_position && <span>vs {actions.villain_position}</span>}
+                    {actions.effective_stack && <span>{actions.effective_stack}bb deep</span>}
+                </div>
+            )}
+            {/* Street actions */}
+            {renderStreetActions('Preflop', actions.preflop)}
+            {renderStreetActions('Flop', actions.flop)}
+            {renderStreetActions('Turn', actions.turn)}
+            {renderStreetActions('River', actions.river)}
+        </div>
+    );
 }
 
 export default function MobileHandsPage() {
@@ -301,16 +356,36 @@ export default function MobileHandsPage() {
                         {/* Modal Meta */}
                         <div className="mobile-modal-meta">
                             <span className="mobile-modal-position">{selectedHand.position}</span>
+                            {selectedHand.hand_actions?.villain_position && (
+                                <span className="mobile-modal-vs">vs {selectedHand.hand_actions.villain_position}</span>
+                            )}
                             <span className="mobile-modal-stakes">{selectedHand.stakes || '—'}</span>
                             <span className="mobile-modal-date">
                                 {selectedHand.date || selectedHand.created_at?.slice(0, 10)}
                             </span>
                         </div>
 
+                        {/* Board Display */}
+                        {selectedHand.board && (
+                            <div className="mobile-modal-board">
+                                <span className="board-label">Board:</span> {selectedHand.board}
+                            </div>
+                        )}
+
                         {/* Session Badge */}
                         {selectedHand.session?.name && (
                             <div className="mobile-modal-session">
                                 📁 {selectedHand.session.name}
+                            </div>
+                        )}
+
+                        {/* Hand Actions Timeline - Shows what user played */}
+                        {selectedHand.hand_actions && (
+                            <div className="mobile-modal-section">
+                                <div className="mobile-modal-section-title">🎲 Hand Actions</div>
+                                <div className="mobile-modal-section-body">
+                                    {renderActionTimeline(selectedHand)}
+                                </div>
                             </div>
                         )}
 
@@ -349,10 +424,10 @@ export default function MobileHandsPage() {
                             </div>
                         )}
 
-                        {/* No Analysis */}
-                        {!selectedHand.gto_strategy && !selectedHand.exploit_deviation && (
+                        {/* No Analysis - only show if no actions AND no GTO */}
+                        {!selectedHand.gto_strategy && !selectedHand.exploit_deviation && !selectedHand.hand_actions && (
                             <div className="mobile-modal-empty">
-                                No analysis available yet.
+                                No analysis or actions saved yet.
                             </div>
                         )}
                     </div>

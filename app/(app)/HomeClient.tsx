@@ -728,7 +728,17 @@ export default function HomeClient() {
         notes: actionSummary || null,
         source: activeSession ? 'session' : 'quick_save',
         session_id: quickSave ? null : (activeSession?.id || null),
-        is_favorited: false
+        is_favorited: false,
+        // NEW: Structured action data for full replay/display
+        hand_actions: {
+          villain_position: villainPosition || null,
+          effective_stack: eff || null,
+          table_format: tableFormat || '6max',
+          preflop: preflopActions.length > 0 ? preflopActions : null,
+          flop: flopActions.length > 0 ? flopActions : null,
+          turn: turnActions.length > 0 ? turnActions : null,
+          river: riverActions.length > 0 ? riverActions : null,
+        },
       };
 
       const res = await fetch('/api/hands', {
