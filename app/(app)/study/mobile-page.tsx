@@ -316,7 +316,7 @@ export default function MobileStudyPage() {
                             </span>
                         ) : (
                             <>
-                                <AICoachIcon className="ask-btn-icon" size={18} />
+                                <AICoachIcon className="ask-btn-icon" size={16} />
                                 <span className="ask-btn-text">Ask Coach</span>
                             </>
                         )}

@@ -10066,7 +10066,7 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   ASK COACH BUTTON - Exact match to Home page Analyze button (DARK style)
+   ASK COACH BUTTON - Slim pill style matching compact design
    ═══════════════════════════════════════════════════════════════════════════════ */
 .study-ask-btn-premium {
     position: relative;
@@ -10074,23 +10074,24 @@ body.native-app [class*="btn-row"]>* {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    /* Compact pill - not full width */
+    /* SLIM pill - reduced height */
     width: auto;
-    padding: 12px 24px;
+    padding: 8px 20px;
     margin: 4px auto 0;
-    /* Dark gradient - EXACT match to Analyze button */
+    /* Dark gradient */
     background: linear-gradient(180deg,
             rgba(60, 60, 65, 1) 0%,
             rgba(45, 45, 50, 1) 50%,
             rgba(35, 35, 40, 1) 100%);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 12px;
+    border-radius: 10px;
     cursor: pointer;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
     -webkit-tap-highlight-color: transparent;
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.1),
         0 4px 12px rgba(0, 0, 0, 0.3);
+    line-height: 1;
 }
 
 .study-ask-btn-premium:active {
