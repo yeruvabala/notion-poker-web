@@ -47,7 +47,7 @@ type Hand = {
     } | null;
 };
 
-type FilterType = 'all' | 'quick' | string;
+type FilterType = 'all' | 'quick' | 'upload' | string;
 
 // Render hero cards with bold text-forward design - no fake card shapes
 // Shows "K♥ Q♦" style with large ranks and colorful glowing suits
@@ -152,6 +152,13 @@ export default function MobileHandsPage() {
     const [activeFilter, setActiveFilter] = useState<FilterType>('all');
     const [selectedHand, setSelectedHand] = useState<Hand | null>(null);
 
+    // Upload state
+    const [uploadBusy, setUploadBusy] = useState(false);
+    const [uploadMsg, setUploadMsg] = useState<string | null>(null);
+
+    // Session sheet state
+    const [showSessionSheet, setShowSessionSheet] = useState(false);
+
     // Load hands from Supabase
     useEffect(() => {
         let cancelled = false;
@@ -207,6 +214,7 @@ export default function MobileHandsPage() {
     const filteredHands = useMemo(() => {
         if (activeFilter === 'all') return hands;
         if (activeFilter === 'quick') return hands.filter(h => h.source === 'quick_save');
+        if (activeFilter === 'upload') return hands.filter(h => h.source === 'upload');
         return hands.filter(h => h.session_id === activeFilter || h.session?.id === activeFilter);
     }, [hands, activeFilter]);
 
@@ -229,12 +237,68 @@ export default function MobileHandsPage() {
         setSelectedHand(null);
     };
 
+    // Upload handler - same as web page
+    async function handleUploadChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploadMsg(null);
+        setUploadBusy(true);
+
+        try {
+            const { data: { user }, error: uerr } = await supabase.auth.getUser();
+            if (uerr) throw new Error(`Auth error: ${uerr.message}`);
+            if (!user) throw new Error('Please sign in.');
+
+            const fd = new FormData();
+            fd.append('file', file);
+
+            const upRes = await fetch('/api/uploads/direct', { method: 'POST', body: fd });
+            const upJson = await upRes.json().catch(() => ({}));
+            if (!upRes.ok) throw new Error(upJson?.error || `Upload failed`);
+
+            const { key, contentType } = upJson;
+            const bucket = process.env.NEXT_PUBLIC_AWS_S3_BUCKET;
+            if (!bucket) throw new Error('NEXT_PUBLIC_AWS_S3_BUCKET is not set.');
+
+            const enqueueRes = await fetch('/api/hand-files/enqueue', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    storage_path: `s3://${bucket}/${key}`,
+                    original_filename: file.name,
+                    file_size_bytes: file.size,
+                    mime_type: contentType || file.type
+                }),
+            });
+
+            const enqueueJson = await enqueueRes.json().catch(() => ({}));
+            if (!enqueueRes.ok || !enqueueJson?.ok) throw new Error(enqueueJson?.error || 'Enqueue failed');
+
+            setUploadMsg('✓ Uploaded! New hands will appear soon.');
+            e.target.value = '';
+            // Haptic feedback
+            if (Capacitor.isNativePlatform()) {
+                Haptics.impact({ style: ImpactStyle.Medium }).catch(() => { });
+            }
+        } catch (err: any) {
+            console.error('upload error', err);
+            setUploadMsg(`Error: ${err?.message || 'Upload failed'}`);
+        } finally {
+            setUploadBusy(false);
+        }
+    }
+
+    // Get hand count per session
+    const getSessionHandCount = (sessionId: string) => {
+        return hands.filter(h => h.session_id === sessionId || h.session?.id === sessionId).length;
+    };
+
     return (
         <div className="mobile-hands-page">
             {/* Premium Page Header */}
             <MobilePageHeader title="MY HANDS" />
 
-            {/* Stats Bar */}
+            {/* Stats Bar with Upload */}
             <div className="mobile-hands-stats">
                 <div className="mobile-stat">
                     <span className="mobile-stat-value">{stats.total}</span>
@@ -245,9 +309,29 @@ export default function MobileHandsPage() {
                     <span className="mobile-stat-value">{stats.sessions}</span>
                     <span className="mobile-stat-label">sessions</span>
                 </div>
+                <div className="mobile-stat-divider" />
+                {/* Upload Button */}
+                <label className={`mobile-upload-btn ${uploadBusy ? 'uploading' : ''}`}>
+                    <input
+                        type="file"
+                        accept=".txt"
+                        onChange={handleUploadChange}
+                        disabled={uploadBusy}
+                        style={{ display: 'none' }}
+                    />
+                    <span className="upload-icon">📤</span>
+                    <span className="upload-text">{uploadBusy ? 'Uploading…' : 'Upload'}</span>
+                </label>
             </div>
 
-            {/* Filter Pills */}
+            {/* Upload Message */}
+            {uploadMsg && (
+                <div className={`mobile-upload-msg ${uploadMsg.startsWith('Error') ? 'error' : 'success'}`}>
+                    {uploadMsg}
+                </div>
+            )}
+
+            {/* Filter Pills - Smart layout */}
             <div className="mobile-hands-filters">
                 <button
                     className={`mobile-filter-pill ${activeFilter === 'all' ? 'active' : ''}`}
@@ -255,15 +339,25 @@ export default function MobileHandsPage() {
                 >
                     All
                 </button>
-                {sessions.slice(0, 3).map(s => (
+                {/* Show first 2 sessions inline */}
+                {sessions.slice(0, 2).map(s => (
                     <button
                         key={s.id}
                         className={`mobile-filter-pill ${activeFilter === s.id ? 'active' : ''}`}
                         onClick={() => setActiveFilter(s.id)}
                     >
-                        {s.name.length > 12 ? s.name.slice(0, 12) + '…' : s.name}
+                        {s.name.length > 10 ? s.name.slice(0, 10) + '…' : s.name}
                     </button>
                 ))}
+                {/* More button if 3+ sessions */}
+                {sessions.length > 2 && (
+                    <button
+                        className={`mobile-filter-pill more-pill ${showSessionSheet ? 'active' : ''}`}
+                        onClick={() => setShowSessionSheet(true)}
+                    >
+                        ▼ More
+                    </button>
+                )}
                 <button
                     className={`mobile-filter-pill ${activeFilter === 'quick' ? 'active' : ''}`}
                     onClick={() => setActiveFilter('quick')}
@@ -430,6 +524,38 @@ export default function MobileHandsPage() {
                                 No analysis or actions saved yet.
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Session Selection Bottom Sheet */}
+            {showSessionSheet && (
+                <div className="session-sheet-overlay" onClick={() => setShowSessionSheet(false)}>
+                    <div className="session-sheet" onClick={(e) => e.stopPropagation()}>
+                        <div className="session-sheet-header">
+                            <span className="session-sheet-title">Select Session</span>
+                            <button className="session-sheet-close" onClick={() => setShowSessionSheet(false)}>
+                                ✕
+                            </button>
+                        </div>
+                        <div className="session-sheet-list">
+                            {sessions.map(s => (
+                                <button
+                                    key={s.id}
+                                    className={`session-sheet-item ${activeFilter === s.id ? 'active' : ''}`}
+                                    onClick={() => {
+                                        setActiveFilter(s.id);
+                                        setShowSessionSheet(false);
+                                        if (Capacitor.isNativePlatform()) {
+                                            Haptics.impact({ style: ImpactStyle.Light }).catch(() => { });
+                                        }
+                                    }}
+                                >
+                                    <span className="session-item-name">{s.name}</span>
+                                    <span className="session-item-count">{getSessionHandCount(s.id)} hands</span>
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}
