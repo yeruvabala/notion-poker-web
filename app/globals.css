@@ -10907,13 +10907,164 @@ body.native-app [class*="btn-row"]>* {
     font-size: 13px;
 }
 
-/* Stats Grid - 2x2 Layout */
-.analytics-stats-grid {
+/* ═══════════════════════════════════════════════════════════════════════════════
+   HERO STAT CARD - Win Rate as THE star
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.analytics-hero-card {
+    position: relative;
+    text-align: center;
+    padding: 28px 20px 22px;
+    margin-bottom: 16px;
+    /* Premium platinum gradient border */
+    background:
+        linear-gradient(#1a1a1a, #1a1a1a) padding-box,
+        linear-gradient(135deg,
+            rgba(180, 180, 180, 0.5) 0%,
+            rgba(100, 100, 100, 0.3) 25%,
+            rgba(160, 160, 160, 0.4) 50%,
+            rgba(80, 80, 80, 0.25) 75%,
+            rgba(140, 140, 140, 0.4) 100%) border-box;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    box-shadow:
+        0 0 0 0.5px rgba(255, 255, 255, 0.05),
+        0 4px 12px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.analytics-hero-card .hero-glow {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150px;
+    height: 80px;
+    background: linear-gradient(135deg, rgba(200, 200, 200, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+    filter: blur(30px);
+    border-radius: 50%;
+}
+
+.analytics-hero-card .hero-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 8px;
+}
+
+.analytics-hero-card .hero-value {
+    font-size: 48px;
+    font-weight: 900;
+    font-family: 'SF Mono', monospace;
+    line-height: 1;
+    margin-bottom: 4px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.analytics-hero-card .hero-unit {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 16px;
+}
+
+.analytics-hero-card .hero-secondary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.analytics-hero-card .hero-dot {
+    opacity: 0.3;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   QUICK INSIGHTS ROW - Best Position + Focus Area
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.analytics-insights-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
-    /* No horizontal padding - page has padding */
-    padding: 0 0 20px;
+    margin-bottom: 20px;
+}
+
+.insight-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    /* Platinum gradient border */
+    background:
+        linear-gradient(#1a1a1a, #1a1a1a) padding-box,
+        linear-gradient(135deg,
+            rgba(180, 180, 180, 0.4) 0%,
+            rgba(100, 100, 100, 0.25) 50%,
+            rgba(160, 160, 160, 0.35) 100%) border-box;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.insight-card .insight-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.insight-card .insight-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.insight-card .insight-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 4px;
+}
+
+.insight-card .insight-value {
+    font-size: 18px;
+    font-weight: 800;
+    /* Platinum gradient text */
+    background: linear-gradient(135deg, #ffffff 0%, #a3a3a3 50%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 2px;
+}
+
+.insight-card .insight-detail {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Success variant (green) */
+.insight-card.success .insight-detail {
+    color: #22c55e;
+}
+
+/* Warning variant (orange) */
+.insight-card.warning .insight-detail {
+    color: #f97316;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   SECTION HEADER WITH EMOJI
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.section-header .section-emoji {
+    font-size: 16px;
+    margin-right: 2px;
+}
+
+/* Keep old stats grid for backward compatibility, but hide it */
+.analytics-stats-grid {
+    display: none;
 }
 
 .grid-stat-card {
