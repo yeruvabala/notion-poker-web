@@ -10812,28 +10812,49 @@ body.native-app [class*="btn-row"]>* {
     background: transparent;
 }
 
-/* Filter Section */
+/* Filter Section - Blue Border + Gray Shimmer (matching My Hands stats bar) */
 .analytics-filters {
+    position: relative;
     display: flex;
     gap: 10px;
-    /* No extra padding since page has padding */
-    padding: 0 0 16px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    /* Blue glowing border - same as My Hands stats */
+    border: 1px solid rgba(100, 180, 255, 0.3);
+    border-radius: 14px;
+    margin-bottom: 16px;
+    box-shadow:
+        0 0 20px rgba(100, 180, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* Filter Selects - Platinum Theme */
+/* Gray shimmer border wrapper */
+.analytics-filters::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 15px;
+    /* Animated gray gradient border */
+    background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.08) 0%,
+            rgba(255, 255, 255, 0.03) 25%,
+            rgba(255, 255, 255, 0.12) 50%,
+            rgba(255, 255, 255, 0.03) 75%,
+            rgba(255, 255, 255, 0.08) 100%);
+    background-size: 300% 300%;
+    animation: gray-shimmer 6s ease-in-out infinite;
+    z-index: -1;
+}
+
+/* Filter Selects - Clean inside the shimmer bar */
 .analytics-filter-select {
     flex: 1;
     padding: 10px 14px;
-    /* Platinum gradient border */
+    /* Simple dark background - no extra border */
     background:
-        linear-gradient(#1a1a1a, #1a1a1a) padding-box,
-        linear-gradient(135deg,
-            rgba(180, 180, 180, 0.4) 0%,
-            rgba(100, 100, 100, 0.25) 50%,
-            rgba(160, 160, 160, 0.35) 100%) border-box,
-        /* Dropdown arrow */
+        linear-gradient(#222, #222) padding-box,
         url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23a0a0a0' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") no-repeat right 10px center / 16px;
-    border: 1px solid transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
     color: #fff;
     font-size: 13px;
@@ -10841,7 +10862,6 @@ body.native-app [class*="btn-row"]>* {
     outline: none;
     -webkit-appearance: none;
     appearance: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Loading State */
