@@ -9143,7 +9143,7 @@ body.native-app [class*="btn-row"]>* {
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
     padding-left: 12px;
     padding-right: 12px;
-    background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
+    background: transparent;
 }
 
 /* Stats Bar - Blue Glowing Border (matching PREFLOP style) */
@@ -9703,7 +9703,7 @@ body.native-app [class*="btn-row"]>* {
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
     padding-left: 14px;
     padding-right: 14px;
-    background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+    background: transparent;
 }
 
 /* Coach Input Section */
@@ -10585,7 +10585,7 @@ body.native-app [class*="btn-row"]>* {
     min-height: 100vh;
     padding-top: calc(env(safe-area-inset-top, 0px) + 115px);
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
-    background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+    background: transparent;
 }
 
 /* Filter Section */
