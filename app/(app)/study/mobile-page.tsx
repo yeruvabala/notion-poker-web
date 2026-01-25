@@ -13,7 +13,8 @@ import {
     WaveIcon,
     ShieldIcon,
     ButtonChipIcon,
-    HandCatchIcon
+    HandCatchIcon,
+    FilterIcon
 } from '@/components/icons/StudyIcons';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -262,7 +263,7 @@ export default function MobileStudyPage() {
                         className="filter-toggle"
                         onClick={() => { haptic(); setShowFilters(!showFilters); }}
                     >
-                        <span>🔧</span>
+                        <FilterIcon className="filter-toggle-icon" size={16} />
                         <span>Filters</span>
                         <span className="filter-arrow">{showFilters ? '▲' : '▼'}</span>
                     </button>
@@ -301,20 +302,23 @@ export default function MobileStudyPage() {
                         </div>
                     )}
 
-                    {/* Ask Button - Compact pill style */}
+                    {/* Ask Button - Premium Platinum Style */}
                     <button
-                        className={`study-ask-btn ${loading ? 'loading' : ''}`}
+                        className={`study-ask-btn-premium ${loading ? 'loading' : ''}`}
                         onClick={handleAskCoach}
                         disabled={loading}
                     >
                         {loading ? (
-                            <span className="ask-btn-content">
+                            <span className="ask-btn-text">
                                 <span className="thinking-dots">
                                     <span>●</span><span>●</span><span>●</span>
                                 </span>
                             </span>
                         ) : (
-                            <span className="ask-btn-content">Ask</span>
+                            <>
+                                <AICoachIcon className="ask-btn-icon" size={18} />
+                                <span className="ask-btn-text">Ask Coach</span>
+                            </>
                         )}
                     </button>
 

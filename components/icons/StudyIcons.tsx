@@ -261,6 +261,37 @@ export const HandCatchIcon: React.FC<IconProps> = ({ className = '', size = 16 }
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// FILTER ICON - Premium sliders design
+// ═══════════════════════════════════════════════════════════════════════════════
+export const FilterIcon: React.FC<IconProps> = ({ className = '', size = 16 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <defs>
+            <linearGradient id="filterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#e0e0e0" />
+                <stop offset="50%" stopColor="#a0a0a0" />
+                <stop offset="100%" stopColor="#c0c0c0" />
+            </linearGradient>
+        </defs>
+        {/* Three horizontal lines with slider dots */}
+        <line x1="4" y1="6" x2="20" y2="6" stroke="url(#filterGrad)" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="8" cy="6" r="2.5" fill="url(#filterGrad)" stroke="#808080" strokeWidth="0.5" />
+
+        <line x1="4" y1="12" x2="20" y2="12" stroke="url(#filterGrad)" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="16" cy="12" r="2.5" fill="url(#filterGrad)" stroke="#808080" strokeWidth="0.5" />
+
+        <line x1="4" y1="18" x2="20" y2="18" stroke="url(#filterGrad)" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="11" cy="18" r="2.5" fill="url(#filterGrad)" stroke="#808080" strokeWidth="0.5" />
+    </svg>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Export all Study Icons
 // ═══════════════════════════════════════════════════════════════════════════════
 export const StudyIcons = {
@@ -271,6 +302,7 @@ export const StudyIcons = {
     Shield: ShieldIcon,
     ButtonChip: ButtonChipIcon,
     HandCatch: HandCatchIcon,
+    Filter: FilterIcon,
 };
 
 export default StudyIcons;

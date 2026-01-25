@@ -9632,6 +9632,110 @@ body.native-app [class*="btn-row"]>* {
     letter-spacing: 0.02em;
 }
 
+/* Filter Toggle Icon Glow */
+.filter-toggle-icon {
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 3px rgba(160, 160, 160, 0.3));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   PREMIUM ASK COACH BUTTON - Platinum Metallic with Heat Reflection
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.study-ask-btn-premium {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 32px;
+    margin: 0 auto;
+    /* Premium platinum gradient with heat reflection */
+    background: linear-gradient(180deg,
+            #ffffff 0%,
+            #e8e8e8 45%,
+            #bfbfbf 49%,
+            #8f8f8f 50%,
+            #aebfcc 55%,
+            #e8e8e8 100%);
+    border: 1px solid #ffffff;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow:
+        0px 2px 6px rgba(0, 0, 0, 0.4),
+        inset 0px 1px 0px rgba(255, 255, 255, 0.8);
+}
+
+.study-ask-btn-premium:active {
+    transform: scale(0.97);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(180deg,
+            #d7d7d7 0%,
+            #b0b0b0 49%,
+            #7a7a7a 50%,
+            #909090 100%);
+}
+
+.study-ask-btn-premium:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.study-ask-btn-premium .ask-btn-icon {
+    filter: brightness(0) saturate(100%);
+}
+
+.study-ask-btn-premium .ask-btn-text {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #1a1a1a;
+    text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.8);
+}
+
+/* Loading state - shimmer border */
+.study-ask-btn-premium.loading {
+    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 50%, #0f0f0f 100%);
+    border: 1px solid transparent;
+}
+
+.study-ask-btn-premium.loading::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 15px;
+    padding: 1.5px;
+    background: linear-gradient(90deg,
+            rgba(100, 100, 100, 0.3) 0%,
+            rgba(180, 180, 180, 0.6) 15%,
+            rgba(255, 255, 255, 0.8) 30%,
+            rgba(180, 180, 180, 0.6) 45%,
+            rgba(100, 100, 100, 0.3) 60%,
+            rgba(180, 180, 180, 0.6) 75%,
+            rgba(255, 255, 255, 0.8) 90%,
+            rgba(100, 100, 100, 0.3) 100%);
+    background-size: 200% 200%;
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: gto-border-shimmer 2s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.study-ask-btn-premium.loading .ask-btn-text {
+    background: linear-gradient(90deg, #888888 0%, #c0c0c0 30%, #ffffff 50%, #c0c0c0 70%, #888888 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
 .thinking-dots {
     display: flex;
     gap: 4px;
