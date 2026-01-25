@@ -9828,8 +9828,9 @@ body.native-app [class*="btn-row"]>* {
 .study-textarea {
     width: 100%;
     padding: 14px;
-    background: rgba(15, 15, 20, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    /* Match app theme - subtle dark like other inputs */
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 14px;
     color: #fff;
     font-size: 15px;
@@ -9840,12 +9841,13 @@ body.native-app [class*="btn-row"]>* {
 }
 
 .study-textarea:focus {
-    border-color: rgba(99, 102, 241, 0.5);
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+    border-color: rgba(100, 180, 255, 0.4);
+    box-shadow: 0 0 20px rgba(100, 180, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .study-textarea::placeholder {
-    color: rgba(255, 255, 255, 0.35);
+    color: rgba(255, 255, 255, 0.4);
 }
 
 /* Quick Topic Chips */
