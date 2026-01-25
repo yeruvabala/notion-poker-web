@@ -10806,6 +10806,9 @@ body.native-app [class*="btn-row"]>* {
     min-height: 100vh;
     padding-top: calc(env(safe-area-inset-top, 0px) + 115px);
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
+    /* Match My Hands page padding for consistent alignment */
+    padding-left: 16px;
+    padding-right: 16px;
     background: transparent;
 }
 
@@ -10813,7 +10816,8 @@ body.native-app [class*="btn-row"]>* {
 .analytics-filters {
     display: flex;
     gap: 10px;
-    padding: 0 14px 16px;
+    /* No extra padding since page has padding */
+    padding: 0 0 16px;
 }
 
 /* Filter Selects - Platinum Theme */
@@ -10873,7 +10877,8 @@ body.native-app [class*="btn-row"]>* {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin: 0 14px 16px;
+    /* No horizontal margin - page has padding */
+    margin: 0 0 16px;
     padding: 12px;
     background: rgba(239, 68, 68, 0.1);
     border: 1px solid rgba(239, 68, 68, 0.3);
@@ -10887,7 +10892,8 @@ body.native-app [class*="btn-row"]>* {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
-    padding: 0 14px 20px;
+    /* No horizontal padding - page has padding */
+    padding: 0 0 20px;
 }
 
 .grid-stat-card {
@@ -11083,7 +11089,8 @@ body.native-app [class*="btn-row"]>* {
 /* Analytics Section */
 /* Analytics Section - Platinum Theme */
 .analytics-section {
-    margin: 0 14px 20px;
+    /* No horizontal margin - page has padding */
+    margin: 0 0 20px;
     padding: 16px;
     /* Premium platinum gradient border */
     background:
