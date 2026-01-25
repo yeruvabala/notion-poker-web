@@ -10043,34 +10043,45 @@ body.native-app [class*="btn-row"]>* {
 
 .grid-stat-card {
     padding: 18px 16px;
-    background: linear-gradient(145deg, rgba(28, 30, 38, 0.95) 0%, rgba(20, 22, 30, 0.98) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
+    /* Premium platinum gradient border */
+    background:
+        /* LAYER 1: The Inner Background */
+        linear-gradient(#1a1a1a, #1a1a1a) padding-box,
+        /* LAYER 2: Platinum Edge Gradient */
+        linear-gradient(135deg,
+            rgba(180, 180, 180, 0.6) 0%,
+            rgba(100, 100, 100, 0.4) 25%,
+            rgba(160, 160, 160, 0.5) 50%,
+            rgba(80, 80, 80, 0.3) 75%,
+            rgba(140, 140, 140, 0.5) 100%) border-box;
+    border: 1px solid transparent;
+    border-radius: 14px;
     position: relative;
     overflow: hidden;
     text-align: center;
+    /* Subtle shadow for depth */
+    box-shadow:
+        0 0 0 0.5px rgba(255, 255, 255, 0.05),
+        0 2px 4px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(0, 0, 0, 0.15);
 }
 
+/* Removed the colored top bar - using platinum border instead */
 .grid-stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: var(--stat-color);
+    display: none;
 }
 
+/* Subtle platinum shimmer glow */
 .grid-stat-card .stat-glow {
     position: absolute;
-    top: -20px;
+    top: -10px;
     left: 50%;
     transform: translateX(-50%);
-    width: 80px;
-    height: 50px;
-    background: var(--stat-color);
-    opacity: 0.15;
-    filter: blur(25px);
+    width: 100px;
+    height: 40px;
+    background: linear-gradient(135deg, rgba(200, 200, 200, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    opacity: 0.8;
+    filter: blur(20px);
     border-radius: 50%;
 }
 
@@ -10086,7 +10097,11 @@ body.native-app [class*="btn-row"]>* {
 .grid-stat-card .stat-value-large {
     font-size: 32px;
     font-weight: 800;
-    color: var(--stat-color);
+    /* Platinum gradient text */
+    background: linear-gradient(135deg, #ffffff 0%, #a3a3a3 50%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     line-height: 1;
     margin-bottom: 4px;
     font-family: 'SF Mono', monospace;
@@ -10095,14 +10110,22 @@ body.native-app [class*="btn-row"]>* {
 .grid-stat-card .stat-value {
     font-size: 24px;
     font-weight: 800;
-    color: var(--stat-color);
+    /* Platinum gradient text */
+    background: linear-gradient(135deg, #ffffff 0%, #a3a3a3 50%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 4px;
 }
 
 .grid-stat-card .stat-value-sm {
     font-size: 14px;
     font-weight: 700;
-    color: var(--stat-color);
+    /* Platinum gradient text */
+    background: linear-gradient(135deg, #ffffff 0%, #a3a3a3 50%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 4px;
     line-height: 1.3;
 }
