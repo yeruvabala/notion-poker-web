@@ -4068,11 +4068,12 @@ body.native-app [class*="btn-row"]>* {
     padding: 2px 0;
 }
 
-/* Inner group keeps everything together */
+/* Inner group keeps everything together - PROPERLY CENTERED */
 .hero-group {
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: center;
+    gap: 14px;
 }
 
 .hero-group .hero-cards {
@@ -4097,21 +4098,21 @@ body.native-app [class*="btn-row"]>* {
    Text appears to rotate on the surface of an invisible globe
    ═══════════════════════════════════════════════════════════════════════════════ */
 .vs-rotating-text {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 800;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.7);
     text-transform: uppercase;
     letter-spacing: 2px;
-    padding: 0 14px;
-    /* Vertical centering - move up to align with card centers */
-    align-self: center;
-    margin-top: -13px;
+    padding: 0 8px;
+    /* Proper vertical centering - NO negative margins */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     /* 3D globe-surface effect */
-    display: inline-block;
     animation: vs-globe-rotate 4s ease-in-out infinite, vs-glow-pulse 2s ease-in-out infinite;
     text-shadow:
-        0 0 10px rgba(59, 130, 246, 0.7),
-        0 0 20px rgba(139, 92, 246, 0.5);
+        0 0 8px rgba(59, 130, 246, 0.5),
+        0 0 16px rgba(139, 92, 246, 0.3);
     /* Hide backface so text doesn't appear reversed */
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
@@ -4157,20 +4158,35 @@ body.native-app [class*="btn-row"]>* {
 }
 
 .villain-select-inline {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
-    padding: 8px 14px;
+    background: linear-gradient(180deg, rgba(50, 50, 55, 0.9) 0%, rgba(35, 35, 40, 0.9) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 10px 16px;
     color: #fff;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     -webkit-appearance: none;
     appearance: none;
-    min-width: 70px;
+    min-width: 65px;
     text-align: center;
-    align-self: center;
-    margin-top: -16px;
+    /* Proper vertical centering - NO negative margins */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Premium shadow */
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+.villain-select-inline:focus {
+    outline: none;
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 0 12px rgba(59, 130, 246, 0.3);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
