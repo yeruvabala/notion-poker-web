@@ -3606,7 +3606,7 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   SETUP BAR - Position, Stack, Format (Top Row)
+   SETUP BAR - Position, Stack, Format (Top Row) - LEGACY
    ═══════════════════════════════════════════════════════════════════════════════ */
 .setup-bar {
     display: flex;
@@ -3617,6 +3617,158 @@ body.native-app [class*="btn-row"]>* {
     background: rgba(255, 255, 255, 0.03);
     border-radius: 12px;
     margin: 0 8px 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ULTRA-PREMIUM SETUP CONTAINER - Glassmorphic with animated border
+   Apple-style premium card with subtle animated gradient border
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.premium-setup-container {
+    position: relative;
+    margin: 0 16px 8px;
+    border-radius: 16px;
+    padding: 2px;
+    /* Animated gradient border */
+    background: linear-gradient(135deg,
+            rgba(100, 100, 120, 0.3) 0%,
+            rgba(60, 60, 80, 0.2) 25%,
+            rgba(100, 180, 255, 0.25) 50%,
+            rgba(60, 60, 80, 0.2) 75%,
+            rgba(100, 100, 120, 0.3) 100%);
+    background-size: 300% 300%;
+    animation: premium-border-shimmer 8s ease infinite;
+}
+
+/* Animated shimmer on border */
+@keyframes premium-border-shimmer {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* Outer glow layer */
+.premium-setup-glow {
+    position: absolute;
+    inset: -1px;
+    border-radius: 17px;
+    background: transparent;
+    box-shadow:
+        0 0 20px rgba(100, 180, 255, 0.08),
+        0 4px 20px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Inner container - dark glassmorphic */
+.premium-setup-inner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 8px 12px;
+    background: linear-gradient(180deg,
+            rgba(35, 38, 45, 0.98) 0%,
+            rgba(28, 30, 36, 0.99) 100%);
+    border-radius: 14px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 1;
+}
+
+/* Segment styling */
+.setup-segment {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.setup-segment:active {
+    background: rgba(255, 255, 255, 0.05);
+    transform: scale(0.98);
+}
+
+/* Segment icon */
+.segment-icon {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+/* Segment select - invisible native with custom display */
+.segment-select {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    padding: 0;
+    padding-right: 16px;
+    /* Dropdown chevron */
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0 center;
+    background-size: 12px;
+}
+
+.segment-select:focus {
+    outline: none;
+}
+
+/* Segment input for stack */
+.segment-input {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    width: 50px;
+    text-align: center;
+    -moz-appearance: textfield;
+}
+
+.segment-input::-webkit-outer-spin-button,
+.segment-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.segment-input:focus {
+    outline: none;
+}
+
+.segment-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Suffix (bb) */
+.segment-suffix {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Divider between segments */
+.segment-divider {
+    width: 1px;
+    height: 24px;
+    background: linear-gradient(180deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.15) 50%,
+            transparent 100%);
+    margin: 0 4px;
 }
 
 .setup-select {

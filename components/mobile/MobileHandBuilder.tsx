@@ -1144,42 +1144,55 @@ export default function MobileHandBuilder({
         <div className="premium-hand-builder">
 
             {/* ═══════════════════════════════════════════════════════════════════════
-          SETUP BAR - Position, Stack, Format
+          ULTRA-PREMIUM SETUP BAR - Glassmorphic with animated border
           ═══════════════════════════════════════════════════════════════════════ */}
-            <div className="setup-bar">
-                <select
-                    className="setup-select"
-                    value={heroPosition}
-                    onChange={(e) => setHeroPosition(e.target.value)}
-                >
-                    <option value="">Position</option>
-                    {positions.map(p => <option key={p} value={p}>{p}</option>)}
-                </select>
+            <div className="premium-setup-container">
+                <div className="premium-setup-glow"></div>
+                <div className="premium-setup-inner">
+                    {/* Position Segment */}
+                    <div className="setup-segment position-segment">
+                        <span className="segment-icon">🎯</span>
+                        <select
+                            className="segment-select"
+                            value={heroPosition}
+                            onChange={(e) => setHeroPosition(e.target.value)}
+                        >
+                            <option value="">Position</option>
+                            {positions.map(p => <option key={p} value={p}>{p}</option>)}
+                        </select>
+                    </div>
 
-                <div className="setup-divider">•</div>
+                    <div className="segment-divider"></div>
 
-                <div className="stack-input-wrap">
-                    <input
-                        type="number"
-                        className="stack-input"
-                        placeholder="100"
-                        value={effectiveStack}
-                        onChange={(e) => setEffectiveStack(e.target.value)}
-                    />
-                    <span className="stack-label">bb</span>
+                    {/* Stack Segment */}
+                    <div className="setup-segment stack-segment">
+                        <span className="segment-icon">🪙</span>
+                        <input
+                            type="number"
+                            className="segment-input"
+                            placeholder="100"
+                            value={effectiveStack}
+                            onChange={(e) => setEffectiveStack(e.target.value)}
+                        />
+                        <span className="segment-suffix">bb</span>
+                    </div>
+
+                    <div className="segment-divider"></div>
+
+                    {/* Table Format Segment */}
+                    <div className="setup-segment format-segment">
+                        <span className="segment-icon">🃏</span>
+                        <select
+                            className="segment-select"
+                            value={tableFormat}
+                            onChange={(e) => setTableFormat(e.target.value)}
+                        >
+                            {Object.entries(TABLE_FORMATS).map(([key, val]) => (
+                                <option key={key} value={key}>{val.label}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
-
-                <div className="setup-divider">•</div>
-
-                <select
-                    className="setup-select"
-                    value={tableFormat}
-                    onChange={(e) => setTableFormat(e.target.value)}
-                >
-                    {Object.entries(TABLE_FORMATS).map(([key, val]) => (
-                        <option key={key} value={key}>{val.label}</option>
-                    ))}
-                </select>
             </div>
 
             {/* ═══════════════════════════════════════════════════════════════════════
