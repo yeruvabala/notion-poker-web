@@ -1144,14 +1144,13 @@ export default function MobileHandBuilder({
         <div className="premium-hand-builder">
 
             {/* ═══════════════════════════════════════════════════════════════════════
-          ULTRA-PREMIUM SETUP BAR - Glassmorphic with animated border
+          PREMIUM SETUP BAR - Clean unified container
           ═══════════════════════════════════════════════════════════════════════ */}
             <div className="premium-setup-container">
                 <div className="premium-setup-glow"></div>
                 <div className="premium-setup-inner">
                     {/* Position Segment */}
                     <div className="setup-segment position-segment">
-                        <span className="segment-icon">🎯</span>
                         <select
                             className="segment-select"
                             value={heroPosition}
@@ -1166,7 +1165,6 @@ export default function MobileHandBuilder({
 
                     {/* Stack Segment */}
                     <div className="setup-segment stack-segment">
-                        <span className="segment-icon">🪙</span>
                         <input
                             type="number"
                             className="segment-input"
@@ -1181,7 +1179,6 @@ export default function MobileHandBuilder({
 
                     {/* Table Format Segment */}
                     <div className="setup-segment format-segment">
-                        <span className="segment-icon">🃏</span>
                         <select
                             className="segment-select"
                             value={tableFormat}

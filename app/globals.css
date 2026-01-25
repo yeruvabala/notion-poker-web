@@ -3620,65 +3620,39 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   ULTRA-PREMIUM SETUP CONTAINER - Glassmorphic with animated border
-   Apple-style premium card with subtle animated gradient border
+   PREMIUM SETUP CONTAINER - Matches page theme
+   Subtle gray border matching PREFLOP/FLOP/TURN/RIVER boxes
    ═══════════════════════════════════════════════════════════════════════════════ */
 .premium-setup-container {
     position: relative;
     margin: 0 16px 8px;
     border-radius: 16px;
-    padding: 2px;
-    /* Animated gradient border */
-    background: linear-gradient(135deg,
-            rgba(100, 100, 120, 0.3) 0%,
-            rgba(60, 60, 80, 0.2) 25%,
-            rgba(100, 180, 255, 0.25) 50%,
-            rgba(60, 60, 80, 0.2) 75%,
-            rgba(100, 100, 120, 0.3) 100%);
-    background-size: 300% 300%;
-    animation: premium-border-shimmer 8s ease infinite;
+    padding: 1px;
+    /* Subtle gray border matching page theme */
+    background: rgba(255, 255, 255, 0.06);
 }
 
-/* Animated shimmer on border */
-@keyframes premium-border-shimmer {
-
-    0%,
-    100% {
-        background-position: 0% 50%;
-    }
-
-    50% {
-        background-position: 100% 50%;
-    }
-}
-
-/* Outer glow layer */
+/* Outer subtle shadow - matches street sections */
 .premium-setup-glow {
     position: absolute;
     inset: -1px;
     border-radius: 17px;
     background: transparent;
-    box-shadow:
-        0 0 20px rgba(100, 180, 255, 0.08),
-        0 4px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
     pointer-events: none;
     z-index: 0;
 }
 
-/* Inner container - dark glassmorphic */
+/* Inner container - matches page dark theme */
 .premium-setup-inner {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0;
-    padding: 8px 12px;
-    background: linear-gradient(180deg,
-            rgba(35, 38, 45, 0.98) 0%,
-            rgba(28, 30, 36, 0.99) 100%);
-    border-radius: 14px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 15px;
     z-index: 1;
 }
 
