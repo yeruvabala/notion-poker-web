@@ -11284,6 +11284,7 @@ body.native-app [class*="btn-row"]>* {
     align-items: center;
     gap: 10px;
     margin-bottom: 14px;
+    flex-wrap: nowrap;
 }
 
 /* Removed colored icon - using platinum text instead */
@@ -11302,6 +11303,7 @@ body.native-app [class*="btn-row"]>* {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     flex: 1;
+    white-space: nowrap;
 }
 
 .section-badge {

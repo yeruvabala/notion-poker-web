@@ -43,7 +43,7 @@ function fmt(n: number): string {
 }
 
 function formatLeakName(tag: string | null | undefined): string {
-    if (!tag) return '—';
+    if (!tag || tag === '{}' || tag === '[]' || tag.trim() === '') return 'Unknown Leak';
     return tag
         .replace(/[-_]/g, ' ')
         .replace(/\b\w/g, c => c.toUpperCase())
