@@ -6,6 +6,15 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { createClient } from '@/lib/supabase/client';
 import MobilePageHeader from '@/components/mobile/MobilePageHeader';
 import MobileBottomNav from '@/components/mobile/MobileBottomNav';
+import {
+    AICoachIcon,
+    CrosshairsIcon,
+    ExplosionIcon,
+    WaveIcon,
+    ShieldIcon,
+    ButtonChipIcon,
+    HandCatchIcon
+} from '@/components/icons/StudyIcons';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MOBILE STUDY PAGE - Premium AI Coach Experience
@@ -32,13 +41,14 @@ type CoachAnswer = {
     drills?: StudyDrill[] | null;
 };
 
+// Premium icon components for topics
 const QUICK_TOPICS = [
-    { emoji: '🎯', label: '3-Betting', query: 'How should I construct my 3-betting range?' },
-    { emoji: '💥', label: 'C-Betting', query: 'When should I continuation bet and when should I check?' },
-    { emoji: '🌊', label: 'River Play', query: 'How do I make better river decisions with marginal hands?' },
-    { emoji: '🛡️', label: 'Defense', query: 'How should I defend my small blind vs button opens?' },
-    { emoji: '🎰', label: 'BTN Play', query: 'What are the key strategies for playing from the button?' },
-    { emoji: '🃏', label: 'Bluff Catching', query: 'When should I call down as a bluff catcher?' },
+    { icon: CrosshairsIcon, label: '3-Betting', query: 'How should I construct my 3-betting range?' },
+    { icon: ExplosionIcon, label: 'C-Betting', query: 'When should I continuation bet and when should I check?' },
+    { icon: WaveIcon, label: 'River Play', query: 'How do I make better river decisions with marginal hands?' },
+    { icon: ShieldIcon, label: 'Defense', query: 'How should I defend my small blind vs button opens?' },
+    { icon: ButtonChipIcon, label: 'BTN Play', query: 'What are the key strategies for playing from the button?' },
+    { icon: HandCatchIcon, label: 'Bluff Catching', query: 'When should I call down as a bluff catcher?' },
 ];
 
 const FILTER_CONFIGS = {
@@ -214,7 +224,7 @@ export default function MobileStudyPage() {
                 {/* Premium Input Card */}
                 <div className="study-input-card">
                     <div className="study-input-header">
-                        <span className="coach-avatar">🤖</span>
+                        <AICoachIcon className="coach-avatar-icon" size={24} />
                         <span className="coach-label">AI Coach</span>
                         <span className="coach-status">
                             <span className="status-dot" />
@@ -232,16 +242,19 @@ export default function MobileStudyPage() {
 
                     {/* Quick Topics */}
                     <div className="study-quick-topics">
-                        {QUICK_TOPICS.map((topic) => (
-                            <button
-                                key={topic.label}
-                                className="quick-topic-chip"
-                                onClick={() => selectTopic(topic.query)}
-                            >
-                                <span className="chip-emoji">{topic.emoji}</span>
-                                <span>{topic.label}</span>
-                            </button>
-                        ))}
+                        {QUICK_TOPICS.map((topic) => {
+                            const IconComponent = topic.icon;
+                            return (
+                                <button
+                                    key={topic.label}
+                                    className="quick-topic-chip"
+                                    onClick={() => selectTopic(topic.query)}
+                                >
+                                    <IconComponent className="chip-icon" size={16} />
+                                    <span>{topic.label}</span>
+                                </button>
+                            );
+                        })}
                     </div>
 
                     {/* Filter Toggle */}

@@ -9347,6 +9347,18 @@ body.native-app [class*="btn-row"]>* {
     font-size: 24px;
 }
 
+/* Premium SVG Coach Icon */
+.coach-avatar-icon {
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 6px rgba(180, 180, 180, 0.4));
+}
+
+/* Premium SVG Icons in Topic Chips */
+.chip-icon {
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 3px rgba(160, 160, 160, 0.3));
+}
+
 .coach-label {
     font-size: 16px;
     font-weight: 700;
