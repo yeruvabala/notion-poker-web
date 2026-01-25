@@ -9684,17 +9684,26 @@ body.native-app [class*="btn-row"]>* {
     cursor: not-allowed;
 }
 
-/* Icon in button - white sparkle */
+/* Icon in button - centered with text */
 .study-ask-btn-premium .ask-btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: -1px;
+    /* Fine-tune vertical alignment */
     filter: brightness(10);
 }
 
-/* Text styling - white and bold */
+/* Text styling - white and bold, matched line-height */
 .study-ask-btn-premium .ask-btn-text {
+    display: flex;
+    align-items: center;
     font-size: 15px;
     font-weight: 700;
     letter-spacing: 0.5px;
     color: #ffffff;
+    line-height: 1;
 }
 
 /* Loading state - shimmer border */
