@@ -9643,19 +9643,21 @@ body.native-app [class*="btn-row"]>* {
    ═══════════════════════════════════════════════════════════════════════════════ */
 .study-ask-btn-premium {
     position: relative;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    width: 100%;
-    padding: 16px 24px;
+    /* Compact pill - not full width */
+    width: auto;
+    padding: 12px 32px;
+    margin: 4px auto 0;
     /* Dark gradient - EXACT match to Analyze button */
     background: linear-gradient(180deg,
             rgba(60, 60, 65, 1) 0%,
             rgba(45, 45, 50, 1) 50%,
             rgba(35, 35, 40, 1) 100%);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 14px;
+    border-radius: 12px;
     cursor: pointer;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
     -webkit-tap-highlight-color: transparent;
