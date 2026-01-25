@@ -9973,11 +9973,20 @@ body.native-app [class*="btn-row"]>* {
     padding: 0 14px 16px;
 }
 
+/* Filter Selects - Platinum Theme */
 .analytics-filter-select {
     flex: 1;
     padding: 10px 14px;
-    background: linear-gradient(145deg, #1e1e1e 0%, #141414 100%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    /* Platinum gradient border */
+    background:
+        linear-gradient(#1a1a1a, #1a1a1a) padding-box,
+        linear-gradient(135deg,
+            rgba(180, 180, 180, 0.4) 0%,
+            rgba(100, 100, 100, 0.25) 50%,
+            rgba(160, 160, 160, 0.35) 100%) border-box,
+        /* Dropdown arrow */
+        url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23a0a0a0' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") no-repeat right 10px center / 16px;
+    border: 1px solid transparent;
     border-radius: 10px;
     color: #fff;
     font-size: 13px;
@@ -9985,10 +9994,7 @@ body.native-app [class*="btn-row"]>* {
     outline: none;
     -webkit-appearance: none;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 10px center;
-    background-repeat: no-repeat;
-    background-size: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Loading State */
@@ -10232,12 +10238,24 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* Analytics Section */
+/* Analytics Section - Platinum Theme */
 .analytics-section {
     margin: 0 14px 20px;
     padding: 16px;
-    background: linear-gradient(145deg, rgba(28, 30, 38, 0.95) 0%, rgba(20, 22, 30, 0.98) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 18px;
+    /* Premium platinum gradient border */
+    background:
+        linear-gradient(#1a1a1a, #1a1a1a) padding-box,
+        linear-gradient(135deg,
+            rgba(180, 180, 180, 0.5) 0%,
+            rgba(100, 100, 100, 0.3) 25%,
+            rgba(160, 160, 160, 0.4) 50%,
+            rgba(80, 80, 80, 0.25) 75%,
+            rgba(140, 140, 140, 0.4) 100%) border-box;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    box-shadow:
+        0 0 0 0.5px rgba(255, 255, 255, 0.05),
+        0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .section-header {
@@ -10247,17 +10265,19 @@ body.native-app [class*="btn-row"]>* {
     margin-bottom: 14px;
 }
 
+/* Removed colored icon - using platinum text instead */
 .section-icon {
-    width: 10px;
-    height: 10px;
-    border-radius: 3px;
-    box-shadow: 0 0 8px currentColor;
+    display: none;
 }
 
 .section-title {
     font-size: 13px;
     font-weight: 700;
-    color: #fff;
+    /* Platinum gradient text */
+    background: linear-gradient(135deg, #ffffff 0%, #a3a3a3 50%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     flex: 1;
@@ -10265,11 +10285,15 @@ body.native-app [class*="btn-row"]>* {
 
 .section-badge {
     padding: 4px 10px;
-    background: rgba(255, 255, 255, 0.05);
+    /* Platinum style badge */
+    background:
+        linear-gradient(#252525, #252525) padding-box,
+        linear-gradient(135deg, rgba(180, 180, 180, 0.3) 0%, rgba(100, 100, 100, 0.2) 100%) border-box;
+    border: 1px solid transparent;
     border-radius: 20px;
     font-size: 10px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.6);
 }
 
 /* Position Cards Scroll */
@@ -10290,37 +10314,46 @@ body.native-app [class*="btn-row"]>* {
     gap: 10px;
 }
 
+/* Position Card - Platinum Theme */
 .position-card {
     flex-shrink: 0;
-    width: 80px;
+    width: 85px;
     padding: 14px 10px;
-    background: rgba(20, 20, 25, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    /* Platinum gradient border */
+    background:
+        linear-gradient(#1a1a1a, #1a1a1a) padding-box,
+        linear-gradient(135deg,
+            rgba(180, 180, 180, 0.4) 0%,
+            rgba(100, 100, 100, 0.25) 50%,
+            rgba(160, 160, 160, 0.35) 100%) border-box;
+    border: 1px solid transparent;
     border-radius: 12px;
     text-align: center;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+/* Hide colored indicator */
 .position-card .pos-indicator {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: var(--pos-color);
+    display: none;
 }
 
 .position-card .pos-name {
     font-size: 13px;
     font-weight: 700;
-    color: #fff;
+    /* Platinum gradient text */
+    background: linear-gradient(135deg, #ffffff 0%, #a3a3a3 50%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 6px;
 }
 
 .position-card .pos-bb {
     font-size: 16px;
     font-weight: 800;
+    /* Keep color coding for profit/loss indication */
     color: var(--pos-color);
     margin-bottom: 4px;
     font-family: 'SF Mono', monospace;
@@ -10338,26 +10371,37 @@ body.native-app [class*="btn-row"]>* {
     gap: 8px;
 }
 
+/* Leak Card - Platinum Theme */
 .leak-card {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px;
-    background: rgba(20, 20, 25, 0.8);
-    border-radius: 10px;
+    gap: 12px;
+    padding: 14px;
+    /* Platinum gradient border */
+    background:
+        linear-gradient(#1a1a1a, #1a1a1a) padding-box,
+        linear-gradient(135deg,
+            rgba(180, 180, 180, 0.35) 0%,
+            rgba(100, 100, 100, 0.2) 50%,
+            rgba(160, 160, 160, 0.3) 100%) border-box;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .leak-rank {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 6px;
+    /* Platinum gradient for rank badge */
+    background: linear-gradient(135deg, rgba(180, 180, 180, 0.15) 0%, rgba(100, 100, 100, 0.1) 100%);
+    border: 1px solid rgba(180, 180, 180, 0.2);
+    border-radius: 8px;
     font-size: 11px;
     font-weight: 700;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .leak-info {
@@ -10368,7 +10412,11 @@ body.native-app [class*="btn-row"]>* {
 .leak-name {
     font-size: 12px;
     font-weight: 600;
-    color: #fff;
+    /* Platinum gradient text */
+    background: linear-gradient(135deg, #ffffff 0%, #b0b0b0 50%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 6px;
     white-space: nowrap;
     overflow: hidden;
@@ -10377,7 +10425,7 @@ body.native-app [class*="btn-row"]>* {
 
 .leak-bar-bg {
     height: 4px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 2px;
     overflow: hidden;
 }
@@ -10385,6 +10433,8 @@ body.native-app [class*="btn-row"]>* {
 .leak-bar-fill {
     height: 100%;
     border-radius: 2px;
+    /* Use subtle platinum gradient for bar */
+    background: linear-gradient(90deg, rgba(180, 180, 180, 0.5) 0%, rgba(220, 220, 220, 0.6) 100%);
     transition: width 0.3s ease;
 }
 
@@ -10394,6 +10444,11 @@ body.native-app [class*="btn-row"]>* {
     font-family: 'SF Mono', monospace;
     min-width: 55px;
     text-align: right;
+    /* Platinum text */
+    background: linear-gradient(135deg, #ffffff 0%, #a3a3a3 50%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 /* Empty State */
