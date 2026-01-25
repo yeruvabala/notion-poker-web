@@ -1183,7 +1183,7 @@ export default function MobileHandBuilder({
             </div>
 
             {/* ═══════════════════════════════════════════════════════════════════════
-          HERO ROW - Cards + Villain grouped together
+          HERO ROW - Cards + Premium Villain Globe
           ═══════════════════════════════════════════════════════════════════════ */}
             <div className="hero-row">
                 <div className="hero-group">
@@ -1192,17 +1192,23 @@ export default function MobileHandBuilder({
                         <CardDisplay card={heroCard2} cardKey="hero2" size="small" />
                     </div>
 
-                    {/* Simple Rotating VS Text with Glow */}
+                    {/* Subtle VS Text */}
                     <span className="vs-rotating-text">VS</span>
 
-                    <select
-                        className="villain-select-inline"
-                        value={villainPosition}
-                        onChange={(e) => setVillainPosition(e.target.value)}
+                    {/* ═══ PREMIUM VILLAIN GLOBE ═══ */}
+                    <div
+                        className={`villain-globe ${villainPosition ? 'active' : ''}`}
+                        onClick={() => setShowVillainModal(true)}
                     >
-                        <option value="">Villain</option>
-                        {positions.map(p => <option key={p} value={p}>{p}</option>)}
-                    </select>
+                        <div className="villain-globe-inner">
+                            {villainPosition ? (
+                                <span className="villain-position-text">{villainPosition}</span>
+                            ) : (
+                                <span className="villain-icon">👤</span>
+                            )}
+                        </div>
+                        <div className="villain-globe-glow"></div>
+                    </div>
                 </div>
             </div>
 
