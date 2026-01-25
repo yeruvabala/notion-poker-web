@@ -8403,21 +8403,36 @@ body.native-app [class*="btn-row"]>* {
     -webkit-text-fill-color: transparent;
 }
 
-/* Stats Bar - Blue Glowing Border (matching PREFLOP style) */
+/* Stats Bar - Gray Shimmer Animation (matching Home page setup bar) */
 .mobile-hands-stats {
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 24px;
     padding: 14px 20px;
-    background: rgba(255, 255, 255, 0.05);
-    /* Blue glowing border - same as PREFLOP active */
-    border: 1px solid rgba(100, 180, 255, 0.3);
+    background: rgba(255, 255, 255, 0.03);
     border-radius: 14px;
     margin-bottom: 12px;
-    box-shadow:
-        0 0 20px rgba(100, 180, 255, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    /* Outer wrapper for shimmer border effect */
+}
+
+/* Gray shimmer border wrapper */
+.mobile-hands-stats::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 15px;
+    /* Animated gray gradient border */
+    background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.08) 0%,
+            rgba(255, 255, 255, 0.03) 25%,
+            rgba(255, 255, 255, 0.12) 50%,
+            rgba(255, 255, 255, 0.03) 75%,
+            rgba(255, 255, 255, 0.08) 100%);
+    background-size: 300% 300%;
+    animation: gray-shimmer 6s ease-in-out infinite;
+    z-index: -1;
 }
 
 .mobile-stat {
