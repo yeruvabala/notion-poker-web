@@ -9639,7 +9639,7 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   PREMIUM ASK COACH BUTTON - Platinum Metallic with Heat Reflection
+   ASK COACH BUTTON - Exact match to Home page Analyze button
    ═══════════════════════════════════════════════════════════════════════════════ */
 .study-ask-btn-premium {
     position: relative;
@@ -9647,39 +9647,30 @@ body.native-app [class*="btn-row"]>* {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 32px;
-    margin: 0 auto;
-    /* Premium platinum gradient with heat reflection */
-    background: linear-gradient(180deg,
-            #ffffff 0%,
-            #e8e8e8 45%,
-            #bfbfbf 49%,
-            #8f8f8f 50%,
-            #aebfcc 55%,
-            #e8e8e8 100%);
-    border: 1px solid #ffffff;
+    width: 100%;
+    padding: 16px 24px;
+    /* Exact Home page gradient - smooth metallic */
+    background: linear-gradient(180deg, #ffffff 0%, #e0e0e0 20%, #bfbfbf 60%, #999999 100%);
+    border: none;
     border-radius: 14px;
+    color: #1a1a1a;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
     -webkit-tap-highlight-color: transparent;
+    /* Exact Home page shadows */
     box-shadow:
-        0px 2px 6px rgba(0, 0, 0, 0.4),
-        inset 0px 1px 0px rgba(255, 255, 255, 0.8);
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2),
+        0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
 .study-ask-btn-premium:active {
-    transform: scale(0.97);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    background: linear-gradient(180deg,
-            #d7d7d7 0%,
-            #b0b0b0 49%,
-            #7a7a7a 50%,
-            #909090 100%);
+    transform: scale(0.98);
 }
 
 .study-ask-btn-premium:disabled {
     opacity: 0.6;
-    cursor: default;
+    cursor: not-allowed;
 }
 
 .study-ask-btn-premium .ask-btn-icon {
@@ -9687,18 +9678,18 @@ body.native-app [class*="btn-row"]>* {
 }
 
 .study-ask-btn-premium .ask-btn-text {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
     letter-spacing: 0.5px;
-    text-transform: uppercase;
     color: #1a1a1a;
-    text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.8);
 }
 
-/* Loading state - shimmer border */
+/* Loading state - dark with shimmer */
 .study-ask-btn-premium.loading {
     background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 50%, #0f0f0f 100%);
-    border: 1px solid transparent;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .study-ask-btn-premium.loading::before {
