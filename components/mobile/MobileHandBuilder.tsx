@@ -1195,11 +1195,8 @@ export default function MobileHandBuilder({
                     {/* Subtle VS Text */}
                     <span className="vs-rotating-text">VS</span>
 
-                    {/* ═══ PREMIUM VILLAIN GLOBE ═══ */}
-                    <div
-                        className={`villain-globe ${villainPosition ? 'active' : ''}`}
-                        onClick={() => setShowVillainModal(true)}
-                    >
+                    {/* ═══ PREMIUM VILLAIN GLOBE WITH NATIVE SELECT ═══ */}
+                    <div className={`villain-globe ${villainPosition ? 'active' : ''}`}>
                         <div className="villain-globe-inner">
                             {villainPosition ? (
                                 <span className="villain-position-text">{villainPosition}</span>
@@ -1208,6 +1205,15 @@ export default function MobileHandBuilder({
                             )}
                         </div>
                         <div className="villain-globe-glow"></div>
+                        {/* Native select overlay - opens iOS picker */}
+                        <select
+                            className="villain-native-select"
+                            value={villainPosition}
+                            onChange={(e) => setVillainPosition(e.target.value)}
+                        >
+                            <option value="">Villain</option>
+                            {positions.map(p => <option key={p} value={p}>{p}</option>)}
+                        </select>
                     </div>
                 </div>
             </div>

@@ -4271,18 +4271,33 @@ body.native-app [class*="btn-row"]>* {
     background: rgba(255, 255, 255, 0.05);
 }
 
-/* Subtle pulse animation - matching hero style */
+/* Native select overlay - invisible but triggers iOS picker */
+.villain-native-select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    z-index: 10;
+}
+
+/* Stronger pulse animation - matching hero cards */
 @keyframes villain-subtle-pulse {
 
     0%,
     100% {
-        opacity: 0.5;
+        opacity: 0.6;
         transform: scale(1);
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.15);
     }
 
     50% {
-        opacity: 0.8;
-        transform: scale(1.02);
+        opacity: 1;
+        transform: scale(1.04);
+        box-shadow: 0 0 16px rgba(239, 68, 68, 0.3);
     }
 }
 
