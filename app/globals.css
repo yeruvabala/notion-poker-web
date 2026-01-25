@@ -8403,7 +8403,7 @@ body.native-app [class*="btn-row"]>* {
     -webkit-text-fill-color: transparent;
 }
 
-/* Stats Bar - Gray Shimmer Animation (matching Home page setup bar) */
+/* Stats Bar - Gray Shimmer Animation + Blue Border (matching PREFLOP style) */
 .mobile-hands-stats {
     position: relative;
     display: flex;
@@ -8412,9 +8412,13 @@ body.native-app [class*="btn-row"]>* {
     gap: 24px;
     padding: 14px 20px;
     background: rgba(255, 255, 255, 0.03);
+    /* Blue glowing border - same as PREFLOP active */
+    border: 1px solid rgba(100, 180, 255, 0.3);
     border-radius: 14px;
     margin-bottom: 12px;
-    /* Outer wrapper for shimmer border effect */
+    box-shadow:
+        0 0 20px rgba(100, 180, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* Gray shimmer border wrapper */
