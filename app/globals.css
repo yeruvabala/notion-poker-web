@@ -4190,125 +4190,84 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   PREMIUM VILLAIN GLOBE - Circular orb with red pulsing glow
-   Sized to half hero card height for perfect symmetry
+   PREMIUM VILLAIN GLOBE - Subtle red border matching preflop blue intensity
+   Sized to match hero cards for perfect vertical alignment
    ═══════════════════════════════════════════════════════════════════════════════ */
 .villain-globe {
     position: relative;
     width: 52px;
-    height: 52px;
-    border-radius: 50%;
+    height: 62px;
+    /* Match hero card height for alignment */
+    border-radius: 26px;
+    /* Pill shape to match height */
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s ease;
+    transition: all 0.2s ease;
     -webkit-tap-highlight-color: transparent;
 }
 
 .villain-globe:active {
-    transform: scale(0.95);
+    transform: scale(0.97);
 }
 
-/* Inner orb - dark gradient background */
+/* Inner orb - matches page dark theme */
 .villain-globe-inner {
     position: relative;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: linear-gradient(180deg,
-            rgba(50, 45, 48, 1) 0%,
-            rgba(35, 30, 33, 1) 50%,
-            rgba(25, 22, 24, 1) 100%);
-    border: 2px solid rgba(239, 68, 68, 0.5);
+    width: 48px;
+    height: 56px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.03);
+    /* SUBTLE red border - matching preflop blue intensity */
+    border: 1px solid rgba(239, 68, 68, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 2;
-    box-shadow:
-        inset 0 2px 4px rgba(255, 255, 255, 0.08),
-        inset 0 -2px 6px rgba(0, 0, 0, 0.3),
-        0 2px 8px rgba(0, 0, 0, 0.4);
+    transition: all 0.2s ease;
 }
 
-/* Pulsing red glow layer */
+/* Very subtle outer glow - NO animation for subtlety */
 .villain-globe-glow {
     position: absolute;
-    inset: -3px;
-    border-radius: 50%;
+    inset: -2px;
+    border-radius: 24px;
     background: transparent;
-    border: 2px solid rgba(239, 68, 68, 0.4);
-    animation: villain-glow-pulse 2s ease-in-out infinite;
+    border: 1px solid rgba(239, 68, 68, 0.1);
     z-index: 1;
+    pointer-events: none;
 }
 
 /* Position text inside globe */
 .villain-position-text {
-    font-size: 12px;
-    font-weight: 800;
-    color: rgba(255, 255, 255, 0.95);
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
     letter-spacing: 0.5px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 /* Empty state icon */
 .villain-icon {
-    font-size: 16px;
-    opacity: 0.5;
+    font-size: 18px;
+    opacity: 0.4;
     filter: grayscale(100%);
 }
 
-/* Active state - position selected */
+/* Active state - position selected, slightly brighter */
 .villain-globe.active .villain-globe-inner {
-    border-color: rgba(239, 68, 68, 0.7);
-    box-shadow:
-        inset 0 2px 4px rgba(255, 255, 255, 0.1),
-        inset 0 -2px 6px rgba(0, 0, 0, 0.3),
-        0 0 12px rgba(239, 68, 68, 0.3),
-        0 2px 8px rgba(0, 0, 0, 0.4);
+    border-color: rgba(239, 68, 68, 0.35);
+    background: rgba(255, 255, 255, 0.04);
 }
 
 .villain-globe.active .villain-globe-glow {
-    border-color: rgba(239, 68, 68, 0.6);
-    animation: villain-glow-pulse-active 1.5s ease-in-out infinite;
+    border-color: rgba(239, 68, 68, 0.15);
 }
 
-.villain-globe.active .villain-icon {
-    opacity: 0;
-}
-
-/* Pulsing glow animation - subtle */
-@keyframes villain-glow-pulse {
-
-    0%,
-    100% {
-        opacity: 0.4;
-        transform: scale(1);
-        box-shadow: 0 0 8px rgba(239, 68, 68, 0.2);
-    }
-
-    50% {
-        opacity: 0.7;
-        transform: scale(1.03);
-        box-shadow: 0 0 16px rgba(239, 68, 68, 0.35);
-    }
-}
-
-/* Active pulsing - more prominent */
-@keyframes villain-glow-pulse-active {
-
-    0%,
-    100% {
-        opacity: 0.5;
-        transform: scale(1);
-        box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
-    }
-
-    50% {
-        opacity: 1;
-        transform: scale(1.05);
-        box-shadow: 0 0 24px rgba(239, 68, 68, 0.5);
-    }
+/* Hover state for desktop */
+.villain-globe:hover .villain-globe-inner {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
