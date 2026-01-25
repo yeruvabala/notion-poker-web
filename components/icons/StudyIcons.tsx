@@ -292,6 +292,125 @@ export const FilterIcon: React.FC<IconProps> = ({ className = '', size = 16 }) =
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// TROPHY ICON - For Best Position (Success/Achievement)
+// ═══════════════════════════════════════════════════════════════════════════════
+export const TrophyIcon: React.FC<IconProps> = ({ className = '', size = 20 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <defs>
+            <linearGradient id="trophyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="30%" stopColor="#d0d0d0" />
+                <stop offset="70%" stopColor="#a0a0a0" />
+                <stop offset="100%" stopColor="#c0c0c0" />
+            </linearGradient>
+            <linearGradient id="trophyHandle" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#c0c0c0" />
+                <stop offset="100%" stopColor="#909090" />
+            </linearGradient>
+        </defs>
+        {/* Trophy cup */}
+        <path
+            d="M8 2H16V3C16 7 14 10 12 11C10 10 8 7 8 3V2Z"
+            fill="url(#trophyGrad)"
+            stroke="#909090"
+            strokeWidth="0.5"
+        />
+        {/* Left handle */}
+        <path
+            d="M8 4H5C4 4 3 5 3 6C3 8 4 9 6 9H8"
+            stroke="url(#trophyHandle)"
+            strokeWidth="1.5"
+            fill="none"
+            strokeLinecap="round"
+        />
+        {/* Right handle */}
+        <path
+            d="M16 4H19C20 4 21 5 21 6C21 8 20 9 18 9H16"
+            stroke="url(#trophyHandle)"
+            strokeWidth="1.5"
+            fill="none"
+            strokeLinecap="round"
+        />
+        {/* Stem */}
+        <rect x="11" y="11" width="2" height="4" fill="url(#trophyGrad)" />
+        {/* Base */}
+        <path
+            d="M8 15H16V16C16 17 15 18 14 18H10C9 18 8 17 8 16V15Z"
+            fill="url(#trophyGrad)"
+            stroke="#909090"
+            strokeWidth="0.3"
+        />
+        {/* Star highlight */}
+        <path
+            d="M12 5L12.5 6.5L14 7L12.5 7.5L12 9L11.5 7.5L10 7L11.5 6.5L12 5Z"
+            fill="#ffffff"
+            opacity="0.6"
+        />
+    </svg>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TARGET ICON - For Focus Area (Targeting weakness)
+// ═══════════════════════════════════════════════════════════════════════════════
+export const TargetIcon: React.FC<IconProps> = ({ className = '', size = 20 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <defs>
+            <linearGradient id="targetGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#e0e0e0" />
+                <stop offset="50%" stopColor="#a0a0a0" />
+                <stop offset="100%" stopColor="#c0c0c0" />
+            </linearGradient>
+        </defs>
+        {/* Outer ring */}
+        <circle
+            cx="12" cy="12" r="9"
+            stroke="url(#targetGrad)"
+            strokeWidth="1.5"
+            fill="none"
+        />
+        {/* Middle ring */}
+        <circle
+            cx="12" cy="12" r="6"
+            stroke="url(#targetGrad)"
+            strokeWidth="1.2"
+            fill="none"
+            opacity="0.7"
+        />
+        {/* Inner ring */}
+        <circle
+            cx="12" cy="12" r="3"
+            stroke="url(#targetGrad)"
+            strokeWidth="1"
+            fill="none"
+            opacity="0.5"
+        />
+        {/* Bullseye center */}
+        <circle cx="12" cy="12" r="1.5" fill="url(#targetGrad)" />
+        {/* Crosshair marks */}
+        <path
+            d="M12 2V5M12 19V22M2 12H5M19 12H22"
+            stroke="url(#targetGrad)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+        />
+    </svg>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Export all Study Icons
 // ═══════════════════════════════════════════════════════════════════════════════
 export const StudyIcons = {
@@ -303,6 +422,8 @@ export const StudyIcons = {
     ButtonChip: ButtonChipIcon,
     HandCatch: HandCatchIcon,
     Filter: FilterIcon,
+    Trophy: TrophyIcon,
+    Target: TargetIcon,
 };
 
 export default StudyIcons;

@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import MobilePageHeader from '@/components/mobile/MobilePageHeader';
 import MobileBottomNav from '@/components/mobile/MobileBottomNav';
+import { TrophyIcon, TargetIcon } from '@/components/icons/StudyIcons';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MOBILE ANALYTICS PAGE - Premium Performance Dashboard
@@ -175,7 +176,9 @@ export default function MobileAnalyticsPage() {
                     <div className="analytics-insights-row">
                         {/* Best Position - Green */}
                         <div className="insight-card success">
-                            <div className="insight-icon">🏆</div>
+                            <div className="insight-icon">
+                                <TrophyIcon size={22} />
+                            </div>
                             <div className="insight-content">
                                 <div className="insight-label">BEST POSITION</div>
                                 <div className="insight-value">{bestPosition?.hero_position ?? '—'}</div>
@@ -187,7 +190,9 @@ export default function MobileAnalyticsPage() {
 
                         {/* Focus Area - Orange (weakest position) */}
                         <div className="insight-card warning">
-                            <div className="insight-icon">🎯</div>
+                            <div className="insight-icon">
+                                <TargetIcon size={22} />
+                            </div>
                             <div className="insight-content">
                                 <div className="insight-label">FOCUS AREA</div>
                                 <div className="insight-value">{overview?.weakest_seat ?? '—'}</div>
@@ -203,7 +208,6 @@ export default function MobileAnalyticsPage() {
                         ═══════════════════════════════════════════════════════════════════ */}
                     <section className="analytics-section">
                         <div className="section-header">
-                            <span className="section-emoji">📊</span>
                             <span className="section-title">Position Breakdown</span>
                         </div>
 
@@ -239,7 +243,6 @@ export default function MobileAnalyticsPage() {
                         ═══════════════════════════════════════════════════════════════════ */}
                     <section className="analytics-section">
                         <div className="section-header">
-                            <span className="section-emoji">🔥</span>
                             <span className="section-title">Leaks to Fix</span>
                             {leaks.length > 0 && (
                                 <span className="section-badge">{leaks.length} found</span>
@@ -283,9 +286,8 @@ export default function MobileAnalyticsPage() {
                     {/* Quick Insights */}
                     {overview?.weakest_seat && (overview?.weakest_bb ?? 0) < 0 && (
                         <section className="analytics-insight">
-                            <span className="insight-icon">💡</span>
                             <span className="insight-text">
-                                Focus on your <strong>{overview.weakest_seat}</strong> play. You're losing{' '}
+                                💡 Focus on your <strong>{overview.weakest_seat}</strong> play. You're losing{' '}
                                 <strong>{fmt(Math.abs(overview.weakest_bb ?? 0))} bb/hand</strong> there.
                             </span>
                         </section>
