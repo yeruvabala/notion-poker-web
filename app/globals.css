@@ -4104,11 +4104,11 @@ body.native-app [class*="btn-row"]>* {
     text-transform: uppercase;
     letter-spacing: 2px;
     padding: 0 8px;
-    /* Proper vertical centering - NO negative margins */
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    /* Vertical centering - align with card centers */
+    align-self: center;
+    margin-top: -13px;
     /* 3D globe-surface effect */
+    display: inline-block;
     animation: vs-globe-rotate 4s ease-in-out infinite, vs-glow-pulse 2s ease-in-out infinite;
     text-shadow:
         0 0 8px rgba(59, 130, 246, 0.5),
@@ -4190,22 +4190,22 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   PREMIUM VILLAIN GLOBE - Subtle red border matching preflop blue intensity
+   PREMIUM VILLAIN GLOBE - Subtle red border with pulse
    Sized to match hero cards for perfect vertical alignment
    ═══════════════════════════════════════════════════════════════════════════════ */
 .villain-globe {
     position: relative;
     width: 52px;
     height: 62px;
-    /* Match hero card height for alignment */
     border-radius: 26px;
-    /* Pill shape to match height */
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
     -webkit-tap-highlight-color: transparent;
+    /* Vertical centering - align with card centers */
+    margin-top: -16px;
 }
 
 .villain-globe:active {
@@ -4228,15 +4228,16 @@ body.native-app [class*="btn-row"]>* {
     transition: all 0.2s ease;
 }
 
-/* Very subtle outer glow - NO animation for subtlety */
+/* Subtle pulsing glow - matching hero card style */
 .villain-globe-glow {
     position: absolute;
     inset: -2px;
     border-radius: 24px;
     background: transparent;
-    border: 1px solid rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.15);
     z-index: 1;
     pointer-events: none;
+    animation: villain-subtle-pulse 2.5s ease-in-out infinite;
 }
 
 /* Position text inside globe */
@@ -4261,13 +4262,28 @@ body.native-app [class*="btn-row"]>* {
 }
 
 .villain-globe.active .villain-globe-glow {
-    border-color: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.2);
 }
 
 /* Hover state for desktop */
 .villain-globe:hover .villain-globe-inner {
     border-color: rgba(239, 68, 68, 0.4);
     background: rgba(255, 255, 255, 0.05);
+}
+
+/* Subtle pulse animation - matching hero style */
+@keyframes villain-subtle-pulse {
+
+    0%,
+    100% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.8;
+        transform: scale(1.02);
+    }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
