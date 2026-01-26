@@ -9769,14 +9769,14 @@ body.native-app [class*="btn-row"]>* {
             rgba(255, 255, 255, 0.03) 100%);
 }
 
-/* Suit corner elements - tiny watermarks in each corner */
+/* Suit corner elements - tiny solid watermarks in each corner */
 .suit-corner {
     position: absolute;
     font-size: 4px;
-    opacity: 0.2;
+    opacity: 0.5;
     pointer-events: none;
     line-height: 1;
-    color: inherit;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .suit-corner.top-left {
