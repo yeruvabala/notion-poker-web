@@ -9769,34 +9769,18 @@ body.native-app [class*="btn-row"]>* {
             rgba(255, 255, 255, 0.03) 100%);
 }
 
-/* Suit corner elements - tiny solid watermarks in each corner */
-.suit-corner {
+/* Suited - 's' in bottom right corner */
+.matrix-cell.suited::after {
+    content: 's';
     position: absolute;
-    font-size: 3px;
-    opacity: 0.45;
+    bottom: 1px;
+    right: 2px;
+    font-size: 6px;
+    font-weight: 500;
+    font-style: italic;
+    opacity: 0.22;
+    color: currentColor;
     pointer-events: none;
-    line-height: 1;
-    color: rgba(255, 255, 255, 0.85);
-}
-
-.suit-corner.top-left {
-    top: 0px;
-    left: 1px;
-}
-
-.suit-corner.top-right {
-    top: 0px;
-    right: 1px;
-}
-
-.suit-corner.bottom-left {
-    bottom: 0px;
-    left: 1px;
-}
-
-.suit-corner.bottom-right {
-    bottom: 0px;
-    right: 1px;
 }
 
 /* OFFSUIT (Lower Triangle) - Matte with diagonal line watermark */
