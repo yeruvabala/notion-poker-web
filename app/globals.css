@@ -8535,10 +8535,34 @@ body.native-app [class*="btn-row"]>* {
     color: rgba(100, 180, 255, 0.8);
 }
 
-/* Spacer to push Quick filter to the right */
-.filter-spacer {
+/* Center zone - takes remaining space, centers content */
+.filter-center-zone {
     flex: 1;
-    min-width: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+    /* Allow shrinking */
+}
+
+/* Session scroll wrapper - horizontal scroll for long names */
+.session-scroll-wrapper {
+    max-width: 140px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.session-scroll-wrapper::-webkit-scrollbar {
+    display: none;
+}
+
+/* Session pill - doesn't shrink, shows full text with scroll */
+.mobile-filter-pill.session-pill {
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 /* Stats bar dropdown arrow - beside sessions */
