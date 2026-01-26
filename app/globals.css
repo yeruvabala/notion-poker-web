@@ -11675,29 +11675,27 @@ body.native-app [class*="btn-row"]>* {
    SETTINGS DRAWER - Premium slide-in panel with glassmorphism
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-/* Settings Avatar Button in Header */
+/* Settings Avatar Button in Header - positioned at bottom right, no circle */
 .settings-avatar-button {
     position: absolute;
-    top: 50%;
+    bottom: 8px;
     right: 16px;
-    transform: translateY(-50%);
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: rgba(255, 255, 255, 0.7);
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     transition: all 0.2s ease;
     -webkit-tap-highlight-color: transparent;
 }
 
 .settings-avatar-button:active {
-    transform: translateY(-50%) scale(0.95);
-    background: rgba(255, 255, 255, 0.1);
+    transform: scale(0.95);
+    color: rgba(255, 255, 255, 0.8);
 }
 
 /* Drawer Backdrop */
