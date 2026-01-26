@@ -1575,7 +1575,7 @@ export default function HomeClient() {
                 <div className="session-recent-section">
                   <h4>Recent Sessions</h4>
                   <div className="session-list">
-                    {recentSessions.slice(0, 5).map(session => (
+                    {recentSessions.map(session => (
                       <button
                         key={session.id}
                         className="session-list-item"
@@ -1699,7 +1699,7 @@ export default function HomeClient() {
                   <div className="session-recent">
                     <div className="session-recent-header">Recent Sessions</div>
                     <div className="session-recent-list">
-                      {recentSessions.slice(0, 5).map((session) => (
+                      {recentSessions.map((session) => (
                         <button
                           key={session.id}
                           className="session-recent-item"
