@@ -9772,11 +9772,11 @@ body.native-app [class*="btn-row"]>* {
 /* Suit corner elements - tiny solid watermarks in each corner */
 .suit-corner {
     position: absolute;
-    font-size: 4px;
-    opacity: 0.5;
+    font-size: 3px;
+    opacity: 0.45;
     pointer-events: none;
     line-height: 1;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .suit-corner.top-left {
