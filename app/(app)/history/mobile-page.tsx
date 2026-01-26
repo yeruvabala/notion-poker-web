@@ -357,7 +357,7 @@ export default function MobileHandsPage() {
                         className={`mobile-filter-pill more-pill ${showSessionSheet ? 'active' : ''}`}
                         onClick={() => setShowSessionSheet(true)}
                     >
-                        ▼ More
+                        ▼
                     </button>
                 )}
                 <button
