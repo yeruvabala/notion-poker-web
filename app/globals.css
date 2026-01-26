@@ -9705,76 +9705,50 @@ body.native-app [class*="btn-row"]>* {
     letter-spacing: -0.3px;
 }
 
-/* Frequency Color Classes - Premium Glossy Effect */
+/* Frequency Color Classes - Border Style (no solid fill) */
 .matrix-cell.freq-always {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 40%),
-        linear-gradient(135deg, #34d399 0%, #22c55e 40%, #16a34a 100%);
-    box-shadow:
-        0 0 10px rgba(34, 197, 94, 0.4),
-        inset 0 1px 1px rgba(255, 255, 255, 0.3),
-        inset 0 -1px 2px rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(34, 197, 94, 0.08);
+    border: 1.5px solid rgba(34, 197, 94, 0.7);
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.25);
 }
 
 .matrix-cell.freq-always .cell-text {
-    color: #052e16;
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+    color: #4ade80;
 }
 
 .matrix-cell.freq-often {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, transparent 40%),
-        linear-gradient(135deg, #fcd34d 0%, #eab308 40%, #ca8a04 100%);
-    box-shadow:
-        0 0 8px rgba(234, 179, 8, 0.4),
-        inset 0 1px 1px rgba(255, 255, 255, 0.35),
-        inset 0 -1px 2px rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(234, 179, 8, 0.08);
+    border: 1.5px solid rgba(234, 179, 8, 0.7);
+    box-shadow: 0 0 6px rgba(234, 179, 8, 0.25);
 }
 
 .matrix-cell.freq-often .cell-text {
-    color: #422006;
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
+    color: #facc15;
 }
 
 .matrix-cell.freq-mixed {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 40%),
-        linear-gradient(135deg, #fb923c 0%, #f97316 40%, #ea580c 100%);
-    box-shadow:
-        0 0 8px rgba(249, 115, 22, 0.35),
-        inset 0 1px 1px rgba(255, 255, 255, 0.25),
-        inset 0 -1px 2px rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(249, 115, 22, 0.08);
+    border: 1.5px solid rgba(249, 115, 22, 0.7);
+    box-shadow: 0 0 6px rgba(249, 115, 22, 0.25);
 }
 
 .matrix-cell.freq-mixed .cell-text {
-    color: #431407;
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
+    color: #fb923c;
 }
 
 .matrix-cell.freq-rare {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 40%),
-        linear-gradient(135deg, #818cf8 0%, #6366f1 40%, #4f46e5 100%);
-    box-shadow:
-        0 0 8px rgba(99, 102, 241, 0.35),
-        inset 0 1px 1px rgba(255, 255, 255, 0.2),
-        inset 0 -1px 2px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(99, 102, 241, 0.08);
+    border: 1.5px solid rgba(99, 102, 241, 0.7);
+    box-shadow: 0 0 6px rgba(99, 102, 241, 0.25);
 }
 
 .matrix-cell.freq-rare .cell-text {
-    color: #e0e7ff;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+    color: #a5b4fc;
 }
 
 .matrix-cell.freq-fold {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 40%),
-        linear-gradient(145deg, rgba(40, 40, 45, 0.9) 0%, rgba(25, 25, 30, 0.95) 100%);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    background: rgba(40, 40, 45, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .matrix-cell.freq-fold .cell-text {
