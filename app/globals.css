@@ -8468,12 +8468,11 @@ body.native-app [class*="btn-row"]>* {
     background: linear-gradient(transparent, rgba(180, 180, 180, 0.3), transparent);
 }
 
-/* Filter Pills - 3-zone: All (left) | Center zone | Quick (right) */
+/* Filter Pills - Centered session between All and Quick */
 .mobile-hands-filters {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0;
+    gap: 8px;
     padding-bottom: 8px;
     margin-bottom: 16px;
 }
