@@ -352,13 +352,13 @@ export default function MobileHandsPage() {
                 {/* Divider after All */}
                 <div className="segment-divider" />
 
-                {/* Session filter in middle */}
+                {/* Session filter in middle - centered, truncates if needed */}
                 {sessions.length > 0 && (
                     <button
-                        className={`mobile-filter-pill ${activeFilter === sessions[0].id ? 'active' : ''}`}
+                        className={`mobile-filter-pill session-pill ${activeFilter === sessions[0].id ? 'active' : ''}`}
                         onClick={() => setActiveFilter(sessions[0].id)}
                     >
-                        {sessions[0].name.length > 12 ? sessions[0].name.slice(0, 12) + '…' : sessions[0].name}
+                        {sessions[0].name}
                     </button>
                 )}
 

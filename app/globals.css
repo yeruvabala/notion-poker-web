@@ -8407,15 +8407,16 @@ body.native-app [class*="btn-row"]>* {
 .mobile-hands-stats {
     position: relative;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    gap: 24px;
-    padding: 14px 20px;
+    gap: 12px;
+    padding: 14px 16px;
     background: rgba(255, 255, 255, 0.03);
     /* Blue glowing border - same as PREFLOP active */
     border: 1px solid rgba(100, 180, 255, 0.3);
     border-radius: 14px;
     margin-bottom: 12px;
+    overflow: hidden;
     box-shadow:
         0 0 20px rgba(100, 180, 255, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -8467,14 +8468,25 @@ body.native-app [class*="btn-row"]>* {
     background: linear-gradient(transparent, rgba(180, 180, 180, 0.3), transparent);
 }
 
-/* Filter Pills */
+/* Filter Pills - Fixed layout: All | Session (center) | Quick (right) */
 .mobile-hands-filters {
     display: flex;
+    align-items: center;
     gap: 8px;
-    overflow-x: auto;
     padding-bottom: 8px;
     margin-bottom: 16px;
-    scrollbar-width: none;
+    /* No scroll - truncate session name instead */
+}
+
+/* Session filter pill - takes flex space, truncates if needed */
+.mobile-filter-pill.session-pill {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 60px;
+    max-width: 120px;
 }
 
 .mobile-hands-filters::-webkit-scrollbar {
@@ -8544,31 +8556,30 @@ body.native-app [class*="btn-row"]>* {
     color: rgba(100, 180, 255, 1);
 }
 
-/* Blue pulse animation for upload button */
+/* Blue pulse animation for upload - TEXT ONLY, no box */
 .mobile-upload-btn.pulse-blue {
-    animation: pulse-blue-glow 2s ease-in-out infinite;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0;
 }
 
-@keyframes pulse-blue-glow {
+.mobile-upload-btn.pulse-blue .upload-icon,
+.mobile-upload-btn.pulse-blue .upload-text {
+    animation: pulse-blue-text 2s ease-in-out infinite;
+}
+
+@keyframes pulse-blue-text {
 
     0%,
     100% {
-        box-shadow: 0 0 4px rgba(59, 130, 246, 0.3);
-        border-color: rgba(59, 130, 246, 0.3);
+        color: rgba(100, 180, 255, 0.6);
     }
 
     50% {
-        box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
-        border-color: rgba(59, 130, 246, 0.5);
+        color: rgba(100, 180, 255, 1);
+        text-shadow: 0 0 6px rgba(100, 180, 255, 0.5);
     }
-}
-
-.mobile-upload-btn.pulse-blue .upload-icon {
-    color: rgba(100, 180, 255, 0.9);
-}
-
-.mobile-upload-btn.pulse-blue .upload-text {
-    color: rgba(100, 180, 255, 0.9);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
@@ -9366,9 +9377,7 @@ body.native-app [class*="btn-row"]>* {
 
 /* Action type colors */
 .action-chip.raise,
-.action-chip.3bet,
-.action-chip.4bet,
-.action-chip.bet {
+.action-chip[class*="bet"] {
     border-color: rgba(251, 191, 36, 0.4);
 }
 
