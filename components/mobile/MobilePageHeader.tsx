@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import SettingsDrawer from './SettingsDrawer';
+import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 
 /**
  * MobilePageHeader - Reusable page header with premium styling
@@ -24,6 +25,9 @@ interface MobilePageHeaderProps {
 
 export default function MobilePageHeader({ title, showSettings = true }: MobilePageHeaderProps) {
     const [settingsOpen, setSettingsOpen] = useState(false);
+
+    // Enable Safari-style edge swipe navigation
+    useSwipeNavigation();
 
     const haptic = () => {
         if (Capacitor.isNativePlatform()) {
