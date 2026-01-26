@@ -2,6 +2,7 @@
 
 import MobileHeader from './MobileHeader';
 import MobileBottomNav from './MobileBottomNav';
+import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 
 interface MobileLayoutProps {
     children: React.ReactNode;
@@ -20,8 +21,16 @@ interface MobileLayoutProps {
  * ├─────────────────────────────┤
  * │   MobileBottomNav (fixed)   │
  * └─────────────────────────────┘
+ * 
+ * Features:
+ * - Instagram-style horizontal swipe navigation
+ * - Swipe left → next page, swipe right → previous page
+ * - Haptic feedback on navigation
  */
 export default function MobileLayout({ children }: MobileLayoutProps) {
+    // Enable swipe navigation between pages
+    useSwipeNavigation();
+
     return (
         <div className="mobile-app-container">
             <MobileHeader />
