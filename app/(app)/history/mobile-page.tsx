@@ -333,7 +333,7 @@ export default function MobileHandsPage() {
                 </div>
             )}
 
-            {/* Filter Pills - Smart layout */}
+            {/* Filter Pills - Smart layout with dividers */}
             <div className="mobile-hands-filters">
                 <button
                     className={`mobile-filter-pill ${activeFilter === 'all' ? 'active' : ''}`}
@@ -341,6 +341,10 @@ export default function MobileHandsPage() {
                 >
                     All
                 </button>
+
+                {/* Divider after All */}
+                <div className="segment-divider" />
+
                 {/* Show first 2 sessions inline */}
                 {sessions.slice(0, 2).map(s => (
                     <button
@@ -351,6 +355,7 @@ export default function MobileHandsPage() {
                         {s.name.length > 10 ? s.name.slice(0, 10) + '…' : s.name}
                     </button>
                 ))}
+
                 {/* More button if 3+ sessions */}
                 {sessions.length > 2 && (
                     <button
@@ -360,6 +365,10 @@ export default function MobileHandsPage() {
                         ▼
                     </button>
                 )}
+
+                {/* Divider before Quick */}
+                <div className="segment-divider" />
+
                 <button
                     className={`mobile-filter-pill ${activeFilter === 'quick' ? 'active' : ''}`}
                     onClick={() => setActiveFilter('quick')}
