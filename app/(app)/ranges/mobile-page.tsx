@@ -219,6 +219,15 @@ export default function MobileRangesPage() {
                                         className={`matrix-cell ${frequencyToClass(freq)} ${isSelected ? 'selected' : ''} ${isPair ? 'pair' : ''} ${isSuited ? 'suited' : 'offsuit'}`}
                                         onClick={() => handleCellTap(rowIdx, colIdx)}
                                     >
+                                        {/* Four suit corners for suited hands */}
+                                        {isSuited && !isPair && (
+                                            <>
+                                                <span className="suit-corner top-left">♠</span>
+                                                <span className="suit-corner top-right">♥</span>
+                                                <span className="suit-corner bottom-left">♦</span>
+                                                <span className="suit-corner bottom-right">♣</span>
+                                            </>
+                                        )}
                                         <span className="cell-text">{displayHand}</span>
                                     </button>
                                 );
