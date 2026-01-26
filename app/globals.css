@@ -8468,25 +8468,14 @@ body.native-app [class*="btn-row"]>* {
     background: linear-gradient(transparent, rgba(180, 180, 180, 0.3), transparent);
 }
 
-/* Filter Pills - Fixed layout: All | Session (center) | Quick (right) */
+/* Filter Pills - 3-zone: All (left) | Center zone | Quick (right) */
 .mobile-hands-filters {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
+    gap: 0;
     padding-bottom: 8px;
     margin-bottom: 16px;
-    /* No scroll - truncate session name instead */
-}
-
-/* Session filter pill - takes flex space, truncates if needed */
-.mobile-filter-pill.session-pill {
-    flex: 1;
-    text-align: center;
-    justify-content: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 60px;
-    max-width: 120px;
 }
 
 .mobile-hands-filters::-webkit-scrollbar {
