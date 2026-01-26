@@ -340,9 +340,9 @@ export default function MobileHandsPage() {
                 </div>
             )}
 
-            {/* Filter Pills - 3-zone layout: All (left) | Session (center) | Quick (right) */}
+            {/* Filter Pills - Centered session between All and Quick */}
             <div className="mobile-hands-filters">
-                {/* Left zone - All button */}
+                {/* All button (left) */}
                 <button
                     className={`mobile-filter-pill ${activeFilter === 'all' ? 'active' : ''}`}
                     onClick={() => setActiveFilter('all')}
@@ -350,23 +350,27 @@ export default function MobileHandsPage() {
                     All
                 </button>
 
-                {/* Center zone - Session with separators (expands in center) */}
-                <div className="filter-center-zone">
-                    <div className="segment-divider" />
-                    {sessions.length > 0 && (
-                        <div className="session-scroll-wrapper">
-                            <button
-                                className={`mobile-filter-pill session-pill ${activeFilter === sessions[0].id ? 'active' : ''}`}
-                                onClick={() => setActiveFilter(sessions[0].id)}
-                            >
-                                {sessions[0].name}
-                            </button>
-                        </div>
-                    )}
-                    <div className="segment-divider" />
-                </div>
+                {/* Left spacer */}
+                <div className="filter-spacer" />
 
-                {/* Right zone - Quick button */}
+                {/* Session area - separator | pill | separator */}
+                <div className="segment-divider" />
+                {sessions.length > 0 && (
+                    <div className="session-scroll-wrapper">
+                        <button
+                            className={`mobile-filter-pill session-pill ${activeFilter === sessions[0].id ? 'active' : ''}`}
+                            onClick={() => setActiveFilter(sessions[0].id)}
+                        >
+                            {sessions[0].name}
+                        </button>
+                    </div>
+                )}
+                <div className="segment-divider" />
+
+                {/* Right spacer */}
+                <div className="filter-spacer" />
+
+                {/* Quick button (right) */}
                 <button
                     className={`mobile-filter-pill ${activeFilter === 'quick' ? 'active' : ''}`}
                     onClick={() => setActiveFilter('quick')}
