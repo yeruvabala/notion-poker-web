@@ -411,6 +411,45 @@ export const TargetIcon: React.FC<IconProps> = ({ className = '', size = 20 }) =
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// LIGHTNING ICON - For Quick Saves (Fast action)
+// ═══════════════════════════════════════════════════════════════════════════════
+export const LightningIcon: React.FC<IconProps> = ({ className = '', size = 16 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <defs>
+            <linearGradient id="lightningGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="30%" stopColor="#d0d0d0" />
+                <stop offset="70%" stopColor="#a0a0a0" />
+                <stop offset="100%" stopColor="#c0c0c0" />
+            </linearGradient>
+        </defs>
+        {/* Lightning bolt */}
+        <path
+            d="M13 2L4 14H11L10 22L19 10H12L13 2Z"
+            fill="url(#lightningGrad)"
+            stroke="#909090"
+            strokeWidth="0.5"
+            strokeLinejoin="round"
+        />
+        {/* Highlight streak */}
+        <path
+            d="M12 4L9 10H12L11.5 14"
+            stroke="#ffffff"
+            strokeWidth="0.8"
+            strokeLinecap="round"
+            opacity="0.4"
+        />
+    </svg>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Export all Study Icons
 // ═══════════════════════════════════════════════════════════════════════════════
 export const StudyIcons = {
@@ -424,6 +463,7 @@ export const StudyIcons = {
     Filter: FilterIcon,
     Trophy: TrophyIcon,
     Target: TargetIcon,
+    Lightning: LightningIcon,
 };
 
 export default StudyIcons;

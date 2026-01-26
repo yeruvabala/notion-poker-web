@@ -8,6 +8,7 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import MobileBottomNav from '@/components/mobile/MobileBottomNav';
 import MobilePageHeader from '@/components/mobile/MobilePageHeader';
 import { UploadIcon } from '@/components/icons/ActionBarIcons';
+import { LightningIcon } from '@/components/icons/StudyIcons';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MOBILE HANDS PAGE - Premium Card-based Hand History
@@ -363,7 +364,7 @@ export default function MobileHandsPage() {
                     className={`mobile-filter-pill ${activeFilter === 'quick' ? 'active' : ''}`}
                     onClick={() => setActiveFilter('quick')}
                 >
-                    ⚡ Quick
+                    <LightningIcon size={14} /> Quick
                 </button>
             </div>
 
