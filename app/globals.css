@@ -9551,10 +9551,16 @@ body.native-app [class*="btn-row"]>* {
 }
 
 .position-pill.active {
-    background: var(--pos-color);
-    border-color: var(--pos-color);
-    color: #000;
-    box-shadow: 0 0 20px color-mix(in srgb, var(--pos-color) 50%, transparent);
+    /* Gold border highlight like My Hands page */
+    background:
+        linear-gradient(#1e1e1e, #1e1e1e) padding-box,
+        linear-gradient(135deg,
+            rgba(255, 200, 100, 0.7) 0%,
+            rgba(200, 160, 80, 0.5) 50%,
+            rgba(255, 200, 100, 0.6) 100%) border-box;
+    border: 1.5px solid transparent;
+    color: #fff;
+    box-shadow: 0 0 12px rgba(255, 200, 100, 0.25);
 }
 
 .position-pill:active {
