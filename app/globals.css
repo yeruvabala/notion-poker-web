@@ -8523,6 +8523,13 @@ body.native-app [class*="btn-row"]>* {
     color: rgba(100, 180, 255, 0.8);
 }
 
+/* Equal width for All and Quick to ensure perfect centering */
+.mobile-filter-pill.filter-left,
+.mobile-filter-pill.filter-right {
+    min-width: 70px;
+    justify-content: center;
+}
+
 /* Spacers - push session area to center */
 .filter-spacer {
     flex: 1;

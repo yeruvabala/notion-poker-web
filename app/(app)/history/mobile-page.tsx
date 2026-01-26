@@ -344,7 +344,7 @@ export default function MobileHandsPage() {
             <div className="mobile-hands-filters">
                 {/* All button (left) */}
                 <button
-                    className={`mobile-filter-pill ${activeFilter === 'all' ? 'active' : ''}`}
+                    className={`mobile-filter-pill filter-left ${activeFilter === 'all' ? 'active' : ''}`}
                     onClick={() => setActiveFilter('all')}
                 >
                     All
@@ -372,7 +372,7 @@ export default function MobileHandsPage() {
 
                 {/* Quick button (right) */}
                 <button
-                    className={`mobile-filter-pill ${activeFilter === 'quick' ? 'active' : ''}`}
+                    className={`mobile-filter-pill filter-right ${activeFilter === 'quick' ? 'active' : ''}`}
                     onClick={() => setActiveFilter('quick')}
                 >
                     <LightningIcon size={14} /> Quick
