@@ -11898,7 +11898,7 @@ body.native-app [class*="btn-row"]>* {
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: center;
     padding: 14px 16px;
     margin-top: 8px;
     background: rgba(239, 68, 68, 0.1);

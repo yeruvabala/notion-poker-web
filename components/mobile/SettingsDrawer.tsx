@@ -127,7 +127,6 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
                             onClick={handleSignOut}
                             disabled={loading}
                         >
-                            <span className="settings-drawer-logout-icon">🚪</span>
                             <span className="settings-drawer-logout-text">
                                 {loading ? 'Signing out...' : 'Sign Out'}
                             </span>
