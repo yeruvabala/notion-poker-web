@@ -168,16 +168,19 @@ export default function LoginClient() {
 
   return (
     <div className="op-surface login-page">
-      {/* Animated Floating Card Suits Background */}
+      {/* Animated Floating Card Suits - Positioned at edges */}
       <div className="login-floating-bg">
+        {/* Top row */}
         <span className="floating-suit s1">♠</span>
         <span className="floating-suit s2">♥</span>
         <span className="floating-suit s3">♦</span>
         <span className="floating-suit s4">♣</span>
+        {/* Bottom row */}
         <span className="floating-suit s5">♠</span>
         <span className="floating-suit s6">♥</span>
         <span className="floating-suit s7">♦</span>
         <span className="floating-suit s8">♣</span>
+        {/* Card letters at corners */}
         <span className="floating-suit s9">A</span>
         <span className="floating-suit s10">K</span>
         <span className="floating-suit s11">Q</span>
@@ -188,26 +191,28 @@ export default function LoginClient() {
       <div className="login-ambient-glow glow-1"></div>
       <div className="login-ambient-glow glow-2"></div>
 
-      {/* Centered Login Card - Premium Glassmorphism */}
-      <div className="login-card platinum-inner-border">
-        {/* Header with Metallic Gradient - matching home page exactly */}
-        <h1 className="login-title platinum-text-gradient">Only Poker</h1>
+      {/* Content - No Card, Just Clean Floating Layout */}
+      <div className="login-content">
+        {/* Logo with glow effect */}
+        <div className="login-logo-container">
+          <h1 className="login-title platinum-text-gradient">Only Poker</h1>
 
-        {/* Card Suits with decorative lines - matching home page */}
-        <div className="login-suits-row">
-          <div className="login-line-left"></div>
-          <div className="login-suits">
-            <span className="login-suit">♠</span>
-            <span className="login-suit">♥</span>
-            <span className="login-suit">♣</span>
-            <span className="login-suit">♦</span>
+          {/* Card Suits with decorative lines */}
+          <div className="login-suits-row">
+            <div className="login-line-left"></div>
+            <div className="login-suits">
+              <span className="login-suit">♠</span>
+              <span className="login-suit">♥</span>
+              <span className="login-suit">♣</span>
+              <span className="login-suit">♦</span>
+            </div>
+            <div className="login-line-right"></div>
           </div>
-          <div className="login-line-right"></div>
+
+          <p className="login-subtitle">v0.1 · preview</p>
         </div>
 
-        <p className="login-subtitle">v0.1 · preview</p>
-
-        {/* Tab Switcher - Premium with indicator */}
+        {/* Tab Switcher */}
         <div className="login-tabs">
           <div className="login-tab-container">
             <button
@@ -224,7 +229,6 @@ export default function LoginClient() {
             >
               Create account
             </button>
-            {/* Animated tab indicator */}
             <div className={`login-tab-indicator ${tab === 'signup' ? 'right' : 'left'}`}></div>
           </div>
         </div>
@@ -234,9 +238,12 @@ export default function LoginClient() {
           <div className="login-input-group">
             <label className="login-label">Email</label>
             <div className="login-input-wrapper">
-              <span className="login-input-icon">✉</span>
+              <svg className="login-input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="M22 6L12 13 2 6" />
+              </svg>
               <input
-                className="login-input input-ony platinum-inner-border"
+                className="login-input input-ony"
                 type="email"
                 inputMode="email"
                 autoComplete="email"
@@ -251,9 +258,12 @@ export default function LoginClient() {
           <div className="login-input-group">
             <label className="login-label">Password</label>
             <div className="login-input-wrapper">
-              <span className="login-input-icon">🔒</span>
+              <svg className="login-input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <rect x="3" y="11" width="18" height="11" rx="2" />
+                <path d="M7 11V7a5 5 0 0110 0v4" />
+              </svg>
               <input
-                className="login-input input-ony platinum-inner-border"
+                className="login-input input-ony"
                 type="password"
                 autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
                 placeholder="••••••••"
@@ -264,7 +274,7 @@ export default function LoginClient() {
             </div>
           </div>
 
-          {/* Forgot password link - only show on login tab */}
+          {/* Forgot password link */}
           {tab === 'login' && (
             <button
               type="button"
@@ -381,26 +391,29 @@ export default function LoginClient() {
         .floating-suit {
           position: absolute;
           font-size: 3rem;
-          color: rgba(200, 200, 200, 0.08);
+          color: rgba(200, 200, 200, 0.15);
           font-family: serif;
           animation: float-drift 8s ease-in-out infinite;
           filter: blur(0.5px);
         }
 
-        .floating-suit.s1 { top: 10%; left: 8%; animation-delay: 0s; font-size: 2.5rem; color: rgba(180,180,180,0.1); }
-        .floating-suit.s2 { top: 20%; right: 12%; animation-delay: 1s; font-size: 2rem; color: rgba(239,68,68,0.12); }
-        .floating-suit.s3 { top: 45%; left: 5%; animation-delay: 2s; font-size: 1.8rem; color: rgba(239,68,68,0.1); }
-        .floating-suit.s4 { top: 70%; right: 8%; animation-delay: 3s; font-size: 2.2rem; color: rgba(180,180,180,0.08); }
-        .floating-suit.s5 { bottom: 15%; left: 15%; animation-delay: 4s; font-size: 1.5rem; animation: float-drift-slow 12s ease-in-out infinite; }
-        .floating-suit.s6 { top: 35%; right: 5%; animation-delay: 2.5s; font-size: 1.6rem; color: rgba(239,68,68,0.08); animation: float-drift-slow 10s ease-in-out infinite; }
-        .floating-suit.s7 { bottom: 30%; right: 20%; animation-delay: 1.5s; font-size: 2rem; color: rgba(239,68,68,0.06); }
-        .floating-suit.s8 { top: 60%; left: 20%; animation-delay: 3.5s; font-size: 1.8rem; color: rgba(180,180,180,0.06); }
+        /* TOP ROW - Visible above content */
+        .floating-suit.s1 { top: 3%; left: 10%; font-size: 2.5rem; color: rgba(180,180,180,0.2); animation-delay: 0s; }
+        .floating-suit.s2 { top: 5%; right: 15%; font-size: 2.2rem; color: rgba(239,68,68,0.2); animation-delay: 0.5s; }
+        .floating-suit.s3 { top: 8%; left: 50%; font-size: 1.8rem; color: rgba(239,68,68,0.18); animation-delay: 1s; }
+        .floating-suit.s4 { top: 2%; right: 35%; font-size: 2rem; color: rgba(180,180,180,0.15); animation-delay: 1.5s; }
         
-        /* Card rank letters */
-        .floating-suit.s9 { top: 15%; left: 25%; font-size: 4rem; color: rgba(200,200,200,0.04); animation: float-drift-slow 15s ease-in-out infinite; font-weight: 700; }
-        .floating-suit.s10 { bottom: 20%; right: 30%; font-size: 3.5rem; color: rgba(200,200,200,0.03); animation: float-drift-slow 18s ease-in-out infinite; animation-delay: 5s; font-weight: 700; }
-        .floating-suit.s11 { top: 50%; right: 25%; font-size: 3rem; color: rgba(200,200,200,0.035); animation: float-drift-slow 14s ease-in-out infinite; animation-delay: 8s; font-weight: 700; }
-        .floating-suit.s12 { bottom: 40%; left: 10%; font-size: 2.5rem; color: rgba(200,200,200,0.03); animation: float-drift-slow 16s ease-in-out infinite; animation-delay: 3s; font-weight: 700; }
+        /* BOTTOM ROW - Visible below content */
+        .floating-suit.s5 { bottom: 8%; left: 12%; font-size: 2.2rem; color: rgba(180,180,180,0.18); animation: float-drift-slow 10s ease-in-out infinite; }
+        .floating-suit.s6 { bottom: 5%; right: 10%; font-size: 2rem; color: rgba(239,68,68,0.2); animation: float-drift-slow 12s ease-in-out infinite; animation-delay: 2s; }
+        .floating-suit.s7 { bottom: 10%; left: 40%; font-size: 1.8rem; color: rgba(239,68,68,0.15); animation-delay: 3s; }
+        .floating-suit.s8 { bottom: 3%; right: 40%; font-size: 2.5rem; color: rgba(180,180,180,0.18); animation-delay: 4s; }
+        
+        /* Card rank letters - CORNERS */
+        .floating-suit.s9 { top: 12%; left: 5%; font-size: 3.5rem; color: rgba(200,200,200,0.08); animation: float-drift-slow 15s ease-in-out infinite; font-weight: 700; }
+        .floating-suit.s10 { top: 10%; right: 5%; font-size: 3rem; color: rgba(200,200,200,0.06); animation: float-drift-slow 18s ease-in-out infinite; animation-delay: 5s; font-weight: 700; }
+        .floating-suit.s11 { bottom: 15%; left: 3%; font-size: 2.8rem; color: rgba(200,200,200,0.07); animation: float-drift-slow 14s ease-in-out infinite; animation-delay: 8s; font-weight: 700; }
+        .floating-suit.s12 { bottom: 12%; right: 8%; font-size: 3.2rem; color: rgba(200,200,200,0.06); animation: float-drift-slow 16s ease-in-out infinite; animation-delay: 3s; font-weight: 700; }
 
         /* ===== AMBIENT GLOW EFFECTS ===== */
         .login-ambient-glow {
@@ -419,18 +432,18 @@ export default function LoginClient() {
         .glow-1 {
           width: 300px;
           height: 300px;
-          top: 10%;
+          top: 5%;
           left: -10%;
-          background: radial-gradient(circle, rgba(100,100,120,0.3) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(100,100,120,0.4) 0%, transparent 70%);
           animation: glow-pulse 8s ease-in-out infinite;
         }
 
         .glow-2 {
           width: 250px;
           height: 250px;
-          bottom: 10%;
+          bottom: 5%;
           right: -5%;
-          background: radial-gradient(circle, rgba(80,80,100,0.25) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(80,80,100,0.35) 0%, transparent 70%);
           animation: glow-pulse 10s ease-in-out infinite;
           animation-delay: 4s;
         }
@@ -442,22 +455,22 @@ export default function LoginClient() {
           font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
         }
 
-        /* The Centered Card - Premium Glassmorphism */
-        .login-card {
+        /* ===== CLEAN CONTENT LAYOUT (No Card) ===== */
+        .login-content {
           width: 100%;
-          max-width: 400px;
-          padding: 36px 28px;
+          max-width: 340px;
+          padding: 0 20px;
           position: relative;
           z-index: 1;
-          background: rgba(20, 20, 25, 0.85);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 24px;
-          box-shadow: 
-            0 25px 50px rgba(0, 0, 0, 0.5),
-            0 0 0 1px rgba(255, 255, 255, 0.05) inset,
-            0 1px 0 rgba(255, 255, 255, 0.1) inset;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        /* Logo container with optional glow */
+        .login-logo-container {
+          text-align: center;
+          margin-bottom: 32px;
         }
 
         /* Header - ANIMATED Title matching home page exactly */
@@ -638,22 +651,42 @@ export default function LoginClient() {
         .login-input-group {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 8px;
+          width: 100%;
         }
 
         .login-input-wrapper {
-          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          background: rgba(15, 15, 20, 0.6);
+          border: 1px solid rgba(100, 100, 110, 0.25);
+          border-radius: 12px;
+          padding: 0 16px;
+          transition: all 0.3s ease;
+        }
+
+        .login-input-wrapper:hover {
+          border-color: rgba(150, 150, 160, 0.35);
+          background: rgba(20, 20, 25, 0.7);
+        }
+
+        .login-input-wrapper:focus-within {
+          border-color: rgba(180, 180, 190, 0.4);
+          background: rgba(20, 20, 25, 0.85);
+          box-shadow: 
+            0 0 0 3px rgba(255, 255, 255, 0.05),
+            0 0 20px rgba(150, 150, 160, 0.1);
         }
 
         .login-input-icon {
-          position: absolute;
-          left: 14px;
-          top: 50%;
-          transform: translateY(-50%);
-          font-size: 14px;
-          opacity: 0.4;
-          pointer-events: none;
-          z-index: 1;
+          flex-shrink: 0;
+          color: rgba(150, 150, 160, 0.5);
+          transition: color 0.3s ease;
+        }
+
+        .login-input-wrapper:focus-within .login-input-icon {
+          color: rgba(200, 200, 210, 0.8);
         }
 
         /* Labels - Metallic gradient matching home page */
@@ -697,51 +730,29 @@ export default function LoginClient() {
         }
 
         .login-input {
-          width: 100%;
-          padding: 14px 16px 14px 42px; /* Left padding for icon */
+          flex: 1;
+          padding: 14px 0;
           font-size: 15px;
-          background: rgba(15, 15, 20, 0.8) !important;
+          background: transparent !important;
           color: #E2E8F0 !important;
           -webkit-text-fill-color: #E2E8F0 !important;
-          border: 1px solid rgba(100, 100, 110, 0.25) !important;
-          border-radius: 12px;
-          transition: all 0.3s ease;
+          border: none !important;
         }
 
         .login-input::placeholder {
           color: rgba(150, 150, 160, 0.5);
         }
 
-        .login-input:hover:not(:focus) {
-          border-color: rgba(150, 150, 160, 0.35) !important;
-          background: rgba(20, 20, 25, 0.9) !important;
-        }
-
-        .login-input:focus,
-        .login-input:focus-visible {
-          border-color: rgba(180, 180, 190, 0.4) !important;
-          background: rgba(20, 20, 25, 1) !important;
-          box-shadow: 
-            0 0 0 3px rgba(255, 255, 255, 0.05),
-            0 0 20px rgba(150, 150, 160, 0.1) !important;
-        }
-
-        /* Icon brightness on focus */
-        .login-input-wrapper:focus-within .login-input-icon {
-          opacity: 0.7;
-        }
-
-        /* Autofill Override - match password box background */
+        /* Autofill Override */
         .login-input:-webkit-autofill,
         .login-input:-webkit-autofill:hover,
         .login-input:-webkit-autofill:focus,
         .login-input:-webkit-autofill:active {
           -webkit-text-fill-color: #E2E8F0 !important;
           caret-color: #E2E8F0;
-          -webkit-box-shadow: 0 0 0px 1000px #1a1a1a inset !important;
-          box-shadow: 0 0 0px 1000px #1a1a1a inset !important;
-          background-color: #1a1a1a !important;
-          border-color: rgba(180, 180, 180, 0.3) !important;
+          -webkit-box-shadow: 0 0 0px 1000px rgba(15, 15, 20, 0.9) inset !important;
+          box-shadow: 0 0 0px 1000px rgba(15, 15, 20, 0.9) inset !important;
+          background-color: transparent !important;
           transition: background-color 99999s ease-in-out 0s;
         }
 
