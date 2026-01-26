@@ -758,7 +758,7 @@ function fmt(n: number) {
 }
 
 function formatLeakName(tag: string | null | undefined): string {
-  if (!tag) return "—";
+  if (!tag || tag === '{}' || tag === '[]' || tag.trim() === '') return "Unknown Leak";
   // Convert snake_case or kebab-case to Title Case
   return tag
     .replace(/[-_]/g, ' ')
