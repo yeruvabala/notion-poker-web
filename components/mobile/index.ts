@@ -5,3 +5,4 @@ export { default as MobilePageHeader } from './MobilePageHeader';
 export { default as MobileBottomNav } from './MobileBottomNav';
 export { default as MobileHandBuilder } from './MobileHandBuilder';
 export { default as PullToRefresh } from './PullToRefresh';
+export { default as SettingsDrawer } from './SettingsDrawer';
