@@ -8484,6 +8484,10 @@ body.native-app [class*="btn-row"]>* {
 /* Filter Pills - Platinum Theme */
 .mobile-filter-pill {
     flex-shrink: 0;
+    /* Flex for icon + text inline */
+    display: flex;
+    align-items: center;
+    gap: 6px;
     padding: 8px 16px;
     border-radius: 20px;
     /* Platinum gradient border */
