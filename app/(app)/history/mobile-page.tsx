@@ -306,14 +306,21 @@ export default function MobileHandsPage() {
                     <span className="mobile-stat-value">{stats.total}</span>
                     <span className="mobile-stat-label">hands</span>
                 </div>
-                <div className="mobile-stat-divider" />
+                <div className="segment-divider" />
                 <div className="mobile-stat">
                     <span className="mobile-stat-value">{stats.sessions}</span>
                     <span className="mobile-stat-label">sessions</span>
                 </div>
-                <div className="mobile-stat-divider" />
-                {/* Upload Button */}
-                <label className={`mobile-upload-btn ${uploadBusy ? 'uploading' : ''}`}>
+                {/* Arrow to show all sessions */}
+                <button
+                    className="stats-dropdown-arrow"
+                    onClick={() => setShowSessionSheet(true)}
+                >
+                    ▼
+                </button>
+                <div className="segment-divider" />
+                {/* Upload Button with blue pulse */}
+                <label className={`mobile-upload-btn pulse-blue ${uploadBusy ? 'uploading' : ''}`}>
                     <input
                         type="file"
                         accept=".txt"
@@ -333,7 +340,7 @@ export default function MobileHandsPage() {
                 </div>
             )}
 
-            {/* Filter Pills - Clean layout with dividers */}
+            {/* Filter Pills - Clean layout: All | Session (flex middle) | Quick (right) */}
             <div className="mobile-hands-filters">
                 <button
                     className={`mobile-filter-pill ${activeFilter === 'all' ? 'active' : ''}`}
@@ -345,24 +352,18 @@ export default function MobileHandsPage() {
                 {/* Divider after All */}
                 <div className="segment-divider" />
 
-                {/* Show only most recent session + arrow */}
+                {/* Session filter in middle */}
                 {sessions.length > 0 && (
-                    <>
-                        <button
-                            className={`mobile-filter-pill ${activeFilter === sessions[0].id ? 'active' : ''}`}
-                            onClick={() => setActiveFilter(sessions[0].id)}
-                        >
-                            {sessions[0].name.length > 10 ? sessions[0].name.slice(0, 10) + '…' : sessions[0].name}
-                        </button>
-                        {/* Arrow to show more sessions */}
-                        <button
-                            className={`mobile-filter-pill more-pill ${showSessionSheet ? 'active' : ''}`}
-                            onClick={() => setShowSessionSheet(true)}
-                        >
-                            ▼
-                        </button>
-                    </>
+                    <button
+                        className={`mobile-filter-pill ${activeFilter === sessions[0].id ? 'active' : ''}`}
+                        onClick={() => setActiveFilter(sessions[0].id)}
+                    >
+                        {sessions[0].name.length > 12 ? sessions[0].name.slice(0, 12) + '…' : sessions[0].name}
+                    </button>
                 )}
+
+                {/* Spacer to push Quick to the right */}
+                <div className="filter-spacer" />
 
                 {/* Divider before Quick */}
                 <div className="segment-divider" />

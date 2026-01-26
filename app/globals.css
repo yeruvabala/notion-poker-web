@@ -8523,6 +8523,54 @@ body.native-app [class*="btn-row"]>* {
     color: rgba(100, 180, 255, 0.8);
 }
 
+/* Spacer to push Quick filter to the right */
+.filter-spacer {
+    flex: 1;
+    min-width: 8px;
+}
+
+/* Stats bar dropdown arrow - beside sessions */
+.stats-dropdown-arrow {
+    background: none;
+    border: none;
+    color: rgba(100, 180, 255, 0.8);
+    font-size: 10px;
+    padding: 4px 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.stats-dropdown-arrow:hover {
+    color: rgba(100, 180, 255, 1);
+}
+
+/* Blue pulse animation for upload button */
+.mobile-upload-btn.pulse-blue {
+    animation: pulse-blue-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-blue-glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 4px rgba(59, 130, 246, 0.3);
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
+        border-color: rgba(59, 130, 246, 0.5);
+    }
+}
+
+.mobile-upload-btn.pulse-blue .upload-icon {
+    color: rgba(100, 180, 255, 0.9);
+}
+
+.mobile-upload-btn.pulse-blue .upload-text {
+    color: rgba(100, 180, 255, 0.9);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════════
    UPLOAD BUTTON - In stats bar, Premium Platinum Style
    ═══════════════════════════════════════════════════════════════════════════════ */
