@@ -2553,6 +2553,10 @@ button:active:not(:disabled) {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    max-height: 260px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
 .session-recent-item {
@@ -7640,6 +7644,10 @@ body.native-app [class*="btn-row"]>* {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    max-height: 280px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
 .session-list-item {
