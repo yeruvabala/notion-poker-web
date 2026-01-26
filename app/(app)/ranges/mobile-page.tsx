@@ -33,6 +33,15 @@ function getHandNotation(row: number, col: number): string {
     return `${r2}${r1}o`;
 }
 
+// Display notation without s/o suffix (visual styling indicates suited/offsuit)
+function getDisplayNotation(row: number, col: number): string {
+    const r1 = RANKS[row];
+    const r2 = RANKS[col];
+    if (row === col) return `${r1}${r2}`;
+    if (row < col) return `${r1}${r2}`;
+    return `${r2}${r1}`;
+}
+
 function getFrequency(hand: string, range: Record<string, number>): number {
     return range[hand] || 0;
 }
@@ -200,6 +209,7 @@ export default function MobileRangesPage() {
                         <div key={rowRank} className="matrix-row">
                             {RANKS.map((colRank, colIdx) => {
                                 const hand = getHandNotation(rowIdx, colIdx);
+                                const displayHand = getDisplayNotation(rowIdx, colIdx);
                                 const freq = getFrequency(hand, currentRange);
                                 const isSelected = selectedHand?.row === rowIdx && selectedHand?.col === colIdx;
                                 const isPair = rowIdx === colIdx;
@@ -211,7 +221,7 @@ export default function MobileRangesPage() {
                                         className={`matrix-cell ${frequencyToClass(freq)} ${isSelected ? 'selected' : ''} ${isPair ? 'pair' : ''} ${isSuited ? 'suited' : 'offsuit'}`}
                                         onClick={() => handleCellTap(rowIdx, colIdx)}
                                     >
-                                        <span className="cell-text">{hand}</span>
+                                        <span className="cell-text">{displayHand}</span>
                                     </button>
                                 );
                             })}
