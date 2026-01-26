@@ -333,7 +333,7 @@ export default function MobileHandsPage() {
                 </div>
             )}
 
-            {/* Filter Pills - Smart layout with dividers */}
+            {/* Filter Pills - Clean layout with dividers */}
             <div className="mobile-hands-filters">
                 <button
                     className={`mobile-filter-pill ${activeFilter === 'all' ? 'active' : ''}`}
@@ -345,25 +345,23 @@ export default function MobileHandsPage() {
                 {/* Divider after All */}
                 <div className="segment-divider" />
 
-                {/* Show first 2 sessions inline */}
-                {sessions.slice(0, 2).map(s => (
-                    <button
-                        key={s.id}
-                        className={`mobile-filter-pill ${activeFilter === s.id ? 'active' : ''}`}
-                        onClick={() => setActiveFilter(s.id)}
-                    >
-                        {s.name.length > 10 ? s.name.slice(0, 10) + '…' : s.name}
-                    </button>
-                ))}
-
-                {/* More button if 3+ sessions */}
-                {sessions.length > 2 && (
-                    <button
-                        className={`mobile-filter-pill more-pill ${showSessionSheet ? 'active' : ''}`}
-                        onClick={() => setShowSessionSheet(true)}
-                    >
-                        ▼
-                    </button>
+                {/* Show only most recent session + arrow */}
+                {sessions.length > 0 && (
+                    <>
+                        <button
+                            className={`mobile-filter-pill ${activeFilter === sessions[0].id ? 'active' : ''}`}
+                            onClick={() => setActiveFilter(sessions[0].id)}
+                        >
+                            {sessions[0].name.length > 10 ? sessions[0].name.slice(0, 10) + '…' : sessions[0].name}
+                        </button>
+                        {/* Arrow to show more sessions */}
+                        <button
+                            className={`mobile-filter-pill more-pill ${showSessionSheet ? 'active' : ''}`}
+                            onClick={() => setShowSessionSheet(true)}
+                        >
+                            ▼
+                        </button>
+                    </>
                 )}
 
                 {/* Divider before Quick */}
