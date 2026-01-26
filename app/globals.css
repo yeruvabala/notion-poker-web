@@ -11790,7 +11790,7 @@ body.native-app [class*="btn-row"]>* {
     align-items: center;
     gap: 14px;
     padding: 20px;
-    padding-top: calc(env(safe-area-inset-top) + 29px);
+    padding-top: calc(env(safe-area-inset-top) + 34px);
     background: rgba(255, 255, 255, 0.03);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -11799,11 +11799,17 @@ body.native-app [class*="btn-row"]>* {
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    /* Blue gradient matching preflop border */
-    background: linear-gradient(135deg,
-            rgba(59, 130, 246, 0.3) 0%,
-            rgba(37, 99, 235, 0.3) 100%);
-    border: 2px solid rgba(59, 130, 246, 0.5);
+    /* Platinum gradient background */
+    background: linear-gradient(145deg,
+            rgba(180, 180, 190, 0.15) 0%,
+            rgba(120, 120, 130, 0.1) 100%);
+    /* Platinum border */
+    border: 2px solid rgba(200, 200, 210, 0.4);
+    /* Platinum glow */
+    box-shadow:
+        0 0 12px rgba(200, 200, 210, 0.3),
+        0 0 24px rgba(180, 180, 190, 0.15),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -11812,8 +11818,12 @@ body.native-app [class*="btn-row"]>* {
 .settings-profile-initial {
     font-size: 20px;
     font-weight: 700;
-    color: #60a5fa;
-    /* Bright blue */
+    /* Platinum gradient text */
+    background: linear-gradient(135deg, #ffffff 0%, #b0b0b0 50%, #e0e0e0 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
 }
 
 .settings-profile-info {
@@ -11825,9 +11835,12 @@ body.native-app [class*="btn-row"]>* {
 .settings-profile-email {
     font-size: 13px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.9) !important;
-    -webkit-text-fill-color: rgba(255, 255, 255, 0.9) !important;
-    background: none !important;
+    /* Platinum gradient */
+    background: linear-gradient(to right, #999999 0%, #e0e0e0 40%, #ffffff 50%, #e0e0e0 60%, #999999 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
 }
 
 .settings-profile-plan {
@@ -11835,9 +11848,12 @@ body.native-app [class*="btn-row"]>* {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #60a5fa !important;
-    -webkit-text-fill-color: #60a5fa !important;
-    background: none !important;
+    /* Platinum gradient */
+    background: linear-gradient(to right, #999999 0%, #e0e0e0 40%, #ffffff 50%, #e0e0e0 60%, #999999 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
 }
 
 /* Options */
