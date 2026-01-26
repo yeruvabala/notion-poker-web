@@ -8468,13 +8468,32 @@ body.native-app [class*="btn-row"]>* {
     background: linear-gradient(transparent, rgba(180, 180, 180, 0.3), transparent);
 }
 
-/* Filter Pills - Centered session between All and Quick */
+/* Filter Pills - 3-column grid for PERFECT centering */
 .mobile-hands-filters {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    gap: 8px;
+    gap: 0;
     padding-bottom: 8px;
     margin-bottom: 16px;
+}
+
+/* Left column - All button aligned left */
+.mobile-hands-filters .filter-left {
+    justify-self: start;
+}
+
+/* Center column - Session area */
+.mobile-hands-filters .filter-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Right column - Quick button aligned right */
+.mobile-hands-filters .filter-right {
+    justify-self: end;
 }
 
 .mobile-hands-filters::-webkit-scrollbar {
