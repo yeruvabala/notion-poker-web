@@ -168,7 +168,27 @@ export default function LoginClient() {
 
   return (
     <div className="op-surface login-page">
-      {/* Centered Login Card - Thin elegant border */}
+      {/* Animated Floating Card Suits Background */}
+      <div className="login-floating-bg">
+        <span className="floating-suit s1">♠</span>
+        <span className="floating-suit s2">♥</span>
+        <span className="floating-suit s3">♦</span>
+        <span className="floating-suit s4">♣</span>
+        <span className="floating-suit s5">♠</span>
+        <span className="floating-suit s6">♥</span>
+        <span className="floating-suit s7">♦</span>
+        <span className="floating-suit s8">♣</span>
+        <span className="floating-suit s9">A</span>
+        <span className="floating-suit s10">K</span>
+        <span className="floating-suit s11">Q</span>
+        <span className="floating-suit s12">J</span>
+      </div>
+
+      {/* Ambient glow effects */}
+      <div className="login-ambient-glow glow-1"></div>
+      <div className="login-ambient-glow glow-2"></div>
+
+      {/* Centered Login Card - Premium Glassmorphism */}
       <div className="login-card platinum-inner-border">
         {/* Header with Metallic Gradient - matching home page exactly */}
         <h1 className="login-title platinum-text-gradient">Only Poker</h1>
@@ -187,48 +207,62 @@ export default function LoginClient() {
 
         <p className="login-subtitle">v0.1 · preview</p>
 
-        {/* Tab Switcher */}
+        {/* Tab Switcher - Premium with indicator */}
         <div className="login-tabs">
-          <button
-            className={`login-tab ${tab === 'login' ? 'active' : ''}`}
-            onClick={() => setTab('login')}
-            type="button"
-          >
-            Log in
-          </button>
-          <button
-            className={`login-tab ${tab === 'signup' ? 'active' : ''}`}
-            onClick={() => setTab('signup')}
-            type="button"
-          >
-            Create account
-          </button>
+          <div className="login-tab-container">
+            <button
+              className={`login-tab ${tab === 'login' ? 'active' : ''}`}
+              onClick={() => setTab('login')}
+              type="button"
+            >
+              Log in
+            </button>
+            <button
+              className={`login-tab ${tab === 'signup' ? 'active' : ''}`}
+              onClick={() => setTab('signup')}
+              type="button"
+            >
+              Create account
+            </button>
+            {/* Animated tab indicator */}
+            <div className={`login-tab-indicator ${tab === 'signup' ? 'right' : 'left'}`}></div>
+          </div>
         </div>
 
         {/* Form */}
         <form className="login-form" onSubmit={handleSubmit}>
-          <label className="login-label">Email</label>
-          <input
-            className="login-input input-ony platinum-inner-border"
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+          <div className="login-input-group">
+            <label className="login-label">Email</label>
+            <div className="login-input-wrapper">
+              <span className="login-input-icon">✉</span>
+              <input
+                className="login-input input-ony platinum-inner-border"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+          </div>
 
-          <label className="login-label">Password</label>
-          <input
-            className="login-input input-ony platinum-inner-border"
-            type="password"
-            autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div className="login-input-group">
+            <label className="login-label">Password</label>
+            <div className="login-input-wrapper">
+              <span className="login-input-icon">🔒</span>
+              <input
+                className="login-input input-ony platinum-inner-border"
+                type="password"
+                autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+          </div>
 
           {/* Forgot password link - only show on login tab */}
           {tab === 'login' && (
@@ -242,7 +276,10 @@ export default function LoginClient() {
           )}
 
           <button className="login-cta btn-platinum-premium" disabled={loading}>
-            {loading ? (tab === 'login' ? 'Signing in…' : 'Creating…') : tab === 'login' ? 'Sign in' : 'Create account'}
+            <span className="login-cta-text">
+              {loading ? (tab === 'login' ? 'Signing in…' : 'Creating…') : tab === 'login' ? 'Sign in' : 'Create account'}
+            </span>
+            <span className="login-cta-arrow">→</span>
           </button>
 
           {err && <div className="login-err">{err}</div>}
@@ -296,47 +333,131 @@ export default function LoginClient() {
 
       {/* === Dark Mode Platinum Theme Styles matching home page === */}
       <style jsx global>{`
-        /* Page Background - matching home page #1c1c1c with subtle grid pattern */
+        /* Page Background - Premium Dark with depth */
         .login-page {
           min-height: 100dvh;
           display: grid;
           place-items: center;
           padding: 28px;
-          background: #1c1c1c !important;
+          background: linear-gradient(180deg, #0a0a0f 0%, #151520 50%, #0d0d12 100%) !important;
           position: relative;
+          overflow: hidden;
         }
 
-        /* Subtle background grid pattern like home page */
+        /* Subtle background grid pattern */
         .login-page::before {
           content: '';
           position: absolute;
           inset: 0;
           background-image: 
-            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-          background-size: 60px 60px;
+            linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+          background-size: 50px 50px;
           pointer-events: none;
           z-index: 0;
+        }
+
+        /* ===== FLOATING CARD SUITS BACKGROUND ===== */
+        .login-floating-bg {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        @keyframes float-drift {
+          0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.08; }
+          25% { transform: translateY(-20px) rotate(5deg); opacity: 0.15; }
+          50% { transform: translateY(-10px) rotate(-3deg); opacity: 0.12; }
+          75% { transform: translateY(-25px) rotate(8deg); opacity: 0.1; }
+        }
+
+        @keyframes float-drift-slow {
+          0%, 100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0.06; }
+          50% { transform: translateY(-30px) rotate(-5deg) scale(1.05); opacity: 0.1; }
+        }
+
+        .floating-suit {
+          position: absolute;
+          font-size: 3rem;
+          color: rgba(200, 200, 200, 0.08);
+          font-family: serif;
+          animation: float-drift 8s ease-in-out infinite;
+          filter: blur(0.5px);
+        }
+
+        .floating-suit.s1 { top: 10%; left: 8%; animation-delay: 0s; font-size: 2.5rem; color: rgba(180,180,180,0.1); }
+        .floating-suit.s2 { top: 20%; right: 12%; animation-delay: 1s; font-size: 2rem; color: rgba(239,68,68,0.12); }
+        .floating-suit.s3 { top: 45%; left: 5%; animation-delay: 2s; font-size: 1.8rem; color: rgba(239,68,68,0.1); }
+        .floating-suit.s4 { top: 70%; right: 8%; animation-delay: 3s; font-size: 2.2rem; color: rgba(180,180,180,0.08); }
+        .floating-suit.s5 { bottom: 15%; left: 15%; animation-delay: 4s; font-size: 1.5rem; animation: float-drift-slow 12s ease-in-out infinite; }
+        .floating-suit.s6 { top: 35%; right: 5%; animation-delay: 2.5s; font-size: 1.6rem; color: rgba(239,68,68,0.08); animation: float-drift-slow 10s ease-in-out infinite; }
+        .floating-suit.s7 { bottom: 30%; right: 20%; animation-delay: 1.5s; font-size: 2rem; color: rgba(239,68,68,0.06); }
+        .floating-suit.s8 { top: 60%; left: 20%; animation-delay: 3.5s; font-size: 1.8rem; color: rgba(180,180,180,0.06); }
+        
+        /* Card rank letters */
+        .floating-suit.s9 { top: 15%; left: 25%; font-size: 4rem; color: rgba(200,200,200,0.04); animation: float-drift-slow 15s ease-in-out infinite; font-weight: 700; }
+        .floating-suit.s10 { bottom: 20%; right: 30%; font-size: 3.5rem; color: rgba(200,200,200,0.03); animation: float-drift-slow 18s ease-in-out infinite; animation-delay: 5s; font-weight: 700; }
+        .floating-suit.s11 { top: 50%; right: 25%; font-size: 3rem; color: rgba(200,200,200,0.035); animation: float-drift-slow 14s ease-in-out infinite; animation-delay: 8s; font-weight: 700; }
+        .floating-suit.s12 { bottom: 40%; left: 10%; font-size: 2.5rem; color: rgba(200,200,200,0.03); animation: float-drift-slow 16s ease-in-out infinite; animation-delay: 3s; font-weight: 700; }
+
+        /* ===== AMBIENT GLOW EFFECTS ===== */
+        .login-ambient-glow {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(80px);
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        @keyframes glow-pulse {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.1); }
+        }
+
+        .glow-1 {
+          width: 300px;
+          height: 300px;
+          top: 10%;
+          left: -10%;
+          background: radial-gradient(circle, rgba(100,100,120,0.3) 0%, transparent 70%);
+          animation: glow-pulse 8s ease-in-out infinite;
+        }
+
+        .glow-2 {
+          width: 250px;
+          height: 250px;
+          bottom: 10%;
+          right: -5%;
+          background: radial-gradient(circle, rgba(80,80,100,0.25) 0%, transparent 70%);
+          animation: glow-pulse 10s ease-in-out infinite;
+          animation-delay: 4s;
         }
 
         /* Override global body for login */
         html, body {
           margin: 0;
-          background: #1c1c1c !important;
+          background: #0a0a0f !important;
           font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
         }
 
-        /* The Centered Card - Custom thicker platinum border */
+        /* The Centered Card - Premium Glassmorphism */
         .login-card {
           width: 100%;
-          max-width: 450px;
-          padding: 40px 36px;
+          max-width: 400px;
+          padding: 36px 28px;
           position: relative;
           z-index: 1;
-          background: linear-gradient(#1e1e1e, #1e1e1e) padding-box,
-                      linear-gradient(135deg, rgba(120,120,120,0.4) 0%, rgba(200,200,200,0.6) 25%, rgba(180,180,180,0.3) 50%, rgba(200,200,200,0.6) 75%, rgba(120,120,120,0.4) 100%) border-box !important;
-          border: 1.5px solid transparent !important;
-          border-radius: 16px;
+          background: rgba(20, 20, 25, 0.85);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 24px;
+          box-shadow: 
+            0 25px 50px rgba(0, 0, 0, 0.5),
+            0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+            0 1px 0 rgba(255, 255, 255, 0.1) inset;
         }
 
         /* Header - ANIMATED Title matching home page exactly */
@@ -452,53 +573,87 @@ export default function LoginClient() {
           -webkit-text-fill-color: transparent !important;
         }
 
-        /* Tab Switcher */
+        /* Tab Switcher - Premium with animated indicator */
         .login-tabs {
+          margin-bottom: 28px;
+        }
+
+        .login-tab-container {
           display: flex;
-          gap: 24px;
-          margin-bottom: 24px;
+          position: relative;
           justify-content: center;
+          gap: 32px;
+          padding-bottom: 10px;
         }
 
         .login-tab {
           background: transparent;
           border: none;
           cursor: pointer;
-          padding: 0 0 8px;
-          border-bottom: 2px solid transparent;
+          padding: 0;
           font-weight: 600;
-          font-size: 16px;
-          transition: all 0.2s ease;
-          /* Metallic gradient for inactive tabs */
-          background: linear-gradient(to right, #6b7280 0%, #94A3B8 40%, #94A3B8 60%, #6b7280 100%) !important;
-          -webkit-background-clip: text !important;
-          background-clip: text !important;
-          color: transparent !important;
-          -webkit-text-fill-color: transparent !important;
+          font-size: 15px;
+          transition: all 0.3s ease;
+          color: rgba(150, 150, 160, 0.7) !important;
+          -webkit-text-fill-color: rgba(150, 150, 160, 0.7) !important;
         }
 
         .login-tab:hover {
-          background: linear-gradient(to right, #6b7280 0%, #E2E8F0 40%, #E2E8F0 60%, #6b7280 100%) !important;
-          -webkit-background-clip: text !important;
-          background-clip: text !important;
-          color: transparent !important;
-          -webkit-text-fill-color: transparent !important;
+          color: rgba(200, 200, 210, 0.9) !important;
+          -webkit-text-fill-color: rgba(200, 200, 210, 0.9) !important;
         }
 
         .login-tab.active {
-          background: linear-gradient(to right, #6b7280 0%, #ffffff 40%, #ffffff 60%, #6b7280 100%) !important;
-          -webkit-background-clip: text !important;
-          background-clip: text !important;
-          color: transparent !important;
-          -webkit-text-fill-color: transparent !important;
-          border-color: rgba(200, 200, 200, 0.5);
+          color: rgba(255, 255, 255, 0.95) !important;
+          -webkit-text-fill-color: rgba(255, 255, 255, 0.95) !important;
+        }
+
+        /* Animated sliding indicator */
+        .login-tab-indicator {
+          position: absolute;
+          bottom: 0;
+          height: 2px;
+          width: 60px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+          border-radius: 2px;
+          transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .login-tab-indicator.left {
+          left: calc(50% - 95px);
+        }
+
+        .login-tab-indicator.right {
+          left: calc(50% + 35px);
         }
 
         /* Form */
         .login-form {
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 16px;
+        }
+
+        /* Input Groups */
+        .login-input-group {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .login-input-wrapper {
+          position: relative;
+        }
+
+        .login-input-icon {
+          position: absolute;
+          left: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          font-size: 14px;
+          opacity: 0.4;
+          pointer-events: none;
+          z-index: 1;
         }
 
         /* Labels - Metallic gradient matching home page */
@@ -543,25 +698,37 @@ export default function LoginClient() {
 
         .login-input {
           width: 100%;
-          padding: 14px 16px;
+          padding: 14px 16px 14px 42px; /* Left padding for icon */
           font-size: 15px;
-          background: #1a1a1a !important;
+          background: rgba(15, 15, 20, 0.8) !important;
           color: #E2E8F0 !important;
           -webkit-text-fill-color: #E2E8F0 !important;
-          border: 1px solid rgba(100, 100, 100, 0.3) !important;
-          border-radius: 10px;
-          transition: border-color 0.3s ease, box-shadow 0.3s ease;
+          border: 1px solid rgba(100, 100, 110, 0.25) !important;
+          border-radius: 12px;
+          transition: all 0.3s ease;
+        }
+
+        .login-input::placeholder {
+          color: rgba(150, 150, 160, 0.5);
         }
 
         .login-input:hover:not(:focus) {
-          border-color: rgba(150, 150, 150, 0.4) !important;
+          border-color: rgba(150, 150, 160, 0.35) !important;
+          background: rgba(20, 20, 25, 0.9) !important;
         }
 
         .login-input:focus,
         .login-input:focus-visible {
-          border-color: rgba(180, 180, 180, 0.5) !important;
-          box-shadow: 0 0 0 1.5px rgba(180, 180, 180, 0.25), 0 0 15px rgba(160, 160, 160, 0.1) !important;
-          animation: focus-flash 0.4s ease-out;
+          border-color: rgba(180, 180, 190, 0.4) !important;
+          background: rgba(20, 20, 25, 1) !important;
+          box-shadow: 
+            0 0 0 3px rgba(255, 255, 255, 0.05),
+            0 0 20px rgba(150, 150, 160, 0.1) !important;
+        }
+
+        /* Icon brightness on focus */
+        .login-input-wrapper:focus-within .login-input-icon {
+          opacity: 0.7;
         }
 
         /* Autofill Override - match password box background */
@@ -661,6 +828,24 @@ export default function LoginClient() {
 
         .login-cta[disabled]::before {
           animation: none;
+        }
+
+        /* Button content layout */
+        .login-cta-text {
+          position: relative;
+          z-index: 1;
+        }
+
+        .login-cta-arrow {
+          position: relative;
+          z-index: 1;
+          margin-left: 8px;
+          font-size: 18px;
+          transition: transform 0.3s ease;
+        }
+
+        .login-cta:hover:not([disabled]) .login-cta-arrow {
+          transform: translateX(4px);
         }
 
         /* Error & Success Messages */
