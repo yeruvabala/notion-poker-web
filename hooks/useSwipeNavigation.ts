@@ -11,32 +11,34 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 const NAV_ORDER = ['/', '/history', '/ranges', '/study', '/analytics'];
 
 interface SwipeConfig {
+    edgeWidth: number;        // Width of edge zone (px from screen edge)
     minDistance: number;      // Minimum swipe distance (px)
     maxVerticalRatio: number; // Max vertical/horizontal ratio to count as horizontal swipe
     velocityThreshold: number; // Minimum velocity (px/ms) for quick swipes
 }
 
 const DEFAULT_CONFIG: SwipeConfig = {
+    edgeWidth: 30,            // 30px from edge (like Safari)
     minDistance: 50,
-    maxVerticalRatio: 0.5,  // Swipe must be more horizontal than vertical
+    maxVerticalRatio: 0.5,
     velocityThreshold: 0.3,
 };
 
 /**
- * useSwipeNavigation - Instagram-style swipe between pages
+ * useSwipeNavigation - Safari-style edge swipe between pages
  * 
  * Features:
- * - Swipe left → next page, swipe right → previous page
+ * - Swipe from LEFT edge → go to previous page
+ * - Swipe from RIGHT edge → go to next page
+ * - Middle of screen is ignored (no interference with scrolling)
  * - Haptic feedback on successful navigation
  * - Edge bounce when at first/last page
- * - Velocity detection for quick swipes
- * - Ignores vertical scrolls
  */
 export function useSwipeNavigation(config: Partial<SwipeConfig> = {}) {
     const router = useRouter();
     const pathname = usePathname();
-    const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
-    const { minDistance, maxVerticalRatio, velocityThreshold } = { ...DEFAULT_CONFIG, ...config };
+    const touchStartRef = useRef<{ x: number; y: number; time: number; edge: 'left' | 'right' | null } | null>(null);
+    const { edgeWidth, minDistance, maxVerticalRatio, velocityThreshold } = { ...DEFAULT_CONFIG, ...config };
 
     // Haptic feedback for navigation
     const hapticNavigate = useCallback(() => {
@@ -61,47 +63,61 @@ export function useSwipeNavigation(config: Partial<SwipeConfig> = {}) {
     }, [pathname]);
 
     // Navigate to adjacent page
-    const navigateToPage = useCallback((direction: 'left' | 'right') => {
+    const navigateToPage = useCallback((direction: 'next' | 'prev') => {
         const currentIndex = getCurrentIndex();
 
-        if (direction === 'left') {
-            // Swipe left = go to next page
+        if (direction === 'next') {
             if (currentIndex < NAV_ORDER.length - 1) {
                 hapticNavigate();
                 router.push(NAV_ORDER[currentIndex + 1]);
             } else {
-                // At last page - edge bounce
                 hapticEdge();
             }
         } else {
-            // Swipe right = go to previous page
             if (currentIndex > 0) {
                 hapticNavigate();
                 router.push(NAV_ORDER[currentIndex - 1]);
             } else {
-                // At first page - edge bounce
                 hapticEdge();
             }
         }
     }, [getCurrentIndex, hapticNavigate, hapticEdge, router]);
 
     useEffect(() => {
+        const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
+
         const handleTouchStart = (e: TouchEvent) => {
             const touch = e.touches[0];
+            const x = touch.clientX;
+
+            // Determine if touch started from an edge
+            let edge: 'left' | 'right' | null = null;
+            if (x <= edgeWidth) {
+                edge = 'left';
+            } else if (x >= screenWidth - edgeWidth) {
+                edge = 'right';
+            }
+
             touchStartRef.current = {
-                x: touch.clientX,
+                x,
                 y: touch.clientY,
                 time: Date.now(),
+                edge,
             };
         };
 
         const handleTouchEnd = (e: TouchEvent) => {
-            if (!touchStartRef.current) return;
+            if (!touchStartRef.current || !touchStartRef.current.edge) {
+                // Not an edge swipe - ignore
+                touchStartRef.current = null;
+                return;
+            }
 
             const touch = e.changedTouches[0];
             const deltaX = touch.clientX - touchStartRef.current.x;
             const deltaY = touch.clientY - touchStartRef.current.y;
             const deltaTime = Date.now() - touchStartRef.current.time;
+            const startEdge = touchStartRef.current.edge;
 
             // Calculate swipe metrics
             const absX = Math.abs(deltaX);
@@ -113,14 +129,14 @@ export function useSwipeNavigation(config: Partial<SwipeConfig> = {}) {
             const hasSufficientDistance = absX >= minDistance;
             const hasSufficientVelocity = velocity >= velocityThreshold;
 
-            // Valid swipe: horizontal + (sufficient distance OR fast velocity)
+            // Valid swipe from edge
             if (isHorizontal && (hasSufficientDistance || hasSufficientVelocity)) {
-                if (deltaX < 0) {
-                    // Swipe left (finger moved left = go right/next page)
-                    navigateToPage('left');
-                } else {
-                    // Swipe right (finger moved right = go left/previous page)
-                    navigateToPage('right');
+                if (startEdge === 'left' && deltaX > 0) {
+                    // Swipe from left edge toward right = go to PREVIOUS page
+                    navigateToPage('prev');
+                } else if (startEdge === 'right' && deltaX < 0) {
+                    // Swipe from right edge toward left = go to NEXT page
+                    navigateToPage('next');
                 }
             }
 
@@ -141,7 +157,7 @@ export function useSwipeNavigation(config: Partial<SwipeConfig> = {}) {
             document.removeEventListener('touchend', handleTouchEnd);
             document.removeEventListener('touchcancel', handleTouchCancel);
         };
-    }, [minDistance, maxVerticalRatio, velocityThreshold, navigateToPage]);
+    }, [edgeWidth, minDistance, maxVerticalRatio, velocityThreshold, navigateToPage]);
 
     return {
         currentIndex: getCurrentIndex(),
