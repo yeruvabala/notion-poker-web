@@ -9,6 +9,17 @@ const config: CapacitorConfig = {
     // This allows the mobile app to use all Next.js features
     url: 'https://notion-poker-web.vercel.app',
     cleartext: true
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 1500,           // Show for 1.5 seconds
+      launchAutoHide: true,               // Auto hide after duration
+      backgroundColor: '#0a0a0f',         // Match our dark theme
+      showSpinner: false,                 // No spinner needed
+      splashFullScreen: true,             // Full screen splash
+      splashImmersive: true,              // Immersive mode on Android
+      launchFadeOutDuration: 300          // Smooth fade out
+    }
   }
 };
 

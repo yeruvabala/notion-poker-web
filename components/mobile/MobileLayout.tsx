@@ -3,6 +3,7 @@
 import MobileHeader from './MobileHeader';
 import MobileBottomNav from './MobileBottomNav';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import { useRoutePrefetch } from '@/hooks/useRoutePrefetch';
 
 interface MobileLayoutProps {
     children: React.ReactNode;
@@ -23,13 +24,16 @@ interface MobileLayoutProps {
  * └─────────────────────────────┘
  * 
  * Features:
- * - Instagram-style horizontal swipe navigation
- * - Swipe left → next page, swipe right → previous page
+ * - Safari-style edge swipe navigation
+ * - Background route prefetching for instant navigation
  * - Haptic feedback on navigation
  */
 export default function MobileLayout({ children }: MobileLayoutProps) {
     // Enable swipe navigation between pages
     useSwipeNavigation();
+
+    // Prefetch all main routes for instant navigation
+    useRoutePrefetch();
 
     return (
         <div className="mobile-app-container">
