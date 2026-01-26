@@ -119,12 +119,10 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
                     <div className="settings-drawer-section">
                         <div className="settings-drawer-section-title">About</div>
                         <div className="settings-drawer-item">
-                            <span className="settings-drawer-item-icon">📱</span>
                             <span className="settings-drawer-item-label">Version</span>
                             <span className="settings-drawer-item-value">1.0.0</span>
                         </div>
                         <div className="settings-drawer-item">
-                            <span className="settings-drawer-item-icon">⚡</span>
                             <span className="settings-drawer-item-label">Build</span>
                             <span className="settings-drawer-item-value">Production</span>
                         </div>

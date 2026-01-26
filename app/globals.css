@@ -11784,12 +11784,14 @@ body.native-app [class*="btn-row"]>* {
     -webkit-text-fill-color: transparent;
 }
 
-/* Profile Section */
+/* Profile Section - Positioned below settings header */
 .settings-drawer-profile {
     display: flex;
     align-items: center;
     gap: 14px;
     padding: 20px;
+    padding-left: 64px;
+    /* Align with settings title (after X button) */
     background: rgba(255, 255, 255, 0.03);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -11798,10 +11800,11 @@ body.native-app [class*="btn-row"]>* {
     width: 50px;
     height: 50px;
     border-radius: 50%;
+    /* Blue gradient matching preflop border */
     background: linear-gradient(135deg,
-            rgba(99, 102, 241, 0.3) 0%,
-            rgba(139, 92, 246, 0.3) 100%);
-    border: 2px solid rgba(139, 92, 246, 0.4);
+            rgba(59, 130, 246, 0.3) 0%,
+            rgba(37, 99, 235, 0.3) 100%);
+    border: 2px solid rgba(59, 130, 246, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -11810,7 +11813,8 @@ body.native-app [class*="btn-row"]>* {
 .settings-profile-initial {
     font-size: 20px;
     font-weight: 700;
-    color: #a78bfa;
+    color: #60a5fa;
+    /* Bright blue */
 }
 
 .settings-profile-info {
@@ -11832,8 +11836,8 @@ body.native-app [class*="btn-row"]>* {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #a78bfa !important;
-    -webkit-text-fill-color: #a78bfa !important;
+    color: #60a5fa !important;
+    -webkit-text-fill-color: #60a5fa !important;
     background: none !important;
 }
 
