@@ -9769,33 +9769,34 @@ body.native-app [class*="btn-row"]>* {
             rgba(255, 255, 255, 0.03) 100%);
 }
 
-/* Suit corner elements - positioned in each corner */
+/* Suit corner elements - tiny watermarks in each corner */
 .suit-corner {
     position: absolute;
-    font-size: 5px;
-    opacity: 0.35;
+    font-size: 4px;
+    opacity: 0.2;
     pointer-events: none;
     line-height: 1;
+    color: inherit;
 }
 
 .suit-corner.top-left {
-    top: 1px;
-    left: 2px;
+    top: 0px;
+    left: 1px;
 }
 
 .suit-corner.top-right {
-    top: 1px;
-    right: 2px;
+    top: 0px;
+    right: 1px;
 }
 
 .suit-corner.bottom-left {
-    bottom: 1px;
-    left: 2px;
+    bottom: 0px;
+    left: 1px;
 }
 
 .suit-corner.bottom-right {
-    bottom: 1px;
-    right: 2px;
+    bottom: 0px;
+    right: 1px;
 }
 
 /* OFFSUIT (Lower Triangle) - Matte with diagonal line watermark */
