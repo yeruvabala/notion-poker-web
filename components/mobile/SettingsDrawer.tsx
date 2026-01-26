@@ -90,15 +90,6 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
 
             {/* Drawer */}
             <div className={`settings-drawer ${isOpen ? 'open' : ''}`}>
-                {/* Header */}
-                <div className="settings-drawer-header">
-                    <button className="settings-drawer-close" onClick={() => { haptic(); onClose(); }}>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M18 6L6 18M6 6l12 12" />
-                        </svg>
-                    </button>
-                    <h2 className="settings-drawer-title">Settings</h2>
-                </div>
 
                 {/* Profile Section */}
                 <div className="settings-drawer-profile">

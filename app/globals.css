@@ -11784,14 +11784,13 @@ body.native-app [class*="btn-row"]>* {
     -webkit-text-fill-color: transparent;
 }
 
-/* Profile Section - Positioned below settings header */
+/* Profile Section - First element now, needs safe area padding */
 .settings-drawer-profile {
     display: flex;
     align-items: center;
     gap: 14px;
     padding: 20px;
-    padding-left: 64px;
-    /* Align with settings title (after X button) */
+    padding-top: calc(env(safe-area-inset-top) + 24px);
     background: rgba(255, 255, 255, 0.03);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
