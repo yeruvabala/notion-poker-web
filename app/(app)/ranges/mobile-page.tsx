@@ -174,15 +174,13 @@ export default function MobileRangesPage() {
                     className={`scenario-btn ${selectedScenario === 'rfi' ? 'active' : ''}`}
                     onClick={() => { haptic(); setSelectedScenario('rfi'); }}
                 >
-                    <span className="scenario-icon">🎯</span>
-                    <span>RFI</span>
+                    RFI
                 </button>
                 <button
                     className={`scenario-btn ${selectedScenario === 'vs3bet' ? 'active' : ''}`}
                     onClick={() => { haptic(); setSelectedScenario('vs3bet'); }}
                 >
-                    <span className="scenario-icon">⚔️</span>
-                    <span>vs 3-Bet</span>
+                    vs 3-Bet
                 </button>
             </div>
 
