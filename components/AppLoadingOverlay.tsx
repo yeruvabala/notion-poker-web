@@ -205,15 +205,15 @@ export default function AppLoadingOverlay() {
                 }
 
                 /* LOGGED IN: Float to HOME PAGE header position */
-                /* Suits need to go HIGHER (near top of screen) */
+                /* Floating suits were TOO HIGH, need to go LOWER */
                 .suits-container.float-to-home {
-                    transform: translateY(-42vh) scale(0.45);
+                    transform: translateY(-35vh) scale(0.45);
                 }
 
                 /* LOGGED OUT: Float to LOGIN PAGE suits position */
-                /* Suits need to go LOWER (about 35% from top) */
+                /* Floating suits were TOO LOW, need to go HIGHER */
                 .suits-container.float-to-login {
-                    transform: translateY(-15vh) scale(0.5);
+                    transform: translateY(-25vh) scale(0.5);
                 }
 
                 .suit {
