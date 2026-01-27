@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 /**
  * AppLoadingOverlay - Immersive loading with auth-aware positioning
@@ -41,19 +40,32 @@ export default function AppLoadingOverlay() {
             instantOverlay.remove();
         }
 
-        // Check auth state to determine where suits should land
-        const checkAuth = async () => {
+        // Quick sync check: look for Supabase session in localStorage
+        // This is FASTER than async getSession() call
+        const checkAuthSync = () => {
             try {
-                const supabase = createClientComponentClient();
-                const { data: { session } } = await supabase.auth.getSession();
-                setIsLoggedIn(!!session);
+                // Supabase stores session in localStorage with project-specific key
+                const storageKeys = Object.keys(localStorage);
+                const supabaseKey = storageKeys.find(key =>
+                    key.includes('supabase') && key.includes('auth')
+                );
+                if (supabaseKey) {
+                    const sessionData = localStorage.getItem(supabaseKey);
+                    if (sessionData) {
+                        const parsed = JSON.parse(sessionData);
+                        // Check if there's a valid session with access token
+                        return !!(parsed?.access_token || parsed?.currentSession?.access_token);
+                    }
+                }
+                return false;
             } catch {
-                // Default to logged out if error
-                setIsLoggedIn(false);
+                return false;
             }
         };
 
-        checkAuth();
+        // Check auth immediately (synchronously)
+        const loggedIn = checkAuthSync();
+        setIsLoggedIn(loggedIn);
         setIsMounted(true);
 
         // Timeline
