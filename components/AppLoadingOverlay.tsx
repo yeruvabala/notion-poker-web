@@ -1,20 +1,35 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 /**
  * AppLoadingOverlay - Immersive loading experience
  * 
  * Features:
- * - Floating poker symbols in background (suits + AKQJ)
+ * - Random floating poker symbols in background
  * - Four suits animate in and settle
- * - Wave shimmer effect (more noticeable)
+ * - Wave shimmer effect
  * - Fades out to reveal app
  */
 export default function AppLoadingOverlay() {
     const [isVisible, setIsVisible] = useState(true);
     const [isFadingOut, setIsFadingOut] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
+
+    // Generate random positions for floating symbols
+    const floatingSymbols = useMemo(() => {
+        const symbols = ['♠', '♥', '♦', '♣', 'A', 'K', 'Q', 'J', '♠', '♥', '♦', '♣'];
+        return symbols.map((symbol, i) => ({
+            symbol,
+            left: Math.random() * 85 + 5, // 5% to 90%
+            startTop: Math.random() * 30 + 70, // Start from 70-100% (bottom area)
+            duration: 3 + Math.random() * 2, // 3-5 seconds
+            delay: Math.random() * 2, // 0-2 second delay
+            size: 18 + Math.random() * 14, // 18-32px
+            rotation: Math.random() * 360, // Random initial rotation
+            isRed: symbol === '♥' || symbol === '♦',
+        }));
+    }, []);
 
     useEffect(() => {
         // Remove the instant blocking overlay now that React is ready
@@ -37,24 +52,26 @@ export default function AppLoadingOverlay() {
 
     if (!isVisible) return null;
 
-    // Floating background symbols
-    const floatingSymbols = ['♠', '♥', '♦', '♣', 'A', 'K', 'Q', 'J', '♠', '♥', '♦', '♣'];
-
     return (
         <>
             <div className={`app-loading-overlay ${isFadingOut ? 'fade-out' : ''}`}>
-                {/* Floating background symbols */}
+                {/* Random floating background symbols */}
                 <div className="floating-bg">
-                    {floatingSymbols.map((symbol, i) => (
+                    {floatingSymbols.map((item, i) => (
                         <span
                             key={i}
-                            className={`floating-symbol fs-${i + 1}`}
+                            className="floating-symbol"
                             style={{
-                                left: `${5 + (i * 8)}%`,
-                                animationDelay: `${i * 0.2}s`,
-                            }}
+                                left: `${item.left}%`,
+                                top: `${item.startTop}%`,
+                                fontSize: `${item.size}px`,
+                                color: item.isRed ? '#4a2020' : '#2a2a2a',
+                                animationDuration: `${item.duration}s`,
+                                animationDelay: `${item.delay}s`,
+                                '--rotation': `${item.rotation}deg`,
+                            } as React.CSSProperties}
                         >
-                            {symbol}
+                            {item.symbol}
                         </span>
                     ))}
                 </div>
@@ -98,32 +115,24 @@ export default function AppLoadingOverlay() {
 
                 .floating-symbol {
                     position: absolute;
-                    font-size: 24px;
                     opacity: 0;
-                    color: #333;
-                    animation: floatUp 4s ease-in-out infinite;
+                    animation: floatRandom 4s ease-in-out forwards;
                 }
 
-                /* Stagger positions */
-                .fs-1, .fs-5, .fs-9 { top: 90%; }
-                .fs-2, .fs-6, .fs-10 { top: 85%; }
-                .fs-3, .fs-7, .fs-11 { top: 95%; }
-                .fs-4, .fs-8, .fs-12 { top: 88%; }
-
-                @keyframes floatUp {
+                @keyframes floatRandom {
                     0% {
                         opacity: 0;
-                        transform: translateY(0) rotate(0deg);
+                        transform: translateY(0) rotate(var(--rotation, 0deg));
                     }
-                    10% {
-                        opacity: 0.15;
+                    15% {
+                        opacity: 0.2;
                     }
-                    90% {
-                        opacity: 0.15;
+                    85% {
+                        opacity: 0.2;
                     }
                     100% {
                         opacity: 0;
-                        transform: translateY(-100vh) rotate(360deg);
+                        transform: translateY(-120vh) rotate(calc(var(--rotation, 0deg) + 360deg));
                     }
                 }
 
@@ -192,7 +201,7 @@ export default function AppLoadingOverlay() {
                     100% { opacity: 0.8; transform: translateY(0) rotate(0deg) scale(1); }
                 }
 
-                /* BIG shimmer effect - very noticeable */
+                /* BIG shimmer effect */
                 @keyframes shimmerBig {
                     0% {
                         opacity: 0.8;
