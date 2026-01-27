@@ -1,17 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { LOADING_SYMBOLS } from '@/lib/loadingSymbols';
+import { getPatternSymbols } from '@/lib/loadingSymbols';
+
+// Extend Window interface for pattern index
+declare global {
+    interface Window {
+        __PATTERN_INDEX__?: number;
+    }
+}
 
 /**
- * AppLoadingOverlay - Immersive loading with seamless transition
+ * AppLoadingOverlay - Immersive loading with random scatter patterns
  * 
  * Flow:
- * 1. Dark HTML shows scattered symbols (same positions as here)
- * 2. React mounts, symbols are at SAME positions
- * 3. React removes dark HTML overlay (no visible change!)
- * 4. Symbols float UP together
- * 5. Main 4 suits float in, shimmer, then settle
+ * 1. Server picks random pattern (0-16)
+ * 2. Dark HTML shows scattered symbols in that pattern
+ * 3. React reads same pattern index from window.__PATTERN_INDEX__
+ * 4. Seamless takeover - symbols at same positions
+ * 5. Symbols float UP, main suits shimmer, then settle
  */
 export default function AppLoadingOverlay() {
     const [isVisible, setIsVisible] = useState(true);
@@ -19,10 +26,16 @@ export default function AppLoadingOverlay() {
     const [isMounted, setIsMounted] = useState(false);
     const [suitsFloatingUp, setSuitsFloatingUp] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+    const [patternIndex, setPatternIndex] = useState(0);
 
     useEffect(() => {
+        // Read pattern index from server (set in layout.tsx)
+        const serverPatternIndex = typeof window !== 'undefined'
+            ? (window.__PATTERN_INDEX__ ?? 0)
+            : 0;
+        setPatternIndex(serverPatternIndex);
+
         // Remove the instant overlay now that React is ready
-        // The symbols here are at the SAME positions, so no visual jump!
         const instantOverlay = document.getElementById('__instant-overlay');
         if (instantOverlay) {
             instantOverlay.remove();
@@ -67,6 +80,9 @@ export default function AppLoadingOverlay() {
 
     if (!isVisible) return null;
 
+    // Get the same symbols as dark HTML (matching positions!)
+    const symbols = getPatternSymbols(patternIndex);
+
     const floatTargetClass = suitsFloatingUp
         ? (isLoggedIn ? 'float-to-home' : 'float-to-login')
         : '';
@@ -76,7 +92,7 @@ export default function AppLoadingOverlay() {
             <div className={`app-loading-overlay ${isFadingOut ? 'fade-out' : ''}`}>
                 {/* Background symbols - same positions as dark HTML, then float up */}
                 <div className="floating-bg">
-                    {LOADING_SYMBOLS.map((item, i) => (
+                    {symbols.map((item, i) => (
                         <span
                             key={i}
                             className={`bg-symbol ${isMounted ? 'float-up' : ''}`}
