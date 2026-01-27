@@ -64,7 +64,7 @@ export default function LoginClient() {
         if (error) throw error;
 
         // 2) Sync server cookie BEFORE redirecting
-        await fetch('/auth/callback', {
+        await fetch('/api/auth/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ event: 'SIGNED_IN', session: data.session }),
@@ -108,7 +108,7 @@ export default function LoginClient() {
       }
 
       // 3) If autoconfirm is enabled: sync cookie and redirect
-      await fetch('/auth/callback', {
+      await fetch('/api/auth/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ event: 'SIGNED_IN', session: data.session }),
