@@ -175,14 +175,16 @@ export default function AppLoadingOverlay() {
                     transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
                 }
 
-                /* LOGGED IN: Float to HOME PAGE header position */
+                /* LOGGED IN: Float to HOME PAGE header position (right under "ONLY POKER") */
                 .suits-container.float-to-home {
-                    transform: translateY(calc(-50vh + 90px + env(safe-area-inset-top, 0px))) scale(0.6);
+                    /* Home page: title at very top, suits ~140px down */
+                    transform: translateY(calc(-50vh + 140px + env(safe-area-inset-top, 0px))) scale(0.5);
                 }
 
-                /* LOGGED OUT: Float to LOGIN PAGE suits position (slightly above center) */
+                /* LOGGED OUT: Float to LOGIN PAGE center position */
                 .suits-container.float-to-login {
-                    transform: translateY(-35vh) scale(0.7);
+                    /* Login page: title centered, suits just below center at ~30% from center */
+                    transform: translateY(-25vh) scale(0.55);
                 }
 
                 .suit {
