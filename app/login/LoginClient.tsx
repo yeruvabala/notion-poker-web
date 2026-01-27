@@ -763,8 +763,8 @@ export default function LoginClient() {
         }
 
         @keyframes btn-glow-pulse {
-          0%, 100% { box-shadow: 0 4px 20px rgba(200, 200, 200, 0.15), 0 8px 32px rgba(180, 180, 180, 0.08); }
-          50% { box-shadow: 0 6px 28px rgba(220, 220, 220, 0.25), 0 12px 40px rgba(200, 200, 200, 0.12); }
+          0%, 100% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.05); }
+          50% { box-shadow: 0 0 30px rgba(255, 255, 255, 0.1); }
         }
 
         .login-cta {
@@ -772,73 +772,64 @@ export default function LoginClient() {
           padding: 16px 24px;
           border-radius: 14px;
           font-size: 17px;
-          font-weight: 700;
+          font-weight: 600;
           cursor: pointer;
           width: 100%;
-          border: none;
           position: relative;
           overflow: hidden;
-          /* Premium metallic gradient */
-          background: linear-gradient(180deg, 
-            #f5f5f5 0%, 
-            #e8e8e8 20%, 
-            #d4d4d4 50%,
-            #c0c0c0 80%,
-            #a8a8a8 100%);
-          color: #1a1a1a !important;
-          -webkit-text-fill-color: #1a1a1a !important;
-          text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+          /* Glassmorphism: frosted glass effect */
+          background: rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
+          text-shadow: none;
           box-shadow: 
-            0 4px 20px rgba(200, 200, 200, 0.15),
-            0 8px 32px rgba(180, 180, 180, 0.08),
-            inset 0 1px 0 rgba(255, 255, 255, 0.6),
-            inset 0 -2px 4px rgba(0, 0, 0, 0.1);
-          transition: transform 0.25s ease, box-shadow 0.25s ease;
-          animation: btn-glow-pulse 3s ease-in-out infinite;
+            0 4px 24px rgba(0, 0, 0, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+          transition: all 0.3s ease;
+          animation: btn-glow-pulse 4s ease-in-out infinite;
         }
 
-        /* Shimmer wave overlay */
+        /* Subtle inner glow on top edge */
         .login-cta::before {
           content: '';
           position: absolute;
           top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: linear-gradient(
-            120deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0) 30%,
-            rgba(255, 255, 255, 0.6) 50%,
-            rgba(255, 255, 255, 0) 70%,
-            transparent 100%
-          );
-          background-size: 200% 100%;
-          animation: btn-shimmer-wave 4s ease-in-out infinite;
+          left: 10%;
+          right: 10%;
+          height: 1px;
+          background: linear-gradient(90deg, 
+            transparent 0%, 
+            rgba(255, 255, 255, 0.4) 50%, 
+            transparent 100%);
           pointer-events: none;
         }
 
         .login-cta:hover:not([disabled]) {
-          transform: translateY(-3px) scale(1.01);
+          background: rgba(255, 255, 255, 0.12);
+          border-color: rgba(255, 255, 255, 0.25);
+          transform: translateY(-2px);
           box-shadow: 
-            0 8px 32px rgba(220, 220, 220, 0.3),
-            0 16px 48px rgba(180, 180, 180, 0.15),
-            inset 0 1px 0 rgba(255, 255, 255, 0.8),
-            inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+            0 8px 32px rgba(0, 0, 0, 0.3),
+            0 0 40px rgba(255, 255, 255, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.15);
         }
 
         .login-cta:active:not([disabled]) {
-          transform: translateY(0) scale(0.99);
+          transform: translateY(0);
+          background: rgba(255, 255, 255, 0.06);
         }
 
         .login-cta[disabled] {
-          opacity: 0.5;
+          opacity: 0.4;
           cursor: not-allowed;
           animation: none;
         }
 
         .login-cta[disabled]::before {
-          animation: none;
+          display: none;
         }
 
         /* Button content layout */
@@ -852,11 +843,13 @@ export default function LoginClient() {
           z-index: 1;
           margin-left: 8px;
           font-size: 18px;
-          transition: transform 0.3s ease;
+          opacity: 0.7;
+          transition: all 0.3s ease;
         }
 
         .login-cta:hover:not([disabled]) .login-cta-arrow {
           transform: translateX(4px);
+          opacity: 1;
         }
 
         /* Error & Success Messages */
