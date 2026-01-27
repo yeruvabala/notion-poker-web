@@ -3,6 +3,7 @@ import AuthSync from '@/components/AuthSync';
 import NativeAppDetector from '@/components/NativeAppDetector';
 import AppLoadingOverlay from '@/components/AppLoadingOverlay';
 import { Inter } from 'next/font/google';
+import { generateDarkOverlayCss, generateDarkOverlayHtml } from '@/lib/loadingSymbols';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -23,24 +24,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={inter.variable} style={{ background: '#0a0a0f' }}>
       <head>
-        {/* CRITICAL: Dark background before ANYTHING loads */}
-        <style dangerouslySetInnerHTML={{
-          __html: `
-            html, body {
-              background: #0a0a0f !important;
-            }
-            #__instant-overlay {
-              position: fixed;
-              top: 0; left: 0; right: 0; bottom: 0;
-              z-index: 999998;
-              background: #0a0a0f;
-            }
-          `
-        }} />
+        {/* Dark background + scattered symbols CSS (same positions as React) */}
+        <style dangerouslySetInnerHTML={{ __html: generateDarkOverlayCss() }} />
       </head>
       <body className="min-h-screen bg-[#0a0a0f] text-[#E2E8F0] antialiased" style={{ background: '#0a0a0f' }}>
-        {/* This div shows INSTANTLY before React hydrates */}
-        <div id="__instant-overlay" />
+        {/* Scattered symbols show INSTANTLY before React loads */}
+        <div
+          id="__instant-overlay"
+          dangerouslySetInnerHTML={{ __html: generateDarkOverlayHtml() }}
+        />
         <AppLoadingOverlay />
         <AuthSync />
         <NativeAppDetector />

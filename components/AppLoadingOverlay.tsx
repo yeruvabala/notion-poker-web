@@ -1,13 +1,17 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
+import { LOADING_SYMBOLS } from '@/lib/loadingSymbols';
 
 /**
- * AppLoadingOverlay - Immersive loading with auth-aware positioning
+ * AppLoadingOverlay - Immersive loading with seamless transition
  * 
- * Detects if user is logged in and positions suits accordingly:
- * - Logged IN: Suits float to HOME PAGE header
- * - Logged OUT: Suits float to LOGIN PAGE center
+ * Flow:
+ * 1. Dark HTML shows scattered symbols (same positions as here)
+ * 2. React mounts, symbols are at SAME positions
+ * 3. React removes dark HTML overlay (no visible change!)
+ * 4. Symbols float UP together
+ * 5. Main 4 suits float in, shimmer, then settle
  */
 export default function AppLoadingOverlay() {
     const [isVisible, setIsVisible] = useState(true);
@@ -16,87 +20,43 @@ export default function AppLoadingOverlay() {
     const [suitsFloatingUp, setSuitsFloatingUp] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
-    // Generate random positions for floating symbols
-    const floatingSymbols = useMemo(() => {
-        const suits = ['♠', '♥', '♦', '♣'];
-        const ranks = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
-        const symbols = [...suits, ...ranks];
-
-        return symbols.map((symbol, i) => ({
-            symbol,
-            left: Math.random() * 85 + 5,
-            startTop: Math.random() * 30 + 70,
-            duration: 3 + Math.random() * 2,
-            delay: Math.random() * 2.5,
-            size: 16 + Math.random() * 14,
-            rotation: Math.random() * 360,
-            isRed: symbol === '♥' || symbol === '♦',
-        }));
-    }, []);
-
     useEffect(() => {
+        // Remove the instant overlay now that React is ready
+        // The symbols here are at the SAME positions, so no visual jump!
         const instantOverlay = document.getElementById('__instant-overlay');
         if (instantOverlay) {
             instantOverlay.remove();
         }
 
-        // Quick sync check: look for Supabase session in localStorage
-        // Supabase uses key: sb-{projectRef}-auth-token
+        // Quick sync check for auth
         const checkAuthSync = () => {
             try {
-                // Try the exact key pattern Supabase uses
                 const key = 'sb-dkkozaccpdsmbbhkhdvs-auth-token';
                 const sessionData = localStorage.getItem(key);
-
                 if (sessionData) {
                     const parsed = JSON.parse(sessionData);
-                    // Check for access_token in various possible locations
-                    const hasToken = !!(
-                        parsed?.access_token ||
-                        parsed?.currentSession?.access_token ||
-                        parsed?.session?.access_token
-                    );
-                    console.log('[Loading] Auth check:', hasToken ? 'LOGGED IN' : 'LOGGED OUT');
-                    return hasToken;
+                    return !!(parsed?.access_token || parsed?.currentSession?.access_token || parsed?.session?.access_token);
                 }
-
-                // Fallback: search all keys
                 const storageKeys = Object.keys(localStorage);
                 for (const k of storageKeys) {
                     if (k.includes('supabase') || k.includes('sb-')) {
                         const data = localStorage.getItem(k);
-                        if (data && data.includes('access_token')) {
-                            console.log('[Loading] Found auth in key:', k);
-                            return true;
-                        }
+                        if (data && data.includes('access_token')) return true;
                     }
                 }
-
-                console.log('[Loading] No auth found');
                 return false;
-            } catch (e) {
-                console.log('[Loading] Auth check error:', e);
+            } catch {
                 return false;
             }
         };
 
-        // Check auth immediately (synchronously)
-        const loggedIn = checkAuthSync();
-        setIsLoggedIn(loggedIn);
+        setIsLoggedIn(checkAuthSync());
         setIsMounted(true);
 
         // Timeline
-        const floatUpTimer = setTimeout(() => {
-            setSuitsFloatingUp(true);
-        }, 3500);
-
-        const fadeTimer = setTimeout(() => {
-            setIsFadingOut(true);
-        }, 4000);
-
-        const hideTimer = setTimeout(() => {
-            setIsVisible(false);
-        }, 4500);
+        const floatUpTimer = setTimeout(() => setSuitsFloatingUp(true), 3500);
+        const fadeTimer = setTimeout(() => setIsFadingOut(true), 4000);
+        const hideTimer = setTimeout(() => setIsVisible(false), 4500);
 
         return () => {
             clearTimeout(floatUpTimer);
@@ -107,7 +67,6 @@ export default function AppLoadingOverlay() {
 
     if (!isVisible) return null;
 
-    // Determine float target class based on login state
     const floatTargetClass = suitsFloatingUp
         ? (isLoggedIn ? 'float-to-home' : 'float-to-login')
         : '';
@@ -115,28 +74,26 @@ export default function AppLoadingOverlay() {
     return (
         <>
             <div className={`app-loading-overlay ${isFadingOut ? 'fade-out' : ''}`}>
-                {/* Floating background symbols */}
+                {/* Background symbols - same positions as dark HTML, then float up */}
                 <div className="floating-bg">
-                    {floatingSymbols.map((item, i) => (
+                    {LOADING_SYMBOLS.map((item, i) => (
                         <span
                             key={i}
-                            className="floating-symbol"
+                            className={`bg-symbol ${isMounted ? 'float-up' : ''}`}
                             style={{
                                 left: `${item.left}%`,
-                                top: `${item.startTop}%`,
+                                top: `${item.top}%`,
                                 fontSize: `${item.size}px`,
                                 color: item.isRed ? '#4a2020' : '#2a2a2a',
-                                animationDuration: `${item.duration}s`,
-                                animationDelay: `${item.delay}s`,
-                                '--rotation': `${item.rotation}deg`,
-                            } as React.CSSProperties}
+                                animationDelay: `${i * 0.05}s`,
+                            }}
                         >
                             {item.symbol}
                         </span>
                     ))}
                 </div>
 
-                {/* Main suits - will float to appropriate position */}
+                {/* Main suits - float in, shimmer, then settle */}
                 <div className={`suits-container ${isMounted ? 'animate' : ''} ${floatTargetClass}`}>
                     <span className="suit suit-1">♠</span>
                     <span className="suit suit-2">♥</span>
@@ -166,29 +123,37 @@ export default function AppLoadingOverlay() {
                     pointer-events: none;
                 }
 
-                /* Floating background */
+                /* Background symbols */
                 .floating-bg {
                     position: absolute;
                     inset: 0;
                     pointer-events: none;
                 }
 
-                .floating-symbol {
+                .bg-symbol {
                     position: absolute;
-                    opacity: 0;
-                    animation: floatRandom 4s ease-in-out forwards;
+                    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+                    opacity: 0.15;
+                    transition: none;
                 }
 
-                @keyframes floatRandom {
+                /* Float up animation - starts after a delay */
+                .bg-symbol.float-up {
+                    animation: symbolFloatUp 3s ease-in forwards;
+                    animation-delay: var(--delay, 0.5s);
+                }
+
+                @keyframes symbolFloatUp {
                     0% {
-                        opacity: 0;
-                        transform: translateY(0) rotate(var(--rotation, 0deg));
+                        opacity: 0.15;
+                        transform: translateY(0);
                     }
-                    15% { opacity: 0.2; }
-                    85% { opacity: 0.2; }
+                    50% {
+                        opacity: 0.25;
+                    }
                     100% {
                         opacity: 0;
-                        transform: translateY(-120vh) rotate(calc(var(--rotation, 0deg) + 360deg));
+                        transform: translateY(-120vh);
                     }
                 }
 
