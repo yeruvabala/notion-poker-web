@@ -21,6 +21,14 @@ export default function AuthSync() {
         return;
       }
 
+      // Handle SIGNED_OUT event - redirect to login
+      // This ensures user is redirected even if signout was triggered elsewhere
+      if (event === 'SIGNED_OUT') {
+        console.log('AuthSync: SIGNED_OUT detected! Redirecting to login...');
+        window.location.href = '/login';
+        return;
+      }
+
       // Sync session with server for other events
       try {
         await fetch('/api/auth/sync', {

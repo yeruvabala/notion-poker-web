@@ -4,6 +4,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LogOut } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import {
   PokerChipIcon,
   HoleCardsIcon,
@@ -28,6 +29,31 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
+
+  /**
+   * Proper signout flow:
+   * 1. Call Supabase signOut on CLIENT (clears localStorage tokens)
+   * 2. POST to server to clear server-side cookies
+   * 3. Hard redirect to login page (ensures clean state)
+   */
+  const handleSignOut = async () => {
+    try {
+      const supabase = createClient();
+
+      // 1. Sign out on client - this clears localStorage
+      await supabase.auth.signOut();
+
+      // 2. Also clear server-side session (cookies)
+      await fetch('/auth/signout', { method: 'POST' });
+
+      // 3. Hard redirect to login (ensures clean navigation state)
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Sign out error:', error);
+      // Even if there's an error, redirect to login
+      window.location.href = '/login';
+    }
+  };
 
   return (
     <>
@@ -98,12 +124,13 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             <SettingsGearIcon className="sidebar-nav-icon" />
             Settings
           </Link>
-          <form action="/auth/signout" method="post">
-            <button className="sidebar-nav-item sidebar-signout w-full text-left">
-              <LogOut className="sidebar-nav-icon" />
-              Sign out
-            </button>
-          </form>
+          <button
+            onClick={handleSignOut}
+            className="sidebar-nav-item sidebar-signout w-full text-left"
+          >
+            <LogOut className="sidebar-nav-icon" />
+            Sign out
+          </button>
         </div>
       </aside>
     </>
