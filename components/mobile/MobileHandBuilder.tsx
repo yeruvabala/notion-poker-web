@@ -814,6 +814,24 @@ export default function MobileHandBuilder({
     onSave, savingHand, onStartSession, onEndSession
 }: MobileHandBuilderProps) {
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // STREET COMPLETION HELPER
+    // A postflop street is complete when:
+    // 1. Someone calls a bet (action closes), OR
+    // 2. Both players check (check-check closes action without betting)
+    // ═══════════════════════════════════════════════════════════════════════════
+    const isPostflopStreetComplete = (actions: PostflopAction[]): boolean => {
+        // Case 1: Someone called a bet
+        if (actions.some(a => a.action === 'call')) return true;
+
+        // Case 2: Both players checked (check-check)
+        // Need exactly 2 checks (one from each player) with no bets/raises in between
+        const checks = actions.filter(a => a.action === 'check');
+        if (checks.length >= 2) return true;
+
+        return false;
+    };
+
     const [showCardPicker, setShowCardPicker] = useState<string | null>(null);
     const [showPositionModal, setShowPositionModal] = useState(false);
     const [showTableModal, setShowTableModal] = useState(false);
@@ -854,8 +872,8 @@ export default function MobileHandBuilder({
         }
     }, [flopIsActive]);
 
-    // Auto-scroll to TURN when it expands (flop has call) + HAPTIC FEEDBACK
-    const turnIsActive = flopActions.some(a => a.action === 'call') && !turnActions.some(a => a.action === 'fold');
+    // Auto-scroll to TURN when it expands (flop completed via call OR check-check) + HAPTIC FEEDBACK
+    const turnIsActive = isPostflopStreetComplete(flopActions) && !turnActions.some(a => a.action === 'fold');
     useEffect(() => {
         if (turnIsActive && turnSectionRef.current) {
             // Haptic feedback for card migration!
@@ -868,8 +886,8 @@ export default function MobileHandBuilder({
         }
     }, [turnIsActive]);
 
-    // Auto-scroll to RIVER when it expands (turn has call) + HAPTIC FEEDBACK
-    const riverIsActive = turnActions.some(a => a.action === 'call');
+    // Auto-scroll to RIVER when it expands (turn completed via call OR check-check) + HAPTIC FEEDBACK
+    const riverIsActive = isPostflopStreetComplete(turnActions);
     useEffect(() => {
         if (riverIsActive && riverSectionRef.current) {
             // Haptic feedback for card migration!
@@ -1261,7 +1279,7 @@ export default function MobileHandBuilder({
                 !preflopActions.some(a => a.action === 'fold') && (
                     <div ref={flopSectionRef} className={`street-section flop ${!preflopActions.some(a => a.action === 'call') ? 'collapsed' :
                         (flop1 && flop2 && flop3)
-                            ? (flopActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                            ? (flopActions.some(a => a.action === 'fold') || isPostflopStreetComplete(flopActions) ? 'completed' : 'active')
                             : 'active'
                         }`}>
                         <div className="street-header">
@@ -1272,7 +1290,7 @@ export default function MobileHandBuilder({
                         {/* Show cards ONLY when preflop done but flop action NOT done yet */}
                         {/* OR when action ENDED at flop (fold at flop) - cards stay visible */}
                         {preflopActions.some(a => a.action === 'call') && (
-                            !flopActions.some(a => a.action === 'call') || flopActions.some(a => a.action === 'fold')
+                            !isPostflopStreetComplete(flopActions) || flopActions.some(a => a.action === 'fold')
                         ) && (
                                 <div className="community-cards flop-cards">
                                     <CardDisplay card={flop1} cardKey="flop1" size="small" />
@@ -1303,20 +1321,20 @@ export default function MobileHandBuilder({
           ═══════════════════════════════════════════════════════════════════════ */}
             {
                 !preflopActions.some(a => a.action === 'fold') && !flopActions.some(a => a.action === 'fold') && (
-                    <div ref={turnSectionRef} className={`street-section turn ${!(flop1 && flop2 && flop3) || !flopActions.some(a => a.action === 'call') ? 'collapsed' :
+                    <div ref={turnSectionRef} className={`street-section turn ${!(flop1 && flop2 && flop3) || !isPostflopStreetComplete(flopActions) ? 'collapsed' :
                         turn
-                            ? (turnActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                            ? (turnActions.some(a => a.action === 'fold') || isPostflopStreetComplete(turnActions) ? 'completed' : 'active')
                             : 'active'
                         }`}>
                         <div className="street-header">
                             <span className="street-name">Turn</span>
-                            {(flop1 && flop2 && flop3) && flopActions.some(a => a.action === 'call') && <span className="pot-badge">{calculatePot('turn').toFixed(1)}bb</span>}
+                            {(flop1 && flop2 && flop3) && isPostflopStreetComplete(flopActions) && <span className="pot-badge">{calculatePot('turn').toFixed(1)}bb</span>}
                         </div>
 
                         {/* Show FLOP cards (migrated) + TURN card when flop action is complete */}
                         {/* OR when action ENDED at turn (fold at turn) - cards stay visible */}
-                        {(flop1 && flop2 && flop3) && flopActions.some(a => a.action === 'call') && (
-                            !turnActions.some(a => a.action === 'call') || turnActions.some(a => a.action === 'fold')
+                        {(flop1 && flop2 && flop3) && isPostflopStreetComplete(flopActions) && (
+                            !isPostflopStreetComplete(turnActions) || turnActions.some(a => a.action === 'fold')
                         ) && (
                                 <div className="community-cards migrated-cards">
                                     {/* Flop cards that flew in */}
@@ -1352,18 +1370,18 @@ export default function MobileHandBuilder({
           ═══════════════════════════════════════════════════════════════════════ */}
             {
                 !preflopActions.some(a => a.action === 'fold') && !flopActions.some(a => a.action === 'fold') && !turnActions.some(a => a.action === 'fold') && (
-                    <div ref={riverSectionRef} className={`street-section river ${!turn || !turnActions.some(a => a.action === 'call') ? 'collapsed' :
+                    <div ref={riverSectionRef} className={`street-section river ${!turn || !isPostflopStreetComplete(turnActions) ? 'collapsed' :
                         river
-                            ? (riverActions.some(a => a.action === 'fold' || a.action === 'call') ? 'completed' : 'active')
+                            ? (riverActions.some(a => a.action === 'fold') || isPostflopStreetComplete(riverActions) ? 'completed' : 'active')
                             : 'active'
                         }`}>
                         <div className="street-header">
                             <span className="street-name">River</span>
-                            {turn && turnActions.some(a => a.action === 'call') && <span className="pot-badge">{calculatePot('river').toFixed(1)}bb</span>}
+                            {turn && isPostflopStreetComplete(turnActions) && <span className="pot-badge">{calculatePot('river').toFixed(1)}bb</span>}
                         </div>
 
                         {/* Show ALL cards - FLOP + TURN (migrated) + RIVER when turn action is complete */}
-                        {turn && turnActions.some(a => a.action === 'call') && (
+                        {turn && isPostflopStreetComplete(turnActions) && (
                             <div className="community-cards migrated-cards">
                                 {/* Flop cards */}
                                 <CardDisplay card={flop1} cardKey="flop1-river" size="small" />
