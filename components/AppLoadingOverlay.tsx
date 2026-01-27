@@ -5,18 +5,17 @@ import { useState, useEffect } from 'react';
 /**
  * AppLoadingOverlay - Animated suits loading experience
  * 
- * Flow:
- * 1. Dark background appears
- * 2. Four suits (♠ ♥ ♦ ♣) float in from random directions
- * 3. They settle into position (row formation)
- * 4. Wave shimmer animation plays
- * 5. Fade out to reveal app
+ * CRITICAL: Shows immediately on mount to prevent any flash of content
  */
 export default function AppLoadingOverlay() {
     const [isVisible, setIsVisible] = useState(true);
     const [isFadingOut, setIsFadingOut] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
+        // Mark as mounted to start animations
+        setIsMounted(true);
+
         // Total animation: 4 seconds, then fade out
         const timer = setTimeout(() => {
             setIsFadingOut(true);
@@ -31,7 +30,7 @@ export default function AppLoadingOverlay() {
     return (
         <>
             <div className={`app-loading-overlay ${isFadingOut ? 'fade-out' : ''}`}>
-                <div className="suits-container">
+                <div className={`suits-container ${isMounted ? 'animate' : ''}`}>
                     <span className="suit suit-1">♠</span>
                     <span className="suit suit-2">♥</span>
                     <span className="suit suit-3">♦</span>
@@ -40,10 +39,14 @@ export default function AppLoadingOverlay() {
             </div>
 
             <style jsx global>{`
+                /* CRITICAL: Overlay must cover everything immediately */
                 .app-loading-overlay {
                     position: fixed;
-                    inset: 0;
-                    z-index: 99999;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    z-index: 999999;
                     background: #0a0a0f;
                     display: flex;
                     align-items: center;
@@ -56,10 +59,14 @@ export default function AppLoadingOverlay() {
                     pointer-events: none;
                 }
 
+                /* CENTERED suits container */
                 .suits-container {
                     display: flex;
-                    gap: 16px;
-                    font-size: 28px;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 20px;
+                    font-size: 32px;
                 }
 
                 .suit {
@@ -67,32 +74,29 @@ export default function AppLoadingOverlay() {
                     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
                 }
 
-                /* Spade - floats in from top */
-                .suit-1 {
+                /* Animations only start when mounted */
+                .suits-container.animate .suit-1 {
                     color: #a0a0a0;
                     animation: 
                         floatIn1 0.8s ease-out 0.2s forwards,
                         shimmer 0.6s ease-in-out 2.5s forwards;
                 }
 
-                /* Heart - floats in from left */
-                .suit-2 {
+                .suits-container.animate .suit-2 {
                     color: #dc2626;
                     animation: 
                         floatIn2 0.8s ease-out 0.5s forwards,
                         shimmer 0.6s ease-in-out 2.7s forwards;
                 }
 
-                /* Diamond - floats in from right */
-                .suit-3 {
+                .suits-container.animate .suit-3 {
                     color: #dc2626;
                     animation: 
                         floatIn3 0.8s ease-out 0.8s forwards,
                         shimmer 0.6s ease-in-out 2.9s forwards;
                 }
 
-                /* Club - floats in from bottom */
-                .suit-4 {
+                .suits-container.animate .suit-4 {
                     color: #a0a0a0;
                     animation: 
                         floatIn4 0.8s ease-out 1.1s forwards,
@@ -103,10 +107,10 @@ export default function AppLoadingOverlay() {
                 @keyframes floatIn1 {
                     0% {
                         opacity: 0;
-                        transform: translateY(-100px) rotate(-20deg);
+                        transform: translateY(-80px) rotate(-20deg);
                     }
                     100% {
-                        opacity: 0.6;
+                        opacity: 0.7;
                         transform: translateY(0) rotate(0deg);
                     }
                 }
@@ -115,10 +119,10 @@ export default function AppLoadingOverlay() {
                 @keyframes floatIn2 {
                     0% {
                         opacity: 0;
-                        transform: translateX(-100px) rotate(15deg);
+                        transform: translateX(-80px) rotate(15deg);
                     }
                     100% {
-                        opacity: 0.6;
+                        opacity: 0.7;
                         transform: translateX(0) rotate(0deg);
                     }
                 }
@@ -127,10 +131,10 @@ export default function AppLoadingOverlay() {
                 @keyframes floatIn3 {
                     0% {
                         opacity: 0;
-                        transform: translateX(100px) rotate(-15deg);
+                        transform: translateX(80px) rotate(-15deg);
                     }
                     100% {
-                        opacity: 0.6;
+                        opacity: 0.7;
                         transform: translateX(0) rotate(0deg);
                     }
                 }
@@ -139,10 +143,10 @@ export default function AppLoadingOverlay() {
                 @keyframes floatIn4 {
                     0% {
                         opacity: 0;
-                        transform: translateY(100px) rotate(20deg);
+                        transform: translateY(80px) rotate(20deg);
                     }
                     100% {
-                        opacity: 0.6;
+                        opacity: 0.7;
                         transform: translateY(0) rotate(0deg);
                     }
                 }
@@ -150,7 +154,7 @@ export default function AppLoadingOverlay() {
                 /* Shimmer wave effect */
                 @keyframes shimmer {
                     0% {
-                        opacity: 0.6;
+                        opacity: 0.7;
                         text-shadow: none;
                     }
                     50% {
