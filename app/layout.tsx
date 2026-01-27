@@ -21,11 +21,14 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} style={{ background: '#0a0a0f' }}>
       <head>
-        {/* CRITICAL: Immediate blocking overlay before JS loads */}
+        {/* CRITICAL: Dark background before ANYTHING loads */}
         <style dangerouslySetInnerHTML={{
           __html: `
+            html, body {
+              background: #0a0a0f !important;
+            }
             #__instant-overlay {
               position: fixed;
               top: 0; left: 0; right: 0; bottom: 0;
@@ -35,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           `
         }} />
       </head>
-      <body className="min-h-screen bg-[#0a0a0f] text-[#E2E8F0] antialiased">
+      <body className="min-h-screen bg-[#0a0a0f] text-[#E2E8F0] antialiased" style={{ background: '#0a0a0f' }}>
         {/* This div shows INSTANTLY before React hydrates */}
         <div id="__instant-overlay" />
         <AppLoadingOverlay />
