@@ -204,16 +204,18 @@ export default function AppLoadingOverlay() {
                     transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
                 }
 
-                /* LOGGED IN: Float to HOME PAGE header position (right under "ONLY POKER") */
+                /* LOGGED IN: Float to HOME PAGE header position */
+                /* mobile-header: fixed top, padding-top: safe-area + 8px */
+                /* mobile-header-content: padding: 30px 16px 6px */
+                /* Total: ~70px + safe-area from top of screen */
                 .suits-container.float-to-home {
-                    /* Home page: title at very top, suits ~140px down */
-                    transform: translateY(calc(-50vh + 140px + env(safe-area-inset-top, 0px))) scale(0.5);
+                    transform: translateY(calc(-50vh + 80px + env(safe-area-inset-top, 47px))) scale(0.45);
                 }
 
-                /* LOGGED OUT: Float to LOGIN PAGE center position */
+                /* LOGGED OUT: Float to LOGIN PAGE suits position */
+                /* Login page has title + suits around 30% from top */
                 .suits-container.float-to-login {
-                    /* Login page: title centered, suits just below center at ~30% from center */
-                    transform: translateY(-25vh) scale(0.55);
+                    transform: translateY(calc(-50vh + 30vh)) scale(0.5);
                 }
 
                 .suit {
