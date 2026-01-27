@@ -84,7 +84,7 @@ export default function AuthCallbackPage() {
           min-height: 100dvh;
           display: grid;
           place-items: center;
-          background: #1c1c1c;
+          background: linear-gradient(180deg, #1c1c1c 0%, #242428 50%, #1c1c1c 100%);
           font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
         }
         .callback-card {
