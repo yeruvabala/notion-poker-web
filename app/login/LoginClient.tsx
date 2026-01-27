@@ -349,7 +349,7 @@ export default function LoginClient() {
           display: grid;
           place-items: center;
           padding: 28px;
-          background: linear-gradient(180deg, #0a0a0f 0%, #151520 50%, #0d0d12 100%) !important;
+          background: linear-gradient(180deg, #1c1c1c 0%, #242428 50%, #1c1c1c 100%) !important;
           position: relative;
           overflow: hidden;
         }
