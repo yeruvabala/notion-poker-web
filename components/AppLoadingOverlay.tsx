@@ -41,24 +41,41 @@ export default function AppLoadingOverlay() {
         }
 
         // Quick sync check: look for Supabase session in localStorage
-        // This is FASTER than async getSession() call
+        // Supabase uses key: sb-{projectRef}-auth-token
         const checkAuthSync = () => {
             try {
-                // Supabase stores session in localStorage with project-specific key
+                // Try the exact key pattern Supabase uses
+                const key = 'sb-dkkozaccpdsmbbhkhdvs-auth-token';
+                const sessionData = localStorage.getItem(key);
+
+                if (sessionData) {
+                    const parsed = JSON.parse(sessionData);
+                    // Check for access_token in various possible locations
+                    const hasToken = !!(
+                        parsed?.access_token ||
+                        parsed?.currentSession?.access_token ||
+                        parsed?.session?.access_token
+                    );
+                    console.log('[Loading] Auth check:', hasToken ? 'LOGGED IN' : 'LOGGED OUT');
+                    return hasToken;
+                }
+
+                // Fallback: search all keys
                 const storageKeys = Object.keys(localStorage);
-                const supabaseKey = storageKeys.find(key =>
-                    key.includes('supabase') && key.includes('auth')
-                );
-                if (supabaseKey) {
-                    const sessionData = localStorage.getItem(supabaseKey);
-                    if (sessionData) {
-                        const parsed = JSON.parse(sessionData);
-                        // Check if there's a valid session with access token
-                        return !!(parsed?.access_token || parsed?.currentSession?.access_token);
+                for (const k of storageKeys) {
+                    if (k.includes('supabase') || k.includes('sb-')) {
+                        const data = localStorage.getItem(k);
+                        if (data && data.includes('access_token')) {
+                            console.log('[Loading] Found auth in key:', k);
+                            return true;
+                        }
                     }
                 }
+
+                console.log('[Loading] No auth found');
                 return false;
-            } catch {
+            } catch (e) {
+                console.log('[Loading] Auth check error:', e);
                 return false;
             }
         };
