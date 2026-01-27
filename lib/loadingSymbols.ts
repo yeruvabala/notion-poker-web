@@ -377,17 +377,25 @@ export function generateDarkOverlayCss(patternIndex: number): string {
     .instant-symbol {
       position: absolute;
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      opacity: 0.25;
+      opacity: 0;
+      animation: symbolFadeIn 1s ease-out forwards;
+    }
+    @keyframes symbolFadeIn {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 0.25; transform: scale(1); }
     }
   `;
 
   symbols.forEach((s, i) => {
+    // Stagger the fade-in for each symbol (50ms apart)
+    const delay = i * 0.05;
     css += `
     .instant-symbol-${i} {
       left: ${s.left}%;
       top: ${s.top}%;
       font-size: ${s.size}px;
       color: ${s.isRed ? '#5a3535' : '#3a3a3a'};
+      animation-delay: ${delay}s;
     }`;
   });
 
