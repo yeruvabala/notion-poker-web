@@ -13,6 +13,12 @@ export default function AppLoadingOverlay() {
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
+        // Remove the instant blocking overlay now that React is ready
+        const instantOverlay = document.getElementById('__instant-overlay');
+        if (instantOverlay) {
+            instantOverlay.remove();
+        }
+
         // Mark as mounted to start animations
         setIsMounted(true);
 

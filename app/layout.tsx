@@ -22,7 +22,22 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className="min-h-screen bg-[#1c1c1c] text-[#E2E8F0] antialiased">
+      <head>
+        {/* CRITICAL: Immediate blocking overlay before JS loads */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            #__instant-overlay {
+              position: fixed;
+              top: 0; left: 0; right: 0; bottom: 0;
+              z-index: 999998;
+              background: #0a0a0f;
+            }
+          `
+        }} />
+      </head>
+      <body className="min-h-screen bg-[#0a0a0f] text-[#E2E8F0] antialiased">
+        {/* This div shows INSTANTLY before React hydrates */}
+        <div id="__instant-overlay" />
         <AppLoadingOverlay />
         <AuthSync />
         <NativeAppDetector />
