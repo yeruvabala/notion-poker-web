@@ -1,22 +1,21 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 /**
- * AppLoadingOverlay - Immersive loading with seamless transition
+ * AppLoadingOverlay - Immersive loading with auth-aware positioning
  * 
- * Flow:
- * 1. Floating symbols in background
- * 2. Four suits animate in and shimmer
- * 3. Suits float UP to home page header position
- * 4. Background fades out, revealing home page
- * 5. Suits are already in place - seamless!
+ * Detects if user is logged in and positions suits accordingly:
+ * - Logged IN: Suits float to HOME PAGE header
+ * - Logged OUT: Suits float to LOGIN PAGE center
  */
 export default function AppLoadingOverlay() {
     const [isVisible, setIsVisible] = useState(true);
     const [isFadingOut, setIsFadingOut] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
     const [suitsFloatingUp, setSuitsFloatingUp] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
     // Generate random positions for floating symbols
     const floatingSymbols = useMemo(() => {
@@ -42,15 +41,22 @@ export default function AppLoadingOverlay() {
             instantOverlay.remove();
         }
 
+        // Check auth state to determine where suits should land
+        const checkAuth = async () => {
+            try {
+                const supabase = createClientComponentClient();
+                const { data: { session } } = await supabase.auth.getSession();
+                setIsLoggedIn(!!session);
+            } catch {
+                // Default to logged out if error
+                setIsLoggedIn(false);
+            }
+        };
+
+        checkAuth();
         setIsMounted(true);
 
-        // Timeline:
-        // 0-2s: Suits float in
-        // 2-3s: Shimmer effect
-        // 3.5s: Suits start floating up to header position
-        // 4s: Background starts fading
-        // 4.5s: Overlay removed
-
+        // Timeline
         const floatUpTimer = setTimeout(() => {
             setSuitsFloatingUp(true);
         }, 3500);
@@ -71,6 +77,11 @@ export default function AppLoadingOverlay() {
     }, []);
 
     if (!isVisible) return null;
+
+    // Determine float target class based on login state
+    const floatTargetClass = suitsFloatingUp
+        ? (isLoggedIn ? 'float-to-home' : 'float-to-login')
+        : '';
 
     return (
         <>
@@ -96,8 +107,8 @@ export default function AppLoadingOverlay() {
                     ))}
                 </div>
 
-                {/* Main suits - will float up to header position */}
-                <div className={`suits-container ${isMounted ? 'animate' : ''} ${suitsFloatingUp ? 'float-to-header' : ''}`}>
+                {/* Main suits - will float to appropriate position */}
+                <div className={`suits-container ${isMounted ? 'animate' : ''} ${floatTargetClass}`}>
                     <span className="suit suit-1">♠</span>
                     <span className="suit suit-2">♥</span>
                     <span className="suit suit-3">♦</span>
@@ -164,11 +175,14 @@ export default function AppLoadingOverlay() {
                     transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
                 }
 
-                /* When floating up to header position */
-                .suits-container.float-to-header {
-                    /* Move to approximately where home page header suits are */
-                    /* env(safe-area-inset-top) handles notch on iPhones */
+                /* LOGGED IN: Float to HOME PAGE header position */
+                .suits-container.float-to-home {
                     transform: translateY(calc(-50vh + 90px + env(safe-area-inset-top, 0px))) scale(0.6);
+                }
+
+                /* LOGGED OUT: Float to LOGIN PAGE suits position (slightly above center) */
+                .suits-container.float-to-login {
+                    transform: translateY(-35vh) scale(0.7);
                 }
 
                 .suit {
