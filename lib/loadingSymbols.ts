@@ -377,7 +377,7 @@ export function generateDarkOverlayCss(patternIndex: number): string {
     .instant-symbol {
       position: absolute;
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      opacity: 0.15;
+      opacity: 0.25;
     }
   `;
 
@@ -387,7 +387,7 @@ export function generateDarkOverlayCss(patternIndex: number): string {
       left: ${s.left}%;
       top: ${s.top}%;
       font-size: ${s.size}px;
-      color: ${s.isRed ? '#4a2020' : '#2a2a2a'};
+      color: ${s.isRed ? '#5a3535' : '#3a3a3a'};
     }`;
   });
 
