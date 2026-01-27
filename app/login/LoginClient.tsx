@@ -783,8 +783,8 @@ export default function LoginClient() {
         }
 
         @keyframes border-glow {
-          0%, 100% { border-color: rgba(251, 191, 36, 0.3); }
-          50% { border-color: rgba(251, 191, 36, 0.6); }
+          0%, 100% { border-color: rgba(255, 255, 255, 0.15); }
+          50% { border-color: rgba(255, 255, 255, 0.35); }
         }
 
         .login-cta {
@@ -807,8 +807,8 @@ export default function LoginClient() {
             #312e81 75%,
             #1e1b4b 100%);
           background-size: 200% 200%;
-          /* Gold accent border */
-          border: 2px solid rgba(251, 191, 36, 0.4);
+          /* Soft silver accent border */
+          border: 1.5px solid rgba(255, 255, 255, 0.2);
           /* Solid white text - no gradient override issues */
           color: #ffffff !important;
           -webkit-text-fill-color: #ffffff !important;
@@ -827,7 +827,7 @@ export default function LoginClient() {
             border-glow 2s ease-in-out infinite;
         }
 
-        /* Gold shimmer wave that sweeps across */
+        /* Silver shimmer wave that sweeps across */
         .login-cta::before {
           content: '';
           position: absolute;
@@ -839,9 +839,9 @@ export default function LoginClient() {
             105deg,
             transparent 0%,
             transparent 35%,
-            rgba(251, 191, 36, 0.1) 45%,
-            rgba(251, 191, 36, 0.3) 50%,
-            rgba(251, 191, 36, 0.1) 55%,
+            rgba(255, 255, 255, 0.05) 45%,
+            rgba(255, 255, 255, 0.15) 50%,
+            rgba(255, 255, 255, 0.05) 55%,
             transparent 65%,
             transparent 100%
           );
@@ -861,7 +861,7 @@ export default function LoginClient() {
           height: 1px;
           background: linear-gradient(90deg,
             transparent 0%,
-            rgba(251, 191, 36, 0.6) 50%,
+            rgba(255, 255, 255, 0.4) 50%,
             transparent 100%);
           pointer-events: none;
         }
@@ -869,12 +869,12 @@ export default function LoginClient() {
         /* HOVER: Button lifts and glows intensely */
         .login-cta:hover:not([disabled]) {
           transform: translateY(-3px) scale(1.02);
-          border-color: rgba(251, 191, 36, 0.8);
+          border-color: rgba(255, 255, 255, 0.4);
           box-shadow: 
             0 12px 40px rgba(0, 0, 0, 0.6),
-            0 0 60px rgba(168, 85, 247, 0.35),
-            0 0 80px rgba(251, 191, 36, 0.2),
-            inset 0 1px 0 rgba(255, 255, 255, 0.15),
+            0 0 60px rgba(168, 85, 247, 0.4),
+            0 0 40px rgba(255, 255, 255, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2),
             inset 0 -2px 0 rgba(0, 0, 0, 0.2);
         }
 
@@ -922,17 +922,17 @@ export default function LoginClient() {
           z-index: 2;
           margin-left: 10px;
           font-size: 18px;
-          opacity: 0.7;
+          opacity: 0.6;
           transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
           background: none !important;
-          color: #fbbf24 !important;
-          -webkit-text-fill-color: #fbbf24 !important;
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
         }
 
         .login-cta:hover:not([disabled]) .login-cta-arrow {
           transform: translateX(6px);
           opacity: 1;
-          text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+          text-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
         }
 
         /* Error & Success Messages */
