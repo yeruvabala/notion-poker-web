@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import WebKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -7,15 +8,40 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Set window background to dark to prevent white flash between splash and WebView
-        window?.backgroundColor = UIColor(red: 10/255, green: 10/255, blue: 15/255, alpha: 1.0)
+        let darkColor = UIColor(red: 10/255, green: 10/255, blue: 15/255, alpha: 1.0)
         
-        // Also set the view background if available
+        // Set window background to dark
+        window?.backgroundColor = darkColor
+        
+        // Set root view controller background
         if let rootViewController = window?.rootViewController {
-            rootViewController.view.backgroundColor = UIColor(red: 10/255, green: 10/255, blue: 15/255, alpha: 1.0)
+            rootViewController.view.backgroundColor = darkColor
+            
+            // Set all subviews to dark (catches WebView)
+            setAllBackgroundsDark(view: rootViewController.view, color: darkColor)
+        }
+        
+        // Delayed check to catch WebView after it initializes
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            if let rootVC = self?.window?.rootViewController {
+                self?.setAllBackgroundsDark(view: rootVC.view, color: darkColor)
+            }
         }
         
         return true
+    }
+    
+    private func setAllBackgroundsDark(view: UIView, color: UIColor) {
+        view.backgroundColor = color
+        // WKWebView has an opaque white background, set it to clear
+        if let webView = view as? WKWebView {
+            webView.isOpaque = false
+            webView.backgroundColor = color
+            webView.scrollView.backgroundColor = color
+        }
+        for subview in view.subviews {
+            setAllBackgroundsDark(view: subview, color: color)
+        }
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
