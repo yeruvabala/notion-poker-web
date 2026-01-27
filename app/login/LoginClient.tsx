@@ -658,11 +658,11 @@ export default function LoginClient() {
         .login-input-wrapper {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
           background: rgba(15, 15, 20, 0.6);
           border: 1px solid rgba(100, 100, 110, 0.25);
-          border-radius: 12px;
-          padding: 0 16px;
+          border-radius: 10px;
+          padding: 0 14px;
           transition: all 0.3s ease;
         }
 
@@ -731,8 +731,8 @@ export default function LoginClient() {
 
         .login-input {
           flex: 1;
-          padding: 14px 0;
-          font-size: 15px;
+          padding: 12px 0;
+          font-size: 14px;
           background: transparent !important;
           color: #E2E8F0 !important;
           -webkit-text-fill-color: #E2E8F0 !important;
@@ -788,10 +788,10 @@ export default function LoginClient() {
         }
 
         .login-cta {
-          margin-top: 20px;
-          padding: 18px 28px;
-          border-radius: 16px;
-          font-size: 17px;
+          margin-top: 16px;
+          padding: 14px 22px;
+          border-radius: 12px;
+          font-size: 15px;
           font-weight: 700;
           letter-spacing: 0.5px;
           text-transform: uppercase;
