@@ -763,8 +763,8 @@ export default function LoginClient() {
         }
 
         @keyframes btn-glow-pulse {
-          0%, 100% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.05); }
-          50% { box-shadow: 0 0 30px rgba(255, 255, 255, 0.1); }
+          0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.15); }
+          50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.25); }
         }
 
         .login-cta {
@@ -773,69 +773,80 @@ export default function LoginClient() {
           border-radius: 14px;
           font-size: 17px;
           font-weight: 600;
+          letter-spacing: 0.3px;
           cursor: pointer;
           width: 100%;
           position: relative;
           overflow: hidden;
-          /* Glassmorphism: frosted glass effect */
-          background: rgba(255, 255, 255, 0.08);
+          /* Dark glass with blue accent */
+          background: rgba(20, 20, 25, 0.85);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.15);
+          border: 1px solid rgba(59, 130, 246, 0.3);
+          /* CRITICAL: Override globals.css gradient text - solid white */
           color: #ffffff !important;
           -webkit-text-fill-color: #ffffff !important;
-          text-shadow: none;
+          background-clip: border-box !important;
+          -webkit-background-clip: border-box !important;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
           box-shadow: 
-            0 4px 24px rgba(0, 0, 0, 0.2),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            0 4px 20px rgba(0, 0, 0, 0.4),
+            0 0 15px rgba(59, 130, 246, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05);
           transition: all 0.3s ease;
-          animation: btn-glow-pulse 4s ease-in-out infinite;
+          animation: btn-glow-pulse 3s ease-in-out infinite;
         }
 
-        /* Subtle inner glow on top edge */
+        /* Top edge highlight */
         .login-cta::before {
           content: '';
           position: absolute;
           top: 0;
-          left: 10%;
-          right: 10%;
+          left: 15%;
+          right: 15%;
           height: 1px;
           background: linear-gradient(90deg, 
             transparent 0%, 
-            rgba(255, 255, 255, 0.4) 50%, 
+            rgba(59, 130, 246, 0.5) 50%, 
             transparent 100%);
           pointer-events: none;
         }
 
         .login-cta:hover:not([disabled]) {
-          background: rgba(255, 255, 255, 0.12);
-          border-color: rgba(255, 255, 255, 0.25);
+          background: rgba(30, 30, 40, 0.9);
+          border-color: rgba(59, 130, 246, 0.5);
           transform: translateY(-2px);
           box-shadow: 
-            0 8px 32px rgba(0, 0, 0, 0.3),
-            0 0 40px rgba(255, 255, 255, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            0 8px 32px rgba(0, 0, 0, 0.5),
+            0 0 40px rgba(59, 130, 246, 0.25),
+            inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
 
         .login-cta:active:not([disabled]) {
           transform: translateY(0);
-          background: rgba(255, 255, 255, 0.06);
+          background: rgba(15, 15, 20, 0.9);
         }
 
         .login-cta[disabled] {
           opacity: 0.4;
           cursor: not-allowed;
           animation: none;
+          border-color: rgba(100, 100, 100, 0.2);
         }
 
         .login-cta[disabled]::before {
           display: none;
         }
 
-        /* Button content layout */
+        /* Button text - ensure no gradient override */
         .login-cta-text {
           position: relative;
           z-index: 1;
+          background: none !important;
+          -webkit-background-clip: border-box !important;
+          background-clip: border-box !important;
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
         }
 
         .login-cta-arrow {
@@ -843,8 +854,11 @@ export default function LoginClient() {
           z-index: 1;
           margin-left: 8px;
           font-size: 18px;
-          opacity: 0.7;
+          opacity: 0.6;
           transition: all 0.3s ease;
+          background: none !important;
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
         }
 
         .login-cta:hover:not([disabled]) .login-cta-arrow {
