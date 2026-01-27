@@ -205,17 +205,15 @@ export default function AppLoadingOverlay() {
                 }
 
                 /* LOGGED IN: Float to HOME PAGE header position */
-                /* mobile-header: fixed top, padding-top: safe-area + 8px */
-                /* mobile-header-content: padding: 30px 16px 6px */
-                /* Total: ~70px + safe-area from top of screen */
+                /* Suits need to go HIGHER (near top of screen) */
                 .suits-container.float-to-home {
-                    transform: translateY(calc(-50vh + 80px + env(safe-area-inset-top, 47px))) scale(0.45);
+                    transform: translateY(-42vh) scale(0.45);
                 }
 
                 /* LOGGED OUT: Float to LOGIN PAGE suits position */
-                /* Login page has title + suits around 30% from top */
+                /* Suits need to go LOWER (about 35% from top) */
                 .suits-container.float-to-login {
-                    transform: translateY(calc(-50vh + 30vh)) scale(0.5);
+                    transform: translateY(-15vh) scale(0.5);
                 }
 
                 .suit {
