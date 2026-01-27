@@ -1478,7 +1478,13 @@ export default function MobileHandBuilder({
                 (isLoading || gtoStrategy) && (
                     <div ref={gtoCardRef} className={`gto-inline-card ${isLoading ? 'loading' : ''}`}>
                         <div className="gto-inline-header">
-                            <span className="gto-inline-icon">🎯</span>
+                            <span className="gto-inline-icon">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <circle cx="12" cy="12" r="6" />
+                                    <circle cx="12" cy="12" r="2" />
+                                </svg>
+                            </span>
                             <span className="gto-inline-title">GTO Strategy</span>
                         </div>
 
@@ -1496,7 +1502,13 @@ export default function MobileHandBuilder({
                                 {exploitDeviation && (
                                     <div className="gto-exploit-section">
                                         <div className="gto-exploit-header">
-                                            <span>📊</span>
+                                            <span>
+                                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M3 3v18h18" />
+                                                    <rect x="7" y="10" width="3" height="8" />
+                                                    <rect x="14" y="5" width="3" height="13" />
+                                                </svg>
+                                            </span>
                                             <span>Play Review</span>
                                         </div>
                                         {renderMobileGTO(exploitDeviation)}
