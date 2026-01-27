@@ -205,15 +205,13 @@ export default function AppLoadingOverlay() {
                 }
 
                 /* LOGGED IN: Float to HOME PAGE header position */
-                /* Floating suits were TOO HIGH, need to go LOWER */
                 .suits-container.float-to-home {
-                    transform: translateY(-35vh) scale(0.45);
+                    transform: translateY(-37.5vh) scale(0.45);
                 }
 
                 /* LOGGED OUT: Float to LOGIN PAGE suits position */
-                /* Floating suits were TOO LOW, need to go HIGHER */
                 .suits-container.float-to-login {
-                    transform: translateY(-25vh) scale(0.5);
+                    transform: translateY(-26vh) scale(0.5);
                 }
 
                 .suit {
