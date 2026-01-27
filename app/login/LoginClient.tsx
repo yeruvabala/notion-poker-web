@@ -757,91 +757,159 @@ export default function LoginClient() {
         }
 
         /* CTA Button - PREMIUM ANIMATED with shimmer wave */
-        @keyframes btn-shimmer-wave {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
+        /* ============================================
+           🎰 THE ROYAL FLUSH BUTTON
+           A button that feels like going ALL IN
+           ============================================ */
+
+        @keyframes gold-shimmer {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
         }
 
-        @keyframes btn-glow-pulse {
-          0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.15); }
-          50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.25); }
+        @keyframes subtle-pulse {
+          0%, 100% { 
+            box-shadow: 
+              0 4px 20px rgba(0, 0, 0, 0.5),
+              0 0 30px rgba(168, 85, 247, 0.15),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+          }
+          50% { 
+            box-shadow: 
+              0 4px 25px rgba(0, 0, 0, 0.6),
+              0 0 40px rgba(168, 85, 247, 0.25),
+              inset 0 1px 0 rgba(255, 255, 255, 0.15);
+          }
+        }
+
+        @keyframes border-glow {
+          0%, 100% { border-color: rgba(251, 191, 36, 0.3); }
+          50% { border-color: rgba(251, 191, 36, 0.6); }
         }
 
         .login-cta {
-          margin-top: 16px;
-          padding: 16px 24px;
-          border-radius: 14px;
+          margin-top: 20px;
+          padding: 18px 28px;
+          border-radius: 16px;
           font-size: 17px;
-          font-weight: 600;
-          letter-spacing: 0.3px;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
           cursor: pointer;
           width: 100%;
           position: relative;
           overflow: hidden;
-          /* Dark glass with blue accent */
-          background: rgba(20, 20, 25, 0.85);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border: 1px solid rgba(59, 130, 246, 0.3);
-          /* CRITICAL: Override globals.css gradient text - solid white */
+          /* Deep casino purple/indigo gradient - VIP energy */
+          background: linear-gradient(135deg, 
+            #1e1b4b 0%,
+            #312e81 25%,
+            #4c1d95 50%,
+            #312e81 75%,
+            #1e1b4b 100%);
+          background-size: 200% 200%;
+          /* Gold accent border */
+          border: 2px solid rgba(251, 191, 36, 0.4);
+          /* Solid white text - no gradient override issues */
           color: #ffffff !important;
           -webkit-text-fill-color: #ffffff !important;
-          background-clip: border-box !important;
-          -webkit-background-clip: border-box !important;
-          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+          background-clip: padding-box !important;
+          -webkit-background-clip: padding-box !important;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+          /* 3D depth effect */
           box-shadow: 
-            0 4px 20px rgba(0, 0, 0, 0.4),
-            0 0 15px rgba(59, 130, 246, 0.15),
-            inset 0 1px 0 rgba(255, 255, 255, 0.05);
-          transition: all 0.3s ease;
-          animation: btn-glow-pulse 3s ease-in-out infinite;
+            0 4px 20px rgba(0, 0, 0, 0.5),
+            0 0 30px rgba(168, 85, 247, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1),
+            inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          animation: 
+            subtle-pulse 3s ease-in-out infinite,
+            border-glow 2s ease-in-out infinite;
         }
 
-        /* Top edge highlight */
+        /* Gold shimmer wave that sweeps across */
         .login-cta::before {
           content: '';
           position: absolute;
           top: 0;
-          left: 15%;
-          right: 15%;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(
+            105deg,
+            transparent 0%,
+            transparent 35%,
+            rgba(251, 191, 36, 0.1) 45%,
+            rgba(251, 191, 36, 0.3) 50%,
+            rgba(251, 191, 36, 0.1) 55%,
+            transparent 65%,
+            transparent 100%
+          );
+          background-size: 200% 100%;
+          animation: gold-shimmer 3s ease-in-out infinite;
+          pointer-events: none;
+          border-radius: 14px;
+        }
+
+        /* Subtle inner glow at top */
+        .login-cta::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 20%;
+          right: 20%;
           height: 1px;
-          background: linear-gradient(90deg, 
-            transparent 0%, 
-            rgba(59, 130, 246, 0.5) 50%, 
+          background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(251, 191, 36, 0.6) 50%,
             transparent 100%);
           pointer-events: none;
         }
 
+        /* HOVER: Button lifts and glows intensely */
         .login-cta:hover:not([disabled]) {
-          background: rgba(30, 30, 40, 0.9);
-          border-color: rgba(59, 130, 246, 0.5);
-          transform: translateY(-2px);
+          transform: translateY(-3px) scale(1.02);
+          border-color: rgba(251, 191, 36, 0.8);
           box-shadow: 
-            0 8px 32px rgba(0, 0, 0, 0.5),
-            0 0 40px rgba(59, 130, 246, 0.25),
-            inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            0 12px 40px rgba(0, 0, 0, 0.6),
+            0 0 60px rgba(168, 85, 247, 0.35),
+            0 0 80px rgba(251, 191, 36, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.15),
+            inset 0 -2px 0 rgba(0, 0, 0, 0.2);
         }
 
+        /* Shimmer speeds up on hover */
+        .login-cta:hover:not([disabled])::before {
+          animation-duration: 1.5s;
+        }
+
+        /* ACTIVE: Push chips forward feel */
         .login-cta:active:not([disabled]) {
-          transform: translateY(0);
-          background: rgba(15, 15, 20, 0.9);
+          transform: translateY(1px) scale(0.98);
+          box-shadow: 
+            0 2px 10px rgba(0, 0, 0, 0.5),
+            0 0 20px rgba(168, 85, 247, 0.2),
+            inset 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
+        /* DISABLED state */
         .login-cta[disabled] {
           opacity: 0.4;
           cursor: not-allowed;
           animation: none;
           border-color: rgba(100, 100, 100, 0.2);
+          background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
         }
 
-        .login-cta[disabled]::before {
+        .login-cta[disabled]::before,
+        .login-cta[disabled]::after {
           display: none;
         }
 
-        /* Button text - ensure no gradient override */
+        /* Button text styling */
         .login-cta-text {
           position: relative;
-          z-index: 1;
+          z-index: 2;
           background: none !important;
           -webkit-background-clip: border-box !important;
           background-clip: border-box !important;
@@ -851,19 +919,20 @@ export default function LoginClient() {
 
         .login-cta-arrow {
           position: relative;
-          z-index: 1;
-          margin-left: 8px;
+          z-index: 2;
+          margin-left: 10px;
           font-size: 18px;
-          opacity: 0.6;
-          transition: all 0.3s ease;
+          opacity: 0.7;
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
           background: none !important;
-          color: #ffffff !important;
-          -webkit-text-fill-color: #ffffff !important;
+          color: #fbbf24 !important;
+          -webkit-text-fill-color: #fbbf24 !important;
         }
 
         .login-cta:hover:not([disabled]) .login-cta-arrow {
-          transform: translateX(4px);
+          transform: translateX(6px);
           opacity: 1;
+          text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
         }
 
         /* Error & Success Messages */
