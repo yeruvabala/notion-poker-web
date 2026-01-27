@@ -20,6 +20,13 @@ const config: CapacitorConfig = {
       splashImmersive: true,              // Immersive mode on Android
       launchFadeOutDuration: 300          // Smooth fade out
     }
+  },
+  ios: {
+    backgroundColor: '#0a0a0f',           // Dark background for WebView
+    contentInset: 'automatic'
+  },
+  android: {
+    backgroundColor: '#0a0a0f'            // Dark background for WebView
   }
 };
 

@@ -7,7 +7,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Set window background to dark to prevent white flash between splash and WebView
+        window?.backgroundColor = UIColor(red: 10/255, green: 10/255, blue: 15/255, alpha: 1.0)
+        
+        // Also set the view background if available
+        if let rootViewController = window?.rootViewController {
+            rootViewController.view.backgroundColor = UIColor(red: 10/255, green: 10/255, blue: 15/255, alpha: 1.0)
+        }
+        
         return true
     }
 
