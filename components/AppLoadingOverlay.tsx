@@ -156,27 +156,27 @@ export default function AppLoadingOverlay() {
                 .bg-symbol {
                     position: absolute;
                     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-                    opacity: 0.15;
+                    opacity: 0;
                     transition: none;
                 }
 
-                /* Float up animation - starts after a delay */
+                /* Fade in animation */
                 .bg-symbol.float-up {
-                    animation: symbolFloatUp 3s ease-in forwards;
-                    animation-delay: var(--delay, 0.5s);
+                    animation: symbolFadeInThenUp 4s ease-out forwards;
                 }
 
-                @keyframes symbolFloatUp {
+                @keyframes symbolFadeInThenUp {
                     0% {
-                        opacity: 0.15;
-                        transform: translateY(0);
+                        opacity: 0;
+                        transform: translateY(0) scale(0.8);
                     }
-                    50% {
+                    25% {
                         opacity: 0.25;
+                        transform: translateY(0) scale(1);
                     }
                     100% {
                         opacity: 0;
-                        transform: translateY(-120vh);
+                        transform: translateY(-120vh) scale(1);
                     }
                 }
 
