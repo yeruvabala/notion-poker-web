@@ -12,13 +12,13 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2500,           // Show for 2.5 seconds
-      launchAutoHide: true,               // Auto hide after duration
+      launchShowDuration: 0,              // Don't auto-hide based on duration
+      launchAutoHide: false,              // We'll hide manually from JS when ready
       backgroundColor: '#0a0a0f',         // Match our dark theme
       showSpinner: false,                 // No spinner needed
       splashFullScreen: true,             // Full screen splash
       splashImmersive: true,              // Immersive mode on Android
-      launchFadeOutDuration: 300          // Smooth fade out
+      launchFadeOutDuration: 300          // Smooth fade out when we do hide
     }
   },
   ios: {

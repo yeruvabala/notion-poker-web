@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { getPatternSymbols } from '@/lib/loadingSymbols';
+import { Capacitor } from '@capacitor/core';
+import { SplashScreen } from '@capacitor/splash-screen';
 
 // Extend Window interface for pattern index
 declare global {
@@ -39,6 +41,11 @@ export default function AppLoadingOverlay() {
         const instantOverlay = document.getElementById('__instant-overlay');
         if (instantOverlay) {
             instantOverlay.remove();
+        }
+
+        // NOW hide the native splash - dark background + symbols are ready!
+        if (Capacitor.isNativePlatform()) {
+            SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => { });
         }
 
         // Quick sync check for auth
