@@ -133,7 +133,7 @@ export default function AppLoadingOverlay() {
                     right: 0;
                     bottom: 0;
                     z-index: 999999;
-                    background: #0a0a0f;
+                    background: #1c1c1c;
                     display: flex;
                     align-items: center;
                     justify-content: center;

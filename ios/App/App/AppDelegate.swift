@@ -8,7 +8,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        let darkColor = UIColor(red: 10/255, green: 10/255, blue: 15/255, alpha: 1.0)
+        // #1c1c1c - matches home page background
+        let darkColor = UIColor(red: 28/255, green: 28/255, blue: 28/255, alpha: 1.0)
         
         // Set window background to dark
         window?.backgroundColor = darkColor

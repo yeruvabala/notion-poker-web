@@ -20,28 +20,31 @@ export const metadata = {
   }
 };
 
+// Unified background color - matches home page
+const BG_COLOR = '#1c1c1c';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   // Pick a random pattern (0-16) on each page load
   const patternIndex = Math.floor(Math.random() * SCATTER_PATTERNS.length);
 
   return (
-    <html lang="en" className={inter.variable} style={{ background: '#0a0a0f' }}>
+    <html lang="en" className={inter.variable} style={{ background: BG_COLOR }}>
       <head>
-        {/* Dark background CSS - no symbols, React will fade them in */}
+        {/* Dark background CSS - matches home page */}
         <style dangerouslySetInnerHTML={{
           __html: `
-          html, body { background: #0a0a0f !important; }
+          html, body { background: ${BG_COLOR} !important; }
           #__instant-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             z-index: 999998;
-            background: #0a0a0f;
+            background: ${BG_COLOR};
           }
         `}} />
         {/* Pass pattern index to React via global variable */}
         <script dangerouslySetInnerHTML={{ __html: `window.__PATTERN_INDEX__=${patternIndex};` }} />
       </head>
-      <body className="min-h-screen bg-[#0a0a0f] text-[#E2E8F0] antialiased" style={{ background: '#0a0a0f' }}>
+      <body className="min-h-screen bg-[#1c1c1c] text-[#E2E8F0] antialiased" style={{ background: BG_COLOR }}>
         {/* Just dark overlay - React will fade in the symbols */}
         <div id="__instant-overlay" />
         <AppLoadingOverlay />
