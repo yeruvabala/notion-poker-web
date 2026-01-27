@@ -17,15 +17,19 @@ export default function AppLoadingOverlay() {
     const [isMounted, setIsMounted] = useState(false);
 
     // Generate random positions for floating symbols
+    // All 13 ranks + 4 suits = 17 symbols
     const floatingSymbols = useMemo(() => {
-        const symbols = ['♠', '♥', '♦', '♣', 'A', 'K', 'Q', 'J', '♠', '♥', '♦', '♣'];
+        const suits = ['♠', '♥', '♦', '♣'];
+        const ranks = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
+        const symbols = [...suits, ...ranks];
+
         return symbols.map((symbol, i) => ({
             symbol,
             left: Math.random() * 85 + 5, // 5% to 90%
             startTop: Math.random() * 30 + 70, // Start from 70-100% (bottom area)
             duration: 3 + Math.random() * 2, // 3-5 seconds
-            delay: Math.random() * 2, // 0-2 second delay
-            size: 18 + Math.random() * 14, // 18-32px
+            delay: Math.random() * 2.5, // 0-2.5 second delay
+            size: 16 + Math.random() * 14, // 16-30px
             rotation: Math.random() * 360, // Random initial rotation
             isRed: symbol === '♥' || symbol === '♦',
         }));
