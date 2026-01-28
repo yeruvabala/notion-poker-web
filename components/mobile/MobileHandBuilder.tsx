@@ -1538,7 +1538,7 @@ export default function MobileHandBuilder({
                             <span>Select Your Position</span>
                         </div>
                         <div className="premium-modal-options">
-                            {positions.map(pos => (
+                            {positions.filter(p => p !== villainPosition).map(pos => (
                                 <button
                                     key={pos}
                                     className={`premium-modal-option ${heroPosition === pos ? 'selected' : ''}`}
