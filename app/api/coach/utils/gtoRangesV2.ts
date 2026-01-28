@@ -2014,6 +2014,80 @@ export function getFacingOpenAction(
 }
 
 /**
+ * Get MIXED action when facing an open raise - returns BOTH primary AND alternative
+ * Used for proper classification (so MistakeClassifier can mark alternatives as 'acceptable')
+ */
+export function getMixedFacingOpenAction(
+    hand: string,
+    heroPosition: string,
+    openerPosition: string
+): { primary: RangeAction; alternative?: RangeAction; scenario: string; found: boolean } {
+    const normalized = normalizeHand(hand);
+    const heroPos = normalizePosition(heroPosition);
+    const openerPos = normalizePosition(openerPosition);
+    const key = `${heroPos}_vs_${openerPos}`;
+
+    const rangeData = THREE_BET_RANGES_V2[key];
+
+    if (!rangeData) {
+        return {
+            found: false,
+            primary: { action: 'fold', frequency: 1.0 },
+            scenario: key
+        };
+    }
+
+    const threeBetFreq = rangeData['3bet']?.[normalized] || 0;
+    const callFreq = rangeData['call']?.[normalized] || 0;
+    const stats = SPOT_AGGREGATE_STATS[key];
+    const sizing = stats?.raiseSize || '10bb';
+
+    // If both exist, return as primary/alternative
+    if (threeBetFreq > 0 && callFreq > 0) {
+        if (callFreq >= threeBetFreq) {
+            // Call is primary, raise is alternative
+            return {
+                found: true,
+                primary: { action: 'call', frequency: callFreq },
+                alternative: { action: 'raise', frequency: threeBetFreq, sizing },
+                scenario: key
+            };
+        } else {
+            // Raise is primary, call is alternative
+            return {
+                found: true,
+                primary: { action: 'raise', frequency: threeBetFreq, sizing },
+                alternative: { action: 'call', frequency: callFreq },
+                scenario: key
+            };
+        }
+    }
+
+    // Only one action exists
+    if (threeBetFreq > 0) {
+        return {
+            found: true,
+            primary: { action: 'raise', frequency: threeBetFreq, sizing },
+            scenario: key
+        };
+    }
+    if (callFreq > 0) {
+        return {
+            found: true,
+            primary: { action: 'call', frequency: callFreq },
+            scenario: key
+        };
+    }
+
+    // Fold
+    return {
+        found: true,
+        primary: { action: 'fold', frequency: 1.0 },
+        scenario: key
+    };
+}
+
+/**
  * Get action when CONSIDERING calling an open raise (Cold Call)
  * Uses the 'call' portion of THREE_BET_RANGES_V2
  */
@@ -2384,6 +2458,7 @@ export default {
     // Agent-compatible functions (match gtoRanges.ts interface)
     getOpeningAction,
     getFacingOpenAction,
+    getMixedFacingOpenAction,
     getColdCallAction,
     getMaking3BetAction,
     getVs3BetAction,

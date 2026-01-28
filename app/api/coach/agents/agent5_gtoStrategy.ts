@@ -22,7 +22,7 @@ import {
 } from '../types/agentContracts';
 import { getHandType } from '../utils/handUtils';
 import { evaluateHand } from '../utils/handEvaluator';
-import { getPreflopAction, getOpeningAction, getVs3BetAction, getFacingOpenAction, normalizeHand } from '../utils/gtoRangesV2';
+import { getPreflopAction, getOpeningAction, getVs3BetAction, getFacingOpenAction, getMixedFacingOpenAction, normalizeHand } from '../utils/gtoRangesV2';
 import { generatePreflopReasoning } from '../utils/PreflopReasoningEngine';
 
 const openai = new OpenAI({
@@ -684,6 +684,56 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
         }
         : undefined;
 
+    // For facing_action, use getMixedFacingOpenAction to get both primary and alternative
+    if (villainContextForRanges?.type === 'facing_action' && villainContextForRanges.villain) {
+        const mixedResult = getMixedFacingOpenAction(heroHand, heroPosition, villainContextForRanges.villain);
+
+        if (!mixedResult.found) {
+            return null;
+        }
+
+        const primaryAction = mixedResult.primary;
+        const alternativeAction = mixedResult.alternative;
+
+        const actionName = primaryAction.action === 'raise' || primaryAction.action === '3bet' || primaryAction.action === '4bet'
+            ? 'raise'
+            : primaryAction.action;
+
+        const reasoning = generatePreflopReasoning(heroHand, actionName as any, heroPosition, villainContextForRanges.villain, primaryAction.frequency);
+
+        // Build result with alternative if exists
+        const result: GTOStrategy = {
+            preflop: {
+                initial_action: {
+                    primary: {
+                        action: actionName as any,
+                        sizing: primaryAction.sizing,
+                        frequency: primaryAction.frequency,
+                        reasoning: reasoning
+                    }
+                }
+            }
+        };
+
+        // Add alternative if it exists (for mixed strategies)
+        if (alternativeAction && alternativeAction.frequency >= 0.1) {  // Only include if >= 10%
+            const altActionName = alternativeAction.action === '3bet' || alternativeAction.action === '4bet'
+                ? 'raise'
+                : alternativeAction.action;
+            const altReasoning = generatePreflopReasoning(heroHand, altActionName as any, heroPosition, villainContextForRanges.villain, alternativeAction.frequency);
+
+            result.preflop.initial_action.alternative = {
+                action: altActionName as any,
+                sizing: alternativeAction.sizing,
+                frequency: alternativeAction.frequency,
+                reasoning: altReasoning
+            };
+        }
+
+        return result;
+    }
+
+    // Fallback to original getPreflopAction for other scenarios
     const rangeResult = getPreflopAction(heroHand, heroPosition, villainContextForRanges);
 
     // If not found in ranges, return null to let LLM handle it
