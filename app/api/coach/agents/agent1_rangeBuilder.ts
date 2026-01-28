@@ -17,7 +17,7 @@
 import OpenAI from 'openai';
 import { Agent1Input, Agent1Output, RangeData, HeroClassification, BoardAnalysis, Action, Position } from '../types/agentContracts';
 import { RangeEngine, Range, RangeStats, BucketCategory } from '../utils/RangeEngine';
-import { getOpeningAction } from '../utils/gtoRanges';
+import { getOpeningAction } from '../utils/gtoRangesV2';
 import { classifyHand } from '../utils/HandClassifierNew';  // Phase 12
 
 const openai = new OpenAI({

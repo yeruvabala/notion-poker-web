@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { RFI_RANGES, VS_THREE_BET_RANGES } from '@/app/api/coach/utils/gtoRanges';
+import { RFI_RANGES, VS_THREE_BET_RANGES } from '@/app/api/coach/utils/gtoRangesV2';
 import MobileRangesPage from './mobile-page';
 
 // =============================================================================

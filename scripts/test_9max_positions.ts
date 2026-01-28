@@ -137,7 +137,7 @@ let failed = 0;
 
 // Also test that normalization works correctly for ranges
 console.log('\n🔄 Testing Range Normalization:\n');
-import { normalizePosition } from '../app/api/coach/utils/gtoRanges';
+import { normalizePosition } from '../app/api/coach/utils/gtoRangesV2';
 
 const normTests = [
     { input: 'UTG+1', expected: 'UTG' },

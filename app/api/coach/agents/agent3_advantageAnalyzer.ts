@@ -192,6 +192,123 @@ function detectBlockers(heroHand: string, board: string): BlockerEffects {
 }
 
 /**
+ * Calculate Hero's Specific Spot Analysis
+ * Analyzes hero's ACTUAL hand vs villain's range (not range vs range)
+ */
+function calculateHeroSpotAnalysis(
+    heroHand: string,
+    villainRange: string | RangeInfo,
+    board: string,
+    prevStrength?: string
+): {
+    hand_strength: string;
+    vs_villain_range: string;
+    board_impact?: string;
+    shift_impact?: string;
+} {
+    // Normalize hero hand
+    const normalized = heroHand.replace(/\\s/g, '');
+    if (normalized.length < 4) {
+        return {
+            hand_strength: 'Unknown',
+            vs_villain_range: 'Unable to calculate'
+        };
+    }
+
+    const rank1 = normalized[0].toUpperCase();
+    const rank2 = normalized[2].toUpperCase();
+    const boardCards = board.split(/\\s+/).filter(c => c.length > 0);
+    const boardRanks = boardCards.map(c => c[0].toUpperCase());
+
+    // Determine hand strength category
+    let handStrength = 'High Card';
+    const isPair = rank1 === rank2;
+    const hitsTop = boardRanks.length > 0 && (rank1 === boardRanks[0] || rank2 === boardRanks[0]);
+    const hitsSecond = boardRanks.length > 1 && (rank1 === boardRanks[1] || rank2 === boardRanks[1]);
+    const hasOverpair = isPair && boardRanks.every(r => getRankValue(rank1) > getRankValue(r));
+
+    if (isPair && boardRanks.includes(rank1)) {
+        handStrength = 'Set';
+    } else if (hasOverpair) {
+        handStrength = 'Overpair';
+    } else if (hitsTop) {
+        // Top pair - check kicker
+        const kicker = rank1 === boardRanks[0] ? rank2 : rank1;
+        if (kicker === 'A') handStrength = 'Top Pair Top Kicker (TPTK)';
+        else if (kicker === 'K' || kicker === 'Q') handStrength = 'Top Pair Good Kicker';
+        else handStrength = 'Top Pair Weak Kicker';
+    } else if (hitsSecond) {
+        handStrength = 'Second Pair';
+    } else if (isPair) {
+        handStrength = 'Underpair';
+    } else if (rank1 === 'A' || rank2 === 'A') {
+        handStrength = 'Ace High';
+    }
+
+    // Estimate vs villain range (simplified)
+    // Use villain stats if available
+    const villainStats = typeof villainRange === 'string' ? null : villainRange.stats;
+    let vsRange = 'Position estimated';
+
+    if (villainStats) {
+        const villainMonster = villainStats.distribution.monster || 0;
+        const villainStrong = villainStats.distribution.strong || 0;
+
+        if (handStrength.includes('Set') || handStrength.includes('Overpair')) {
+            vsRange = `Ahead of ~${(100 - villainMonster).toFixed(0)}% of villain range`;
+        } else if (handStrength.includes('Top Pair')) {
+            vsRange = `Ahead of ~${(100 - villainMonster - villainStrong * 0.5).toFixed(0)}% of villain range`;
+        } else if (handStrength.includes('Second Pair')) {
+            vsRange = `Behind ${(villainMonster + villainStrong).toFixed(0)}% of villain range`;
+        } else {
+            vsRange = `Marginal - behind ${(villainMonster + villainStrong + 20).toFixed(0)}% of villain range`;
+        }
+    }
+
+    // Detect shift impact
+    let shiftImpact: string | undefined;
+    if (prevStrength) {
+        const wasAhead = prevStrength.includes('Top Pair') || prevStrength.includes('Set') || prevStrength.includes('Overpair');
+        const isNowAhead = handStrength.includes('Top Pair') || handStrength.includes('Set') || handStrength.includes('Overpair');
+
+        if (wasAhead && !isNowAhead) {
+            shiftImpact = 'Your hand WEAKENED - you went from AHEAD to BEHIND';
+        } else if (!wasAhead && isNowAhead) {
+            shiftImpact = 'Your hand IMPROVED - you went from BEHIND to AHEAD';
+        }
+    }
+
+    // Board impact (for turn/river)
+    let boardImpact: string | undefined;
+    if (boardCards.length > 3) {
+        const newCard = boardCards[boardCards.length - 1];
+        const newRank = newCard[0].toUpperCase();
+
+        if (newRank === 'A' && rank1 !== 'A' && rank2 !== 'A') {
+            boardImpact = `${newCard} may have helped villain's Ax hands`;
+        } else if (newCard[0] === rank1 || newCard[0] === rank2) {
+            boardImpact = `${newCard} improved your hand!`;
+        }
+    }
+
+    return {
+        hand_strength: handStrength,
+        vs_villain_range: vsRange,
+        board_impact: boardImpact,
+        shift_impact: shiftImpact
+    };
+}
+
+// Helper for rank comparison
+function getRankValue(rank: string): number {
+    const values: Record<string, number> = {
+        'A': 14, 'K': 13, 'Q': 12, 'J': 11, 'T': 10,
+        '9': 9, '8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2
+    };
+    return values[rank.toUpperCase()] || 0;
+}
+
+/**
  * Detect if advantages shifted between streets
  */
 function detectShift(
@@ -266,6 +383,30 @@ export async function agent3_advantageAnalyzer(input: Agent3Input): Promise<Adva
         // Blocker Effects
         if (input.heroHand && input.boardAnalysis.flop?.cards) {
             result.blocker_effects = detectBlockers(input.heroHand, input.boardAnalysis.flop.cards);
+        }
+
+        // Hero-Specific Spot Analysis (NEW)
+        if (input.heroHand && input.boardAnalysis.flop?.cards) {
+            // Get the current board (flop + turn + river if available)
+            let currentBoard = input.boardAnalysis.flop.cards;
+            if (input.boardAnalysis.turn?.card) {
+                currentBoard += ' ' + input.boardAnalysis.turn.card;
+            }
+            if (input.boardAnalysis.river?.card) {
+                currentBoard += ' ' + input.boardAnalysis.river.card;
+            }
+
+            // Get villain range from latest street
+            const villainRange = input.ranges.river?.villain_range ||
+                input.ranges.turn?.villain_range ||
+                input.ranges.flop?.villain_range ||
+                input.ranges.preflop.villain_range;
+
+            result.hero_spot_analysis = calculateHeroSpotAnalysis(
+                input.heroHand,
+                villainRange,
+                currentBoard
+            );
         }
 
         const duration = Date.now() - startTime;

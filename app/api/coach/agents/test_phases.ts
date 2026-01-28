@@ -9,7 +9,7 @@
 
 import { classifyBoard } from '../utils/boardClassifier';
 import { classifyHand, getBucketStrategy } from '../utils/handClassifier';
-import { getOpeningAction, getPreflopAction, normalizeHand } from '../utils/gtoRanges';
+import { getOpeningAction, getPreflopAction, normalizeHand } from '../utils/gtoRangesV2';
 
 async function runValidationTests() {
     console.log('═══════════════════════════════════════════════════════════════');

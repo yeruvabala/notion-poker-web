@@ -22,7 +22,7 @@ import {
 } from '../types/agentContracts';
 import { getHandType } from '../utils/handUtils';
 import { evaluateHand } from '../utils/handEvaluator';
-import { getPreflopAction, getOpeningAction, getVs3BetAction, getFacingOpenAction, normalizeHand } from '../utils/gtoRanges';
+import { getPreflopAction, getOpeningAction, getVs3BetAction, getFacingOpenAction, normalizeHand } from '../utils/gtoRangesV2';
 import { generatePreflopReasoning } from '../utils/PreflopReasoningEngine';
 
 const openai = new OpenAI({
@@ -345,6 +345,22 @@ function formatContextForPrompt(input: Agent5Input): string {
         lines.push(`Beats: ${input.equity.breakdown.beats?.join(', ') || 'N/A'}`);
         lines.push(`Loses to: ${input.equity.breakdown.loses_to?.join(', ') || 'N/A'}`);
     }
+
+    // V2: Villain GTO Action Frequencies (NEW)
+    if (input.equity.villain_action_frequencies) {
+        const vaf = input.equity.villain_action_frequencies;
+        lines.push('');
+        lines.push('VILLAIN GTO FREQUENCIES (from solver data):');
+        lines.push(`- Villain Folds: ${(vaf.fold_pct * 100).toFixed(1)}%`);
+        lines.push(`- Villain Calls: ${(vaf.call_pct * 100).toFixed(1)}%`);
+        lines.push(`- Villain Raises: ${(vaf.raise_pct * 100).toFixed(1)}%`);
+        // Bluff profitability insight
+        if (vaf.fold_pct > 0.5) {
+            lines.push(`- BLUFF INSIGHT: Villain folds >50% - bluffs are often profitable!`);
+        } else if (vaf.fold_pct < 0.3) {
+            lines.push(`- BLUFF INSIGHT: Villain folds <30% - bluffs struggle, need value hands.`);
+        }
+    }
     lines.push('');
 
     // Advantages
@@ -358,8 +374,26 @@ function formatContextForPrompt(input: Agent5Input): string {
     if (input.advantages.turn?.shift) {
         lines.push(`Turn shift: ${input.advantages.turn.shift}`);
     }
+    if (input.advantages.river?.shift) {
+        lines.push(`River shift: ${input.advantages.river.shift}`);
+    }
     if (input.advantages.blocker_effects) {
         lines.push(`Blockers: ${input.advantages.blocker_effects.hero_blocks?.join(', ') || 'None'}`);
+    }
+
+    // NEW: Hero-Specific Spot Analysis
+    if (input.advantages.hero_spot_analysis) {
+        const hsa = input.advantages.hero_spot_analysis;
+        lines.push('');
+        lines.push('YOUR HAND ANALYSIS (Hero-Specific):');
+        lines.push(`- Hand Strength: ${hsa.hand_strength}`);
+        lines.push(`- Vs Villain Range: ${hsa.vs_villain_range}`);
+        if (hsa.board_impact) {
+            lines.push(`- Board Impact: ${hsa.board_impact}`);
+        }
+        if (hsa.shift_impact) {
+            lines.push(`- ⚠️ SHIFT: ${hsa.shift_impact}`);
+        }
     }
     lines.push('');
 

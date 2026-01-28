@@ -186,6 +186,7 @@ export interface Agent2Input {
     board: string;
     potSize: number;
     betSize: number;
+    preflopSpot?: string;                       // NEW: V2 spot key for action frequencies (e.g., 'BB_vs_BTN')
 }
 
 export interface EquityData {
@@ -199,6 +200,12 @@ export interface EquityData {
     decision: string;               // "CALL - equity exceeds pot odds"
     equity_vs_value?: number;       // NEW: Phase 10 (Split Equity)
     equity_vs_bluffs?: number;      // NEW: Phase 10 (Split Equity)
+    villain_action_frequencies?: {  // NEW: V2 GTO action frequencies for this spot
+        fold_pct: number;
+        call_pct: number;
+        raise_pct: number;
+        spot?: string;
+    };
     breakdown?: {
         beats: string[];              // ["Kx weak kicker", "missed draws"]
         loses_to: string[];           // ["AK", "two pair+", "sets"]
@@ -234,6 +241,13 @@ export interface AdvantageData {
     turn?: StreetAdvantage & { shift?: string };   // "Range advantage flipped to villain"
     river?: StreetAdvantage & { shift?: string };
     blocker_effects?: BlockerEffects;              // Added for blocker analysis
+    // NEW: Hero's specific hand vs villain range (with card removal)
+    hero_spot_analysis?: {
+        hand_strength: string;          // "Top Pair Good Kicker", "Second Pair", etc.
+        vs_villain_range: string;       // "Ahead of 62% of villain's range"
+        board_impact?: string;          // "A♠ hurt your hand (Ace helped villain's Ax)"
+        shift_impact?: string;          // "You went from AHEAD to BEHIND"
+    };
 }
 
 // Blocker Effects - tracks which strong hands hero blocks

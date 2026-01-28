@@ -6,7 +6,20 @@
  */
 
 import { evaluateHand, HandEvaluation } from './handEvaluator';
-import { getPreflopAction, normalizeHand, getOpeningFrequency, getVs3BetAction, getVs4BetAction, getMaking3BetAction, getColdCallAction } from './gtoRanges';
+import {
+    getPreflopAction,
+    normalizeHand,
+    getOpeningFrequency,
+    getVs3BetAction,
+    getVs4BetAction,
+    getMaking3BetAction,
+    getColdCallAction,
+    // V2 New: Advanced frequency helpers
+    getAbsoluteFrequency,
+    isHandInRange,
+    getAllSpotStats,
+    SPOT_AGGREGATE_STATS
+} from './gtoRangesV2';
 import { getHandType } from '../utils/handUtils';
 import { classifyBoard } from './boardClassifier';
 import { PreflopClassifier, HandClassification } from './PreflopClassifier';

@@ -8,7 +8,7 @@
  * 3. Functional Testing (actual range lookups)
  */
 
-import { normalizeHand, getOpeningAction, getFacingOpenAction, getVs3BetAction } from '../app/api/coach/utils/gtoRanges';
+import { normalizeHand, getOpeningAction, getFacingOpenAction, getVs3BetAction } from '../app/api/coach/utils/gtoRangesV2';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';

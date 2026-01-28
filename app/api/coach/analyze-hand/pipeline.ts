@@ -720,13 +720,18 @@ export async function runMultiAgentPipeline(input: HandInput): Promise<CoachOutp
         const potSize = input.potSizes.river || input.potSizes.turn ||
             input.potSizes.flop || input.potSizes.preflop || 10;
 
+        // Derive preflopSpot for V2 aggregate stats lookup
+        // Format: 'HERO_vs_VILLAIN' (e.g., 'BB_vs_BTN', 'CO_vs_UTG')
+        const preflopSpot = `${input.positions.hero}_vs_${input.positions.villain}`;
+
         const [equity, advantages] = await Promise.all([
             agent2_equityCalculator({
                 heroHand: input.cards,
                 villainRange: villainRange,
                 board: input.board,
                 potSize: potSize,
-                betSize: input.lastBet || 0
+                betSize: input.lastBet || 0,
+                preflopSpot  // NEW: V2 spot key for villain action frequencies
             }),
             agent3_advantageAnalyzer({
                 boardAnalysis,

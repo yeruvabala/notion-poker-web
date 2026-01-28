@@ -15,6 +15,7 @@
 
 import { Agent2Input, EquityData, RangeInfo } from '../types/agentContracts';
 import { RangeEngine, BucketCategory } from '../utils/RangeEngine';
+import { getAllSpotStats, SpotStats } from '../utils/gtoRangesV2';
 
 /**
  * Convert card notation from symbols to letters
@@ -189,6 +190,12 @@ export async function agent2_equityCalculator(input: Agent2Input): Promise<Equit
         const duration = Date.now() - startTime;
         console.log(`[Agent 2] Eq: ${(finalEquity * 100).toFixed(1)}% (Val: ${(finalValueEq * 100).toFixed(1)}%, Blf: ${(finalBluffEq * 100).toFixed(1)}%). Time: ${duration}ms`);
 
+        // 5. Get GTO villain action frequencies (if spot is known)
+        let villainActionFreqs: SpotStats | null = null;
+        if (input.preflopSpot) {
+            villainActionFreqs = getAllSpotStats(input.preflopSpot);
+        }
+
         return {
             equity_vs_range: finalEquity,
             equity_vs_value: finalValueEq,
@@ -199,6 +206,13 @@ export async function agent2_equityCalculator(input: Agent2Input): Promise<Equit
                 odds_ratio: oddsRatio,
                 equity_needed: equityNeeded
             },
+            // NEW: Villain's GTO action frequencies for this spot
+            villain_action_frequencies: villainActionFreqs ? {
+                fold_pct: villainActionFreqs.fold,
+                call_pct: villainActionFreqs.call,
+                raise_pct: villainActionFreqs.raise,
+                spot: input.preflopSpot
+            } : undefined,
             decision,
             breakdown: {
                 beats: bluffCombos.slice(0, 5),

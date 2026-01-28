@@ -7,7 +7,7 @@
  * poker theory principles to explain Folds, Calls, and Raises.
  */
 
-import { normalizeHand } from './gtoRanges';
+import { normalizeHand } from './gtoRangesV2';
 import { getHandType } from './handUtils';
 
 // =============================================================================
