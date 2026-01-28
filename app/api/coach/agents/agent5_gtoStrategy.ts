@@ -952,6 +952,20 @@ Return JSON in this EXACT format:
 
         const strategy = JSON.parse(content) as GTOStrategy;
 
+        // ==========================================================================
+        // STEP 3: Override preflop with V2 range data (for proper mixed strategies)
+        // This ensures MistakeClassifier gets the alternative action
+        // ==========================================================================
+        const preflopFromRanges = tryGeneratePreflopFromRanges(input);
+        if (preflopFromRanges?.preflop?.initial_action) {
+            // Override LLM's preflop with V2 data which includes alternative
+            strategy.preflop = {
+                ...strategy.preflop,
+                initial_action: preflopFromRanges.preflop.initial_action
+            };
+            console.log('[Agent 5: GTO Strategy] Preflop overridden with V2 range data');
+        }
+
         const duration = Date.now() - startTime;
         console.log(`[Agent 5: GTO Strategy] Completed in ${duration}ms`);
 
