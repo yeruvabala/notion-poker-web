@@ -5,12 +5,10 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 export const runtime = "nodejs";
 
-function monthBounds(ym?: string) {
+function monthBounds(ym?: string): [string | null, string | null] {
+  // If no month specified (All Time), return null bounds
   if (!ym) {
-    const now = new Date();
-    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-    const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
-    return [start.toISOString().slice(0, 10), next.toISOString().slice(0, 10)];
+    return [null, null];
   }
   const [y, m] = ym.split("-").map(Number);
   const start = new Date(Date.UTC(y, (m ?? 1) - 1, 1));
@@ -52,11 +50,21 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Build dynamic filter - only include date filter if fromDate/toDate are set
+  const hasDateFilter = fromDate && toDate;
+  const hasStakesFilter = !!stakes;
+
+  // Build param positions dynamically
+  let paramIdx = 1;
+  const userIdParam = `$${paramIdx++}::uuid`;
+  const dateFromParam = hasDateFilter ? `$${paramIdx++}::date` : null;
+  const dateToParam = hasDateFilter ? `$${paramIdx++}::date` : null;
+  const stakesParam = hasStakesFilter ? `$${paramIdx++}::text` : null;
+
   const baseFilters = `
-    user_id = $1::uuid
-    AND hand_date >= $2::date
-    AND hand_date < $3::date
-    ${stakes ? "AND stakes_bucket = $4::text" : ""}
+    user_id = ${userIdParam}
+    ${hasDateFilter ? `AND hand_date >= ${dateFromParam} AND hand_date < ${dateToParam}` : ""}
+    ${hasStakesFilter ? `AND stakes_bucket = ${stakesParam}` : ""}
   `;
 
   const tags_array_expr = `
@@ -77,9 +85,14 @@ export async function GET(req: Request) {
     )
   `;
 
-  const params = stakes
-    ? [user.id, fromDate, toDate, stakes]
-    : [user.id, fromDate, toDate];
+  // Build params array dynamically matching the filter positions
+  const params: (string | null)[] = [user.id];
+  if (hasDateFilter) {
+    params.push(fromDate!, toDate!);
+  }
+  if (hasStakesFilter) {
+    params.push(stakes!);
+  }
 
   const sql = {
     overview: `
