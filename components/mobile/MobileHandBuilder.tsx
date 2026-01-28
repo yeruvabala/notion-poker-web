@@ -1175,7 +1175,7 @@ export default function MobileHandBuilder({
                             onChange={(e) => setHeroPosition(e.target.value)}
                         >
                             <option value="">Position</option>
-                            {positions.map(p => <option key={p} value={p}>{p}</option>)}
+                            {positions.filter(p => p !== villainPosition).map(p => <option key={p} value={p}>{p}</option>)}
                         </select>
                     </div>
 
@@ -1240,7 +1240,7 @@ export default function MobileHandBuilder({
                             onChange={(e) => setVillainPosition(e.target.value)}
                         >
                             <option value="">Villain</option>
-                            {positions.map(p => <option key={p} value={p}>{p}</option>)}
+                            {positions.filter(p => p !== heroPosition).map(p => <option key={p} value={p}>{p}</option>)}
                         </select>
                     </div>
                 </div>
