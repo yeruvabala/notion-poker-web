@@ -450,6 +450,279 @@ export const LightningIcon: React.FC<IconProps> = ({ className = '', size = 16 }
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// STRATEGY INSIGHT ICON - Elegant lightbulb with glow
+// ═══════════════════════════════════════════════════════════════════════════════
+export const StrategyInsightIcon: React.FC<IconProps> = ({ className = '', size = 20 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <defs>
+            <linearGradient id="bulbGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="40%" stopColor="#e0e0e0" />
+                <stop offset="100%" stopColor="#a0a0a0" />
+            </linearGradient>
+            <linearGradient id="bulbGlow" x1="50%" y1="0%" x2="50%" y2="100%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="100%" stopColor="#c0c0c0" />
+            </linearGradient>
+        </defs>
+        {/* Bulb body */}
+        <path
+            d="M12 2C8.5 2 6 4.5 6 8C6 10.5 7.5 12.5 9 14V16H15V14C16.5 12.5 18 10.5 18 8C18 4.5 15.5 2 12 2Z"
+            fill="url(#bulbGrad)"
+            stroke="#909090"
+            strokeWidth="0.5"
+        />
+        {/* Bulb base */}
+        <rect x="9" y="16" width="6" height="2" rx="0.5" fill="url(#bulbGlow)" stroke="#808080" strokeWidth="0.3" />
+        <rect x="9" y="18" width="6" height="2" rx="0.5" fill="url(#bulbGlow)" stroke="#808080" strokeWidth="0.3" />
+        <path d="M10 20L10 21C10 21.5 10.5 22 11 22H13C13.5 22 14 21.5 14 21L14 20" stroke="#909090" strokeWidth="0.5" />
+        {/* Inner glow rays */}
+        <circle cx="12" cy="8" r="2" fill="#ffffff" opacity="0.6" />
+        <path d="M12 4V5M8 8H9M15 8H16M9.5 5.5L10.2 6.2M14.5 5.5L13.8 6.2" stroke="#ffffff" strokeWidth="0.8" strokeLinecap="round" opacity="0.5" />
+    </svg>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// KEY RULES ICON - Elegant checklist with checks
+// ═══════════════════════════════════════════════════════════════════════════════
+export const KeyRulesIcon: React.FC<IconProps> = ({ className = '', size = 20 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <defs>
+            <linearGradient id="rulesGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#e0e0e0" />
+                <stop offset="50%" stopColor="#a0a0a0" />
+                <stop offset="100%" stopColor="#c0c0c0" />
+            </linearGradient>
+        </defs>
+        {/* Document body */}
+        <rect x="4" y="2" width="16" height="20" rx="2" fill="#1a1a1a" stroke="url(#rulesGrad)" strokeWidth="1.5" />
+        {/* Checkmark 1 */}
+        <path d="M7 8L9 10L13 6" stroke="url(#rulesGrad)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Line 1 */}
+        <line x1="15" y1="8" x2="18" y2="8" stroke="url(#rulesGrad)" strokeWidth="1" strokeLinecap="round" opacity="0.6" />
+        {/* Checkmark 2 */}
+        <path d="M7 14L9 16L13 12" stroke="url(#rulesGrad)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Line 2 */}
+        <line x1="15" y1="14" x2="18" y2="14" stroke="url(#rulesGrad)" strokeWidth="1" strokeLinecap="round" opacity="0.6" />
+        {/* Circle 3 (unchecked) */}
+        <circle cx="9" cy="20" r="2" stroke="url(#rulesGrad)" strokeWidth="1" fill="none" opacity="0.5" />
+    </svg>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PRACTICE DRILL ICON - Dumbbell/training weight
+// ═══════════════════════════════════════════════════════════════════════════════
+export const PracticeDrillIcon: React.FC<IconProps> = ({ className = '', size = 20 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <defs>
+            <linearGradient id="drillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="30%" stopColor="#d0d0d0" />
+                <stop offset="70%" stopColor="#a0a0a0" />
+                <stop offset="100%" stopColor="#c0c0c0" />
+            </linearGradient>
+        </defs>
+        {/* Left weight */}
+        <rect x="2" y="8" width="4" height="8" rx="1" fill="url(#drillGrad)" stroke="#808080" strokeWidth="0.5" />
+        <rect x="4" y="10" width="2" height="4" fill="url(#drillGrad)" stroke="#808080" strokeWidth="0.3" />
+        {/* Bar */}
+        <rect x="6" y="11" width="12" height="2" fill="url(#drillGrad)" stroke="#909090" strokeWidth="0.3" />
+        {/* Right weight */}
+        <rect x="18" y="8" width="4" height="8" rx="1" fill="url(#drillGrad)" stroke="#808080" strokeWidth="0.5" />
+        <rect x="18" y="10" width="2" height="4" fill="url(#drillGrad)" stroke="#808080" strokeWidth="0.3" />
+        {/* Highlight */}
+        <line x1="3" y1="9" x2="3" y2="15" stroke="#ffffff" strokeWidth="0.5" opacity="0.4" />
+        <line x1="21" y1="9" x2="21" y2="15" stroke="#ffffff" strokeWidth="0.5" opacity="0.4" />
+    </svg>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SOURCES ICON - Open book with pages
+// ═══════════════════════════════════════════════════════════════════════════════
+export const SourcesIcon: React.FC<IconProps> = ({ className = '', size = 20 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <defs>
+            <linearGradient id="bookGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#e0e0e0" />
+                <stop offset="50%" stopColor="#a0a0a0" />
+                <stop offset="100%" stopColor="#c0c0c0" />
+            </linearGradient>
+        </defs>
+        {/* Left page */}
+        <path
+            d="M12 4C10 4 6 4.5 3 6V19C6 17.5 10 17 12 17"
+            fill="#1a1a1a"
+            stroke="url(#bookGrad)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+        />
+        {/* Right page */}
+        <path
+            d="M12 4C14 4 18 4.5 21 6V19C18 17.5 14 17 12 17"
+            fill="#1a1a1a"
+            stroke="url(#bookGrad)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+        />
+        {/* Center binding */}
+        <line x1="12" y1="4" x2="12" y2="17" stroke="url(#bookGrad)" strokeWidth="1" />
+        {/* Page lines - left */}
+        <line x1="5" y1="9" x2="10" y2="8.5" stroke="url(#bookGrad)" strokeWidth="0.5" opacity="0.5" strokeLinecap="round" />
+        <line x1="5" y1="12" x2="10" y2="11.5" stroke="url(#bookGrad)" strokeWidth="0.5" opacity="0.5" strokeLinecap="round" />
+        {/* Page lines - right */}
+        <line x1="14" y1="8.5" x2="19" y2="9" stroke="url(#bookGrad)" strokeWidth="0.5" opacity="0.5" strokeLinecap="round" />
+        <line x1="14" y1="11.5" x2="19" y2="12" stroke="url(#bookGrad)" strokeWidth="0.5" opacity="0.5" strokeLinecap="round" />
+    </svg>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// EYE REVEAL ICON - Eye for showing/revealing answers
+// ═══════════════════════════════════════════════════════════════════════════════
+export const EyeRevealIcon: React.FC<IconProps> = ({ className = '', size = 18 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <defs>
+            <linearGradient id="eyeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="50%" stopColor="#d0d0d0" />
+                <stop offset="100%" stopColor="#a0a0a0" />
+            </linearGradient>
+        </defs>
+        {/* Eye outline */}
+        <path
+            d="M2 12C2 12 5 6 12 6C19 6 22 12 22 12C22 12 19 18 12 18C5 18 2 12 2 12Z"
+            fill="none"
+            stroke="url(#eyeGrad)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+        />
+        {/* Iris */}
+        <circle cx="12" cy="12" r="4" fill="url(#eyeGrad)" />
+        {/* Pupil */}
+        <circle cx="12" cy="12" r="2" fill="#1a1a1a" />
+        {/* Highlight */}
+        <circle cx="10.5" cy="10.5" r="1" fill="#ffffff" opacity="0.8" />
+    </svg>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NOTE ICON - Document with lines for study notes
+// ═══════════════════════════════════════════════════════════════════════════════
+export const NoteIcon: React.FC<IconProps> = ({ className = '', size = 16 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <defs>
+            <linearGradient id="noteGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#a5b4fc" />
+                <stop offset="100%" stopColor="#6366f1" />
+            </linearGradient>
+        </defs>
+        {/* Document body */}
+        <rect x="4" y="2" width="16" height="20" rx="2" fill="url(#noteGrad)" opacity="0.9" />
+        {/* Lines */}
+        <line x1="7" y1="7" x2="17" y2="7" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
+        <line x1="7" y1="11" x2="17" y2="11" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+        <line x1="7" y1="15" x2="13" y2="15" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+    </svg>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HAND CONTEXT ICON - Playing card with spade
+// ═══════════════════════════════════════════════════════════════════════════════
+export const HandContextIcon: React.FC<IconProps> = ({ className = '', size = 16 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <defs>
+            <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#e0e0e0" />
+                <stop offset="100%" stopColor="#a0a0a0" />
+            </linearGradient>
+        </defs>
+        {/* Card body */}
+        <rect x="4" y="2" width="16" height="20" rx="2" fill="#1a1a1a" stroke="url(#cardGrad)" strokeWidth="1.5" />
+        {/* Spade symbol */}
+        <path
+            d="M12 6C10 8 8 10 8 12C8 14 10 15 11 15C11.5 15 12 14.5 12 14.5C12 14.5 12.5 15 13 15C14 15 16 14 16 12C16 10 14 8 12 6Z"
+            fill="url(#cardGrad)"
+        />
+        <path d="M12 15L11 19H13L12 15Z" fill="url(#cardGrad)" />
+    </svg>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CHART ICON - For data/stats sources
+// ═══════════════════════════════════════════════════════════════════════════════
+export const ChartIcon: React.FC<IconProps> = ({ className = '', size = 16 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <defs>
+            <linearGradient id="chartGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#10b981" />
+                <stop offset="100%" stopColor="#34d399" />
+            </linearGradient>
+        </defs>
+        {/* Bars */}
+        <rect x="4" y="14" width="4" height="6" rx="1" fill="url(#chartGrad)" opacity="0.6" />
+        <rect x="10" y="10" width="4" height="10" rx="1" fill="url(#chartGrad)" opacity="0.8" />
+        <rect x="16" y="6" width="4" height="14" rx="1" fill="url(#chartGrad)" />
+        {/* Base line */}
+        <line x1="2" y1="20" x2="22" y2="20" stroke="#a0a0a0" strokeWidth="1" strokeLinecap="round" />
+    </svg>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Export all Study Icons
 // ═══════════════════════════════════════════════════════════════════════════════
 export const StudyIcons = {
@@ -464,6 +737,15 @@ export const StudyIcons = {
     Trophy: TrophyIcon,
     Target: TargetIcon,
     Lightning: LightningIcon,
+    StrategyInsight: StrategyInsightIcon,
+    KeyRules: KeyRulesIcon,
+    PracticeDrill: PracticeDrillIcon,
+    Sources: SourcesIcon,
+    EyeReveal: EyeRevealIcon,
+    Note: NoteIcon,
+    HandContext: HandContextIcon,
+    Chart: ChartIcon,
 };
 
 export default StudyIcons;
+

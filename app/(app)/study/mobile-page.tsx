@@ -14,7 +14,15 @@ import {
     ShieldIcon,
     ButtonChipIcon,
     HandCatchIcon,
-    FilterIcon
+    FilterIcon,
+    StrategyInsightIcon,
+    KeyRulesIcon,
+    PracticeDrillIcon,
+    SourcesIcon,
+    EyeRevealIcon,
+    NoteIcon,
+    HandContextIcon,
+    ChartIcon
 } from '@/components/icons/StudyIcons';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -333,7 +341,7 @@ export default function MobileStudyPage() {
                     {coach.summary && (
                         <div className="study-card strategy-card">
                             <div className="card-header">
-                                <span className="card-icon">💡</span>
+                                <span className="card-icon"><StrategyInsightIcon size={20} /></span>
                                 <span className="card-title">Strategy Insight</span>
                             </div>
                             <p className="strategy-text">{coach.summary}</p>
@@ -344,7 +352,7 @@ export default function MobileStudyPage() {
                     {coach.rules && coach.rules.length > 0 && (
                         <div className="study-card rules-card">
                             <div className="card-header">
-                                <span className="card-icon">📋</span>
+                                <span className="card-icon"><KeyRulesIcon size={20} /></span>
                                 <span className="card-title">Key Rules</span>
                             </div>
                             <ul className="rules-list">
@@ -362,7 +370,7 @@ export default function MobileStudyPage() {
                     {drills.length > 0 && (
                         <div className="study-card drill-card">
                             <div className="card-header">
-                                <span className="card-icon">🎯</span>
+                                <span className="card-icon"><PracticeDrillIcon size={20} /></span>
                                 <span className="card-title">Practice Drill</span>
                                 <span className="drill-counter">{activeDrillIndex + 1}/{drills.length}</span>
                             </div>
@@ -375,7 +383,7 @@ export default function MobileStudyPage() {
                                         className="reveal-btn"
                                         onClick={() => { haptic(); setShowDrillAnswer(true); }}
                                     >
-                                        <span>👁️</span>
+                                        <span><EyeRevealIcon size={18} /></span>
                                         <span>Reveal Answer</span>
                                     </button>
                                 ) : (
@@ -415,7 +423,7 @@ export default function MobileStudyPage() {
                     {chunks.length > 0 && (
                         <div className="study-card sources-card">
                             <div className="card-header">
-                                <span className="card-icon">📚</span>
+                                <span className="card-icon"><SourcesIcon size={20} /></span>
                                 <span className="card-title">Sources Used</span>
                                 <span className="sources-count">{chunks.length}</span>
                             </div>
@@ -424,8 +432,8 @@ export default function MobileStudyPage() {
                                     <details key={chunk.id || i} className="source-item">
                                         <summary className="source-summary">
                                             <span className="source-icon">
-                                                {chunk.source_type === 'hand' ? '♠️' :
-                                                    chunk.source_type === 'note' ? '📝' : '📊'}
+                                                {chunk.source_type === 'hand' ? <HandContextIcon size={14} /> :
+                                                    chunk.source_type === 'note' ? <NoteIcon size={14} /> : <ChartIcon size={14} />}
                                             </span>
                                             <span className="source-title">
                                                 {chunk.title || (chunk.source_type === 'hand' ? 'Hand context' : 'Study note')}
