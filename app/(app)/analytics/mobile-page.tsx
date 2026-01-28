@@ -5,7 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import MobilePageHeader from '@/components/mobile/MobilePageHeader';
 import MobileBottomNav from '@/components/mobile/MobileBottomNav';
-import { TrophyIcon, TargetIcon } from '@/components/icons/StudyIcons';
+import { TrophyIcon, TargetIcon, CheckmarkCircleIcon, StatsEmptyIcon } from '@/components/icons/StudyIcons';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MOBILE ANALYTICS PAGE - Premium Performance Dashboard
@@ -241,7 +241,7 @@ export default function MobileAnalyticsPage() {
                                     ))
                                 ) : (
                                     <div className="empty-state">
-                                        <span>📊</span>
+                                        <StatsEmptyIcon size={28} />
                                         <span>Play hands to see position stats</span>
                                     </div>
                                 )}
@@ -287,7 +287,7 @@ export default function MobileAnalyticsPage() {
                                 })
                             ) : (
                                 <div className="empty-state">
-                                    <span>✅</span>
+                                    <CheckmarkCircleIcon size={28} />
                                     <span>No significant leaks detected</span>
                                 </div>
                             )}

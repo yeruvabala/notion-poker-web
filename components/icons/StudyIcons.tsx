@@ -721,6 +721,71 @@ export const ChartIcon: React.FC<IconProps> = ({ className = '', size = 16 }) =>
         <line x1="2" y1="20" x2="22" y2="20" stroke="#a0a0a0" strokeWidth="1" strokeLinecap="round" />
     </svg>
 );
+// ═══════════════════════════════════════════════════════════════════════════════
+// CHECKMARK CIRCLE ICON - For success/no leaks states
+// ═══════════════════════════════════════════════════════════════════════════════
+export const CheckmarkCircleIcon: React.FC<IconProps> = ({ className = '', size = 24 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <defs>
+            <linearGradient id="checkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#10b981" />
+                <stop offset="100%" stopColor="#059669" />
+            </linearGradient>
+            <linearGradient id="checkGlow" x1="50%" y1="0%" x2="50%" y2="100%">
+                <stop offset="0%" stopColor="#34d399" />
+                <stop offset="100%" stopColor="#10b981" />
+            </linearGradient>
+        </defs>
+        {/* Outer circle */}
+        <circle cx="12" cy="12" r="10" fill="url(#checkGrad)" opacity="0.15" />
+        <circle cx="12" cy="12" r="10" stroke="url(#checkGlow)" strokeWidth="1.5" fill="none" />
+        {/* Checkmark */}
+        <path
+            d="M7 12.5L10.5 16L17 9"
+            stroke="url(#checkGlow)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+    </svg>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATS EMPTY ICON - For no data states (bars with question)  
+// ═══════════════════════════════════════════════════════════════════════════════
+export const StatsEmptyIcon: React.FC<IconProps> = ({ className = '', size = 24 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        <defs>
+            <linearGradient id="statsEmptyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#d0d0d0" />
+                <stop offset="100%" stopColor="#808080" />
+            </linearGradient>
+        </defs>
+        {/* Empty bars */}
+        <rect x="4" y="16" width="4" height="4" rx="1" fill="url(#statsEmptyGrad)" opacity="0.3" />
+        <rect x="10" y="14" width="4" height="6" rx="1" fill="url(#statsEmptyGrad)" opacity="0.4" />
+        <rect x="16" y="12" width="4" height="8" rx="1" fill="url(#statsEmptyGrad)" opacity="0.5" />
+        {/* Base line */}
+        <line x1="2" y1="20" x2="22" y2="20" stroke="url(#statsEmptyGrad)" strokeWidth="1" strokeLinecap="round" opacity="0.5" />
+        {/* Plus sign indicating "add data" */}
+        <circle cx="12" cy="7" r="4" fill="none" stroke="url(#statsEmptyGrad)" strokeWidth="1" opacity="0.6" />
+        <path d="M12 5V9M10 7H14" stroke="url(#statsEmptyGrad)" strokeWidth="1" strokeLinecap="round" opacity="0.6" />
+    </svg>
+);
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Export all Study Icons
@@ -745,6 +810,8 @@ export const StudyIcons = {
     Note: NoteIcon,
     HandContext: HandContextIcon,
     Chart: ChartIcon,
+    CheckmarkCircle: CheckmarkCircleIcon,
+    StatsEmpty: StatsEmptyIcon,
 };
 
 export default StudyIcons;
