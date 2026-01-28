@@ -956,14 +956,23 @@ Return JSON in this EXACT format:
         // STEP 3: Override preflop with V2 range data (for proper mixed strategies)
         // This ensures MistakeClassifier gets the alternative action
         // ==========================================================================
+        console.error('[Agent5 V2 DEBUG] Calling tryGeneratePreflopFromRanges...');
         const preflopFromRanges = tryGeneratePreflopFromRanges(input);
+        console.error('[Agent5 V2 DEBUG] preflopFromRanges result:', JSON.stringify(preflopFromRanges, null, 2));
+
         if (preflopFromRanges?.preflop?.initial_action) {
+            console.error('[Agent5 V2 DEBUG] Detected V2 preflop data - OVERRIDING LLM');
+            console.error('[Agent5 V2 DEBUG] V2 primary:', JSON.stringify(preflopFromRanges.preflop.initial_action.primary));
+            console.error('[Agent5 V2 DEBUG] V2 alternative:', JSON.stringify(preflopFromRanges.preflop.initial_action.alternative));
+
             // Override LLM's preflop with V2 data which includes alternative
             strategy.preflop = {
                 ...strategy.preflop,
                 initial_action: preflopFromRanges.preflop.initial_action
             };
-            console.log('[Agent 5: GTO Strategy] Preflop overridden with V2 range data');
+            console.error('[Agent5 V2 DEBUG] After override, strategy.preflop.initial_action:', JSON.stringify(strategy.preflop.initial_action, null, 2));
+        } else {
+            console.error('[Agent5 V2 DEBUG] NO V2 data found - keeping LLM preflop');
         }
 
         const duration = Date.now() - startTime;
