@@ -58,9 +58,6 @@ export class MistakeClassifier {
         gtoPrimary: SingleAction,
         gtoAlternative?: SingleAction
     ): PlayQuality {
-        // DEBUG: Log what's being compared
-        console.error(`[MistakeClassifier] heroAction="${heroAction}" vs primary="${gtoPrimary.action}" alternative="${gtoAlternative?.action}"`);
-
         // Primary match = optimal
         if (heroAction === gtoPrimary.action) {
             return 'optimal';
@@ -68,12 +65,10 @@ export class MistakeClassifier {
 
         // Alternative match = acceptable
         if (gtoAlternative && heroAction === gtoAlternative.action) {
-            console.error(`[MistakeClassifier] MATCHED ALTERNATIVE!`);
             return 'acceptable';
         }
 
         // No match = mistake
-        console.error(`[MistakeClassifier] NO MATCH - marking as mistake`);
         return 'mistake';
     }
 

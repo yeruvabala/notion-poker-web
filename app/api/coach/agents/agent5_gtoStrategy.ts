@@ -559,7 +559,7 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
 
     if (isHeroThe3Bettor) {
         const villainPosition = input.villainContext?.villain || input.positions?.villain || '';
-        console.error(`[Agent5] Hero is the 3-BETTOR! ${heroPosition} 3-betting ${villainPosition} open`);
+
 
         // Use getMixedFacingOpenAction which returns both primary AND alternative
         const mixedResult = getMixedFacingOpenAction(heroHand, heroPosition, villainPosition);
@@ -600,7 +600,7 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
                 frequency: alternativeAction.frequency,
                 reasoning: altReasoning
             };
-            console.error(`[Agent5 3BETTOR] Added alternative: ${altActionName} [${(alternativeAction.frequency * 100).toFixed(0)}%]`);
+
         }
 
         return result;
@@ -620,8 +620,7 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
         // 2. Get Vs 3-Bet Action (Response) - with potential alternative
         const vs3BetResult = getMixedVs3BetAction(heroHand, heroPosition, threeBettorPosition);
 
-        console.error(`[Agent5 vs3bet] openResult:`, JSON.stringify(openResult, null, 2));
-        console.error(`[Agent5 vs3bet] vs3BetResult:`, JSON.stringify(vs3BetResult, null, 2));
+
 
         if (!openResult.found && !vs3BetResult.found) return null;
 
@@ -685,11 +684,11 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
                     frequency: vs3BetResult.alternative.frequency,
                     reasoning: generatePreflopReasoning(heroHand, altActionName as any, heroPosition, threeBettorPosition || 'Villain', vs3BetResult.alternative.frequency)
                 };
-                console.error(`[Agent5 vs3bet] Added response_to_3bet alternative: ${altActionName} [${(vs3BetResult.alternative.frequency * 100).toFixed(0)}%]`);
+
             }
         }
 
-        console.error('[Agent5 vs3bet] Final strategy.preflop:', JSON.stringify(strategy.preflop, null, 2));
+
         return strategy;
     }
 
@@ -1017,23 +1016,15 @@ Return JSON in this EXACT format:
         // STEP 3: Override preflop with V2 range data (for proper mixed strategies)
         // This ensures MistakeClassifier gets the alternative action
         // ==========================================================================
-        console.error('[Agent5 V2 DEBUG] Calling tryGeneratePreflopFromRanges...');
         const preflopFromRanges = tryGeneratePreflopFromRanges(input);
-        console.error('[Agent5 V2 DEBUG] preflopFromRanges result:', JSON.stringify(preflopFromRanges, null, 2));
 
         if (preflopFromRanges?.preflop?.initial_action) {
-            console.error('[Agent5 V2 DEBUG] Detected V2 preflop data - OVERRIDING LLM');
-            console.error('[Agent5 V2 DEBUG] V2 primary:', JSON.stringify(preflopFromRanges.preflop.initial_action.primary));
-            console.error('[Agent5 V2 DEBUG] V2 alternative:', JSON.stringify(preflopFromRanges.preflop.initial_action.alternative));
-
             // Override LLM's preflop with V2 data which includes alternative
             strategy.preflop = {
                 ...strategy.preflop,
                 initial_action: preflopFromRanges.preflop.initial_action
             };
-            console.error('[Agent5 V2 DEBUG] After override, strategy.preflop.initial_action:', JSON.stringify(strategy.preflop.initial_action, null, 2));
-        } else {
-            console.error('[Agent5 V2 DEBUG] NO V2 data found - keeping LLM preflop');
+            console.log('[Agent 5: GTO Strategy] Preflop overridden with V2 range data');
         }
 
         const duration = Date.now() - startTime;
