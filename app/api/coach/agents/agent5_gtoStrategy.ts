@@ -22,7 +22,7 @@ import {
 } from '../types/agentContracts';
 import { getHandType } from '../utils/handUtils';
 import { evaluateHand } from '../utils/handEvaluator';
-import { getPreflopAction, getOpeningAction, getVs3BetAction, getFacingOpenAction, getMixedFacingOpenAction, normalizeHand } from '../utils/gtoRangesV2';
+import { getPreflopAction, getOpeningAction, getVs3BetAction, getFacingOpenAction, getMixedFacingOpenAction, getMixedVs3BetAction, getMixedOpeningAction, normalizeHand } from '../utils/gtoRangesV2';
 import { generatePreflopReasoning } from '../utils/PreflopReasoningEngine';
 
 const openai = new OpenAI({
@@ -607,30 +607,25 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
     }
 
     // CASE 2: Hero OPENED and villain 3-bet us (uses VS_THREE_BET_RANGES)
-    // This is the ORIGINAL logic
+    // This uses getMixedOpeningAction and getMixedVs3BetAction for proper alternatives
     const heroOpenedFirst = heroRaised && !villainRaisedBeforeHero;
     const isVs3Bet = input.villainContext?.type === 'vs_3bet' && heroOpenedFirst;
 
     if (isVs3Bet) {
-        // 1. Get Opening Action (Initial)
-        // We act as if villainContext is 'opening' to get the RFI logic
-        const openResult = getPreflopAction(heroHand, heroPosition, { type: 'opening', villain: null });
-
-        // 2. Get Vs 3-Bet Action (Response)
-        // Call getVs3BetAction directly to lookup in VS_THREE_BET_RANGES
-        // CRITICAL: Use villain POSITION, not player name!
         const threeBettorPosition = input.villainContext?.villain || input.positions?.villain || '';
 
+        // 1. Get Opening Action (Initial) - with potential alternative
+        const openResult = getMixedOpeningAction(heroHand, heroPosition);
 
-        console.error(`[Agent5] Context villain field: ${input.villainContext?.villain}`);
+        // 2. Get Vs 3-Bet Action (Response) - with potential alternative
+        const vs3BetResult = getMixedVs3BetAction(heroHand, heroPosition, threeBettorPosition);
 
-        const vs3BetResult = getVs3BetAction(heroHand, heroPosition, threeBettorPosition);
-
-        console.error(`[Agent5] Loopkup Result: found=${vs3BetResult.found}, action=${vs3BetResult.action?.action}`);
+        console.error(`[Agent5 vs3bet] openResult:`, JSON.stringify(openResult, null, 2));
+        console.error(`[Agent5 vs3bet] vs3BetResult:`, JSON.stringify(vs3BetResult, null, 2));
 
         if (!openResult.found && !vs3BetResult.found) return null;
 
-        // Build the composite strategy - ensure initial_action is present with fallback
+        // Build the composite strategy
         const strategy: GTOStrategy = {
             preflop: {
                 initial_action: {
@@ -639,59 +634,62 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
             }
         };
 
-        // Initial Action (Open)
+        // Initial Action (Open) - with alternative
         if (openResult.found) {
-            const normalizedHand = normalizeHand(heroHand);
-            // Map 3bet/4bet to 'raise' for ActionType compatibility
-            const openActionName = (openResult.action.action === 'raise' || openResult.action.action === '3bet' || openResult.action.action === '4bet') ? 'raise' : openResult.action.action;
+            const openActionName = openResult.primary.action === 'raise' || openResult.primary.action === '3bet' || openResult.primary.action === '4bet'
+                ? 'raise' : openResult.primary.action;
 
             strategy.preflop.initial_action = {
                 primary: {
                     action: openActionName as any,
-                    sizing: openResult.action.sizing,
-                    frequency: openResult.action.frequency,
-                    reasoning: generatePreflopReasoning(heroHand, openActionName as any, heroPosition, 'table', openResult.action.frequency)
+                    sizing: openResult.primary.sizing,
+                    frequency: openResult.primary.frequency,
+                    reasoning: generatePreflopReasoning(heroHand, openActionName as any, heroPosition, 'table', openResult.primary.frequency)
                 }
             };
+
+            // Add opening alternative if exists
+            if (openResult.alternative && openResult.alternative.frequency >= 0.1) {
+                const altActionName = openResult.alternative.action === 'raise' || openResult.alternative.action === '3bet' || openResult.alternative.action === '4bet'
+                    ? 'raise' : openResult.alternative.action;
+                strategy.preflop.initial_action.alternative = {
+                    action: altActionName as any,
+                    sizing: openResult.alternative.sizing,
+                    frequency: openResult.alternative.frequency,
+                    reasoning: generatePreflopReasoning(heroHand, altActionName as any, heroPosition, 'table', openResult.alternative.frequency)
+                };
+            }
         }
 
-        // Response to 3-bet
-        console.error('[Agent5 3BET DEBUG] vs3BetResult:', JSON.stringify(vs3BetResult, null, 2));
-        console.error('[Agent5 3BET DEBUG] vs3BetResult.found:', vs3BetResult.found);
-        console.error('[Agent5 3BET DEBUG] vs3BetResult.action:', vs3BetResult.action);
-
+        // Response to 3-bet - with alternative
         if (vs3BetResult.found) {
-            const normalizedHand = normalizeHand(heroHand);
-            const vs3BetActionName = (vs3BetResult.action.action === 'raise' || vs3BetResult.action.action === '3bet' || vs3BetResult.action.action === '4bet') ? 'raise' : vs3BetResult.action.action;
-
-            console.error('[Agent5 3BET DEBUG] Setting response_to_3bet with action:', vs3BetActionName);
-
-            // Generate reasoning based on actual action
-            // Generate reasoning based on actual action using PreflopReasoningEngine
-            const vs3betReasoning = generatePreflopReasoning(
-                heroHand,
-                vs3BetActionName as any,
-                heroPosition,
-                threeBettorPosition || 'Villain',
-                vs3BetResult.action.frequency
-            );
+            const vs3BetActionName = vs3BetResult.primary.action === 'raise' || vs3BetResult.primary.action === '3bet' || vs3BetResult.primary.action === '4bet'
+                ? 'raise' : vs3BetResult.primary.action;
 
             strategy.preflop.response_to_3bet = {
                 primary: {
                     action: vs3BetActionName as any,
-                    sizing: vs3BetResult.action.sizing,
-                    frequency: vs3BetResult.action.frequency,
-                    reasoning: vs3betReasoning
+                    sizing: vs3BetResult.primary.sizing,
+                    frequency: vs3BetResult.primary.frequency,
+                    reasoning: generatePreflopReasoning(heroHand, vs3BetActionName as any, heroPosition, threeBettorPosition || 'Villain', vs3BetResult.primary.frequency)
                 }
             };
 
-            console.error('[Agent5 3BET DEBUG] response_to_3bet set to:', JSON.stringify(strategy.preflop.response_to_3bet, null, 2));
-        } else {
-            console.error('[Agent5 3BET DEBUG] vs3BetResult.found is FALSE - NOT setting response_to_3bet');
+            // Add response alternative if exists (e.g., call vs 4bet alternative)
+            if (vs3BetResult.alternative && vs3BetResult.alternative.frequency >= 0.1) {
+                const altActionName = vs3BetResult.alternative.action === 'raise' || vs3BetResult.alternative.action === '3bet' || vs3BetResult.alternative.action === '4bet'
+                    ? 'raise' : vs3BetResult.alternative.action;
+                strategy.preflop.response_to_3bet.alternative = {
+                    action: altActionName as any,
+                    sizing: vs3BetResult.alternative.sizing,
+                    frequency: vs3BetResult.alternative.frequency,
+                    reasoning: generatePreflopReasoning(heroHand, altActionName as any, heroPosition, threeBettorPosition || 'Villain', vs3BetResult.alternative.frequency)
+                };
+                console.error(`[Agent5 vs3bet] Added response_to_3bet alternative: ${altActionName} [${(vs3BetResult.alternative.frequency * 100).toFixed(0)}%]`);
+            }
         }
 
-        console.error('[Agent5 DEBUG] Final strategy.preflop:', JSON.stringify(strategy.preflop, null, 2));
-        console.error('[Agent5 DEBUG] Returning composite strategy:', JSON.stringify(strategy, null, 2));
+        console.error('[Agent5 vs3bet] Final strategy.preflop:', JSON.stringify(strategy.preflop, null, 2));
         return strategy;
     }
 
@@ -752,7 +750,51 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
         return result;
     }
 
-    // Fallback to original getPreflopAction for other scenarios
+    // Case 4: Opening (RFI) scenarios - use getMixedOpeningAction for alternatives
+    if (!villainContextForRanges || villainContextForRanges.type === 'opening') {
+        const openResult = getMixedOpeningAction(heroHand, heroPosition);
+
+        if (!openResult.found) {
+            return null;
+        }
+
+        const actionName = openResult.primary.action === 'raise' || openResult.primary.action === '3bet' || openResult.primary.action === '4bet'
+            ? 'raise'
+            : openResult.primary.action;
+
+        const reasoning = generatePreflopReasoning(heroHand, actionName as any, heroPosition, 'table', openResult.primary.frequency);
+
+        const result: GTOStrategy = {
+            preflop: {
+                initial_action: {
+                    primary: {
+                        action: actionName as any,
+                        sizing: openResult.primary.sizing,
+                        frequency: openResult.primary.frequency,
+                        reasoning: reasoning
+                    }
+                }
+            }
+        };
+
+        // Add alternative if exists (for mixed opening strategies)
+        if (openResult.alternative && openResult.alternative.frequency >= 0.1) {
+            const altActionName = openResult.alternative.action === 'raise' || openResult.alternative.action === '3bet' || openResult.alternative.action === '4bet'
+                ? 'raise' : openResult.alternative.action;
+            const altReasoning = generatePreflopReasoning(heroHand, altActionName as any, heroPosition, 'table', openResult.alternative.frequency);
+
+            result.preflop.initial_action.alternative = {
+                action: altActionName as any,
+                sizing: openResult.alternative.sizing,
+                frequency: openResult.alternative.frequency,
+                reasoning: altReasoning
+            };
+        }
+
+        return result;
+    }
+
+    // Final fallback to original getPreflopAction for any uncovered scenarios
     const rangeResult = getPreflopAction(heroHand, heroPosition, villainContextForRanges);
 
     // If not found in ranges, return null to let LLM handle it

@@ -2088,6 +2088,141 @@ export function getMixedFacingOpenAction(
 }
 
 /**
+ * Get MIXED action when facing a 3-bet - returns BOTH primary AND alternative
+ * Used for proper classification (Hero opened, villain 3-bet)
+ */
+export function getMixedVs3BetAction(
+    hand: string,
+    heroPosition: string,
+    threeBettorPosition: string
+): { primary: RangeAction; alternative?: RangeAction; scenario: string; found: boolean } {
+    const normalized = normalizeHand(hand);
+    const heroPos = normalizePosition(heroPosition);
+    const threeBettorPos = normalizePosition(threeBettorPosition);
+    const key = `${heroPos}_vs_${threeBettorPos}_3bet`;
+
+    const rangeData = VS_THREE_BET_RANGES_V2[key];
+
+    if (!rangeData) {
+        return {
+            found: false,
+            primary: { action: 'fold', frequency: 1.0 },
+            scenario: key
+        };
+    }
+
+    const fourBetFreq = rangeData['4bet']?.[normalized] || 0;
+    const callFreq = rangeData['call']?.[normalized] || 0;
+    const stats = SPOT_AGGREGATE_STATS[key];
+    const sizing = stats?.raiseSize || '22bb';
+
+    // If both exist, return as primary/alternative
+    if (fourBetFreq > 0 && callFreq > 0) {
+        if (callFreq >= fourBetFreq) {
+            // Call is primary, 4bet is alternative
+            return {
+                found: true,
+                primary: { action: 'call', frequency: callFreq },
+                alternative: { action: 'raise', frequency: fourBetFreq, sizing },
+                scenario: key
+            };
+        } else {
+            // 4bet is primary, call is alternative
+            return {
+                found: true,
+                primary: { action: 'raise', frequency: fourBetFreq, sizing },
+                alternative: { action: 'call', frequency: callFreq },
+                scenario: key
+            };
+        }
+    }
+
+    // Only one action exists
+    if (fourBetFreq > 0) {
+        return {
+            found: true,
+            primary: { action: 'raise', frequency: fourBetFreq, sizing },
+            scenario: key
+        };
+    }
+    if (callFreq > 0) {
+        return {
+            found: true,
+            primary: { action: 'call', frequency: callFreq },
+            scenario: key
+        };
+    }
+
+    // Fold
+    return {
+        found: true,
+        primary: { action: 'fold', frequency: 1.0 },
+        scenario: key
+    };
+}
+
+/**
+ * Get MIXED action for opening (RFI) - returns primary AND potential alternative
+ * Note: Opening ranges are typically pure (raise or fold), but this provides
+ * the structure for consistency with other mixed action functions.
+ */
+export function getMixedOpeningAction(
+    hand: string,
+    position: string
+): { primary: RangeAction; alternative?: RangeAction; scenario: string; found: boolean } {
+    const normalized = normalizeHand(hand);
+    const posKey = normalizePosition(position);
+    const scenario = `RFI_${posKey}`;
+
+    const range = RFI_RANGES_V2[posKey];
+    if (!range) {
+        return {
+            found: false,
+            primary: { action: 'fold', frequency: 1.0 },
+            scenario
+        };
+    }
+
+    const raiseFreq = range[normalized];
+    const sizing = posKey === 'SB' ? '3.5bb' : '3bb';
+
+    if (raiseFreq !== undefined && raiseFreq > 0) {
+        // If it's a mixed strategy (less than 100%)
+        if (raiseFreq < 1.0) {
+            const foldFreq = 1.0 - raiseFreq;
+            if (raiseFreq >= foldFreq) {
+                return {
+                    found: true,
+                    primary: { action: 'raise', frequency: raiseFreq, sizing },
+                    alternative: foldFreq >= 0.1 ? { action: 'fold', frequency: foldFreq } : undefined,
+                    scenario
+                };
+            } else {
+                return {
+                    found: true,
+                    primary: { action: 'fold', frequency: foldFreq },
+                    alternative: raiseFreq >= 0.1 ? { action: 'raise', frequency: raiseFreq, sizing } : undefined,
+                    scenario
+                };
+            }
+        }
+        // Pure raise (100%)
+        return {
+            found: true,
+            primary: { action: 'raise', frequency: raiseFreq, sizing },
+            scenario
+        };
+    }
+
+    // Not in range = fold
+    return {
+        found: true,
+        primary: { action: 'fold', frequency: 1.0 },
+        scenario
+    };
+}
+
+/**
  * Get action when CONSIDERING calling an open raise (Cold Call)
  * Uses the 'call' portion of THREE_BET_RANGES_V2
  */
@@ -2459,6 +2594,8 @@ export default {
     getOpeningAction,
     getFacingOpenAction,
     getMixedFacingOpenAction,
+    getMixedVs3BetAction,
+    getMixedOpeningAction,
     getColdCallAction,
     getMaking3BetAction,
     getVs3BetAction,
