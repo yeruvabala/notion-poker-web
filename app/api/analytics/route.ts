@@ -147,15 +147,24 @@ export async function GET(req: Request) {
       order by hero_position;
     `,
     leakImpact: `
-      select tag as learning_tag, avg(result_bb) as bb, count(*) as n
+      select 
+        regexp_replace(regexp_replace(tag, '^[\\{\\[]', ''), '[\\}\\]]$', '') as learning_tag,
+        avg(result_bb) as bb, 
+        count(*) as n
       from (
         select unnest(${tags_array_expr}) as tag, result_bb
         from public.hands_silver
         where ${baseFilters}
       ) t
-      where tag is not null and tag <> ''
-      group by tag
-      having count(*) >= 3
+      where tag is not null 
+        and tag <> '' 
+        and tag <> '{}'
+        and tag <> '[]'
+        and lower(tag) not like '%optimal%'
+        and lower(tag) not like '%good%'
+        and lower(tag) not like '%correct%'
+      group by regexp_replace(regexp_replace(tag, '^[\\{\\[]', ''), '[\\}\\]]$', '')
+      having avg(result_bb) < 0
       order by avg(result_bb) asc nulls last
       limit 8;
     `,

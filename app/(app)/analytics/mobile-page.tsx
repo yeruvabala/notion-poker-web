@@ -45,10 +45,20 @@ function fmt(n: number): string {
 
 function formatLeakName(tag: string | null | undefined): string {
     if (!tag || tag === '{}' || tag === '[]' || tag.trim() === '') return 'Unknown Leak';
-    return tag
+
+    // Remove surrounding braces/brackets and clean up
+    let cleaned = tag
+        .replace(/^[\{\[\"\']/, '')  // Remove leading {, [, ", '
+        .replace(/[\}\]\"\']$/, '')  // Remove trailing }, ], ", '
+        .trim();
+
+    if (!cleaned || cleaned === 'null' || cleaned === 'undefined') return 'Unknown Leak';
+
+    // Format nicely: replace underscores/dashes with spaces, capitalize each word
+    return cleaned
         .replace(/[-_]/g, ' ')
         .replace(/\b\w/g, c => c.toUpperCase())
-        .slice(0, 20);
+        .slice(0, 25);
 }
 
 export default function MobileAnalyticsPage() {
