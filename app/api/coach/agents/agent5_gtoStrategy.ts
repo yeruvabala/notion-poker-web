@@ -176,6 +176,32 @@ function formatContextForPrompt(input: Agent5Input): string {
     lines.push('');
 
     // ═══════════════════════════════════════════════════════════
+    // NEW: V2 GTO Preflop Action Lookup (Pass to LLM)
+    // ═══════════════════════════════════════════════════════════
+    const heroHand = input.heroHand || '';
+    const heroPosition = input.positions?.hero || '';
+    const villainPos = input.villainContext?.villain || input.positions?.villain || '';
+
+    // Build context for V2 lookup
+    const v2Context = input.villainContext
+        ? { type: input.villainContext.type, villain: villainPos || null }
+        : undefined;
+
+    const preflopResult = getPreflopAction(heroHand, heroPosition, v2Context);
+
+    if (preflopResult.found) {
+        const actionName = preflopResult.action.action === '3bet' ? 'raise' :
+            preflopResult.action.action === '4bet' ? 'raise' :
+                preflopResult.action.action;
+        const freq = (preflopResult.action.frequency * 100).toFixed(0);
+        lines.push('GTO PREFLOP ACTION (from solver data):');
+        lines.push(`CRITICAL: For ${heroHand} in ${heroPosition} ${v2Context?.type === 'facing_action' ? 'vs ' + villainPos + ' open' : 'opening'}:`);
+        lines.push(`→ GTO says: ${actionName.toUpperCase()} [${freq}%]`);
+        lines.push(`You MUST use this preflop action in your strategy. Do NOT contradict solver data.`);
+        lines.push('');
+    }
+
+    // ═══════════════════════════════════════════════════════════
     // NEW: Deterministic Hand Evaluation (Anti-Hallucination)
     // Evaluate per-street for accuracy
     // ═══════════════════════════════════════════════════════════
