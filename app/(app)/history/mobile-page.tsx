@@ -9,6 +9,7 @@ import MobileBottomNav from '@/components/mobile/MobileBottomNav';
 import MobilePageHeader from '@/components/mobile/MobilePageHeader';
 import { UploadIcon } from '@/components/icons/ActionBarIcons';
 import { LightningIcon } from '@/components/icons/StudyIcons';
+import { renderMobileGTO } from '@/lib/renderMobileGTO';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MOBILE HANDS PAGE - Premium Card-based Hand History
@@ -506,7 +507,7 @@ export default function MobileHandsPage() {
                                     GTO Strategy
                                 </div>
                                 <div className="mobile-modal-section-body">
-                                    {selectedHand.gto_strategy}
+                                    {renderMobileGTO(selectedHand.gto_strategy)}
                                 </div>
                             </div>
                         )}
@@ -531,7 +532,7 @@ export default function MobileHandsPage() {
                             <div className="mobile-modal-section">
                                 <div className="mobile-modal-section-title">👤 Play Review</div>
                                 <div className="mobile-modal-section-body">
-                                    {selectedHand.exploit_deviation}
+                                    {renderMobileGTO(selectedHand.exploit_deviation)}
                                 </div>
                             </div>
                         )}
