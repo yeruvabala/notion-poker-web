@@ -18,10 +18,10 @@ interface SwipeConfig {
 }
 
 const DEFAULT_CONFIG: SwipeConfig = {
-    edgeWidth: 30,            // 30px from edge (like Safari)
-    minDistance: 50,
+    edgeWidth: 40,            // 40px from edge (slightly wider for easier detection)
+    minDistance: 35,          // 35px minimum swipe (more sensitive)
     maxVerticalRatio: 0.5,
-    velocityThreshold: 0.3,
+    velocityThreshold: 0.2,   // Lower threshold for quicker light swipes
 };
 
 /**
