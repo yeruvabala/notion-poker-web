@@ -298,6 +298,78 @@ export const VS_THREE_BET_RANGES_V2: Record<string, Record<string, Record<string
 };
 
 // =============================================================================
+// AGGREGATE SPOT STATS
+// Overall action frequencies for entire range (for pot odds / EV calculations)
+// Source: GTO Wizard - shows what % of total range takes each action
+// =============================================================================
+
+export interface SpotStats {
+    raise: number;      // % of range that raises/3-bets
+    call: number;       // % of range that calls
+    fold: number;       // % of range that folds
+    raiseSize?: string; // e.g., "3x", "10.5bb"
+    combos?: {          // Optional: exact combo counts
+        raise: number;
+        call: number;
+        fold: number;
+    };
+}
+
+export const SPOT_AGGREGATE_STATS: Record<string, SpotStats> = {
+    // =========================================================================
+    // RFI Stats (Raise vs Fold only from unopened pot)
+    // =========================================================================
+    'RFI_UTG': { raise: 0.164, call: 0, fold: 0.836, raiseSize: '3x' },
+    'RFI_HJ': { raise: 0.203, call: 0, fold: 0.797, raiseSize: '3x' },
+    'RFI_CO': { raise: 0.269, call: 0, fold: 0.731, raiseSize: '3x' },
+    'RFI_BTN': { raise: 0.408, call: 0, fold: 0.592, raiseSize: '3x' },
+    'RFI_SB': { raise: 0.431, call: 0, fold: 0.569, raiseSize: '3.5x' },
+
+    // =========================================================================
+    // Facing Raise Stats (3-bet vs Call vs Fold)
+    // To be populated from screenshots
+    // =========================================================================
+    // Example format:
+    // 'BB_vs_BTN': { raise: 0.163, call: 0.421, fold: 0.416, raiseSize: '10.5bb' },
+};
+
+// =============================================================================
+// Helper function to get spot stats
+// =============================================================================
+
+export function getSpotStats(spot: string): SpotStats | undefined {
+    return SPOT_AGGREGATE_STATS[spot];
+}
+
+/**
+ * Calculate if a bluff is profitable based on fold frequency
+ * @param spot - The spot key (e.g., 'BB_vs_BTN')
+ * @param betSize - Bet size in bb
+ * @param potSize - Current pot size in bb
+ * @returns { profitable: boolean, breakeven: number, actualFold: number }
+ */
+export function isBluffProfitable(
+    spot: string,
+    betSize: number,
+    potSize: number
+): { profitable: boolean; breakeven: number; actualFold: number } {
+    const stats = SPOT_AGGREGATE_STATS[spot];
+    if (!stats) {
+        return { profitable: false, breakeven: 0, actualFold: 0 };
+    }
+
+    // Breakeven fold % = bet / (bet + pot)
+    const breakeven = betSize / (betSize + potSize);
+    const actualFold = stats.fold;
+
+    return {
+        profitable: actualFold >= breakeven,
+        breakeven,
+        actualFold,
+    };
+}
+
+// =============================================================================
 // LOOKUP FUNCTIONS (Compatible with existing agent code)
 // =============================================================================
 
@@ -356,9 +428,12 @@ export default {
     RFI_RANGES: RFI_RANGES_V2,
     THREE_BET_RANGES: THREE_BET_RANGES_V2,
     VS_THREE_BET_RANGES: VS_THREE_BET_RANGES_V2,
+    SPOT_AGGREGATE_STATS,
     getRFIAction,
     shouldRFI,
     getFacingRaiseAction,
+    getSpotStats,
+    isBluffProfitable,
     normalizeHand,
     normalizePosition,
 };
