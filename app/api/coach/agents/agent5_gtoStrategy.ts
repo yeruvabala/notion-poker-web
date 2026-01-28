@@ -561,23 +561,26 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
         const villainPosition = input.villainContext?.villain || input.positions?.villain || '';
         console.error(`[Agent5] Hero is the 3-BETTOR! ${heroPosition} 3-betting ${villainPosition} open`);
 
-        // Use getFacingOpenAction which looks up THREE_BET_RANGES
-        const threeBetResult = getFacingOpenAction(heroHand, heroPosition, villainPosition);
+        // Use getMixedFacingOpenAction which returns both primary AND alternative
+        const mixedResult = getMixedFacingOpenAction(heroHand, heroPosition, villainPosition);
 
-        if (!threeBetResult.found) return null;
+        if (!mixedResult.found) return null;
+
+        const primaryAction = mixedResult.primary;
+        const alternativeAction = mixedResult.alternative;
 
         // Build strategy with 3-bet as the action (NOT "initial_action")
-        const actionName = threeBetResult.action.action === '3bet' ? 'raise' : threeBetResult.action.action;
-        const reasoning = generatePreflopReasoning(heroHand, actionName as any, heroPosition, villainPosition, threeBetResult.action.frequency);
+        const actionName = primaryAction.action === '3bet' || primaryAction.action === '4bet' ? 'raise' : primaryAction.action;
+        const reasoning = generatePreflopReasoning(heroHand, actionName as any, heroPosition, villainPosition, primaryAction.frequency);
 
-        return {
+        const result: GTOStrategy = {
             preflop: {
                 // Use initial_action but the label will be corrected in formatOutput
                 initial_action: {
                     primary: {
                         action: actionName as any,
-                        sizing: threeBetResult.action.sizing || '3x',
-                        frequency: threeBetResult.action.frequency,
+                        sizing: primaryAction.sizing || '3x',
+                        frequency: primaryAction.frequency,
                         reasoning: reasoning
                     }
                 },
@@ -585,6 +588,22 @@ function tryGeneratePreflopFromRanges(input: Agent5Input): GTOStrategy | null {
                 _hero_is_3bettor: true
             }
         };
+
+        // Add alternative if it exists (for mixed strategies)
+        if (alternativeAction && alternativeAction.frequency >= 0.1) {
+            const altActionName = alternativeAction.action === '3bet' || alternativeAction.action === '4bet' ? 'raise' : alternativeAction.action;
+            const altReasoning = generatePreflopReasoning(heroHand, altActionName as any, heroPosition, villainPosition, alternativeAction.frequency);
+
+            result.preflop.initial_action.alternative = {
+                action: altActionName as any,
+                sizing: alternativeAction.sizing,
+                frequency: alternativeAction.frequency,
+                reasoning: altReasoning
+            };
+            console.error(`[Agent5 3BETTOR] Added alternative: ${altActionName} [${(alternativeAction.frequency * 100).toFixed(0)}%]`);
+        }
+
+        return result;
     }
 
     // CASE 2: Hero OPENED and villain 3-bet us (uses VS_THREE_BET_RANGES)
