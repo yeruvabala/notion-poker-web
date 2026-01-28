@@ -478,12 +478,19 @@ function estimatePotSizes(actions: Action[]): PotSizes {
  */
 function mapReplayerAction(action: string): ActionType {
     const map: Record<string, ActionType> = {
+        // Replayer-specific formats (plural/alternate)
         'folds': 'fold',
         'checks': 'check',
         'calls': 'call',
         'bets': 'bet',
         'raises': 'raise',
-        'raiseTo': 'raise'
+        'raiseTo': 'raise',
+        // Identity mappings (actions might already be normalized)
+        'fold': 'fold',
+        'check': 'check',
+        'call': 'call',
+        'bet': 'bet',
+        'raise': 'raise',
     };
     return map[action] || 'check';
 }
