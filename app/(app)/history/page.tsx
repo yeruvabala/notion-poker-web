@@ -382,7 +382,16 @@ export default function HistoryPage() {
                           </div>
                           {hasGto && (
                             <div className="mh-tooltip platinum-container-frame">
-                              <div className="mh-tooltip-header">🤖 GTO Strategy</div>
+                              <div className="mh-tooltip-header">
+                                <span className="gto-inline-icon">
+                                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <circle cx="12" cy="12" r="6" />
+                                    <circle cx="12" cy="12" r="2" />
+                                  </svg>
+                                </span>
+                                GTO Strategy
+                              </div>
                               <div className="mh-tooltip-body">{h.gto_strategy?.slice(0, 200)}...</div>
                             </div>
                           )}
@@ -469,7 +478,16 @@ export default function HistoryPage() {
 
               {selectedHand.gto_strategy && (
                 <div className="mh-modal-section">
-                  <div className="mh-modal-section-title">🤖 GTO Strategy</div>
+                  <div className="mh-modal-section-title">
+                    <span className="gto-inline-icon">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <circle cx="12" cy="12" r="6" />
+                        <circle cx="12" cy="12" r="2" />
+                      </svg>
+                    </span>
+                    GTO Strategy
+                  </div>
                   <div className="mh-modal-section-body">{selectedHand.gto_strategy}</div>
                 </div>
               )}
