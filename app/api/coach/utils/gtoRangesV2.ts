@@ -630,13 +630,15 @@ export const THREE_BET_RANGES_V2: Record<string, Record<string, Record<string, n
         '3bet': {
             'AA': 1.0, 'KK': 1.0, 'QQ': 0.6, 'JJ': 0.2,
             'AKs': 1.0, 'AKo': 0.9,
+            'KQs': 0.17,  // Mixed: 17% 3-bet (from GTO screenshot)
             'A5s': 0.6, 'A4s': 0.4,
         },
         'call': {
             'QQ': 0.4, 'JJ': 0.8, 'TT': 1.0, '99': 0.9, '88': 0.7,
             '77': 0.5, '66': 0.3, '55': 0.2,
             'AQs': 1.0, 'AJs': 0.9, 'ATs': 0.7,
-            'KQs': 1.0, 'KJs': 0.7, 'KTs': 0.4,
+            'KQs': 0.83,  // Mixed: 83% call (from GTO screenshot)
+            'KJs': 0.7, 'KTs': 0.4,
             'QJs': 0.6, 'QTs': 0.4,
             'JTs': 0.6, 'T9s': 0.5, '98s': 0.4, '87s': 0.3,
             'AKo': 0.1, 'AQo': 0.6, 'AJo': 0.3,
