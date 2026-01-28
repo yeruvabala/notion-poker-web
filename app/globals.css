@@ -7342,6 +7342,10 @@ body.native-app [class*="btn-row"]>* {
     color: #ffffff;
 }
 
+.gto-inline-icon svg {
+    stroke: #ffffff;
+}
+
 .gto-inline-title {
     font-size: 18px;
     font-weight: 800;
