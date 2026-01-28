@@ -11200,14 +11200,14 @@ body.native-app [class*="btn-row"]>* {
     font-weight: 600;
 }
 
-/* Success variant (green) */
+/* Success variant (emerald green) */
 .insight-card.success .insight-detail {
-    color: #22c55e;
+    color: #10b981;
 }
 
-/* Warning variant (orange) */
+/* Warning variant (soft indigo - matches app accents) */
 .insight-card.warning .insight-detail {
-    color: #f97316;
+    color: #a5b4fc;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════

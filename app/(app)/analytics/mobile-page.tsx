@@ -25,17 +25,18 @@ type LeakRow = { learning_tag: string; bb: number; n: number };
 
 const STAKES_OPTIONS = ['All', '2NL', '5NL', '10NL', '25NL', '50NL', '100NL', '200NL'];
 
-// Color helpers
+// Color helpers - Premium theme aligned
+// Using: Emerald green for positive, platinum/white for neutral, red for negative
 function getWinrateColor(bb: number): string {
-    if (bb >= 2) return '#22c55e';
-    if (bb >= 0) return '#eab308';
-    return '#ef4444';
+    if (bb >= 2) return '#10b981';     // Emerald green for strong win
+    if (bb >= 0) return '#e5e7eb';     // Platinum/light gray for break-even to small win
+    return '#ef4444';                   // Red for losing
 }
 
 function getPositionColor(bb: number): string {
-    if (bb >= 1) return '#22c55e';  // Green for winning
-    if (bb >= 0) return '#06b6d4';  // Cyan for break-even
-    return '#ef4444';  // Red for losing
+    if (bb >= 1) return '#10b981';     // Emerald green for winning
+    if (bb >= 0) return '#a5b4fc';     // Soft indigo/purple for break-even (matches app accents)
+    return '#ef4444';                   // Red for losing
 }
 
 function fmt(n: number): string {
