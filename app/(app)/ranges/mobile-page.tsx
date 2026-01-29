@@ -445,34 +445,41 @@ export default function MobileRangesPage() {
                                     : null;
 
                                 // For RFI: use traditional frequency coloring
-                                // For 3bet+: use RGB color blending (Red=Raise, Green=Call, Blue=Fold)
+                                // For 3bet+: use simplified 6-color palette
                                 if (breakdown) {
-                                    // RGB Color Blending based on action percentages
-                                    // Using rich, saturated colors for premium look
-                                    const r = Math.round(breakdown.raise * 220 + 35); // Red channel (raise)
-                                    const g = Math.round(breakdown.call * 200 + 35);  // Green channel (call)
-                                    const b = Math.round(breakdown.fold * 180 + 50);  // Blue channel (fold)
+                                    // Determine color class based on action frequencies
+                                    let actionClass = 'action-fold-dom'; // default
 
-                                    // Calculate brightness for text contrast
-                                    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-                                    const textColor = brightness > 140 ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.95)';
+                                    const { raise, call, fold } = breakdown;
+                                    const tolerance = 0.15; // for detecting "mix of all 3"
 
-                                    // Dominant color for border glow
-                                    const maxAction = Math.max(breakdown.raise, breakdown.call, breakdown.fold);
-                                    let glowColor = `rgba(${r}, ${g}, ${b}, 0.4)`;
+                                    // Check for 100% actions first
+                                    if (raise >= 0.95) {
+                                        actionClass = 'action-raise-full';
+                                    } else if (call >= 0.95) {
+                                        actionClass = 'action-call-full';
+                                    }
+                                    // Check for mix of all 3 (all within tolerance of each other)
+                                    else if (Math.abs(raise - call) < tolerance &&
+                                        Math.abs(call - fold) < tolerance &&
+                                        Math.abs(raise - fold) < tolerance &&
+                                        raise > 0.2 && call > 0.2 && fold > 0.2) {
+                                        actionClass = 'action-mixed';
+                                    }
+                                    // Dominant action
+                                    else if (raise >= call && raise >= fold) {
+                                        actionClass = 'action-raise-dom';
+                                    } else if (call > raise && call >= fold) {
+                                        actionClass = 'action-call-dom';
+                                    } else if (fold > raise && fold > call) {
+                                        actionClass = 'action-fold-dom';
+                                    }
 
                                     return (
                                         <button
                                             key={`${rowIdx}-${colIdx}`}
-                                            className={`matrix-cell rgb-blend ${isSelected ? 'selected' : ''} ${isPair ? 'pair' : ''} ${isSuited ? 'suited' : 'offsuit'}`}
+                                            className={`matrix-cell ${actionClass} ${isSelected ? 'selected' : ''} ${isPair ? 'pair' : ''} ${isSuited ? 'suited' : 'offsuit'}`}
                                             onClick={() => handleCellTap(rowIdx, colIdx)}
-                                            style={{
-                                                '--blend-r': r,
-                                                '--blend-g': g,
-                                                '--blend-b': b,
-                                                '--blend-glow': glowColor,
-                                                '--text-color': textColor,
-                                            } as React.CSSProperties}
                                         >
                                             <span className="cell-text">{displayHand}</span>
                                         </button>

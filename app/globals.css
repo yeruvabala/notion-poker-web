@@ -9944,41 +9944,62 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   RGB BLEND CELLS - Dynamic color mixing based on Raise/Call/Fold percentages
-   Premium gradient effects with white highlight and subtle glow
+   6-COLOR ACTION PALETTE - Simplified color scheme for 3bet+ scenarios
+   Premium gradient effects matching RFI styling
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-.matrix-cell.rgb-blend {
-    /* Dynamic background using CSS custom properties */
+/* 1. BRIGHT RED - 100% Raise (Always 4bet/5bet) */
+.matrix-cell.action-raise-full {
     background:
-        /* Premium white highlight at top */
-        linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 35%),
-        /* Main blended color */
-        rgb(var(--blend-r), var(--blend-g), var(--blend-b));
-
-    /* Subtle colored border based on blend */
-    border: 1px solid rgba(var(--blend-r), var(--blend-g), var(--blend-b), 0.5);
-
-    /* Premium inner glow */
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.1),
-        inset 0 0 10px rgba(var(--blend-r), var(--blend-g), var(--blend-b), 0.15),
-        0 0 6px var(--blend-glow);
+        linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 40%),
+        linear-gradient(135deg, #ef4444 0%, #dc2626 40%, #b91c1c 100%);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.25);
 }
 
-.matrix-cell.rgb-blend .cell-text {
-    color: var(--text-color);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+/* 2. BRIGHT GREEN - 100% Call (Always call) */
+.matrix-cell.action-call-full {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 40%),
+        linear-gradient(135deg, #22c55e 0%, #16a34a 40%, #15803d 100%);
+    border: 1px solid rgba(34, 197, 94, 0.5);
+    box-shadow: inset 0 0 10px rgba(34, 197, 94, 0.25);
 }
 
-/* Selected state for rgb-blend cells */
-.matrix-cell.rgb-blend.selected {
-    border: 2px solid #ffffff !important;
-    box-shadow:
-        0 0 20px rgba(255, 255, 255, 0.5),
-        inset 0 0 10px rgba(255, 255, 255, 0.2) !important;
-    transform: scale(1.1);
-    z-index: 10;
+/* 3. MEDIUM RED - Raise Dominant */
+.matrix-cell.action-raise-dom {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 40%),
+        linear-gradient(135deg, rgba(239, 68, 68, 0.7) 0%, rgba(220, 38, 38, 0.6) 40%, rgba(185, 28, 28, 0.5) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    box-shadow: inset 0 0 8px rgba(239, 68, 68, 0.15);
+}
+
+/* 4. MEDIUM GREEN - Call Dominant */
+.matrix-cell.action-call-dom {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 40%),
+        linear-gradient(135deg, rgba(34, 197, 94, 0.7) 0%, rgba(22, 163, 74, 0.6) 40%, rgba(21, 128, 61, 0.5) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    box-shadow: inset 0 0 8px rgba(34, 197, 94, 0.15);
+}
+
+/* 5. MEDIUM BLUE - Fold Dominant */
+.matrix-cell.action-fold-dom {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
+        linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(37, 99, 235, 0.4) 40%, rgba(29, 78, 216, 0.35) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    box-shadow: inset 0 0 8px rgba(59, 130, 246, 0.12);
+}
+
+/* 6. PURPLE - Mix of All 3 */
+.matrix-cell.action-mixed {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 40%),
+        linear-gradient(135deg, rgba(168, 85, 247, 0.65) 0%, rgba(139, 92, 246, 0.55) 40%, rgba(124, 58, 237, 0.5) 100%);
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    box-shadow: inset 0 0 8px rgba(168, 85, 247, 0.15);
 }
 
 /* Selected Hand Card */
