@@ -147,10 +147,10 @@ function mergeRangeActions(rangeData: Record<string, Record<string, number>> | u
 
 // Get action breakdown for a specific hand
 interface ActionBreakdown {
-    raise: number;  // 4bet or 5bet
+    raise: number;  // 3bet, 4bet or 5bet
     call: number;
     fold: number;
-    raiseLabel: string;  // "4-Bet" or "5-Bet"
+    raiseLabel: string;  // "3-Bet", "4-Bet" or "5-Bet"
 }
 
 function getActionBreakdown(
@@ -159,8 +159,8 @@ function getActionBreakdown(
     opponent: string,
     hand: string
 ): ActionBreakdown | null {
-    // Only for 3bet+ scenarios
-    if (scenario === 'rfi' || scenario === '3bet') {
+    // RFI has no action split (just raise frequency)
+    if (scenario === 'rfi') {
         return null;
     }
 
@@ -168,17 +168,26 @@ function getActionBreakdown(
     let raiseLabel = '4-Bet';
     let raiseKey = '4bet';
 
-    if (scenario === 'vs3bet') {
+    if (scenario === '3bet') {
+        // Making a 3-bet vs opener
+        const key = `${position}_vs_${opponent}`;
+        rangeData = THREE_BET_RANGES[key];
+        raiseLabel = '3-Bet';
+        raiseKey = '3bet';
+    } else if (scenario === 'vs3bet') {
+        // Facing 3-bet after opening
         const key = `${position}_vs_${opponent}_3bet`;
         rangeData = VS_THREE_BET_RANGES[key];
         raiseLabel = '4-Bet';
         raiseKey = '4bet';
     } else if (scenario === 'vs4bet') {
+        // Facing 4-bet after 3-betting
         const key = `${position}_vs_${opponent}_4bet`;
         rangeData = VS_FOUR_BET_RANGES[key];
         raiseLabel = '5-Bet';
         raiseKey = '5bet';
     } else if (scenario === 'vs5bet') {
+        // Facing 5-bet after 4-betting
         const key = `${position}_vs_${opponent}_5bet`;
         rangeData = VS_FIVE_BET_RANGES[key];
         raiseLabel = 'All-In';
@@ -190,11 +199,11 @@ function getActionBreakdown(
     const raiseFreq = rangeData[raiseKey]?.[hand] || 0;
     const callFreq = rangeData['call']?.[hand] || 0;
 
-    // Calculate fold as remaining (1 - raise - call)
+    // Calculate fold as remaining (1 - raise - call), but max at 1
     const total = raiseFreq + callFreq;
-    const foldFreq = total > 0 ? Math.max(0, 1 - total) : 0;
+    const foldFreq = total > 0 ? Math.max(0, Math.min(1, 1 - total)) : 0;
 
-    // Only return breakdown if hand is in range
+    // Only return breakdown if hand is in range at all
     if (total === 0) return null;
 
     return {
