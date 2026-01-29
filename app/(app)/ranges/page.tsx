@@ -103,16 +103,27 @@ function calculateRangeStats(range: Record<string, number>) {
 // =============================================================================
 
 export default function RangesPage() {
-  // Mobile detection - render mobile page on native platforms
-  const isNative = typeof window !== 'undefined' && Capacitor.isNativePlatform();
-  if (isNative) {
-    return <MobileRangesPage />;
-  }
-
+  const [isNative, setIsNative] = useState<boolean | null>(null); // null = not checked yet
   const [selectedPosition, setSelectedPosition] = useState('BTN');
   const [selectedScenario, setSelectedScenario] = useState('rfi');
   const [hoveredCell, setHoveredCell] = useState<{ row: number; col: number } | null>(null);
   const [vs3betOpener, setVs3betOpener] = useState('BTN'); // For vs 3-bet scenario
+
+  // Check for native platform on client-side only (after mount)
+  useMemo(() => {
+    if (typeof window !== 'undefined' && isNative === null) {
+      try {
+        setIsNative(Capacitor.isNativePlatform());
+      } catch {
+        setIsNative(false);
+      }
+    }
+  }, [isNative]);
+
+  // Mobile detection - render mobile page on native platforms
+  if (isNative === true) {
+    return <MobileRangesPage />;
+  }
 
   // Get the current range based on selection
   const currentRange = useMemo(() => {
