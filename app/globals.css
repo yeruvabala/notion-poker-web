@@ -10000,6 +10000,75 @@ body.native-app [class*="btn-row"]>* {
     border: 1px solid rgba(156, 163, 175, 0.3);
 }
 
+/* Action Breakdown Bars - For 3bet+ scenarios */
+.action-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.action-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.action-label {
+    width: 50px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.action-label.raise {
+    color: #22c55e;
+}
+
+.action-label.call {
+    color: #eab308;
+}
+
+.action-label.fold {
+    color: #6b7280;
+}
+
+.action-bar-container {
+    flex: 1;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.action-bar {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.3s ease-out;
+}
+
+.action-bar.raise {
+    background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+}
+
+.action-bar.call {
+    background: linear-gradient(90deg, #eab308 0%, #ca8a04 100%);
+    box-shadow: 0 0 8px rgba(234, 179, 8, 0.4);
+}
+
+.action-bar.fold {
+    background: linear-gradient(90deg, #6b7280 0%, #4b5563 100%);
+}
+
+.action-pct {
+    width: 40px;
+    text-align: right;
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+}
+
 .selected-hand-stats {
     display: flex;
     justify-content: space-around;

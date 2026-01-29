@@ -145,6 +145,66 @@ function mergeRangeActions(rangeData: Record<string, Record<string, number>> | u
     return merged;
 }
 
+// Get action breakdown for a specific hand
+interface ActionBreakdown {
+    raise: number;  // 4bet or 5bet
+    call: number;
+    fold: number;
+    raiseLabel: string;  // "4-Bet" or "5-Bet"
+}
+
+function getActionBreakdown(
+    scenario: Scenario,
+    position: string,
+    opponent: string,
+    hand: string
+): ActionBreakdown | null {
+    // Only for 3bet+ scenarios
+    if (scenario === 'rfi' || scenario === '3bet') {
+        return null;
+    }
+
+    let rangeData: Record<string, Record<string, number>> | undefined;
+    let raiseLabel = '4-Bet';
+    let raiseKey = '4bet';
+
+    if (scenario === 'vs3bet') {
+        const key = `${position}_vs_${opponent}_3bet`;
+        rangeData = VS_THREE_BET_RANGES[key];
+        raiseLabel = '4-Bet';
+        raiseKey = '4bet';
+    } else if (scenario === 'vs4bet') {
+        const key = `${position}_vs_${opponent}_4bet`;
+        rangeData = VS_FOUR_BET_RANGES[key];
+        raiseLabel = '5-Bet';
+        raiseKey = '5bet';
+    } else if (scenario === 'vs5bet') {
+        const key = `${position}_vs_${opponent}_5bet`;
+        rangeData = VS_FIVE_BET_RANGES[key];
+        raiseLabel = 'All-In';
+        raiseKey = 'allin';
+    }
+
+    if (!rangeData) return null;
+
+    const raiseFreq = rangeData[raiseKey]?.[hand] || 0;
+    const callFreq = rangeData['call']?.[hand] || 0;
+
+    // Calculate fold as remaining (1 - raise - call)
+    const total = raiseFreq + callFreq;
+    const foldFreq = total > 0 ? Math.max(0, 1 - total) : 0;
+
+    // Only return breakdown if hand is in range
+    if (total === 0) return null;
+
+    return {
+        raise: raiseFreq,
+        call: callFreq,
+        fold: foldFreq,
+        raiseLabel
+    };
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // MOBILE RANGES PAGE COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -231,14 +291,18 @@ export default function MobileRangesPage() {
 
     const stats = useMemo(() => calculateRangeStats(currentRange), [currentRange]);
 
-    const selectedHandData = selectedHand ? {
-        notation: getHandNotation(selectedHand.row, selectedHand.col),
-        frequency: getFrequency(getHandNotation(selectedHand.row, selectedHand.col), currentRange),
-        type: selectedHand.row === selectedHand.col ? 'Pocket Pair' :
-            selectedHand.row < selectedHand.col ? 'Suited' : 'Offsuit',
-        combos: selectedHand.row === selectedHand.col ? 6 :
-            selectedHand.row < selectedHand.col ? 4 : 12,
-    } : null;
+    // Get selected hand data + action breakdown
+    const selectedHandData = selectedHand ? (() => {
+        const notation = getHandNotation(selectedHand.row, selectedHand.col);
+        const frequency = getFrequency(notation, currentRange);
+        const type = selectedHand.row === selectedHand.col ? 'Pocket Pair' :
+            selectedHand.row < selectedHand.col ? 'Suited' : 'Offsuit';
+        const combos = selectedHand.row === selectedHand.col ? 6 :
+            selectedHand.row < selectedHand.col ? 4 : 12;
+        const actionBreakdown = getActionBreakdown(selectedScenario, selectedPosition, selectedOpponent, notation);
+
+        return { notation, frequency, type, combos, actionBreakdown };
+    })() : null;
 
     const handleCellTap = (row: number, col: number) => {
         haptic(ImpactStyle.Light);
@@ -390,27 +454,65 @@ export default function MobileRangesPage() {
                             {selectedHandData.type}
                         </span>
                     </div>
-                    <div className="selected-hand-stats">
-                        <div className="stat-item">
-                            <span className="stat-value">
-                                {selectedHandData.frequency > 0
-                                    ? `${Math.round(selectedHandData.frequency * 100)}%`
-                                    : 'Fold'}
-                            </span>
-                            <span className="stat-label">Frequency</span>
+
+                    {/* Action Breakdown for 3bet+ scenarios */}
+                    {selectedHandData.actionBreakdown ? (
+                        <div className="action-breakdown">
+                            <div className="action-row">
+                                <span className="action-label raise">{selectedHandData.actionBreakdown.raiseLabel}</span>
+                                <div className="action-bar-container">
+                                    <div
+                                        className="action-bar raise"
+                                        style={{ width: `${selectedHandData.actionBreakdown.raise * 100}%` }}
+                                    />
+                                </div>
+                                <span className="action-pct">{Math.round(selectedHandData.actionBreakdown.raise * 100)}%</span>
+                            </div>
+                            <div className="action-row">
+                                <span className="action-label call">Call</span>
+                                <div className="action-bar-container">
+                                    <div
+                                        className="action-bar call"
+                                        style={{ width: `${selectedHandData.actionBreakdown.call * 100}%` }}
+                                    />
+                                </div>
+                                <span className="action-pct">{Math.round(selectedHandData.actionBreakdown.call * 100)}%</span>
+                            </div>
+                            <div className="action-row">
+                                <span className="action-label fold">Fold</span>
+                                <div className="action-bar-container">
+                                    <div
+                                        className="action-bar fold"
+                                        style={{ width: `${selectedHandData.actionBreakdown.fold * 100}%` }}
+                                    />
+                                </div>
+                                <span className="action-pct">{Math.round(selectedHandData.actionBreakdown.fold * 100)}%</span>
+                            </div>
                         </div>
-                        <div className="stat-item">
-                            <span className="stat-value">{selectedHandData.combos}</span>
-                            <span className="stat-label">Combos</span>
+                    ) : (
+                        /* Original stats for RFI/3bet scenarios */
+                        <div className="selected-hand-stats">
+                            <div className="stat-item">
+                                <span className="stat-value">
+                                    {selectedHandData.frequency > 0
+                                        ? `${Math.round(selectedHandData.frequency * 100)}%`
+                                        : 'Fold'}
+                                </span>
+                                <span className="stat-label">Frequency</span>
+                            </div>
+                            <div className="stat-item">
+                                <span className="stat-value">{selectedHandData.combos}</span>
+                                <span className="stat-label">Combos</span>
+                            </div>
+                            <div className="stat-item">
+                                <span className={`action-badge ${selectedHandData.frequency >= 0.5 ? 'raise' : selectedHandData.frequency > 0 ? 'mixed' : 'fold'}`}>
+                                    {selectedHandData.frequency >= 0.8 ? '🚀 Always' :
+                                        selectedHandData.frequency >= 0.5 ? '✓ Often' :
+                                            selectedHandData.frequency > 0 ? '⚖️ Mixed' : '✗ Fold'}
+                                </span>
+                            </div>
                         </div>
-                        <div className="stat-item">
-                            <span className={`action-badge ${selectedHandData.frequency >= 0.5 ? 'raise' : selectedHandData.frequency > 0 ? 'mixed' : 'fold'}`}>
-                                {selectedHandData.frequency >= 0.8 ? '🚀 Always' :
-                                    selectedHandData.frequency >= 0.5 ? '✓ Often' :
-                                        selectedHandData.frequency > 0 ? '⚖️ Mixed' : '✗ Fold'}
-                            </span>
-                        </div>
-                    </div>
+                    )}
                 </div>
             )}
 
