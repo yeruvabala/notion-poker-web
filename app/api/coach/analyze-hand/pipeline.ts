@@ -1146,10 +1146,14 @@ function formatOutput(data: FormatInput): CoachOutput {
     // Equity/Pot Odds matter for CALLING decisions, not opening/folding first
     const villainContext = data.villainContext;
     const isFacingAction = villainContext?.type === 'facing_action' || villainContext?.type === 'sb_vs_bb';
+    const hasBetToCall = equity.pot_odds.to_call > 0;
 
     if (isFacingAction) {
         gtoText += `**EQUITY:** ${(equity.equity_vs_range * 100).toFixed(1)}% vs villain's range\n`;
-        gtoText += `**POT ODDS:** ${(equity.pot_odds.equity_needed * 100).toFixed(1)}% needed\n`;
+        // Only show pot odds if there's actually a bet to call
+        if (hasBetToCall) {
+            gtoText += `**POT ODDS:** ${(equity.pot_odds.equity_needed * 100).toFixed(1)}% needed\n`;
+        }
     }
 
     // Build Play Classification text (replaces deviation text)
