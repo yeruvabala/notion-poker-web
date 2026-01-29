@@ -286,15 +286,7 @@ export default function MobileRangesPage() {
             {/* Premium Page Header */}
             <MobilePageHeader title="RANGES" />
 
-            {/* Stack Depth & Format Badge */}
-            <div className="mobile-ranges-format-badge">
-                <div className="format-badge-main">
-                    <span className="format-badge-bb">100 BB</span>
-                </div>
-                <span className="format-badge-label">6-Max Cash</span>
-            </div>
-
-            {/* Stats Bar */}
+            {/* Stats Bar - 3 Column Layout */}
             <div className="mobile-ranges-stats">
                 <div className="range-stat-main">
                     <span className="range-stat-value">{stats.percentage}%</span>
@@ -304,6 +296,11 @@ export default function MobileRangesPage() {
                 <div className="range-stat-secondary">
                     <span className="range-stat-value">{stats.combos}</span>
                     <span className="range-stat-label">combos</span>
+                </div>
+                <div className="range-stat-divider" />
+                <div className="range-stat-format">
+                    <span className="format-bb">100 BB</span>
+                    <span className="format-type">6-max</span>
                 </div>
             </div>
 

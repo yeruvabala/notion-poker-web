@@ -9451,64 +9451,15 @@ body.native-app [class*="btn-row"]>* {
     background: transparent;
 }
 
-/* Stack Depth & Format Badge - 100 BB with Blue Glow */
-.mobile-ranges-format-badge {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 12px;
-}
-
-.format-badge-main {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 20px;
-    /* Blue gradient background */
-    background: linear-gradient(135deg,
-            rgba(59, 130, 246, 0.25) 0%,
-            rgba(37, 99, 235, 0.15) 100%);
-    /* Platinum gradient border */
-    border: 1px solid;
-    border-image: linear-gradient(135deg,
-            rgba(180, 200, 255, 0.5) 0%,
-            rgba(100, 150, 255, 0.3) 50%,
-            rgba(160, 190, 255, 0.4) 100%) 1;
-    border-radius: 12px;
-    /* Blue glow effect */
-    box-shadow:
-        0 0 20px rgba(59, 130, 246, 0.3),
-        0 0 40px rgba(59, 130, 246, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-.format-badge-bb {
-    font-size: 16px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
-}
-
-.format-badge-label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: rgba(255, 255, 255, 0.4);
-}
+/* Stack Depth & Format Badge - REMOVED (now in stats bar) */
 
 /* Stats Bar - Gray Shimmer Animation + Blue Border (matching PREFLOP style) */
 .mobile-ranges-stats {
     position: relative;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    gap: 20px;
+    gap: 16px;
     padding: 14px 20px;
     margin-bottom: 14px;
     background: rgba(255, 255, 255, 0.03);
@@ -9539,15 +9490,17 @@ body.native-app [class*="btn-row"]>* {
 }
 
 .range-stat-main,
-.range-stat-secondary {
+.range-stat-secondary,
+.range-stat-format {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 2px;
+    flex: 1;
 }
 
 .range-stat-value {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 800;
     background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
     -webkit-background-clip: text;
@@ -9575,6 +9528,29 @@ body.native-app [class*="btn-row"]>* {
     width: 1px;
     height: 30px;
     background: rgba(255, 255, 255, 0.15);
+}
+
+/* Format Column - 100 BB + 6-max */
+.range-stat-format {
+    position: relative;
+}
+
+.format-bb {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.format-type {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.4);
 }
 
 /* Position Pills */
