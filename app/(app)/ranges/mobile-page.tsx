@@ -439,6 +439,47 @@ export default function MobileRangesPage() {
                                 const isPair = rowIdx === colIdx;
                                 const isSuited = rowIdx < colIdx;
 
+                                // Get action breakdown for 3bet+ scenarios
+                                const breakdown = selectedScenario !== 'rfi'
+                                    ? getActionBreakdown(selectedScenario, selectedPosition, selectedOpponent, hand)
+                                    : null;
+
+                                // For RFI: use traditional frequency coloring
+                                // For 3bet+: use stacked bar display
+                                if (breakdown) {
+                                    // 3-color stacked bar cell
+                                    return (
+                                        <button
+                                            key={`${rowIdx}-${colIdx}`}
+                                            className={`matrix-cell stacked-cell ${isSelected ? 'selected' : ''} ${isPair ? 'pair' : ''} ${isSuited ? 'suited' : 'offsuit'}`}
+                                            onClick={() => handleCellTap(rowIdx, colIdx)}
+                                        >
+                                            <div className="stacked-bars">
+                                                {breakdown.raise > 0 && (
+                                                    <div
+                                                        className="bar-raise"
+                                                        style={{ height: `${breakdown.raise * 100}%` }}
+                                                    />
+                                                )}
+                                                {breakdown.call > 0 && (
+                                                    <div
+                                                        className="bar-call"
+                                                        style={{ height: `${breakdown.call * 100}%` }}
+                                                    />
+                                                )}
+                                                {breakdown.fold > 0 && (
+                                                    <div
+                                                        className="bar-fold"
+                                                        style={{ height: `${breakdown.fold * 100}%` }}
+                                                    />
+                                                )}
+                                            </div>
+                                            <span className="cell-text">{displayHand}</span>
+                                        </button>
+                                    );
+                                }
+
+                                // RFI: original single-color cell
                                 return (
                                     <button
                                         key={`${rowIdx}-${colIdx}`}
@@ -525,14 +566,24 @@ export default function MobileRangesPage() {
                 </div>
             )}
 
-            {/* Legend */}
-            <div className="mobile-ranges-legend">
-                <div className="legend-item"><div className="legend-dot freq-always" /><span>80-100%</span></div>
-                <div className="legend-item"><div className="legend-dot freq-often" /><span>50-79%</span></div>
-                <div className="legend-item"><div className="legend-dot freq-mixed" /><span>20-49%</span></div>
-                <div className="legend-item"><div className="legend-dot freq-rare" /><span>1-19%</span></div>
-                <div className="legend-item"><div className="legend-dot freq-fold" /><span>Fold</span></div>
-            </div>
+            {/* Legend - Dynamic based on scenario */}
+            {selectedScenario === 'rfi' ? (
+                /* RFI: Frequency-based legend */
+                <div className="mobile-ranges-legend">
+                    <div className="legend-item"><div className="legend-dot freq-always" /><span>80-100%</span></div>
+                    <div className="legend-item"><div className="legend-dot freq-often" /><span>50-79%</span></div>
+                    <div className="legend-item"><div className="legend-dot freq-mixed" /><span>20-49%</span></div>
+                    <div className="legend-item"><div className="legend-dot freq-rare" /><span>1-19%</span></div>
+                    <div className="legend-item"><div className="legend-dot freq-fold" /><span>Fold</span></div>
+                </div>
+            ) : (
+                /* 3bet+: Action-based legend */
+                <div className="mobile-ranges-legend action-legend">
+                    <div className="legend-item"><div className="legend-dot action-raise" /><span>Raise</span></div>
+                    <div className="legend-item"><div className="legend-dot action-call" /><span>Call</span></div>
+                    <div className="legend-item"><div className="legend-dot action-fold" /><span>Fold</span></div>
+                </div>
+            )}
 
             {/* Bottom Navigation */}
             <MobileBottomNav />
