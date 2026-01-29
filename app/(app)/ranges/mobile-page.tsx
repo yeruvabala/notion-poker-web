@@ -3,23 +3,77 @@
 import { useState, useMemo } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { RFI_RANGES, VS_THREE_BET_RANGES } from '@/app/api/coach/utils/gtoRangesV2';
+import {
+    RFI_RANGES,
+    THREE_BET_RANGES,
+    VS_THREE_BET_RANGES,
+    VS_FOUR_BET_RANGES,
+    VS_FIVE_BET_RANGES
+} from '@/app/api/coach/utils/gtoRangesV2';
 import MobilePageHeader from '@/components/mobile/MobilePageHeader';
 import MobileBottomNav from '@/components/mobile/MobileBottomNav';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// MOBILE RANGES PAGE - Premium Touch-Friendly GTO Range Matrix
+// MOBILE RANGES PAGE - Full GTO Range Support (RFI → 5-Bet)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const RANKS = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
 
-const POSITIONS = [
-    { id: 'UTG', label: 'UTG', color: '#ef4444' },
-    { id: 'HJ', label: 'HJ', color: '#f97316' },
-    { id: 'CO', label: 'CO', color: '#eab308' },
-    { id: 'BTN', label: 'BTN', color: '#22c55e' },
-    { id: 'SB', label: 'SB', color: '#3b82f6' },
+// All positions for 6-max
+const ALL_POSITIONS = ['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
+
+// Scenario definitions with available positions
+type Scenario = 'rfi' | '3bet' | 'vs3bet' | 'vs4bet' | 'vs5bet';
+
+const SCENARIOS: { id: Scenario; label: string; description: string }[] = [
+    { id: 'rfi', label: 'RFI', description: 'Raise First In' },
+    { id: '3bet', label: '3-Bet', description: '3-Betting vs Open' },
+    { id: 'vs3bet', label: 'vs 3-Bet', description: 'Facing 3-Bet' },
+    { id: 'vs4bet', label: 'vs 4-Bet', description: 'Facing 4-Bet' },
+    { id: 'vs5bet', label: 'vs 5-Bet', description: 'Facing 5-Bet' },
 ];
+
+// Position colors
+const POSITION_COLORS: Record<string, string> = {
+    UTG: '#ef4444',
+    HJ: '#f97316',
+    CO: '#eab308',
+    BTN: '#22c55e',
+    SB: '#3b82f6',
+    BB: '#8b5cf6',
+};
+
+// Available hero positions per scenario
+const HERO_POSITIONS: Record<Scenario, string[]> = {
+    rfi: ['UTG', 'HJ', 'CO', 'BTN', 'SB'],
+    '3bet': ['HJ', 'CO', 'BTN', 'SB', 'BB'],
+    vs3bet: ['UTG', 'HJ', 'CO', 'BTN', 'SB'],
+    vs4bet: ['UTG', 'HJ', 'CO', 'BTN', 'SB'],
+    vs5bet: ['UTG', 'HJ', 'CO', 'BTN'],
+};
+
+// Get valid opponent positions given hero position and scenario
+function getOpponentPositions(scenario: Scenario, heroPos: string): string[] {
+    const heroIdx = ALL_POSITIONS.indexOf(heroPos);
+
+    if (scenario === '3bet') {
+        // 3-betting: opponent opened before us (earlier positions)
+        return ALL_POSITIONS.filter((_, idx) => idx < heroIdx);
+    }
+    if (scenario === 'vs3bet') {
+        // Facing 3-bet: opponent is behind us (later positions)
+        return ALL_POSITIONS.filter((_, idx) => idx > heroIdx);
+    }
+    if (scenario === 'vs4bet') {
+        // Facing 4-bet after we 3-bet: original opener
+        return ALL_POSITIONS.filter((_, idx) => idx < heroIdx);
+    }
+    if (scenario === 'vs5bet') {
+        // Facing 5-bet after we 4-bet: the 3-bettor
+        return ALL_POSITIONS.filter((_, idx) => idx > heroIdx);
+    }
+    return [];
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // UTILITY FUNCTIONS
@@ -33,7 +87,6 @@ function getHandNotation(row: number, col: number): string {
     return `${r2}${r1}o`;
 }
 
-// Display notation without s/o suffix (visual styling indicates suited/offsuit)
 function getDisplayNotation(row: number, col: number): string {
     const r1 = RANKS[row];
     const r2 = RANKS[col];
@@ -70,15 +123,37 @@ function calculateRangeStats(range: Record<string, number>) {
     };
 }
 
+// Merge action frequencies into single range view
+function mergeRangeActions(rangeData: Record<string, Record<string, number>> | undefined): Record<string, number> {
+    if (!rangeData) return {};
+
+    const merged: Record<string, number> = {};
+
+    // Priority: 5bet/4bet > call > fold (show highest action)
+    const actionPriority = ['5bet', '4bet', 'call'];
+
+    for (const action of actionPriority) {
+        if (rangeData[action]) {
+            Object.entries(rangeData[action]).forEach(([hand, freq]) => {
+                if (!merged[hand]) {
+                    merged[hand] = freq as number;
+                }
+            });
+        }
+    }
+
+    return merged;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // MOBILE RANGES PAGE COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export default function MobileRangesPage() {
+    const [selectedScenario, setSelectedScenario] = useState<Scenario>('rfi');
     const [selectedPosition, setSelectedPosition] = useState('BTN');
-    const [selectedScenario, setSelectedScenario] = useState<'rfi' | 'vs3bet'>('rfi');
+    const [selectedOpponent, setSelectedOpponent] = useState('');
     const [selectedHand, setSelectedHand] = useState<{ row: number; col: number } | null>(null);
-    const [vs3betOpener, setVs3betOpener] = useState('BB');
 
     // Haptic feedback helper
     const haptic = (style: ImpactStyle = ImpactStyle.Light) => {
@@ -87,29 +162,72 @@ export default function MobileRangesPage() {
         }
     };
 
-    // Get current range
+    // Get available positions for current scenario
+    const availablePositions = HERO_POSITIONS[selectedScenario];
+    const opponentPositions = selectedScenario !== 'rfi'
+        ? getOpponentPositions(selectedScenario, selectedPosition)
+        : [];
+
+    // Reset position if not available in new scenario
+    useMemo(() => {
+        if (!availablePositions.includes(selectedPosition)) {
+            setSelectedPosition(availablePositions[0] || 'BTN');
+        }
+    }, [selectedScenario, availablePositions, selectedPosition]);
+
+    // Set default opponent when switching scenarios
+    useMemo(() => {
+        if (opponentPositions.length > 0 && !opponentPositions.includes(selectedOpponent)) {
+            setSelectedOpponent(opponentPositions[0]);
+        }
+    }, [opponentPositions, selectedOpponent]);
+
+    // Get current range based on scenario
     const currentRange = useMemo(() => {
         if (selectedScenario === 'rfi') {
             return RFI_RANGES[selectedPosition] || {};
         }
-        const key = `${selectedPosition}_vs_${vs3betOpener}_3bet`;
-        const rangeData = VS_THREE_BET_RANGES[key];
-        if (rangeData) {
-            const merged: Record<string, number> = {};
-            if (rangeData['4bet']) {
-                Object.entries(rangeData['4bet']).forEach(([hand, freq]) => {
-                    merged[hand] = (merged[hand] || 0) + (freq as number);
-                });
+
+        if (selectedScenario === '3bet') {
+            // Making a 3-bet vs opener
+            const key = `${selectedPosition}_vs_${selectedOpponent}`;
+            const rangeData = THREE_BET_RANGES[key];
+            if (rangeData) {
+                // Merge 3bet action frequencies
+                const merged: Record<string, number> = {};
+                if (rangeData['3bet']) {
+                    Object.entries(rangeData['3bet']).forEach(([hand, freq]) => {
+                        merged[hand] = freq as number;
+                    });
+                }
+                return merged;
             }
-            if (rangeData['call']) {
-                Object.entries(rangeData['call']).forEach(([hand, freq]) => {
-                    merged[hand] = Math.max(merged[hand] || 0, freq as number);
-                });
-            }
-            return merged;
+            return {};
         }
+
+        if (selectedScenario === 'vs3bet') {
+            // Facing 3-bet after opening
+            const key = `${selectedPosition}_vs_${selectedOpponent}_3bet`;
+            const rangeData = VS_THREE_BET_RANGES[key];
+            return mergeRangeActions(rangeData);
+        }
+
+        if (selectedScenario === 'vs4bet') {
+            // Facing 4-bet after 3-betting
+            const key = `${selectedPosition}_vs_${selectedOpponent}_4bet`;
+            const rangeData = VS_FOUR_BET_RANGES[key];
+            return mergeRangeActions(rangeData);
+        }
+
+        if (selectedScenario === 'vs5bet') {
+            // Facing 5-bet after 4-betting
+            const key = `${selectedPosition}_vs_${selectedOpponent}_5bet`;
+            const rangeData = VS_FIVE_BET_RANGES[key];
+            return mergeRangeActions(rangeData);
+        }
+
         return {};
-    }, [selectedPosition, selectedScenario, vs3betOpener]);
+    }, [selectedScenario, selectedPosition, selectedOpponent]);
 
     const stats = useMemo(() => calculateRangeStats(currentRange), [currentRange]);
 
@@ -134,6 +252,33 @@ export default function MobileRangesPage() {
     const handlePositionChange = (posId: string) => {
         haptic(ImpactStyle.Medium);
         setSelectedPosition(posId);
+        setSelectedHand(null);
+    };
+
+    const handleScenarioChange = (scenario: Scenario) => {
+        haptic(ImpactStyle.Medium);
+        setSelectedScenario(scenario);
+        setSelectedHand(null);
+    };
+
+    // Get scenario description for header
+    const getScenarioDescription = () => {
+        if (selectedScenario === 'rfi') {
+            return `${selectedPosition} opens`;
+        }
+        if (selectedScenario === '3bet') {
+            return `${selectedPosition} 3-bets vs ${selectedOpponent}`;
+        }
+        if (selectedScenario === 'vs3bet') {
+            return `${selectedPosition} vs ${selectedOpponent} 3-bet`;
+        }
+        if (selectedScenario === 'vs4bet') {
+            return `${selectedPosition} vs ${selectedOpponent} 4-bet`;
+        }
+        if (selectedScenario === 'vs5bet') {
+            return `${selectedPosition} vs ${selectedOpponent} 5-bet`;
+        }
+        return '';
     };
 
     return (
@@ -141,7 +286,7 @@ export default function MobileRangesPage() {
             {/* Premium Page Header */}
             <MobilePageHeader title="RANGES" />
 
-            {/* Stats Bar - Shows range percentage */}
+            {/* Stats Bar */}
             <div className="mobile-ranges-stats">
                 <div className="range-stat-main">
                     <span className="range-stat-value">{stats.percentage}%</span>
@@ -154,45 +299,43 @@ export default function MobileRangesPage() {
                 </div>
             </div>
 
-            {/* Position Selector - Pill buttons */}
-            <div className="mobile-ranges-positions">
-                {POSITIONS.map((pos) => (
+            {/* Scenario Selector - Scrollable Pills */}
+            <div className="mobile-ranges-scenarios-scroll">
+                {SCENARIOS.map((scenario) => (
                     <button
-                        key={pos.id}
-                        className={`position-pill ${selectedPosition === pos.id ? 'active' : ''}`}
-                        onClick={() => handlePositionChange(pos.id)}
-                        style={{ '--pos-color': pos.color } as React.CSSProperties}
+                        key={scenario.id}
+                        className={`scenario-btn ${selectedScenario === scenario.id ? 'active' : ''}`}
+                        onClick={() => handleScenarioChange(scenario.id)}
                     >
-                        {pos.label}
+                        {scenario.label}
                     </button>
                 ))}
             </div>
 
-            {/* Scenario Toggle */}
-            <div className="mobile-ranges-scenarios">
-                <button
-                    className={`scenario-btn ${selectedScenario === 'rfi' ? 'active' : ''}`}
-                    onClick={() => { haptic(); setSelectedScenario('rfi'); }}
-                >
-                    RFI
-                </button>
-                <button
-                    className={`scenario-btn ${selectedScenario === 'vs3bet' ? 'active' : ''}`}
-                    onClick={() => { haptic(); setSelectedScenario('vs3bet'); }}
-                >
-                    vs 3-Bet
-                </button>
+            {/* Position Selector */}
+            <div className="mobile-ranges-positions">
+                {availablePositions.map((pos) => (
+                    <button
+                        key={pos}
+                        className={`position-pill ${selectedPosition === pos ? 'active' : ''}`}
+                        onClick={() => handlePositionChange(pos)}
+                        style={{ '--pos-color': POSITION_COLORS[pos] } as React.CSSProperties}
+                    >
+                        {pos}
+                    </button>
+                ))}
             </div>
 
-            {/* vs 3-Bet Opener Selector */}
-            {selectedScenario === 'vs3bet' && (
-                <div className="mobile-ranges-3bet-opener">
-                    <span className="opener-label">3-bettor:</span>
-                    {['CO', 'BTN', 'SB', 'BB'].map((pos) => (
+            {/* Opponent Selector (for 3bet+ scenarios) */}
+            {opponentPositions.length > 0 && (
+                <div className="mobile-ranges-opponent">
+                    <span className="opponent-label">vs:</span>
+                    {opponentPositions.map((pos) => (
                         <button
                             key={pos}
-                            className={`opener-pill ${vs3betOpener === pos ? 'active' : ''}`}
-                            onClick={() => { haptic(); setVs3betOpener(pos); }}
+                            className={`opponent-pill ${selectedOpponent === pos ? 'active' : ''}`}
+                            onClick={() => { haptic(); setSelectedOpponent(pos); }}
+                            style={{ '--pos-color': POSITION_COLORS[pos] } as React.CSSProperties}
                         >
                             {pos}
                         </button>
@@ -200,7 +343,12 @@ export default function MobileRangesPage() {
                 </div>
             )}
 
-            {/* Range Matrix - Compact 13x13 Grid */}
+            {/* Scenario Description */}
+            <div className="mobile-ranges-scenario-desc">
+                {getScenarioDescription()}
+            </div>
+
+            {/* Range Matrix */}
             <div className="mobile-ranges-matrix-container">
                 <div className="mobile-ranges-matrix">
                     {RANKS.map((rowRank, rowIdx) => (

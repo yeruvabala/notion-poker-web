@@ -9572,12 +9572,80 @@ body.native-app [class*="btn-row"]>* {
     transform: scale(0.95);
 }
 
-/* Scenario Toggle */
+/* Scenario Toggle - Scrollable for 5 scenarios */
+.mobile-ranges-scenarios-scroll {
+    display: flex;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 2px 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.mobile-ranges-scenarios-scroll::-webkit-scrollbar {
+    display: none;
+}
+
 .mobile-ranges-scenarios {
     display: flex;
     justify-content: center;
     gap: 10px;
     margin-bottom: 12px;
+}
+
+/* Opponent Selector */
+.mobile-ranges-opponent {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.opponent-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.5px;
+}
+
+.opponent-pill {
+    padding: 6px 12px;
+    border-radius: 8px;
+    background:
+        linear-gradient(#1e1e1e, #1e1e1e) padding-box,
+        linear-gradient(135deg,
+            rgba(160, 160, 160, 0.25) 0%,
+            rgba(100, 100, 100, 0.15) 50%,
+            rgba(140, 140, 140, 0.2) 100%) border-box;
+    border: 1px solid transparent;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.opponent-pill.active {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    color: #ef4444;
+}
+
+/* Scenario Description */
+.mobile-ranges-scenario-desc {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 12px;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
 }
 
 /* Scenario Buttons - Platinum Theme */
