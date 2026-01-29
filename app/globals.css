@@ -9451,6 +9451,57 @@ body.native-app [class*="btn-row"]>* {
     background: transparent;
 }
 
+/* Stack Depth & Format Badge - 100 BB with Blue Glow */
+.mobile-ranges-format-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.format-badge-main {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 20px;
+    /* Blue gradient background */
+    background: linear-gradient(135deg,
+            rgba(59, 130, 246, 0.25) 0%,
+            rgba(37, 99, 235, 0.15) 100%);
+    /* Platinum gradient border */
+    border: 1px solid;
+    border-image: linear-gradient(135deg,
+            rgba(180, 200, 255, 0.5) 0%,
+            rgba(100, 150, 255, 0.3) 50%,
+            rgba(160, 190, 255, 0.4) 100%) 1;
+    border-radius: 12px;
+    /* Blue glow effect */
+    box-shadow:
+        0 0 20px rgba(59, 130, 246, 0.3),
+        0 0 40px rgba(59, 130, 246, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.format-badge-bb {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+}
+
+.format-badge-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
 /* Stats Bar - Gray Shimmer Animation + Blue Border (matching PREFLOP style) */
 .mobile-ranges-stats {
     position: relative;

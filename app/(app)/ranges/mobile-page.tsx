@@ -286,6 +286,14 @@ export default function MobileRangesPage() {
             {/* Premium Page Header */}
             <MobilePageHeader title="RANGES" />
 
+            {/* Stack Depth & Format Badge */}
+            <div className="mobile-ranges-format-badge">
+                <div className="format-badge-main">
+                    <span className="format-badge-bb">100 BB</span>
+                </div>
+                <span className="format-badge-label">6-Max Cash</span>
+            </div>
+
             {/* Stats Bar */}
             <div className="mobile-ranges-stats">
                 <div className="range-stat-main">
