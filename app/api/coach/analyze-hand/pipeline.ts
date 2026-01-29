@@ -716,36 +716,56 @@ export async function runMultiAgentPipeline(input: HandInput): Promise<CoachOutp
         // ═══════════════════════════════════════════════════════════
         console.error('[Pipeline] Tier 3: Equity + Advantages (parallel)...');
 
-        // Get villain range for equity calculation
-        const villainRange =
-            ranges.river?.villain_range ||
-            ranges.turn?.villain_range ||
-            ranges.flop?.villain_range ||
-            ranges.preflop.villain_range.description;
+        // OPTIMIZATION: Skip equity calculation for preflop-only hands
+        // Preflop advice uses GTO frequencies directly (much faster and more accurate)
+        let equity: any;
+        let advantages: any;
 
-        // Get current pot and bet for pot odds
-        const potSize = input.potSizes.river || input.potSizes.turn ||
-            input.potSizes.flop || input.potSizes.preflop || 10;
+        if (!streetsPlayed.flop) {
+            // PREFLOP-ONLY: Use default equity (not relevant for preflop GTO decisions)
+            console.error('[Pipeline] Preflop-only hand - skipping equity calculation (using GTO frequencies directly)');
+            equity = {
+                equity_vs_range: 0.5,  // Placeholder - not used for preflop decisions
+                pot_odds: { pot_size: 0, to_call: 0, odds_ratio: 'N/A', equity_needed: 0 },
+                decision: 'GTO frequencies used'
+            };
+            advantages = {
+                flop: null,
+                turn: null,
+                river: null
+            };
+        } else {
+            // POSTFLOP: Calculate equity as normal
+            // Get villain range for equity calculation
+            const villainRange =
+                ranges.river?.villain_range ||
+                ranges.turn?.villain_range ||
+                ranges.flop?.villain_range ||
+                ranges.preflop.villain_range.description;
 
-        // Derive preflopSpot for V2 aggregate stats lookup
-        // Format: 'HERO_vs_VILLAIN' (e.g., 'BB_vs_BTN', 'CO_vs_UTG')
-        const preflopSpot = `${input.positions.hero}_vs_${input.positions.villain}`;
+            // Get current pot and bet for pot odds
+            const potSize = input.potSizes.river || input.potSizes.turn ||
+                input.potSizes.flop || input.potSizes.preflop || 10;
 
-        const [equity, advantages] = await Promise.all([
-            agent2_equityCalculator({
-                heroHand: input.cards,
-                villainRange: villainRange,
-                board: input.board,
-                potSize: potSize,
-                betSize: input.lastBet || 0,
-                preflopSpot  // NEW: V2 spot key for villain action frequencies
-            }),
-            agent3_advantageAnalyzer({
-                boardAnalysis,
-                ranges,
-                heroHand: input.cards
-            })
-        ]);
+            // Derive preflopSpot for V2 aggregate stats lookup
+            const preflopSpot = `${input.positions.hero}_vs_${input.positions.villain}`;
+
+            [equity, advantages] = await Promise.all([
+                agent2_equityCalculator({
+                    heroHand: input.cards,
+                    villainRange: villainRange,
+                    board: input.board,
+                    potSize: potSize,
+                    betSize: input.lastBet || 0,
+                    preflopSpot
+                }),
+                agent3_advantageAnalyzer({
+                    boardAnalysis,
+                    ranges,
+                    heroHand: input.cards
+                })
+            ]);
+        }
 
         // ═══════════════════════════════════════════════════════════
         // TIER 4: GTO Strategy (Needs all context)
