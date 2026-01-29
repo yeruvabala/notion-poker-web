@@ -422,6 +422,361 @@ export function classifyBoardComplete(
 // =============================================================================
 
 /**
+ * Get C-Bet frequency recommendation based on board texture
+ * Based on GTO solver outputs for 6-max cash games
+ */
+function getCBetRecommendation(classification: BoardClassification): {
+    ip_frequency: number;
+    oop_frequency: number;
+    reasoning: string;
+} {
+    const { type, isPaired, isConnected, suitPattern, highCard } = classification;
+
+    // Dry high boards: High c-bet frequency (range advantage)
+    if (type.includes('high') && type.includes('dry')) {
+        return {
+            ip_frequency: 0.75,
+            oop_frequency: 0.35,
+            reasoning: `${highCard}-high dry board heavily favors raiser's range`
+        };
+    }
+
+    // Paired boards: Moderate frequency (depends on high card)
+    if (isPaired) {
+        const highValue = RANK_VALUES[highCard] || 0;
+        if (highValue >= 11) { // J+ paired
+            return {
+                ip_frequency: 0.65,
+                oop_frequency: 0.30,
+                reasoning: `High paired board - raiser has nut advantage`
+            };
+        } else {
+            return {
+                ip_frequency: 0.45,
+                oop_frequency: 0.20,
+                reasoning: `Low paired board - caller has more trips combos`
+            };
+        }
+    }
+
+    // Connected/wet boards: Lower c-bet frequency
+    if (isConnected || type.includes('connected')) {
+        if (suitPattern === 'monotone') {
+            return {
+                ip_frequency: 0.35,
+                oop_frequency: 0.15,
+                reasoning: `Monotone connected board - check back often, protect when betting`
+            };
+        }
+        return {
+            ip_frequency: 0.45,
+            oop_frequency: 0.25,
+            reasoning: `Connected board - selective c-betting, range protection important`
+        };
+    }
+
+    // Two-tone boards: Moderate frequency
+    if (suitPattern === 'two_tone') {
+        return {
+            ip_frequency: 0.55,
+            oop_frequency: 0.28,
+            reasoning: `Two-tone texture - bet draws for equity denial, check marginal`
+        };
+    }
+
+    // Monotone boards: Very low frequency
+    if (suitPattern === 'monotone') {
+        return {
+            ip_frequency: 0.40,
+            oop_frequency: 0.18,
+            reasoning: `Monotone board - flush draws equalize ranges, bet selectively`
+        };
+    }
+
+    // Default dry mid/low boards
+    return {
+        ip_frequency: 0.60,
+        oop_frequency: 0.30,
+        reasoning: `Standard texture - balanced c-betting strategy`
+    };
+}
+
+/**
+ * Get bet sizing recommendation based on board texture
+ */
+function getSizingRecommendation(classification: BoardClassification): {
+    flop: string;
+    turn?: string;
+    reasoning: string;
+} {
+    const { type, isConnected, suitPattern, isPaired } = classification;
+
+    // Dry boards: Small sizing (don't need much to deny equity)
+    if (type.includes('dry') || (suitPattern === 'rainbow' && !isConnected && !isPaired)) {
+        return {
+            flop: 'small (25-33%)',
+            turn: 'medium (50-66%)',
+            reasoning: 'Dry board - small flop sizing, larger turn barrels for value'
+        };
+    }
+
+    // Wet/dynamic boards: Larger sizing (deny equity to draws)
+    if (isConnected || type === 'dynamic' || suitPattern === 'monotone') {
+        return {
+            flop: 'large (66-75%)',
+            turn: 'large (66-80%)',
+            reasoning: 'Wet board - larger sizing to deny equity to draws'
+        };
+    }
+
+    // Two-tone: Medium sizing
+    if (suitPattern === 'two_tone') {
+        return {
+            flop: 'medium (50%)',
+            turn: 'medium-large (60-70%)',
+            reasoning: 'Two-tone - balanced sizing, threaten draws'
+        };
+    }
+
+    // Paired boards: Polarized or small
+    if (isPaired) {
+        return {
+            flop: 'small (33%) or overbet',
+            turn: 'medium (50-66%)',
+            reasoning: 'Paired board - small for thin value, overbet with trips+'
+        };
+    }
+
+    // Default
+    return {
+        flop: 'medium (50%)',
+        turn: 'medium (50-66%)',
+        reasoning: 'Standard sizing for this texture'
+    };
+}
+
+/**
+ * Get texture advantage (who does this board favor)
+ */
+function getTextureAdvantage(classification: BoardClassification): {
+    favors: 'raiser' | 'caller' | 'neutral';
+    confidence: 'high' | 'medium' | 'low';
+    reasoning: string;
+} {
+    const { highCard, isPaired, isConnected, suitPattern } = classification;
+    const highValue = RANK_VALUES[highCard] || 0;
+
+    // High card boards (A/K) strongly favor raiser
+    if (highValue === 14) { // Ace high
+        return {
+            favors: 'raiser',
+            confidence: 'high',
+            reasoning: 'Ace-high board - raiser has many more Ax combos'
+        };
+    }
+
+    if (highValue === 13) { // King high
+        return {
+            favors: 'raiser',
+            confidence: 'high',
+            reasoning: 'King-high board - raiser range connects better'
+        };
+    }
+
+    // Low paired boards favor caller
+    if (isPaired && highValue <= 9) {
+        return {
+            favors: 'caller',
+            confidence: 'medium',
+            reasoning: 'Low paired board - caller has more trips combos'
+        };
+    }
+
+    // Low connected boards favor caller
+    if (isConnected && highValue <= 9) {
+        return {
+            favors: 'caller',
+            confidence: 'medium',
+            reasoning: 'Low connected board - caller has more suited connectors'
+        };
+    }
+
+    // Monotone slightly equalizes
+    if (suitPattern === 'monotone') {
+        return {
+            favors: 'neutral',
+            confidence: 'medium',
+            reasoning: 'Monotone board - flush draws equalize ranges'
+        };
+    }
+
+    // Mid boards are more neutral
+    if (highValue >= 10 && highValue <= 12) {
+        return {
+            favors: 'raiser',
+            confidence: 'low',
+            reasoning: 'Mid-high board - slight raiser advantage'
+        };
+    }
+
+    return {
+        favors: 'neutral',
+        confidence: 'low',
+        reasoning: 'Board texture is relatively neutral'
+    };
+}
+
+/**
+ * Analyze turn card for GTO context
+ */
+function analyzeTurnCard(
+    turnCard: ParsedCard,
+    flopCards: ParsedCard[],
+    classification: BoardClassification
+): {
+    impact: string;
+    range_shift: string;
+    completes_draws: string[];
+    is_scare_card: boolean;
+    barrel_recommendation: string;
+} {
+    const completes: string[] = [];
+    let isScare = false;
+    let rangeShift = 'neutral';
+
+    // Check if turn completes flush
+    const suits = [...flopCards.map(c => c.suit), turnCard.suit];
+    const suitCounts: Record<string, number> = {};
+    for (const s of suits) suitCounts[s] = (suitCounts[s] || 0) + 1;
+    const maxSuit = Math.max(...Object.values(suitCounts));
+
+    if (maxSuit >= 4) {
+        completes.push('flush');
+        isScare = true;
+    } else if (maxSuit === 3 && classification.suitPattern !== 'monotone') {
+        // Flush draw came in (3 to suit on turn)
+        completes.push('third flush card');
+    }
+
+    // Check for straight completion (simplified)
+    const allValues = [...flopCards.map(c => c.rankValue), turnCard.rankValue].sort((a, b) => a - b);
+    const uniqueValues = [...new Set(allValues)];
+    if (uniqueValues.length >= 4) {
+        const spread = uniqueValues[uniqueValues.length - 1] - uniqueValues[0];
+        if (spread === 3) {
+            completes.push('possible straight');
+            isScare = true;
+        }
+    }
+
+    // Check for overcard
+    const flopHigh = Math.max(...flopCards.map(c => c.rankValue));
+    if (turnCard.rankValue > flopHigh) {
+        isScare = true;
+        if (turnCard.rankValue >= 13) { // A or K
+            rangeShift = 'favors raiser';
+        }
+    }
+
+    // Check for blank
+    const isBlank = !isScare && turnCard.rankValue < flopHigh && completes.length === 0;
+
+    // Build impact description
+    let impact = `${RANK_NAMES[turnCard.rank] || turnCard.rank}`;
+    if (completes.length > 0) {
+        impact += ` - completes ${completes.join(', ')}`;
+    } else if (isBlank) {
+        impact += ' - blank (no draws complete)';
+    } else if (turnCard.rankValue > flopHigh) {
+        impact += ' - overcard';
+    }
+
+    // Barrel recommendation
+    let barrelRec = 'check back marginal hands';
+    if (isBlank) {
+        barrelRec = 'continue betting value hands';
+    } else if (isScare) {
+        barrelRec = 'proceed cautiously, check marginal hands';
+    }
+
+    return {
+        impact,
+        range_shift: rangeShift,
+        completes_draws: completes,
+        is_scare_card: isScare,
+        barrel_recommendation: barrelRec
+    };
+}
+
+/**
+ * Analyze river card for GTO context
+ */
+function analyzeRiverCard(
+    riverCard: ParsedCard,
+    allPreviousCards: ParsedCard[],
+    classification: BoardClassification
+): {
+    impact: string;
+    completes_draws: string[];
+    is_scare_card: boolean;
+    is_blank: boolean;
+} {
+    const completes: string[] = [];
+    let isScare = false;
+
+    // Check if river completes flush
+    const suits = [...allPreviousCards.map(c => c.suit), riverCard.suit];
+    const suitCounts: Record<string, number> = {};
+    for (const s of suits) suitCounts[s] = (suitCounts[s] || 0) + 1;
+    const maxSuit = Math.max(...Object.values(suitCounts));
+
+    if (maxSuit >= 4) {
+        completes.push('flush');
+        isScare = true;
+    }
+
+    // Check for 4-straight on board
+    const allValues = [...allPreviousCards.map(c => c.rankValue), riverCard.rankValue].sort((a, b) => a - b);
+    const uniqueValues = [...new Set(allValues)];
+    if (uniqueValues.length >= 4) {
+        // Check for 4 connected cards
+        for (let i = 0; i <= uniqueValues.length - 4; i++) {
+            if (uniqueValues[i + 3] - uniqueValues[i] <= 4) {
+                completes.push('possible straight');
+                isScare = true;
+                break;
+            }
+        }
+    }
+
+    // Check for overcard
+    const previousHigh = Math.max(...allPreviousCards.map(c => c.rankValue));
+    if (riverCard.rankValue > previousHigh && riverCard.rankValue >= 13) {
+        isScare = true;
+    }
+
+    // Blank check
+    const isBlank = !isScare && completes.length === 0 && riverCard.rankValue <= previousHigh;
+
+    // Build impact
+    let impact = `${RANK_NAMES[riverCard.rank] || riverCard.rank}`;
+    if (completes.length > 0) {
+        impact += ` - completes ${completes.join(', ')}`;
+    } else if (isBlank) {
+        impact += ' - blank';
+    } else if (riverCard.rankValue > previousHigh) {
+        impact += ' - overcard';
+    }
+
+    return {
+        impact,
+        completes_draws: completes,
+        is_scare_card: isScare,
+        is_blank: isBlank
+    };
+}
+
+/**
  * Convert code classification to BoardAnalysis format for Agent 0
  */
 export function toBoardAnalysis(
@@ -450,6 +805,11 @@ export function toBoardAnalysis(
         drawsPossible.push('gutshot');
     }
 
+    // Get GTO recommendations
+    const cbetRec = getCBetRecommendation(classification);
+    const sizingRec = getSizingRecommendation(classification);
+    const textureAdv = getTextureAdvantage(classification);
+
     const result: BoardAnalysis = {
         flop: {
             cards: flopStr,
@@ -464,23 +824,36 @@ export function toBoardAnalysis(
             flush_possible: classification.flushPossible,
             straight_possible: classification.straightPossible,
             high_cards: [classification.highCard]
-        }
+        },
+        // NEW: GTO context
+        cbet_recommendation: cbetRec,
+        sizing_recommendation: sizingRec,
+        texture_advantage: textureAdv
     };
 
     if (turnCard) {
+        const turnAnalysis = analyzeTurnCard(turnCard, flopCards, classification);
         result.turn = {
             card: `${turnCard.rank}${turnCard.suit}`,
-            impact: `${RANK_NAMES[turnCard.rank] || turnCard.rank} on turn`,
-            range_shift: turnCard.rankValue >= 13 ? 'favors raiser' : 'neutral'
+            impact: turnAnalysis.impact,
+            range_shift: turnAnalysis.range_shift,
+            completes_draws: turnAnalysis.completes_draws,
+            is_scare_card: turnAnalysis.is_scare_card,
+            barrel_recommendation: turnAnalysis.barrel_recommendation
         };
     }
 
     if (riverCard) {
+        const riverAnalysis = analyzeRiverCard(riverCard, [...flopCards, turnCard!], classification);
         result.river = {
             card: `${riverCard.rank}${riverCard.suit}`,
-            impact: `${RANK_NAMES[riverCard.rank] || riverCard.rank} on river`
+            impact: riverAnalysis.impact,
+            completes_draws: riverAnalysis.completes_draws,
+            is_scare_card: riverAnalysis.is_scare_card,
+            is_blank: riverAnalysis.is_blank
         };
     }
 
     return result;
 }
+

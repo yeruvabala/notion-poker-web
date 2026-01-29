@@ -100,16 +100,41 @@ export interface BoardAnalysis {
         card: string;                 // "A♠"
         impact: string;               // "Overcard, completes some flush draws"
         range_shift: string;          // "Favors villain's wider range"
+        // NEW: GTO-aligned enhancements
+        completes_draws?: string[];   // ["flush", "straight 56"] - draws completed
+        is_scare_card?: boolean;      // True if this shifts advantage significantly
+        barrel_recommendation?: string; // "continue betting" or "check back"
     };
     river?: {
         card: string;                 // "2♣"
         impact: string;               // "Blank, no new draws complete"
+        // NEW: GTO-aligned enhancements
+        completes_draws?: string[];   // ["flush"] - draws completed on river
+        is_scare_card?: boolean;
+        is_blank?: boolean;           // True if no draws complete, no overcards
     };
     summary: {
         is_paired: boolean;
         flush_possible: boolean;
         straight_possible: boolean;
         high_cards: string[];         // ["A", "K"]
+    };
+    // NEW: GTO-aligned strategic context
+    cbet_recommendation?: {
+        ip_frequency: number;         // 0.65 = 65% c-bet IP
+        oop_frequency: number;        // 0.30 = 30% c-bet OOP
+        reasoning: string;            // "Dry A-high board favors raiser"
+    };
+    sizing_recommendation?: {
+        flop: string;                 // "small (33%)" or "large (66%)"
+        turn?: string;                // "medium (50%)"
+        reasoning: string;            // "Dry board - small sizing to deny equity"
+    };
+    // NEW: Range advantage context
+    texture_advantage?: {
+        favors: 'raiser' | 'caller' | 'neutral';
+        confidence: 'high' | 'medium' | 'low';
+        reasoning: string;            // "High card board favors opening range"
     };
 }
 
