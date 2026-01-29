@@ -292,9 +292,53 @@ function formatContextForPrompt(input: Agent5Input): string {
     }
     if (input.boardAnalysis.turn) {
         lines.push(`Turn: ${input.boardAnalysis.turn.card} - ${input.boardAnalysis.turn.impact}`);
+        // NEW: Enhanced turn analysis
+        if (input.boardAnalysis.turn.completes_draws?.length) {
+            lines.push(`  ⚠️ Completes: ${input.boardAnalysis.turn.completes_draws.join(', ')}`);
+        }
+        if (input.boardAnalysis.turn.is_scare_card) {
+            lines.push(`  ⚠️ SCARE CARD - proceed with caution`);
+        }
+        if (input.boardAnalysis.turn.barrel_recommendation) {
+            lines.push(`  Barrel recommendation: ${input.boardAnalysis.turn.barrel_recommendation}`);
+        }
     }
     if (input.boardAnalysis.river) {
         lines.push(`River: ${input.boardAnalysis.river.card} - ${input.boardAnalysis.river.impact}`);
+        // NEW: Enhanced river analysis
+        if (input.boardAnalysis.river.is_blank) {
+            lines.push(`  ✓ BLANK - no draws completed`);
+        }
+        if (input.boardAnalysis.river.completes_draws?.length) {
+            lines.push(`  ⚠️ Completes: ${input.boardAnalysis.river.completes_draws.join(', ')}`);
+        }
+    }
+
+    // NEW: GTO-aligned strategic context from Agent 0
+    if (input.boardAnalysis.cbet_recommendation) {
+        const cbr = input.boardAnalysis.cbet_recommendation;
+        lines.push('');
+        lines.push('C-BET STRATEGY (GTO-based):');
+        lines.push(`  IP c-bet frequency: ${(cbr.ip_frequency * 100).toFixed(0)}%`);
+        lines.push(`  OOP c-bet frequency: ${(cbr.oop_frequency * 100).toFixed(0)}%`);
+        lines.push(`  Reasoning: ${cbr.reasoning}`);
+    }
+
+    if (input.boardAnalysis.sizing_recommendation) {
+        const szr = input.boardAnalysis.sizing_recommendation;
+        lines.push('');
+        lines.push('SIZING GUIDANCE (GTO-based):');
+        lines.push(`  Flop sizing: ${szr.flop}`);
+        if (szr.turn) lines.push(`  Turn sizing: ${szr.turn}`);
+        lines.push(`  Reasoning: ${szr.reasoning}`);
+    }
+
+    if (input.boardAnalysis.texture_advantage) {
+        const ta = input.boardAnalysis.texture_advantage;
+        lines.push('');
+        lines.push('TEXTURE ADVANTAGE:');
+        lines.push(`  Board favors: ${ta.favors.toUpperCase()} (${ta.confidence} confidence)`);
+        lines.push(`  Reasoning: ${ta.reasoning}`);
     }
     lines.push('');
 
