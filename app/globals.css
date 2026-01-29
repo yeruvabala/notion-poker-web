@@ -9944,65 +9944,87 @@ body.native-app [class*="btn-row"]>* {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   STACKED BAR CELLS - 3-Color Action Display for 3bet+ scenarios
+   PREMIUM ACTION COLORS - Red (Raise), Green (Call), Blue (Fold)
+   Same gradient style as RFI but with action-based colors
    ═══════════════════════════════════════════════════════════════════════════════ */
-.matrix-cell.stacked-cell {
-    position: relative;
-    background: rgba(30, 30, 35, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    overflow: hidden;
+
+/* RAISE ACTIONS - Red Gradients (Aggressive) */
+.matrix-cell.action-raise-always {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, transparent 40%),
+        linear-gradient(135deg, #ef4444 0%, #dc2626 40%, #b91c1c 100%);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    box-shadow: inset 0 0 8px rgba(239, 68, 68, 0.2);
 }
 
-.stacked-bars {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    flex-direction: column;
-    pointer-events: none;
+.matrix-cell.action-raise-often {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 40%),
+        linear-gradient(135deg, rgba(239, 68, 68, 0.75) 0%, rgba(220, 38, 38, 0.65) 40%, rgba(185, 28, 28, 0.55) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-/* Raise bar - Red (aggressive action) */
-.bar-raise {
-    width: 100%;
-    background: linear-gradient(180deg,
-            rgba(239, 68, 68, 0.85) 0%,
-            rgba(220, 38, 38, 0.75) 100%);
-    flex-shrink: 0;
+.matrix-cell.action-raise-mixed {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
+        linear-gradient(135deg, rgba(239, 68, 68, 0.5) 0%, rgba(220, 38, 38, 0.4) 40%, rgba(185, 28, 28, 0.3) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
-/* Call bar - Green (passive action) */
-.bar-call {
-    width: 100%;
-    background: linear-gradient(180deg,
-            rgba(34, 197, 94, 0.85) 0%,
-            rgba(22, 163, 74, 0.75) 100%);
-    flex-shrink: 0;
+.matrix-cell.action-raise-rare {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 40%),
+        linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(220, 38, 38, 0.2) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.15);
 }
 
-/* Fold bar - Blue (exit action) */
-.bar-fold {
-    width: 100%;
-    background: linear-gradient(180deg,
-            rgba(59, 130, 246, 0.6) 0%,
-            rgba(37, 99, 235, 0.5) 100%);
-    flex-shrink: 0;
+/* CALL ACTIONS - Green Gradients (Passive) */
+.matrix-cell.action-call-always {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, transparent 40%),
+        linear-gradient(135deg, #22c55e 0%, #16a34a 40%, #15803d 100%);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    box-shadow: inset 0 0 8px rgba(34, 197, 94, 0.2);
 }
 
-/* Cell text overlay */
-.stacked-cell .cell-text {
-    position: relative;
-    z-index: 2;
-    color: rgba(255, 255, 255, 0.95);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+.matrix-cell.action-call-often {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 40%),
+        linear-gradient(135deg, rgba(34, 197, 94, 0.75) 0%, rgba(22, 163, 74, 0.65) 40%, rgba(21, 128, 61, 0.55) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
-/* Stacked cell selected state */
-.matrix-cell.stacked-cell.selected {
-    border: 2px solid #ffffff !important;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.4) !important;
+.matrix-cell.action-call-mixed {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
+        linear-gradient(135deg, rgba(34, 197, 94, 0.5) 0%, rgba(22, 163, 74, 0.4) 40%, rgba(21, 128, 61, 0.3) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.matrix-cell.action-call-rare {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 40%),
+        linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(22, 163, 74, 0.2) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.15);
+}
+
+/* FOLD - Blue/Gray (Exit) */
+.matrix-cell.action-fold {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 40%),
+        linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+/* BORDER HINTS - For mixed actions (secondary action indicator) */
+.matrix-cell.border-call {
+    border: 2px solid rgba(34, 197, 94, 0.6) !important;
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.3);
+}
+
+.matrix-cell.border-raise {
+    border: 2px solid rgba(239, 68, 68, 0.6) !important;
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.3);
 }
 
 /* Selected Hand Card */

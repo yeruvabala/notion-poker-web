@@ -445,35 +445,42 @@ export default function MobileRangesPage() {
                                     : null;
 
                                 // For RFI: use traditional frequency coloring
-                                // For 3bet+: use stacked bar display
+                                // For 3bet+: use premium gradient with action colors
                                 if (breakdown) {
-                                    // 3-color stacked bar cell
+                                    // Determine dominant action and get class
+                                    const total = breakdown.raise + breakdown.call;
+                                    let actionClass = 'action-fold'; // default
+                                    let borderClass = '';
+
+                                    if (breakdown.raise >= breakdown.call && breakdown.raise > 0.1) {
+                                        // Raise dominant
+                                        if (breakdown.raise >= 0.8) actionClass = 'action-raise-always';
+                                        else if (breakdown.raise >= 0.5) actionClass = 'action-raise-often';
+                                        else if (breakdown.raise >= 0.2) actionClass = 'action-raise-mixed';
+                                        else actionClass = 'action-raise-rare';
+
+                                        // Add border for significant call
+                                        if (breakdown.call >= 0.3) borderClass = 'border-call';
+                                    } else if (breakdown.call > breakdown.raise && breakdown.call > 0.1) {
+                                        // Call dominant
+                                        if (breakdown.call >= 0.8) actionClass = 'action-call-always';
+                                        else if (breakdown.call >= 0.5) actionClass = 'action-call-often';
+                                        else if (breakdown.call >= 0.2) actionClass = 'action-call-mixed';
+                                        else actionClass = 'action-call-rare';
+
+                                        // Add border for significant raise
+                                        if (breakdown.raise >= 0.3) borderClass = 'border-raise';
+                                    } else if (total < 0.3) {
+                                        // Mostly fold
+                                        actionClass = 'action-fold';
+                                    }
+
                                     return (
                                         <button
                                             key={`${rowIdx}-${colIdx}`}
-                                            className={`matrix-cell stacked-cell ${isSelected ? 'selected' : ''} ${isPair ? 'pair' : ''} ${isSuited ? 'suited' : 'offsuit'}`}
+                                            className={`matrix-cell ${actionClass} ${borderClass} ${isSelected ? 'selected' : ''} ${isPair ? 'pair' : ''} ${isSuited ? 'suited' : 'offsuit'}`}
                                             onClick={() => handleCellTap(rowIdx, colIdx)}
                                         >
-                                            <div className="stacked-bars">
-                                                {breakdown.raise > 0 && (
-                                                    <div
-                                                        className="bar-raise"
-                                                        style={{ height: `${breakdown.raise * 100}%` }}
-                                                    />
-                                                )}
-                                                {breakdown.call > 0 && (
-                                                    <div
-                                                        className="bar-call"
-                                                        style={{ height: `${breakdown.call * 100}%` }}
-                                                    />
-                                                )}
-                                                {breakdown.fold > 0 && (
-                                                    <div
-                                                        className="bar-fold"
-                                                        style={{ height: `${breakdown.fold * 100}%` }}
-                                                    />
-                                                )}
-                                            </div>
                                             <span className="cell-text">{displayHand}</span>
                                         </button>
                                     );
