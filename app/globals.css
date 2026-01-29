@@ -9680,8 +9680,9 @@ body.native-app [class*="btn-row"]>* {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 10px 20px;
+    padding: 10px 16px;
     border-radius: 20px;
+    white-space: nowrap;
     /* Platinum gradient border */
     background:
         linear-gradient(#1e1e1e, #1e1e1e) padding-box,
@@ -9693,6 +9694,7 @@ body.native-app [class*="btn-row"]>* {
     color: rgba(255, 255, 255, 0.5);
     font-size: 13px;
     font-weight: 600;
+    letter-spacing: 0.5px;
     cursor: pointer;
     transition: all 0.2s ease;
     -webkit-tap-highlight-color: transparent;

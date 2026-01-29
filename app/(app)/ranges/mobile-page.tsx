@@ -27,10 +27,10 @@ type Scenario = 'rfi' | '3bet' | 'vs3bet' | 'vs4bet' | 'vs5bet';
 
 const SCENARIOS: { id: Scenario; label: string; description: string }[] = [
     { id: 'rfi', label: 'RFI', description: 'Raise First In' },
-    { id: '3bet', label: '3-Bet', description: '3-Betting vs Open' },
-    { id: 'vs3bet', label: 'vs 3-Bet', description: 'Facing 3-Bet' },
-    { id: 'vs4bet', label: 'vs 4-Bet', description: 'Facing 4-Bet' },
-    { id: 'vs5bet', label: 'vs 5-Bet', description: 'Facing 5-Bet' },
+    { id: '3bet', label: '3B', description: '3-Betting vs Open' },
+    { id: 'vs3bet', label: 'vs3B', description: 'Facing 3-Bet' },
+    { id: 'vs4bet', label: 'vs4B', description: 'Facing 4-Bet' },
+    { id: 'vs5bet', label: 'vs5B', description: 'Facing 5-Bet' },
 ];
 
 // Position colors
