@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import MobileHeader from './MobileHeader';
 import MobileBottomNav from './MobileBottomNav';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
@@ -29,16 +30,27 @@ interface MobileLayoutProps {
  * - Haptic feedback on navigation
  */
 export default function MobileLayout({ children }: MobileLayoutProps) {
+    const mainRef = useRef<HTMLElement>(null);
+
     // Enable swipe navigation between pages
     useSwipeNavigation();
 
     // Prefetch all main routes for instant navigation
     useRoutePrefetch();
 
+    // Scroll to top on mount to ensure correct initial position
+    useEffect(() => {
+        if (mainRef.current) {
+            mainRef.current.scrollTop = 0;
+        }
+        // Also reset window scroll as a fallback
+        window.scrollTo(0, 0);
+    }, []);
+
     return (
         <div className="mobile-app-container">
             <MobileHeader />
-            <main className="mobile-main-content">
+            <main ref={mainRef} className="mobile-main-content">
                 {children}
             </main>
             <MobileBottomNav />
