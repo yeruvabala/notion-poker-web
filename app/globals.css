@@ -3010,8 +3010,8 @@ body.native-app [class*="btn-row"]>* {
     background: rgba(28, 28, 28, 0.98);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    /* Safe area + extra padding like Instagram - fallback 47px for initial load */
-    padding-top: calc(env(safe-area-inset-top, 47px) + 8px);
+    /* Safe area only - minimal gap to notch */
+    padding-top: env(safe-area-inset-top, 47px);
 }
 
 /* Premium gradient divider line under header */
@@ -3036,8 +3036,8 @@ body.native-app [class*="btn-row"]>* {
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* More top padding to push title lower, less bottom padding for tighter border */
-    padding: 30px 16px 6px;
+    /* Tighter padding - title close to safe area */
+    padding: 8px 16px 6px;
 }
 
 /* Mobile-specific overrides for homepage-title */
@@ -3128,10 +3128,10 @@ body.native-app [class*="btn-row"]>* {
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-top: 1px solid rgba(255, 255, 255, 0.06);
-    /* Icons positioned higher with space below */
-    padding-top: 10px;
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
-    min-height: calc(50px + env(safe-area-inset-bottom, 0px));
+    /* Icons with proper safe area spacing at bottom */
+    padding-top: 8px;
+    padding-bottom: calc(env(safe-area-inset-bottom, 34px) + 8px);
+    min-height: calc(60px + env(safe-area-inset-bottom, 34px));
 }
 
 .mobile-nav-item {
