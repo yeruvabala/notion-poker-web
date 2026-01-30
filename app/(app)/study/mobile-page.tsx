@@ -162,6 +162,10 @@ export default function MobileStudyPage() {
     const [statusMessage, setStatusMessage] = useState<string | null>(null);
     const [isStreaming, setIsStreaming] = useState(false);
 
+    // Conversation history for follow-up questions
+    type ChatMessage = { role: 'user' | 'assistant'; content: string };
+    const [conversationHistory, setConversationHistory] = useState<ChatMessage[]>([]);
+
     // Notes state
     type UserNote = { id: string; content: string; tags?: string[]; created_at?: string };
     const [notes, setNotes] = useState<UserNote[]>([]);
@@ -284,8 +288,12 @@ export default function MobileStudyPage() {
                     q: question.trim(),
                     position: position === 'Any' ? null : position,
                     street: street === 'Any' ? null : street.toLowerCase(),
+                    history: conversationHistory.slice(-4), // Last 2 exchanges for context
                 }),
             });
+
+            // Track user question in history
+            const userQuestion = question.trim();
 
             if (!res.ok) throw new Error('Failed to get response');
             if (!res.body) throw new Error('No response body');
@@ -331,6 +339,12 @@ export default function MobileStudyPage() {
                                 case 'coach':
                                     setCoach(parsed);
                                     setStreamingText(''); // Clear streaming text when final coach arrives
+                                    // Add to conversation history for follow-ups
+                                    setConversationHistory(prev => [
+                                        ...prev,
+                                        { role: 'user', content: userQuestion },
+                                        { role: 'assistant', content: parsed.summary || '' }
+                                    ]);
                                     break;
                                 case 'error':
                                     throw new Error(parsed.message);
