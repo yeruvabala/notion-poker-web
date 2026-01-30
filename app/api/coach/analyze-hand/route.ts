@@ -162,7 +162,7 @@ export async function POST(req: Request) {
   try {
     // Check for specialized app token
     const apiToken = req.headers.get('x-app-token');
-    if (apiToken !== process.env.COACH_API_TOKEN && apiToken !== 'dev-token-123' && apiToken !== 'test-token') {
+    if (apiToken !== process.env.COACH_API_TOKEN) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

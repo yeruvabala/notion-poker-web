@@ -10,7 +10,7 @@ import crypto from 'crypto';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// Supabase has valid SSL certs - no bypass needed
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,

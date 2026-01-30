@@ -8,8 +8,7 @@ import { Pool } from 'pg';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// 👇 Force Node to accept Supabase's self-signed cert in this route
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// Supabase has valid SSL certs - no bypass needed
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -233,12 +232,12 @@ export async function POST(req: NextRequest) {
           : [],
         drills: Array.isArray(parsed.drills)
           ? parsed.drills.map((d: any, idx: number) => ({
-              id: String(d.id ?? `drill-${idx + 1}`),
-              question: String(d.question ?? ''),
-              answer: String(d.answer ?? ''),
-              explanation:
-                d.explanation != null ? String(d.explanation) : undefined,
-            }))
+            id: String(d.id ?? `drill-${idx + 1}`),
+            question: String(d.question ?? ''),
+            answer: String(d.answer ?? ''),
+            explanation:
+              d.explanation != null ? String(d.explanation) : undefined,
+          }))
           : [],
       };
     } catch {

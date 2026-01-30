@@ -9,8 +9,7 @@ import { Pool } from 'pg';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// Force Node to accept Supabase's self-signed cert
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// Supabase has valid SSL certs - no bypass needed
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
