@@ -3084,20 +3084,16 @@ body.native-app [class*="btn-row"]>* {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    /* Increased padding for taller header (safe area + 8px + ~80px header) */
-    /* Fallback 47px is typical iPhone notch size - used before iOS provides actual value */
-    padding-top: calc(env(safe-area-inset-top, 47px) + 110px);
-    /* Header height */
-    padding-bottom: calc(env(safe-area-inset-bottom, 0) + 80px);
-    /* Nav height */
+    /* Padding to account for fixed header height */
+    /* Header: safe-area + padding(1px top + 6px bottom) + title height (~55px) = ~62px + safe-area */
+    padding-top: calc(env(safe-area-inset-top, 47px) + 70px);
+    /* Nav height + safe area */
+    padding-bottom: calc(env(safe-area-inset-bottom, 34px) + 80px);
     padding-left: 16px;
     padding-right: 16px;
     -webkit-overflow-scrolling: touch;
-    /* Subtle radial gradient atmosphere - darker center, softer edges */
-    background: radial-gradient(ellipse 120% 100% at 50% 0%,
-            rgba(35, 40, 50, 0.4) 0%,
-            rgba(28, 28, 28, 0.9) 40%,
-            rgba(28, 28, 28, 1) 100%);
+    /* Solid dark background - matches header */
+    background: #1c1c1c;
 }
 
 /* Hide scrollbar but keep scroll functionality */
