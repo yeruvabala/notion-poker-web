@@ -159,9 +159,23 @@ function getActionBreakdown(
     opponent: string,
     hand: string
 ): ActionBreakdown | null {
-    // RFI has no action split (just raise frequency)
+    // RFI: raise vs fold (no calling option)
     if (scenario === 'rfi') {
-        return null;
+        const rfiRange = RFI_RANGES[position];
+        if (!rfiRange) return null;
+
+        const raiseFreq = rfiRange[hand] || 0;
+        // If hand not in range at all, return null
+        if (raiseFreq === 0) return null;
+
+        const foldFreq = 1 - raiseFreq;
+
+        return {
+            raise: raiseFreq,
+            call: 0,  // No calling in RFI
+            fold: foldFreq,
+            raiseLabel: 'Raise'
+        };
     }
 
     let rangeData: Record<string, Record<string, number>> | undefined;
@@ -439,13 +453,11 @@ export default function MobileRangesPage() {
                                 const isPair = rowIdx === colIdx;
                                 const isSuited = rowIdx < colIdx;
 
-                                // Get action breakdown for 3bet+ scenarios
-                                const breakdown = selectedScenario !== 'rfi'
-                                    ? getActionBreakdown(selectedScenario, selectedPosition, selectedOpponent, hand)
-                                    : null;
+                                // Get action breakdown for all scenarios (including RFI)
+                                const breakdown = getActionBreakdown(selectedScenario, selectedPosition, selectedOpponent, hand);
 
-                                // For RFI: use traditional frequency coloring
-                                // For 3bet+: use simplified 6-color palette
+                                // Use action-based coloring for all scenarios
+                                // For hands not in range, breakdown is null
                                 if (breakdown) {
                                     // Determine color class based on action frequencies
                                     let actionClass = 'action-fold-dom'; // default
