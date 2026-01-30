@@ -8,7 +8,8 @@ import { Pool } from 'pg';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// Supabase has valid SSL certs - no bypass needed
+// Required for Supabase Postgres pooler connection
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
