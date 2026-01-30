@@ -30,8 +30,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={inter.variable} style={{ background: BG_COLOR }}>
       <head>
-        {/* iOS viewport-fit=cover for proper safe-area-inset support */}
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         {/* Dark background CSS - matches home page */}
         <style dangerouslySetInnerHTML={{
           __html: `
