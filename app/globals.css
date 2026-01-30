@@ -7778,12 +7778,12 @@ body.native-app [class*="btn-row"]>* {
    Epic visual effect for resetting the hand builder
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-/* Container */
+/* Container - NO overflow here, parent handles scrolling */
 .pull-to-refresh-container {
     position: relative;
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
+    /* Let parent (mobile-main-content) handle scrolling */
+    overflow: visible;
+    min-height: 100%;
 }
 
 /* Pull Indicator - Holographic refresh icon */

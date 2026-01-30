@@ -148,9 +148,8 @@ export default function PullToRefresh({
             onTouchEnd={handleTouchEnd}
             style={{
                 position: 'relative',
-                overflow: 'auto',
-                height: '100%',
-                WebkitOverflowScrolling: 'touch',
+                /* Let parent handle overflow/scrolling */
+                minHeight: '100%',
             }}
         >
             {/* Poker Chip Pull Indicator - Holographic spinning chip */}
