@@ -3037,7 +3037,7 @@ body.native-app [class*="btn-row"]>* {
     flex-direction: column;
     align-items: center;
     /* Minimal padding - title very close to safe area */
-    padding: 2px 16px 6px;
+    padding: 1px 16px 6px;
 }
 
 /* Mobile-specific overrides for homepage-title */
@@ -3116,25 +3116,35 @@ body.native-app [class*="btn-row"]>* {
    ═══════════════════════════════════════════════════════════════ */
 .mobile-bottom-nav {
     position: fixed;
-    /* Extend into the safe area at bottom */
-    bottom: 0;
+    /* Position at bottom of safe area */
+    bottom: env(safe-area-inset-bottom, 34px);
     left: 0;
     right: 0;
     z-index: 1000;
     display: flex;
     justify-content: space-around;
-    align-items: flex-start;
+    align-items: center;
     /* Premium dark glass background */
     background: linear-gradient(180deg, rgba(18, 18, 20, 0.98) 0%, rgba(12, 12, 14, 0.99) 100%);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-top: 1px solid rgba(255, 255, 255, 0.06);
-    /* Icons at top of nav, extends down into safe area */
-    padding-top: 10px;
-    /* Use the safe area as bottom padding so icons sit above it */
-    padding-bottom: env(safe-area-inset-bottom, 34px);
-    /* Height includes the safe area */
-    height: calc(60px + env(safe-area-inset-bottom, 34px));
+    /* Fixed height for the nav content */
+    height: 60px;
+    padding: 0 8px;
+}
+
+/* Extend nav bar background to physical screen bottom */
+.mobile-bottom-nav::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    /* Extend from nav bar to physical screen bottom */
+    height: calc(100% + env(safe-area-inset-bottom, 34px));
+    background: inherit;
+    z-index: -1;
 }
 
 .mobile-nav-item {
