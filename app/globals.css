@@ -3111,8 +3111,8 @@ body.native-app [class*="btn-row"]>* {
    ═══════════════════════════════════════════════════════════════ */
 .mobile-bottom-nav {
     position: fixed;
-    /* Position at bottom of safe area */
-    bottom: env(safe-area-inset-bottom, 34px);
+    /* Flush with physical screen bottom - like Instagram */
+    bottom: 0;
     left: 0;
     right: 0;
     z-index: 1000;
@@ -3124,23 +3124,16 @@ body.native-app [class*="btn-row"]>* {
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-top: 1px solid rgba(255, 255, 255, 0.06);
-    /* Fixed height for the nav content */
-    height: 60px;
+    /* Nav height with safe area padding at bottom - icons stay at top */
+    height: 54px;
     padding: 0 8px;
+    /* Safe area padding pushes content up from bottom */
+    padding-bottom: env(safe-area-inset-bottom, 34px);
+    /* Total visible height = 54px + safe-area */
+    box-sizing: content-box;
 }
 
-/* Extend nav bar background to physical screen bottom */
-.mobile-bottom-nav::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    /* Extend from nav bar to physical screen bottom */
-    height: calc(100% + env(safe-area-inset-bottom, 34px));
-    background: inherit;
-    z-index: -1;
-}
+/* No longer needed - nav bar extends to bottom naturally now */
 
 .mobile-nav-item {
     display: flex;
