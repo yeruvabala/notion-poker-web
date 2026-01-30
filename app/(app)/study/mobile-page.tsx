@@ -32,7 +32,9 @@ import {
 type StudyDrill = {
     id?: string;
     question: string;
-    answer?: string;
+    options?: string[];
+    correctIndex?: number;
+    answer?: string;  // Fallback for old format
     explanation?: string;
 };
 
@@ -153,6 +155,10 @@ export default function MobileStudyPage() {
     const [chunks, setChunks] = useState<StudyChunk[]>([]);
     const [activeDrillIndex, setActiveDrillIndex] = useState(0);
     const [showDrillAnswer, setShowDrillAnswer] = useState(false);
+
+    // Quiz state for interactive drills
+    const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+    const [drillResults, setDrillResults] = useState<{ [drillId: string]: boolean }>({});
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -617,43 +623,96 @@ export default function MobileStudyPage() {
                             <div className="drill-content">
                                 <p className="drill-question">{activeDrill?.question}</p>
 
-                                {!showDrillAnswer ? (
-                                    <button
-                                        className="reveal-btn"
-                                        onClick={() => { haptic(); setShowDrillAnswer(true); }}
-                                    >
-                                        <span><EyeRevealIcon size={18} /></span>
-                                        <span>Reveal Answer</span>
-                                    </button>
+                                {/* Multiple Choice Options */}
+                                {activeDrill?.options && activeDrill.options.length > 0 ? (
+                                    <div className="drill-options">
+                                        {activeDrill.options.map((option, idx) => {
+                                            const isSelected = selectedAnswer === idx;
+                                            const isCorrect = idx === activeDrill.correctIndex;
+                                            const showResult = selectedAnswer !== null;
+
+                                            let optionClass = 'drill-option';
+                                            if (showResult && isCorrect) optionClass += ' correct';
+                                            if (showResult && isSelected && !isCorrect) optionClass += ' incorrect';
+
+                                            return (
+                                                <button
+                                                    key={idx}
+                                                    className={optionClass}
+                                                    onClick={() => {
+                                                        if (selectedAnswer === null) {
+                                                            haptic(isCorrect ? ImpactStyle.Heavy : ImpactStyle.Medium);
+                                                            setSelectedAnswer(idx);
+                                                            if (activeDrill.id) {
+                                                                setDrillResults(prev => ({
+                                                                    ...prev,
+                                                                    [activeDrill.id!]: isCorrect
+                                                                }));
+                                                            }
+                                                        }
+                                                    }}
+                                                    disabled={selectedAnswer !== null}
+                                                >
+                                                    <span className="option-letter">{['A', 'B', 'C', 'D'][idx]}</span>
+                                                    <span className="option-text">{option}</span>
+                                                    {showResult && isCorrect && <span className="option-check">✓</span>}
+                                                    {showResult && isSelected && !isCorrect && <span className="option-x">✗</span>}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 ) : (
-                                    <div className="drill-answer">
-                                        <div className="answer-label">Answer</div>
-                                        <p>{activeDrill?.answer}</p>
-                                        {activeDrill?.explanation && (
-                                            <div className="drill-explanation">
-                                                <div className="explanation-label">Why?</div>
-                                                <p>{activeDrill.explanation}</p>
-                                            </div>
-                                        )}
+                                    // Fallback for old format without options
+                                    !showDrillAnswer ? (
+                                        <button
+                                            className="reveal-btn"
+                                            onClick={() => { haptic(); setShowDrillAnswer(true); }}
+                                        >
+                                            <span><EyeRevealIcon size={18} /></span>
+                                            <span>Reveal Answer</span>
+                                        </button>
+                                    ) : (
+                                        <div className="drill-answer">
+                                            <div className="answer-label">Answer</div>
+                                            <p>{activeDrill?.answer}</p>
+                                        </div>
+                                    )
+                                )}
+
+                                {/* Explanation after answering */}
+                                {selectedAnswer !== null && activeDrill?.explanation && (
+                                    <div className="drill-explanation">
+                                        <div className="explanation-label">Why?</div>
+                                        <p>{activeDrill.explanation}</p>
                                     </div>
                                 )}
 
                                 {drills.length > 1 && (
-                                    <button className="next-drill-btn" onClick={nextDrill}>
+                                    <button
+                                        className="next-drill-btn"
+                                        onClick={() => {
+                                            haptic();
+                                            setSelectedAnswer(null);
+                                            setShowDrillAnswer(false);
+                                            setActiveDrillIndex((i) => (i + 1) % drills.length);
+                                        }}
+                                    >
                                         <span>Next Drill</span>
                                         <span>→</span>
                                     </button>
                                 )}
                             </div>
 
-                            {/* Drill Progress Bar */}
+                            {/* Drill Progress Bar with results */}
                             <div className="drill-progress">
-                                {drills.map((_, i) => (
-                                    <div
-                                        key={i}
-                                        className={`progress-dot ${i === activeDrillIndex ? 'active' : ''} ${i < activeDrillIndex ? 'completed' : ''}`}
-                                    />
-                                ))}
+                                {drills.map((drill, i) => {
+                                    const result = drill.id ? drillResults[drill.id] : undefined;
+                                    let dotClass = 'progress-dot';
+                                    if (i === activeDrillIndex) dotClass += ' active';
+                                    if (result === true) dotClass += ' correct';
+                                    if (result === false) dotClass += ' incorrect';
+                                    return <div key={i} className={dotClass} />;
+                                })}
                             </div>
                         </div>
                     )}

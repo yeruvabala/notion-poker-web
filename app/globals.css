@@ -11266,6 +11266,98 @@ button.mobile-gto-indicator {
     gap: 14px;
 }
 
+/* Multiple Choice Drill Options */
+.drill-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.drill-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.drill-option:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.drill-option:disabled {
+    cursor: default;
+}
+
+.drill-option.correct {
+    background: rgba(34, 197, 94, 0.15);
+    border-color: #22c55e;
+    color: #4ade80;
+}
+
+.drill-option.incorrect {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #ef4444;
+    color: #f87171;
+}
+
+.option-letter {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.drill-option.correct .option-letter {
+    background: rgba(34, 197, 94, 0.3);
+}
+
+.drill-option.incorrect .option-letter {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+.option-text {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.option-check {
+    color: #22c55e;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.option-x {
+    color: #ef4444;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* Progress dots with result colors */
+.progress-dot.correct {
+    background: #22c55e !important;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.progress-dot.incorrect {
+    background: #ef4444 !important;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
 .drill-question {
     font-size: 15px;
     font-weight: 600;

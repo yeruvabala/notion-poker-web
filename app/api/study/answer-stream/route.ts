@@ -186,7 +186,8 @@ export async function POST(req: NextRequest) {
                     'You analyse the user question and the provided study context (notes, hands, GTO snippets) ' +
                     'and return a JSON object with three keys: "summary", "rules", and "drills". ' +
                     '"summary" is 2–4 sentences. "rules" is an array of concise heuristics. ' +
-                    '"drills" is an array of objects: { "id", "question", "answer", "explanation" }. ' +
+                    '"drills" is an array of MULTIPLE-CHOICE quiz objects: { "id", "question", "options" (array of 4 choices), "correctIndex" (0-3), "explanation" }. ' +
+                    'Make drill questions practical and actionable. Options should be distinct poker actions. ' +
                     'Focus on practical, NLH cash-game strategy at low/mid stakes. ' +
                     'Return ONLY valid JSON, no prose.' +
                     (history.length > 0 ? ' This is a follow-up question - consider the conversation history.' : '');
@@ -198,7 +199,7 @@ export async function POST(req: NextRequest) {
                     contextText,
                     '',
                     'Return JSON in this shape:',
-                    '{ "summary": "string", "rules": ["..."], "drills": [{ "id": "...", "question": "...", "answer": "...", "explanation": "..." }] }',
+                    '{ "summary": "string", "rules": ["..."], "drills": [{ "id": "...", "question": "What action?", "options": ["Fold", "Call", "Raise 2.5x", "All-in"], "correctIndex": 2, "explanation": "why..." }] }',
                 ].join('\n');
 
                 // Build messages with conversation history for follow-ups
@@ -237,8 +238,9 @@ export async function POST(req: NextRequest) {
                         drills: Array.isArray(parsed.drills) ? parsed.drills.map((d: any, idx: number) => ({
                             id: d.id || `drill-${idx + 1}`,
                             question: d.question || '',
-                            answer: d.answer || '',
-                            explanation: d.explanation,
+                            options: Array.isArray(d.options) ? d.options : [],
+                            correctIndex: typeof d.correctIndex === 'number' ? d.correctIndex : 0,
+                            explanation: d.explanation || '',
                         })) : [],
                     });
                 } catch {
