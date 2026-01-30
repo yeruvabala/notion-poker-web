@@ -402,7 +402,7 @@ export default function MobileHandsPage() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-app-token': 'dev-token-123'
+                    'x-app-token': '7f8dc46687ee09ccbff411d4a1507bc08bfb97bf556430a95f5413b59bd780d0'
                 },
                 body: JSON.stringify({
                     raw_text: rawText,
