@@ -3118,19 +3118,18 @@ body.native-app [class*="btn-row"]>* {
     z-index: 1000;
     display: flex;
     justify-content: space-around;
-    align-items: center;
+    /* Icons align to top of the content area */
+    align-items: flex-start;
     /* Premium dark glass background */
     background: linear-gradient(180deg, rgba(18, 18, 20, 0.98) 0%, rgba(12, 12, 14, 0.99) 100%);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-top: 1px solid rgba(255, 255, 255, 0.06);
-    /* Nav height with safe area padding at bottom - icons stay at top */
-    height: 54px;
-    padding: 0 8px;
-    /* Safe area padding pushes content up from bottom */
-    padding-bottom: env(safe-area-inset-bottom, 34px);
-    /* Total visible height = 54px + safe-area */
-    box-sizing: content-box;
+    /* Height includes safe area - icons positioned via padding-top */
+    height: calc(50px + env(safe-area-inset-bottom, 34px));
+    /* Top padding positions icons, left/right for spacing */
+    padding: 8px 8px 0 8px;
+    box-sizing: border-box;
 }
 
 /* No longer needed - nav bar extends to bottom naturally now */
