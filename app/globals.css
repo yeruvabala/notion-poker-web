@@ -3037,7 +3037,7 @@ body.native-app [class*="btn-row"]>* {
     flex-direction: column;
     align-items: center;
     /* Minimal padding - title very close to safe area */
-    padding: 4px 16px 6px;
+    padding: 2px 16px 6px;
 }
 
 /* Mobile-specific overrides for homepage-title */
@@ -3116,22 +3116,25 @@ body.native-app [class*="btn-row"]>* {
    ═══════════════════════════════════════════════════════════════ */
 .mobile-bottom-nav {
     position: fixed;
+    /* Extend into the safe area at bottom */
     bottom: 0;
     left: 0;
     right: 0;
     z-index: 1000;
     display: flex;
     justify-content: space-around;
-    align-items: center;
+    align-items: flex-start;
     /* Premium dark glass background */
     background: linear-gradient(180deg, rgba(18, 18, 20, 0.98) 0%, rgba(12, 12, 14, 0.99) 100%);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-top: 1px solid rgba(255, 255, 255, 0.06);
-    /* Proper safe area - padding from bottom edge */
-    padding: 12px 0;
-    padding-bottom: max(env(safe-area-inset-bottom, 20px), 34px);
-    min-height: 70px;
+    /* Icons at top of nav, extends down into safe area */
+    padding-top: 10px;
+    /* Use the safe area as bottom padding so icons sit above it */
+    padding-bottom: env(safe-area-inset-bottom, 34px);
+    /* Height includes the safe area */
+    height: calc(60px + env(safe-area-inset-bottom, 34px));
 }
 
 .mobile-nav-item {
