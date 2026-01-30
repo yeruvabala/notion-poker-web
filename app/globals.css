@@ -17,6 +17,19 @@ body {
     color: #E2E8F0 !important;
 }
 
+/* iOS Safe Area Support - proper padding for notched devices */
+/* This adds extra top padding on devices with notches (Pro Max, etc) */
+.ios-safe-top {
+    padding-top: calc(env(safe-area-inset-top, 20px) + 12px) !important;
+}
+
+/* Apply safe area to main content containers in native app */
+@supports (padding-top: env(safe-area-inset-top)) {
+    .native-page-container {
+        padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
+    }
+}
+
 /* Hide ALL scrollbars globally for cleaner mobile app appearance */
 * {
     -ms-overflow-style: none;
@@ -3012,8 +3025,8 @@ body.native-app [class*="btn-row"]>* {
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* More top padding to push title lower, less bottom padding for tighter border */
-    padding: 30px 16px 6px;
+    /* More top padding for Pro Max + larger devices, less bottom padding for tighter border */
+    padding: 45px 16px 6px;
 }
 
 /* Mobile-specific overrides for homepage-title */
