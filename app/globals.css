@@ -2999,8 +2999,8 @@ body.native-app [class*="btn-row"]>* {
     background: rgba(28, 28, 28, 0.98);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    /* Safe area + extra padding like Instagram */
-    padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
+    /* Safe area + extra padding like Instagram - fallback 47px for initial load */
+    padding-top: calc(env(safe-area-inset-top, 47px) + 8px);
 }
 
 /* Premium gradient divider line under header */
@@ -3073,7 +3073,8 @@ body.native-app [class*="btn-row"]>* {
     overflow-y: auto;
     overflow-x: hidden;
     /* Increased padding for taller header (safe area + 8px + ~80px header) */
-    padding-top: calc(env(safe-area-inset-top, 0px) + 110px);
+    /* Fallback 47px is typical iPhone notch size - used before iOS provides actual value */
+    padding-top: calc(env(safe-area-inset-top, 47px) + 110px);
     /* Header height */
     padding-bottom: calc(env(safe-area-inset-bottom, 0) + 80px);
     /* Nav height */
