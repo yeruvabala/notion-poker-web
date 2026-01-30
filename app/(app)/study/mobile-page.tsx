@@ -157,6 +157,11 @@ export default function MobileStudyPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Streaming state
+    const [streamingText, setStreamingText] = useState('');
+    const [statusMessage, setStatusMessage] = useState<string | null>(null);
+    const [isStreaming, setIsStreaming] = useState(false);
+
     // Haptic feedback
     const haptic = (style: ImpactStyle = ImpactStyle.Light) => {
         if (Capacitor.isNativePlatform()) {
@@ -164,7 +169,7 @@ export default function MobileStudyPage() {
         }
     };
 
-    // Ask Coach handler
+    // Ask Coach handler - STREAMING VERSION
     async function handleAskCoach() {
         if (!question.trim()) {
             setError('Type a question first');
@@ -173,15 +178,18 @@ export default function MobileStudyPage() {
 
         haptic(ImpactStyle.Medium);
         setLoading(true);
+        setIsStreaming(true);
         setError(null);
         setCoach(null);
         setChunks([]);
+        setStreamingText('');
+        setStatusMessage('Starting...');
 
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) throw new Error('Please sign in first');
 
-            const res = await fetch('/api/study/answer', {
+            const res = await fetch('/api/study/answer-stream', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -189,24 +197,77 @@ export default function MobileStudyPage() {
                 },
                 body: JSON.stringify({
                     q: question.trim(),
-                    range: '10k',
                     position: position === 'Any' ? null : position,
                     street: street === 'Any' ? null : street.toLowerCase(),
                 }),
             });
 
             if (!res.ok) throw new Error('Failed to get response');
+            if (!res.body) throw new Error('No response body');
 
-            const data = await res.json();
-            setCoach(data.coach || {});
-            setChunks(data.chunks || []);
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+
+                // Parse SSE events from buffer
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+                let eventType = '';
+                for (const line of lines) {
+                    if (line.startsWith('event: ')) {
+                        eventType = line.slice(7).trim();
+                    } else if (line.startsWith('data: ')) {
+                        const data = line.slice(6);
+                        try {
+                            const parsed = JSON.parse(data);
+
+                            switch (eventType) {
+                                case 'status':
+                                    setStatusMessage(parsed.message);
+                                    break;
+                                case 'chunks':
+                                    setChunks(parsed);
+                                    setStatusMessage('Sources loaded');
+                                    break;
+                                case 'token':
+                                    setStreamingText(prev => prev + parsed.text);
+                                    setStatusMessage(null); // Clear status when streaming starts
+                                    break;
+                                case 'summary':
+                                    setCoach(prev => ({ ...prev, summary: parsed.text, rules: [], drills: [] }));
+                                    break;
+                                case 'coach':
+                                    setCoach(parsed);
+                                    setStreamingText(''); // Clear streaming text when final coach arrives
+                                    break;
+                                case 'error':
+                                    throw new Error(parsed.message);
+                                case 'done':
+                                    haptic(ImpactStyle.Heavy);
+                                    break;
+                            }
+                        } catch (e) {
+                            // Ignore JSON parse errors for incomplete data
+                        }
+                    }
+                }
+            }
+
             setActiveDrillIndex(0);
             setShowDrillAnswer(false);
-            haptic(ImpactStyle.Heavy);
         } catch (err: any) {
             setError(err?.message || 'Something went wrong');
         } finally {
             setLoading(false);
+            setIsStreaming(false);
+            setStatusMessage(null);
         }
     }
 
@@ -334,8 +395,33 @@ export default function MobileStudyPage() {
                 </div>
             </div>
 
+            {/* Streaming Status & Text Display */}
+            {isStreaming && (
+                <div className="study-streaming-section">
+                    {statusMessage && (
+                        <div className="streaming-status">
+                            <span className="status-spinner">●</span>
+                            <span>{statusMessage}</span>
+                        </div>
+                    )}
+                    {streamingText && (
+                        <div className="study-card strategy-card">
+                            <div className="card-header">
+                                <span className="card-icon"><StrategyInsightIcon size={20} /></span>
+                                <span className="card-title">AI Coach</span>
+                                <span className="streaming-indicator">●</span>
+                            </div>
+                            <p className="strategy-text streaming-text">
+                                {streamingText}
+                                <span className="typing-cursor">|</span>
+                            </p>
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Results Section */}
-            {coach && (
+            {coach && !isStreaming && (
                 <div className="study-results">
                     {/* Strategy Snapshot */}
                     {coach.summary && (

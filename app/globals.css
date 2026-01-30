@@ -10956,6 +10956,70 @@ button.mobile-gto-indicator {
     text-align: center;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   STREAMING COMPONENTS
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.study-streaming-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.streaming-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 12px;
+    color: #60a5fa;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.status-spinner {
+    animation: pulse 1s ease-in-out infinite;
+    color: #3b82f6;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+}
+
+.streaming-text {
+    position: relative;
+}
+
+.typing-cursor {
+    animation: blink 0.8s step-end infinite;
+    color: #60a5fa;
+    font-weight: 300;
+    margin-left: 2px;
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+.streaming-indicator {
+    margin-left: auto;
+    color: #22c55e;
+    font-size: 10px;
+    animation: pulse 1s ease-in-out infinite;
+}
+
 /* Results Section */
 .study-results {
     display: flex;
