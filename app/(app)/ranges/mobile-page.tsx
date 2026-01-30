@@ -585,24 +585,12 @@ export default function MobileRangesPage() {
                 </div>
             )}
 
-            {/* Legend - Dynamic based on scenario */}
-            {selectedScenario === 'rfi' ? (
-                /* RFI: Frequency-based legend */
-                <div className="mobile-ranges-legend">
-                    <div className="legend-item"><div className="legend-dot freq-always" /><span>80-100%</span></div>
-                    <div className="legend-item"><div className="legend-dot freq-often" /><span>50-79%</span></div>
-                    <div className="legend-item"><div className="legend-dot freq-mixed" /><span>20-49%</span></div>
-                    <div className="legend-item"><div className="legend-dot freq-rare" /><span>1-19%</span></div>
-                    <div className="legend-item"><div className="legend-dot freq-fold" /><span>Fold</span></div>
-                </div>
-            ) : (
-                /* 3bet+: Action-based legend */
-                <div className="mobile-ranges-legend action-legend">
-                    <div className="legend-item"><div className="legend-dot action-raise" /><span>Raise</span></div>
-                    <div className="legend-item"><div className="legend-dot action-call" /><span>Call</span></div>
-                    <div className="legend-item"><div className="legend-dot action-fold" /><span>Fold</span></div>
-                </div>
-            )}
+            {/* Legend - Action-based for all scenarios */}
+            <div className="mobile-ranges-legend action-legend">
+                <div className="legend-item"><div className="legend-dot action-raise" /><span>Raise</span></div>
+                <div className="legend-item"><div className="legend-dot action-call" /><span>Call</span></div>
+                <div className="legend-item"><div className="legend-dot action-fold" /><span>Fold</span></div>
+            </div>
 
             {/* Bottom Navigation */}
             <MobileBottomNav />
