@@ -99,7 +99,7 @@ export default function PrivacyPolicyPage() {
                     </h2>
                     <p style={{ lineHeight: '1.7', color: '#d1d5db' }}>
                         You have the right to access, update, or delete your personal data at any time.
-                        You can delete your account and all associated data by contacting us at support@onlypoker.ai.
+                        You can delete your account and all associated data by contacting us at ybar243@gmail.com.
                     </p>
                 </section>
 
@@ -134,7 +134,7 @@ export default function PrivacyPolicyPage() {
                     <p style={{ lineHeight: '1.7', color: '#d1d5db' }}>
                         If you have any questions about this Privacy Policy, please contact us at:
                         <br />
-                        <a href="mailto:support@onlypoker.ai" style={{ color: '#60a5fa' }}>support@onlypoker.ai</a>
+                        <a href="mailto:ybar243@gmail.com" style={{ color: '#60a5fa' }}>ybar243@gmail.com</a>
                     </p>
                 </section>
 
