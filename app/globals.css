@@ -15,12 +15,18 @@ html,
 body {
     background: #1c1c1c !important;
     color: #E2E8F0 !important;
-    /* iOS WebView critical fixes */
-    height: 100%;
-    min-height: 100%;
+    /* iOS WebView critical fixes - use dvh for true viewport */
+    height: 100dvh;
+    height: 100vh;
+    /* Fallback */
+    min-height: -webkit-fill-available;
     overflow: hidden;
     position: fixed;
     width: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 /* iOS Safe Area Support - proper padding for notched devices */
