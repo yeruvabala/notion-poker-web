@@ -30,23 +30,6 @@ body {
     }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   MOBILE PAGE TOP PADDING - Clears fixed header on all devices
-   This ensures content doesn't overlap with the fixed header
-   on larger phones like iPhone Pro Max
-   ═══════════════════════════════════════════════════════════════ */
-.mobile-analytics-page,
-.mobile-hands-page,
-.mobile-ranges-page,
-.mobile-study-page,
-.mobile-coach-page,
-[class*="mobile-"][class*="-page"] {
-    padding-top: calc(env(safe-area-inset-top, 47px) + 145px) !important;
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 80px) !important;
-    min-height: 100vh;
-    box-sizing: border-box;
-}
-
 /* Hide ALL scrollbars globally for cleaner mobile app appearance */
 * {
     -ms-overflow-style: none;
@@ -3042,8 +3025,8 @@ body.native-app [class*="btn-row"]>* {
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* More top padding for Pro Max + larger devices, less bottom padding for tighter border */
-    padding: 45px 16px 6px;
+    /* More top padding to push title lower, less bottom padding for tighter border */
+    padding: 30px 16px 6px;
 }
 
 /* Mobile-specific overrides for homepage-title */
@@ -3090,7 +3073,7 @@ body.native-app [class*="btn-row"]>* {
     overflow-y: auto;
     overflow-x: hidden;
     /* Increased padding for taller header (safe area + 8px + ~80px header) */
-    padding-top: calc(env(safe-area-inset-top, 0px) + 145px);
+    padding-top: calc(env(safe-area-inset-top, 0px) + 110px);
     /* Header height */
     padding-bottom: calc(env(safe-area-inset-bottom, 0) + 80px);
     /* Nav height */
