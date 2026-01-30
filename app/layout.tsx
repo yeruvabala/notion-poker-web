@@ -18,13 +18,15 @@ export const metadata = {
     shortcut: '/static/favicon.png',
     apple: '/static/favicon.png',
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-    viewportFit: 'cover',
-  },
+};
+
+// Next.js 14+ requires viewport as a separate export
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 };
 
 // Unified background color - matches home page
