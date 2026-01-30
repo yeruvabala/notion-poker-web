@@ -3085,15 +3085,13 @@ body.native-app [class*="btn-row"]>* {
     overflow-y: auto;
     overflow-x: hidden;
     /* Padding to account for fixed header height */
-    /* Header: safe-area + header-content (~55px) */
-    padding-top: calc(env(safe-area-inset-top, 47px) + 55px);
+    /* Header: safe-area + header-content (~46px) */
+    padding-top: calc(env(safe-area-inset-top, 47px) + 46px);
     /* Nav height + safe area */
     padding-bottom: calc(env(safe-area-inset-bottom, 34px) + 80px);
     padding-left: 16px;
     padding-right: 16px;
     -webkit-overflow-scrolling: touch;
-    /* Prevent iOS bounce/rubber-banding at top - keeps content locked to header */
-    overscroll-behavior-y: none;
     /* Solid dark background - matches header */
     background: #1c1c1c;
 }
