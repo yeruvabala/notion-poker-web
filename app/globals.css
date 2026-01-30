@@ -3033,7 +3033,8 @@ body.native-app [class*="btn-row"]>* {
 .mobile-homepage-title {
     font-size: 1.75rem !important;
     letter-spacing: 1.5px !important;
-    margin: 0 !important;
+    margin: 2px 0 0 0 !important;
+    /* 2px top margin to push title down */
 }
 
 /* Mobile-specific overrides for suit decoration */
