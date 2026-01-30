@@ -162,6 +162,91 @@ export default function MobileStudyPage() {
     const [statusMessage, setStatusMessage] = useState<string | null>(null);
     const [isStreaming, setIsStreaming] = useState(false);
 
+    // Notes state
+    type UserNote = { id: string; content: string; tags?: string[]; created_at?: string };
+    const [notes, setNotes] = useState<UserNote[]>([]);
+    const [noteInput, setNoteInput] = useState('');
+    const [showNotes, setShowNotes] = useState(false);
+    const [savingNote, setSavingNote] = useState(false);
+
+    // Load notes on mount
+    React.useEffect(() => {
+        async function loadNotes() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) return;
+
+                const res = await fetch('/api/study/notes', {
+                    headers: { Authorization: `Bearer ${session.access_token}` },
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setNotes(data.notes || []);
+                }
+            } catch (e) {
+                console.error('Failed to load notes:', e);
+            }
+        }
+        loadNotes();
+    }, [supabase]);
+
+    // Save a new note
+    async function handleSaveNote() {
+        if (!noteInput.trim() || noteInput.length < 10) {
+            setError('Note must be at least 10 characters');
+            return;
+        }
+
+        haptic();
+        setSavingNote(true);
+        setError(null);
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error('Please sign in');
+
+            const res = await fetch('/api/study/notes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({ content: noteInput }),
+            });
+
+            if (!res.ok) throw new Error('Failed to save note');
+
+            const data = await res.json();
+            setNotes(prev => [data.note, ...prev]);
+            setNoteInput('');
+            haptic(ImpactStyle.Heavy);
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setSavingNote(false);
+        }
+    }
+
+    // Delete a note
+    async function handleDeleteNote(noteId: string) {
+        haptic();
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return;
+
+            const res = await fetch(`/api/study/notes?id=${noteId}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${session.access_token}` },
+            });
+
+            if (res.ok) {
+                setNotes(prev => prev.filter(n => n.id !== noteId));
+            }
+        } catch (e) {
+            console.error('Failed to delete note:', e);
+        }
+    }
+
     // Haptic feedback
     const haptic = (style: ImpactStyle = ImpactStyle.Light) => {
         if (Capacitor.isNativePlatform()) {
@@ -393,6 +478,60 @@ export default function MobileStudyPage() {
 
                     {error && <div className="study-error">{error}</div>}
                 </div>
+
+                {/* My Notes Section */}
+                <div className="study-notes-section">
+                    <button
+                        className="notes-toggle"
+                        onClick={() => { haptic(); setShowNotes(!showNotes); }}
+                    >
+                        <NoteIcon size={16} />
+                        <span>My Notes</span>
+                        <span className="notes-count">{notes.length}</span>
+                        <span className="notes-arrow">{showNotes ? '▲' : '▼'}</span>
+                    </button>
+
+                    {showNotes && (
+                        <div className="notes-panel">
+                            <div className="note-input-row">
+                                <textarea
+                                    className="note-textarea"
+                                    placeholder="Add a study note (e.g., leaks, reminders, concepts)..."
+                                    value={noteInput}
+                                    onChange={(e) => setNoteInput(e.target.value)}
+                                    rows={2}
+                                />
+                                <button
+                                    className="save-note-btn"
+                                    onClick={handleSaveNote}
+                                    disabled={savingNote || noteInput.length < 10}
+                                >
+                                    {savingNote ? '...' : '💾'}
+                                </button>
+                            </div>
+
+                            {notes.length > 0 && (
+                                <div className="notes-list">
+                                    {notes.slice(0, 5).map((note) => (
+                                        <div key={note.id} className="note-item">
+                                            <span className="note-content">{note.content.slice(0, 100)}{note.content.length > 100 ? '...' : ''}</span>
+                                            <button
+                                                className="delete-note-btn"
+                                                onClick={() => handleDeleteNote(note.id)}
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {notes.length === 0 && (
+                                <div className="notes-empty">No notes yet. Add your first study note above!</div>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Streaming Status & Text Display */}
@@ -514,22 +653,53 @@ export default function MobileStudyPage() {
                                 <span className="sources-count">{chunks.length}</span>
                             </div>
                             <div className="sources-list">
-                                {chunks.slice(0, 3).map((chunk, i) => (
-                                    <details key={chunk.id || i} className="source-item">
-                                        <summary className="source-summary">
-                                            <span className="source-icon">
-                                                {chunk.source_type === 'hand' ? <HandContextIcon size={14} /> :
-                                                    chunk.source_type === 'note' ? <NoteIcon size={14} /> : <ChartIcon size={14} />}
-                                            </span>
-                                            <span className="source-title">
-                                                {chunk.title || (chunk.source_type === 'hand' ? 'Hand context' : 'Study note')}
-                                            </span>
-                                        </summary>
-                                        <div className="source-content">
-                                            {formatSourceContent(chunk.content)}
-                                        </div>
-                                    </details>
-                                ))}
+                                {chunks.slice(0, 5).map((chunk, i) => {
+                                    // Determine source type and display config
+                                    const sourceType = chunk.source_type || 'hand';
+                                    const sourceConfig = {
+                                        hand: {
+                                            icon: <HandContextIcon size={14} />,
+                                            badge: '🃏',
+                                            label: 'Hand',
+                                            color: 'source-hand',
+                                            title: chunk.title || 'Analyzed Hand'
+                                        },
+                                        note: {
+                                            icon: <NoteIcon size={14} />,
+                                            badge: '📝',
+                                            label: 'Note',
+                                            color: 'source-note',
+                                            title: chunk.title || 'Study Note'
+                                        },
+                                        gto: {
+                                            icon: <ChartIcon size={14} />,
+                                            badge: '🎯',
+                                            label: 'GTO',
+                                            color: 'source-gto',
+                                            title: chunk.title || 'GTO Strategy'
+                                        },
+                                    }[sourceType] || {
+                                        icon: <ChartIcon size={14} />,
+                                        badge: '📊',
+                                        label: 'Data',
+                                        color: 'source-default',
+                                        title: chunk.title || 'Source'
+                                    };
+
+                                    return (
+                                        <details key={chunk.id || i} className={`source-item ${sourceConfig.color}`}>
+                                            <summary className="source-summary">
+                                                <span className="source-type-badge">{sourceConfig.badge}</span>
+                                                <span className="source-icon">{sourceConfig.icon}</span>
+                                                <span className="source-title">{sourceConfig.title}</span>
+                                                <span className="source-type-label">{sourceConfig.label}</span>
+                                            </summary>
+                                            <div className="source-content">
+                                                {formatSourceContent(chunk.content)}
+                                            </div>
+                                        </details>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
