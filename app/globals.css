@@ -3629,7 +3629,7 @@ body.native-app [class*="btn-row"]>* {
    ═══════════════════════════════════════════════════════════════════════════════ */
 .premium-setup-container {
     position: relative;
-    margin: 0 16px 6px;
+    margin: 5px 16px 6px;
     border-radius: 14px;
     padding: 1px;
     /* Animated gray gradient border - premium shimmer */
