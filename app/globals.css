@@ -8419,8 +8419,8 @@ body.native-app [class*="btn-row"]>* {
    ═══════════════════════════════════════════════════════════════════════════════ */
 .mobile-hands-page {
     min-height: 100vh;
-    /* Increased padding to account for premium header with title + suits */
-    padding-top: calc(env(safe-area-inset-top, 0px) + 115px);
+    /* Matches homepage: safe-area + 43px header height */
+    padding-top: calc(env(safe-area-inset-top, 47px) + 43px);
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
     padding-left: 16px;
     padding-right: 16px;
@@ -9644,7 +9644,8 @@ button.mobile-gto-indicator {
    ═══════════════════════════════════════════════════════════════════════════════ */
 .mobile-ranges-page {
     min-height: 100vh;
-    padding-top: calc(env(safe-area-inset-top, 0px) + 115px);
+    /* Matches homepage: safe-area + 43px header height */
+    padding-top: calc(env(safe-area-inset-top, 47px) + 43px);
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
     padding-left: 12px;
     padding-right: 12px;
@@ -10518,7 +10519,8 @@ button.mobile-gto-indicator {
    ═══════════════════════════════════════════════════════════════════════════════ */
 .mobile-study-page {
     min-height: 100vh;
-    padding-top: calc(env(safe-area-inset-top, 0px) + 115px);
+    /* Matches homepage: safe-area + 43px header height */
+    padding-top: calc(env(safe-area-inset-top, 47px) + 43px);
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
     padding-left: 14px;
     padding-right: 14px;
@@ -11768,7 +11770,8 @@ button.mobile-gto-indicator {
    ═══════════════════════════════════════════════════════════════════════════════ */
 .mobile-analytics-page {
     min-height: 100vh;
-    padding-top: calc(env(safe-area-inset-top, 0px) + 115px);
+    /* Matches homepage: safe-area + 43px header height */
+    padding-top: calc(env(safe-area-inset-top, 47px) + 43px);
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
     /* Match My Hands page padding for consistent alignment */
     padding-left: 16px;
