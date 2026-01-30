@@ -162,6 +162,16 @@ export default function MobileHandsPage() {
     // Session sheet state
     const [showSessionSheet, setShowSessionSheet] = useState(false);
 
+    // Analyze hand state
+    const [analyzingHandId, setAnalyzingHandId] = useState<string | null>(null);
+    const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
+
+    // Show toast notification
+    const showToast = (message: string) => {
+        setToast({ message, visible: true });
+        setTimeout(() => setToast({ message: '', visible: false }), 3000);
+    };
+
     // Load hands from Supabase
     useEffect(() => {
         let cancelled = false;
@@ -296,6 +306,178 @@ export default function MobileHandsPage() {
         return hands.filter(h => h.session_id === sessionId || h.session?.id === sessionId).length;
     };
 
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // GTO ANALYZE FROM CARD - New Feature
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    // Check if a hand has enough info to be analyzed
+    const canAnalyze = (hand: Hand): { canAnalyze: boolean; reason?: string } => {
+        // Required: hero cards (at least 4 chars like "K♦ K♥")
+        if (!hand.cards || hand.cards.trim().length < 3) {
+            return { canAnalyze: false, reason: 'Missing hero cards' };
+        }
+        // Required: hero position
+        if (!hand.position) {
+            return { canAnalyze: false, reason: 'Missing hero position' };
+        }
+        // All good - villain position and actions will use defaults
+        return { canAnalyze: true };
+    };
+
+    // Build raw_text from hand data for the coach API
+    const buildHandText = (hand: Hand): string => {
+        const parts: string[] = [];
+
+        // Position and cards
+        parts.push(`Hero is in ${hand.position || 'BTN'} with ${hand.cards || '??'}`);
+
+        // Villain position if available
+        if (hand.hand_actions?.villain_position) {
+            parts.push(`Villain is in ${hand.hand_actions.villain_position}`);
+        }
+
+        // Effective stack
+        const stack = hand.hand_actions?.effective_stack || '100';
+        parts.push(`Effective stack: ${stack}bb`);
+
+        // Preflop actions
+        if (hand.hand_actions?.preflop && hand.hand_actions.preflop.length > 0) {
+            const preflopStr = hand.hand_actions.preflop.map(a =>
+                `${a.player === 'H' ? 'Hero' : 'Villain'} ${a.action}${a.amount ? ` ${a.amount}bb` : ''}`
+            ).join(', ');
+            parts.push(`Preflop: ${preflopStr}`);
+        }
+
+        // Board cards if any
+        if (hand.board) {
+            parts.push(`Board: ${hand.board}`);
+        }
+
+        // Flop actions
+        if (hand.hand_actions?.flop && hand.hand_actions.flop.length > 0) {
+            const flopStr = hand.hand_actions.flop.map(a =>
+                `${a.player === 'H' ? 'Hero' : 'Villain'} ${a.action}${a.amount ? ` ${a.amount}bb` : ''}`
+            ).join(', ');
+            parts.push(`Flop: ${flopStr}`);
+        }
+
+        // Turn actions
+        if (hand.hand_actions?.turn && hand.hand_actions.turn.length > 0) {
+            const turnStr = hand.hand_actions.turn.map(a =>
+                `${a.player === 'H' ? 'Hero' : 'Villain'} ${a.action}${a.amount ? ` ${a.amount}bb` : ''}`
+            ).join(', ');
+            parts.push(`Turn: ${turnStr}`);
+        }
+
+        // River actions
+        if (hand.hand_actions?.river && hand.hand_actions.river.length > 0) {
+            const riverStr = hand.hand_actions.river.map(a =>
+                `${a.player === 'H' ? 'Hero' : 'Villain'} ${a.action}${a.amount ? ` ${a.amount}bb` : ''}`
+            ).join(', ');
+            parts.push(`River: ${riverStr}`);
+        }
+
+        return parts.join('\n');
+    };
+
+    // Handle analyze button click
+    const handleAnalyzeHand = async (hand: Hand, e: React.MouseEvent) => {
+        e.stopPropagation(); // Don't open the modal
+
+        if (analyzingHandId) return; // Already analyzing something
+
+        // Haptic feedback
+        if (Capacitor.isNativePlatform()) {
+            Haptics.impact({ style: ImpactStyle.Medium }).catch(() => { });
+        }
+
+        setAnalyzingHandId(hand.id);
+
+        try {
+            // Build the raw text from hand data
+            const rawText = buildHandText(hand);
+
+            // Call the coach API
+            const res = await fetch('/api/coach/analyze-hand', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-app-token': 'dev-token-123'
+                },
+                body: JSON.stringify({
+                    raw_text: rawText,
+                    position: hand.position,
+                    cards: hand.cards,
+                    board: hand.board || '',
+                    effectiveStack: hand.hand_actions?.effective_stack || '100'
+                })
+            });
+
+            if (!res.ok) {
+                throw new Error('Analysis failed');
+            }
+
+            const data = await res.json();
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            // Update the hand in Supabase
+            const { error: updateError } = await supabase
+                .from('hands')
+                .update({
+                    gto_strategy: data.gto_strategy,
+                    exploit_deviation: data.exploit_deviation,
+                    hero_classification: data.hero_classification,
+                    spr_analysis: data.spr_analysis,
+                    mistake_analysis: data.mistake_analysis
+                })
+                .eq('id', hand.id);
+
+            if (updateError) {
+                throw new Error('Failed to save analysis');
+            }
+
+            // Update local state
+            setHands(prevHands => prevHands.map(h =>
+                h.id === hand.id
+                    ? {
+                        ...h,
+                        gto_strategy: data.gto_strategy,
+                        exploit_deviation: data.exploit_deviation,
+                        hero_classification: data.hero_classification,
+                        spr_analysis: data.spr_analysis,
+                        mistake_analysis: data.mistake_analysis
+                    }
+                    : h
+            ));
+
+            // Success haptic
+            if (Capacitor.isNativePlatform()) {
+                Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => { });
+            }
+
+            showToast('✅ GTO analysis complete!');
+
+        } catch (err: any) {
+            console.error('Analyze error:', err);
+            showToast(`❌ ${err?.message || 'Analysis failed'}`);
+        } finally {
+            setAnalyzingHandId(null);
+        }
+    };
+
+    // Handle click on disabled (gray) GTO badge
+    const handleDisabledGtoClick = (hand: Hand, e: React.MouseEvent) => {
+        e.stopPropagation();
+        const result = canAnalyze(hand);
+        if (Capacitor.isNativePlatform()) {
+            Haptics.impact({ style: ImpactStyle.Light }).catch(() => { });
+        }
+        showToast(`⚠️ ${result.reason || 'Cannot analyze'}`);
+    };
+
     return (
         <div className="mobile-hands-page">
             {/* Premium Page Header */}
@@ -401,11 +583,13 @@ export default function MobileHandsPage() {
                         {filteredHands.map((hand) => {
                             const hasGto = !!hand.gto_strategy;
                             const timeAgo = getRelativeTime(hand.created_at);
+                            const isAnalyzing = analyzingHandId === hand.id;
+                            const analyzeCheck = canAnalyze(hand);
 
                             return (
                                 <div
                                     key={hand.id}
-                                    className="mobile-hand-card"
+                                    className={`mobile-hand-card ${isAnalyzing ? 'analyzing' : ''}`}
                                     onClick={() => handleHandTap(hand)}
                                 >
                                     {/* Left: Premium Hero Cards */}
@@ -423,17 +607,38 @@ export default function MobileHandsPage() {
                                         </div>
                                     </div>
 
-                                    {/* Right: GTO Status */}
+                                    {/* Right: GTO Status - 3 States */}
                                     <div className="mobile-hand-status">
                                         {hasGto ? (
-                                            <div className="mobile-gto-indicator">
+                                            /* ✅ GREEN: Already analyzed */
+                                            <div className="mobile-gto-indicator analyzed">
                                                 <span className="gto-dot"></span>
                                                 <span className="gto-text">GTO</span>
                                             </div>
-                                        ) : (
-                                            <div className="mobile-pending-indicator">
-                                                <span className="pending-dot"></span>
+                                        ) : isAnalyzing ? (
+                                            /* 🔄 LOADING: Currently analyzing */
+                                            <div className="mobile-gto-indicator analyzing">
+                                                <span className="gto-spinner"></span>
+                                                <span className="gto-text">...</span>
                                             </div>
+                                        ) : analyzeCheck.canAnalyze ? (
+                                            /* 🟡 AMBER: Ready to analyze */
+                                            <button
+                                                className="mobile-gto-indicator ready"
+                                                onClick={(e) => handleAnalyzeHand(hand, e)}
+                                            >
+                                                <span className="gto-plus">+</span>
+                                                <span className="gto-text">GTO</span>
+                                            </button>
+                                        ) : (
+                                            /* ⚫ GRAY: Missing info */
+                                            <button
+                                                className="mobile-gto-indicator disabled"
+                                                onClick={(e) => handleDisabledGtoClick(hand, e)}
+                                            >
+                                                <span className="gto-dot"></span>
+                                                <span className="gto-text">GTO</span>
+                                            </button>
                                         )}
                                     </div>
                                 </div>
@@ -576,6 +781,13 @@ export default function MobileHandsPage() {
                             ))}
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Toast Notification */}
+            {toast.visible && (
+                <div className="mobile-toast">
+                    {toast.message}
                 </div>
             )}
 
