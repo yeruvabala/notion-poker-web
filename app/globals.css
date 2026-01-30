@@ -3111,25 +3111,27 @@ body.native-app [class*="btn-row"]>* {
    ═══════════════════════════════════════════════════════════════ */
 .mobile-bottom-nav {
     position: fixed;
-    /* Flush with physical screen bottom - like Instagram */
+    /* Flush with physical screen bottom */
     bottom: 0;
     left: 0;
     right: 0;
     z-index: 1000;
     display: flex;
     justify-content: space-around;
-    /* Icons align to top of the content area */
-    align-items: flex-start;
+    /* Center icons vertically in the 50px content area */
+    align-items: center;
     /* Premium dark glass background */
     background: linear-gradient(180deg, rgba(18, 18, 20, 0.98) 0%, rgba(12, 12, 14, 0.99) 100%);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-top: 1px solid rgba(255, 255, 255, 0.06);
-    /* Height includes safe area - icons positioned via padding-top */
-    height: calc(50px + env(safe-area-inset-bottom, 34px));
-    /* Top padding positions icons, left/right for spacing */
-    padding: 8px 8px 0 8px;
-    box-sizing: border-box;
+    /* Fixed content height for icons */
+    height: 50px;
+    padding: 0 8px;
+    /* Bottom padding = safe area - pushes bar up, icons stay in 50px area */
+    padding-bottom: env(safe-area-inset-bottom, 34px);
+    /* content-box so padding-bottom extends BEYOND the 50px height */
+    box-sizing: content-box;
 }
 
 /* No longer needed - nav bar extends to bottom naturally now */
