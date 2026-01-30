@@ -17,7 +17,14 @@ export const metadata = {
     icon: '/static/favicon.png',
     shortcut: '/static/favicon.png',
     apple: '/static/favicon.png',
-  }
+  },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: 'cover',
+  },
 };
 
 // Unified background color - matches home page

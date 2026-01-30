@@ -15,6 +15,12 @@ html,
 body {
     background: #1c1c1c !important;
     color: #E2E8F0 !important;
+    /* iOS WebView critical fixes */
+    height: 100%;
+    min-height: 100%;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
 }
 
 /* iOS Safe Area Support - proper padding for notched devices */
@@ -2980,11 +2986,16 @@ body.native-app [class*="btn-row"]>* {
 .mobile-app-container {
     display: flex;
     flex-direction: column;
+    /* iOS WebView proper height handling */
     min-height: 100vh;
-    width: 100vw;
+    min-height: -webkit-fill-available;
+    height: 100%;
+    width: 100%;
     max-width: 100vw;
-    overflow-x: hidden;
+    overflow: hidden;
     background: #1c1c1c;
+    /* Position relative so fixed children work correctly */
+    position: relative;
 }
 
 /* ═══════════════════════════════════════════════════════════════
