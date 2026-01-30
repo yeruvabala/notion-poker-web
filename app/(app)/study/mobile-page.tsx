@@ -570,10 +570,15 @@ export default function MobileStudyPage() {
                                 <span className="card-title">AI Coach</span>
                                 <span className="streaming-indicator">●</span>
                             </div>
-                            <p className="strategy-text streaming-text">
-                                {streamingText}
-                                <span className="typing-cursor">|</span>
-                            </p>
+                            <div className="streaming-text">
+                                <div
+                                    className="streaming-text-inner"
+                                    ref={(el) => { if (el) el.scrollTop = el.scrollHeight; }}
+                                >
+                                    <span className="strategy-text">{streamingText}</span>
+                                    <span className="typing-cursor">|</span>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
