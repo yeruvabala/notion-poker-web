@@ -30,6 +30,23 @@ body {
     }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE PAGE TOP PADDING - Clears fixed header on all devices
+   This ensures content doesn't overlap with the fixed header
+   on larger phones like iPhone Pro Max
+   ═══════════════════════════════════════════════════════════════ */
+.mobile-analytics-page,
+.mobile-hands-page,
+.mobile-ranges-page,
+.mobile-study-page,
+.mobile-coach-page,
+[class*="mobile-"][class*="-page"] {
+    padding-top: calc(env(safe-area-inset-top, 47px) + 125px) !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 80px) !important;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
 /* Hide ALL scrollbars globally for cleaner mobile app appearance */
 * {
     -ms-overflow-style: none;
