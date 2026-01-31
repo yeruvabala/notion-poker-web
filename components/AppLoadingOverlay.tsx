@@ -198,8 +198,10 @@ export default function AppLoadingOverlay() {
                 }
 
                 /* LOGGED OUT: Float to LOGIN PAGE suits position */
+                /* Using fixed px instead of vh for consistent position on all screen sizes */
+                /* (Login content is centered, so offset from center is constant) */
                 .suits-container.float-to-login {
-                    transform: translateY(-26vh) scale(0.5);
+                    transform: translateY(-220px) scale(0.5);
                 }
 
                 .suit {
