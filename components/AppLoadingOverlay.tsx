@@ -194,14 +194,14 @@ export default function AppLoadingOverlay() {
 
                 /* LOGGED IN: Float to HOME PAGE header position */
                 .suits-container.float-to-home {
-                    transform: translateY(-39.25vh) scale(0.45);
+                    transform: translateY(-38.85vh) scale(0.45);
                 }
 
                 /* LOGGED OUT: Float to LOGIN PAGE suits position */
                 /* Using fixed px instead of vh for consistent position on all screen sizes */
                 /* (Login content is centered, so offset from center is constant) */
                 .suits-container.float-to-login {
-                    transform: translateY(-220px) scale(0.5);
+                    transform: translateY(-217px) scale(0.5);
                 }
 
                 .suit {
