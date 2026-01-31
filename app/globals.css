@@ -12873,3 +12873,54 @@ body.native-android .mobile-bottom-nav {
     height: auto;
     min-height: 70px;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   ANDROID SVG SUIT ICONS
+   Premium SVG icons with gradient fills and glow effects
+   ═══════════════════════════════════════════════════════════════ */
+
+.android-suits {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.android-suit-svg {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.4));
+    transition: transform 0.2s ease;
+}
+
+.android-suit-svg:hover {
+    transform: scale(1.1);
+}
+
+/* Add subtle animation to Android suits */
+@keyframes android-suit-shimmer {
+
+    0%,
+    100% {
+        opacity: 0.9;
+        filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.4));
+    }
+
+    50% {
+        opacity: 1;
+        filter: drop-shadow(0 2px 6px rgba(255, 255, 255, 0.3));
+    }
+}
+
+.android-suit-svg.spade,
+.android-suit-svg.club {
+    animation: android-suit-shimmer 3s ease-in-out infinite;
+}
+
+.android-suit-svg.heart {
+    animation: android-suit-shimmer 3s ease-in-out infinite 0.5s;
+}
+
+.android-suit-svg.diamond {
+    animation: android-suit-shimmer 3s ease-in-out infinite 1s;
+}
