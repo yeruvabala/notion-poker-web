@@ -25,7 +25,10 @@ const config: CapacitorConfig = {
     contentInset: 'never'                 // Allow edge-to-edge display (Instagram-style)
   },
   android: {
-    backgroundColor: '#1c1c1c'            // Match home page background
+    backgroundColor: '#1c1c1c',            // Match home page background
+    // For local development testing, uncomment the line below and run: npm run dev
+    // Then rebuild Android - it will load from your Mac's local server
+    // url: 'http://10.0.2.2:3000'  // 10.0.2.2 is Android emulator's alias for host machine
   }
 };
 

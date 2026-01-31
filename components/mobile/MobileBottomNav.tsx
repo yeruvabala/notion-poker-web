@@ -12,7 +12,7 @@ import {
 } from '@/components/icons/PokerIcons';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// PREMIUM 5-TAB NAVIGATION - Instagram-style with custom poker icons
+// PREMIUM 5-TAB NAVIGATION - Instagram-style with labels + custom poker icons
 // ═══════════════════════════════════════════════════════════════════════════════
 
 interface NavItem {
@@ -33,11 +33,11 @@ const NAV_ITEMS: NavItem[] = [
  * MobileBottomNav - Premium 5-tab Instagram-style navigation
  * 
  * Features:
- * - 5 tabs: Home, Hands, Ranges, Study, Stats
+ * - 5 tabs: Home, Hands, Ranges, Study, Stats  
  * - Custom poker-themed SVG icons
+ * - Labels under icons (Instagram-style)
  * - Active state with glow effect
  * - Haptic feedback on tap
- * - Tight Instagram-style positioning
  */
 export default function MobileBottomNav() {
     const router = useRouter();
@@ -69,9 +69,11 @@ export default function MobileBottomNav() {
                             <Icon size={24} className="mobile-nav-svg" />
                             {isActive && <div className="nav-glow" />}
                         </div>
+                        <span className="mobile-nav-label">{label}</span>
                     </button>
                 );
             })}
         </nav>
     );
 }
+

@@ -12771,3 +12771,105 @@ button.mobile-gto-indicator {
     -webkit-text-fill-color: rgba(255, 255, 255, 0.3) !important;
     background: none !important;
 }
+
+/* ================================================================
+   ANDROID-SPECIFIC OVERRIDES
+   These styles ONLY apply when running on Android native app.
+   They do NOT affect iOS or web versions.
+   ================================================================ */
+
+/* Android needs extra top padding for status bar since it doesn't use safe-area-inset */
+body.native-android .mobile-header {
+    /* Android status bar is typically 24-32dp, plus extra padding for visual balance */
+    padding-top: 36px !important;
+}
+
+/* Adjust main content padding to match Android header */
+body.native-android .mobile-main-content {
+    padding-top: calc(36px + 58px) !important;
+    /* Status bar + header height */
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANDROID PREMIUM SUIT ICONS
+   Android emoji suits look basic, so we style them with CSS to match iOS premium look
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Android suit decoration - premium glassmorphic style */
+body.native-android .mobile-suit-decoration,
+body.native-android .suit-decoration {
+    gap: 12px !important;
+}
+
+body.native-android .mobile-suit-decoration span,
+body.native-android .suit-decoration span {
+    /* Better font for Android suit rendering */
+    font-family: 'Noto Sans Symbols 2', 'Segoe UI Symbol', 'DejaVu Sans', sans-serif;
+    font-size: 1rem !important;
+    font-weight: 600;
+    text-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.5),
+        0 0 8px currentColor;
+    filter: drop-shadow(0 0 4px currentColor);
+}
+
+/* Spade - Premium silver/platinum */
+body.native-android .mobile-suit-decoration span:nth-child(1),
+body.native-android .suit-decoration span:nth-child(1) {
+    color: #c0c0c0 !important;
+    background: linear-gradient(180deg, #e8e8e8 0%, #a0a0a0 50%, #808080 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    filter: drop-shadow(0 1px 2px rgba(192, 192, 192, 0.6));
+}
+
+/* Heart - Premium red with glow */
+body.native-android .mobile-suit-decoration span:nth-child(2),
+body.native-android .suit-decoration span:nth-child(2) {
+    color: #ff4444 !important;
+    background: linear-gradient(180deg, #ff6b6b 0%, #dc2626 50%, #b91c1c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    filter: drop-shadow(0 1px 3px rgba(220, 38, 38, 0.7));
+}
+
+/* Diamond - Premium red with glow */
+body.native-android .mobile-suit-decoration span:nth-child(3),
+body.native-android .suit-decoration span:nth-child(3) {
+    color: #ff4444 !important;
+    background: linear-gradient(180deg, #ff6b6b 0%, #dc2626 50%, #b91c1c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    filter: drop-shadow(0 1px 3px rgba(220, 38, 38, 0.7));
+}
+
+/* Club - Premium silver/platinum */
+body.native-android .mobile-suit-decoration span:nth-child(4),
+body.native-android .suit-decoration span:nth-child(4) {
+    color: #c0c0c0 !important;
+    background: linear-gradient(180deg, #e8e8e8 0%, #a0a0a0 50%, #808080 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    filter: drop-shadow(0 1px 2px rgba(192, 192, 192, 0.6));
+}
+
+/* Android title adjustments */
+body.native-android .mobile-homepage-title {
+    margin-top: 4px !important;
+}
+
+/* Android bottom nav adjustments - slightly different home indicator handling */
+body.native-android .mobile-bottom-nav {
+    /* Android gesture nav bar is typically 48dp */
+    padding-bottom: 20px !important;
+    height: auto;
+    min-height: 70px;
+}
