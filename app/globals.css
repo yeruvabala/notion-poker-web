@@ -12875,52 +12875,62 @@ body.native-android .mobile-bottom-nav {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ANDROID SVG SUIT ICONS
-   Premium SVG icons with gradient fills and glow effects
+   ANDROID PREMIUM SUIT STYLING
+   Using Noto Color Emoji font for high-quality colored emoji like iOS
    ═══════════════════════════════════════════════════════════════ */
 
+/* Load Google's Noto Color Emoji for premium emoji on Android */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap');
+
+/* Android-specific suit container */
 .android-suits {
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
+    justify-content: center !important;
+    gap: 8px !important;
 }
 
-.android-suit-svg {
-    display: inline-block;
-    width: 18px;
-    height: 18px;
-    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.4));
-    transition: transform 0.2s ease;
+/* Individual suit styling for Android - premium appearance */
+.android-suits span {
+    font-family: 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', 'Twemoji Mozilla', sans-serif !important;
+    font-size: 16px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 22px !important;
+    height: 22px !important;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5)) brightness(1.1) !important;
+    animation: suit-pulse 3s ease-in-out infinite !important;
 }
 
-.android-suit-svg:hover {
-    transform: scale(1.1);
+/* Staggered animation delays */
+.android-suits .suit-spade {
+    animation-delay: 0s !important;
 }
 
-/* Add subtle animation to Android suits */
-@keyframes android-suit-shimmer {
+.android-suits .suit-heart {
+    animation-delay: 0.5s !important;
+}
+
+.android-suits .suit-diamond {
+    animation-delay: 1s !important;
+}
+
+.android-suits .suit-club {
+    animation-delay: 1.5s !important;
+}
+
+/* Pulse animation for premium feel */
+@keyframes suit-pulse {
 
     0%,
     100% {
-        opacity: 0.9;
-        filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.4));
+        transform: scale(1);
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5)) brightness(1.1);
     }
 
     50% {
-        opacity: 1;
-        filter: drop-shadow(0 2px 6px rgba(255, 255, 255, 0.3));
+        transform: scale(1.05);
+        filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.3)) brightness(1.2);
     }
-}
-
-.android-suit-svg.spade,
-.android-suit-svg.club {
-    animation: android-suit-shimmer 3s ease-in-out infinite;
-}
-
-.android-suit-svg.heart {
-    animation: android-suit-shimmer 3s ease-in-out infinite 0.5s;
-}
-
-.android-suit-svg.diamond {
-    animation: android-suit-shimmer 3s ease-in-out infinite 1s;
 }
