@@ -12781,12 +12781,12 @@ button.mobile-gto-indicator {
 /* Android needs extra top padding for status bar since it doesn't use safe-area-inset */
 body.native-android .mobile-header {
     /* Android status bar is typically 24-32dp, adding generous padding */
-    padding-top: 56px !important;
+    padding-top: 64px !important;
 }
 
 /* Adjust main content padding to match Android header */
 body.native-android .mobile-main-content {
-    padding-top: calc(56px + 65px) !important;
+    padding-top: calc(64px + 75px) !important;
     /* Status bar + header height */
 }
 
@@ -12887,20 +12887,22 @@ body.native-android .mobile-bottom-nav {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 8px !important;
+    gap: 4px !important;
+    /* Closer together */
 }
 
-/* Individual suit styling for Android - premium appearance */
+/* Individual suit styling for Android - enhanced premium appearance */
 .android-suits span {
     font-family: 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', 'Twemoji Mozilla', sans-serif !important;
-    font-size: 16px !important;
+    font-size: 15px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    width: 22px !important;
-    height: 22px !important;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5)) brightness(1.1) !important;
-    animation: suit-pulse 3s ease-in-out infinite !important;
+    width: 20px !important;
+    height: 20px !important;
+    filter:
+        drop-shadow(0 0 3px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 6px rgba(255, 255, 255, 0.3)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)) brightness(1.15) !important;
+    animation: suit-glow 3s ease-in-out infinite !important;
 }
 
 /* Staggered animation delays */
@@ -12920,17 +12922,19 @@ body.native-android .mobile-bottom-nav {
     animation-delay: 1.5s !important;
 }
 
-/* Pulse animation for premium feel */
-@keyframes suit-pulse {
+/* Premium glow animation for suits */
+@keyframes suit-glow {
 
     0%,
     100% {
         transform: scale(1);
-        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5)) brightness(1.1);
+        filter:
+            drop-shadow(0 0 3px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 6px rgba(255, 255, 255, 0.3)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)) brightness(1.15);
     }
 
     50% {
-        transform: scale(1.05);
-        filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.3)) brightness(1.2);
+        transform: scale(1.08);
+        filter:
+            drop-shadow(0 0 6px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 12px rgba(255, 255, 255, 0.4)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)) brightness(1.25);
     }
 }
