@@ -197,6 +197,11 @@ export default function AppLoadingOverlay() {
                     transform: translateY(-37.55vh) scale(0.45);
                 }
 
+                /* Android: Float 15px higher (total: -37.55vh - 15px) */
+                body.native-android .suits-container.float-to-home {
+                    transform: translateY(calc(-37.55vh - 15px)) scale(0.45);
+                }
+
                 /* LOGGED OUT: Float to LOGIN PAGE suits position */
                 /* Using fixed px instead of vh for consistent position on all screen sizes */
                 /* (Login content is centered, so offset from center is constant) */
