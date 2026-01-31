@@ -12902,39 +12902,39 @@ body.native-android .mobile-bottom-nav {
     height: 20px !important;
     filter:
         drop-shadow(0 0 3px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 6px rgba(255, 255, 255, 0.3)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)) brightness(1.15) !important;
-    animation: suit-glow 3s ease-in-out infinite !important;
+    animation: android-suit-wave 3s ease-in-out infinite !important;
 }
 
-/* Staggered animation delays */
+/* Staggered animation delays for wave effect */
 .android-suits .suit-spade {
     animation-delay: 0s !important;
 }
 
 .android-suits .suit-heart {
-    animation-delay: 0.5s !important;
+    animation-delay: 0.4s !important;
 }
 
 .android-suits .suit-diamond {
-    animation-delay: 1s !important;
+    animation-delay: 0.8s !important;
 }
 
 .android-suits .suit-club {
-    animation-delay: 1.5s !important;
+    animation-delay: 1.2s !important;
 }
 
-/* Premium glow animation for suits */
-@keyframes suit-glow {
+/* Wave shimmer animation matching iOS behavior */
+@keyframes android-suit-wave {
 
     0%,
     100% {
+        opacity: 0.65;
         transform: scale(1);
-        filter:
-            drop-shadow(0 0 3px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 6px rgba(255, 255, 255, 0.3)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)) brightness(1.15);
+        filter: brightness(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
     }
 
     50% {
-        transform: scale(1.08);
-        filter:
-            drop-shadow(0 0 6px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 12px rgba(255, 255, 255, 0.4)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)) brightness(1.25);
+        opacity: 1;
+        transform: scale(1.1);
+        filter: brightness(1.4) drop-shadow(0 0 8px rgba(255, 255, 255, 0.5)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
     }
 }
