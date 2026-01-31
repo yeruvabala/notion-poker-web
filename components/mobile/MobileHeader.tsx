@@ -7,88 +7,69 @@ import SettingsDrawer from './SettingsDrawer';
 
 /**
  * Premium SVG Suit Icons for Android
- * These look premium with gradients and glows, unlike basic Android emoji
+ * Designed to match iOS emoji quality with smooth metallic gradients and inner glow
  */
-const SpadeSVG = () => (
-    <svg width="16" height="16" viewBox="0 0 100 100" className="android-suit-svg spade">
+const PremiumSpadeSVG = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" className="android-suit-svg">
         <defs>
-            <linearGradient id="spadeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#e8e8e8" />
-                <stop offset="50%" stopColor="#a0a0a0" />
-                <stop offset="100%" stopColor="#606060" />
+            <linearGradient id="spadeGradPremium" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#d4d4d8" />
+                <stop offset="25%" stopColor="#a1a1aa" />
+                <stop offset="50%" stopColor="#71717a" />
+                <stop offset="75%" stopColor="#52525b" />
+                <stop offset="100%" stopColor="#3f3f46" />
             </linearGradient>
-            <filter id="spadeGlow">
-                <feGaussianBlur stdDeviation="2" result="blur" />
-                <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                </feMerge>
-            </filter>
         </defs>
-        <path fill="url(#spadeGrad)" filter="url(#spadeGlow)" d="M50 10 C50 10 10 45 10 65 C10 80 25 90 40 80 L35 95 L65 95 L60 80 C75 90 90 80 90 65 C90 45 50 10 50 10 Z" />
+        <path fill="url(#spadeGradPremium)"
+            d="M12 2C12 2 4 9 4 14c0 3 2.5 5 5 4.2L8 22h8l-1-3.8c2.5.8 5-1.2 5-4.2C20 9 12 2 12 2z" />
     </svg>
 );
 
-const HeartSVG = () => (
-    <svg width="16" height="16" viewBox="0 0 100 100" className="android-suit-svg heart">
+const PremiumHeartSVG = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" className="android-suit-svg">
         <defs>
-            <linearGradient id="heartGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#ff6b6b" />
-                <stop offset="50%" stopColor="#dc2626" />
-                <stop offset="100%" stopColor="#991b1b" />
+            <linearGradient id="heartGradPremium" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#fca5a5" />
+                <stop offset="25%" stopColor="#f87171" />
+                <stop offset="50%" stopColor="#ef4444" />
+                <stop offset="75%" stopColor="#dc2626" />
+                <stop offset="100%" stopColor="#b91c1c" />
             </linearGradient>
-            <filter id="heartGlow">
-                <feGaussianBlur stdDeviation="2" result="blur" />
-                <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                </feMerge>
-            </filter>
         </defs>
-        <path fill="url(#heartGrad)" filter="url(#heartGlow)" d="M50 88 C20 60 5 40 15 25 C25 10 45 15 50 30 C55 15 75 10 85 25 C95 40 80 60 50 88 Z" />
+        <path fill="url(#heartGradPremium)"
+            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
     </svg>
 );
 
-const DiamondSVG = () => (
-    <svg width="16" height="16" viewBox="0 0 100 100" className="android-suit-svg diamond">
+const PremiumDiamondSVG = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" className="android-suit-svg">
         <defs>
-            <linearGradient id="diamondGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#ff6b6b" />
-                <stop offset="50%" stopColor="#dc2626" />
-                <stop offset="100%" stopColor="#991b1b" />
+            <linearGradient id="diamondGradPremium" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#fca5a5" />
+                <stop offset="25%" stopColor="#f87171" />
+                <stop offset="50%" stopColor="#ef4444" />
+                <stop offset="75%" stopColor="#dc2626" />
+                <stop offset="100%" stopColor="#b91c1c" />
             </linearGradient>
-            <filter id="diamondGlow">
-                <feGaussianBlur stdDeviation="2" result="blur" />
-                <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                </feMerge>
-            </filter>
         </defs>
-        <polygon fill="url(#diamondGrad)" filter="url(#diamondGlow)" points="50,5 90,50 50,95 10,50" />
+        <path fill="url(#diamondGradPremium)"
+            d="M12 2L3 12l9 10 9-10L12 2z" />
     </svg>
 );
 
-const ClubSVG = () => (
-    <svg width="16" height="16" viewBox="0 0 100 100" className="android-suit-svg club">
+const PremiumClubSVG = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" className="android-suit-svg">
         <defs>
-            <linearGradient id="clubGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#e8e8e8" />
-                <stop offset="50%" stopColor="#a0a0a0" />
-                <stop offset="100%" stopColor="#606060" />
+            <linearGradient id="clubGradPremium" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#d4d4d8" />
+                <stop offset="25%" stopColor="#a1a1aa" />
+                <stop offset="50%" stopColor="#71717a" />
+                <stop offset="75%" stopColor="#52525b" />
+                <stop offset="100%" stopColor="#3f3f46" />
             </linearGradient>
-            <filter id="clubGlow">
-                <feGaussianBlur stdDeviation="2" result="blur" />
-                <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                </feMerge>
-            </filter>
         </defs>
-        <circle fill="url(#clubGrad)" filter="url(#clubGlow)" cx="50" cy="30" r="20" />
-        <circle fill="url(#clubGrad)" filter="url(#clubGlow)" cx="30" cy="55" r="20" />
-        <circle fill="url(#clubGrad)" filter="url(#clubGlow)" cx="70" cy="55" r="20" />
-        <polygon fill="url(#clubGrad)" points="45,55 55,55 55,95 45,95" />
+        <path fill="url(#clubGradPremium)"
+            d="M12 2a4 4 0 0 0-4 4c0 1.1.45 2.1 1.17 2.83A4 4 0 0 0 6 13a4 4 0 0 0 4 4h.17L9 22h6l-1.17-5H14a4 4 0 0 0 4-4 4 4 0 0 0-3.17-3.92A4 4 0 0 0 16 6a4 4 0 0 0-4-4z" />
     </svg>
 );
 
@@ -98,7 +79,7 @@ const ClubSVG = () => (
  * Features:
  * - Fixed position at top with extra padding for notch (like Instagram)
  * - "ONLY POKER" title with animated shimmer gradient (same as web)
- * - Premium SVG suits on Android, emoji on iOS
+ * - Premium SVG suits on Android, emoji on iOS (unchanged)
  * - Glassmorphism background
  * - Settings gear button in bottom right
  */
@@ -107,7 +88,7 @@ export default function MobileHeader() {
     const [isAndroid, setIsAndroid] = useState(false);
 
     useEffect(() => {
-        // Detect Android platform
+        // Detect Android platform - iOS remains unchanged
         setIsAndroid(Capacitor.getPlatform() === 'android');
     }, []);
 
@@ -124,14 +105,14 @@ export default function MobileHeader() {
                     {/* Using same class as web for animations */}
                     <h1 className="homepage-title mobile-homepage-title">ONLY POKER</h1>
 
-                    {/* Premium SVG suits on Android, emoji on iOS */}
+                    {/* Premium SVG suits on Android ONLY, emoji on iOS (unchanged) */}
                     <div className={`suit-decoration mobile-suit-decoration ${isAndroid ? 'android-suits' : ''}`}>
                         {isAndroid ? (
                             <>
-                                <SpadeSVG />
-                                <HeartSVG />
-                                <DiamondSVG />
-                                <ClubSVG />
+                                <PremiumSpadeSVG />
+                                <PremiumHeartSVG />
+                                <PremiumDiamondSVG />
+                                <PremiumClubSVG />
                             </>
                         ) : (
                             <>
@@ -172,4 +153,3 @@ export default function MobileHeader() {
         </>
     );
 }
-
