@@ -12784,10 +12784,10 @@ body.native-android .mobile-header {
     padding-top: 34px !important;
 }
 
-/* Adjust main content padding to match Android header */
+/* Adjust main content padding to match Android header - generous padding to avoid overlap */
 body.native-android .mobile-main-content {
-    padding-top: calc(34px + 75px) !important;
-    /* Status bar + header height */
+    padding-top: calc(34px + 115px) !important;
+    /* Status bar + header height + extra buffer */
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -12887,8 +12887,8 @@ body.native-android .mobile-bottom-nav {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 2px !important;
-    /* Tighter spacing */
+    gap: 0 !important;
+    /* No gap - tightest spacing */
 }
 
 /* Individual suit styling for Android - enhanced premium appearance */
