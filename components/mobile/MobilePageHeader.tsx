@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import SettingsDrawer from './SettingsDrawer';
@@ -11,11 +11,13 @@ import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
  * 
  * Features:
  * - "ONLY POKER" style title with metallic gradient animation
- * - Card suit symbols with shimmer effect
+ * - Card suit symbols with shimmer effect (premium Noto Color Emoji on Android)
  * - Settings avatar button in top-right
  * - Glassmorphism background
  * 
  * Used on: Home, My Hands, Ranges, Study, Stats pages
+ * 
+ * IMPORTANT: iOS uses native Apple emoji, Android uses Noto Color Emoji font
  */
 
 interface MobilePageHeaderProps {
@@ -25,6 +27,12 @@ interface MobilePageHeaderProps {
 
 export default function MobilePageHeader({ title, showSettings = true }: MobilePageHeaderProps) {
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const [isAndroid, setIsAndroid] = useState(false);
+
+    // Detect Android platform for premium suit styling
+    useEffect(() => {
+        setIsAndroid(Capacitor.getPlatform() === 'android');
+    }, []);
 
     // Enable Safari-style edge swipe navigation
     useSwipeNavigation();
@@ -42,12 +50,12 @@ export default function MobilePageHeader({ title, showSettings = true }: MobileP
                     {/* Premium metallic gradient title with shimmer animation */}
                     <h1 className="homepage-title mobile-homepage-title">{title}</h1>
 
-                    {/* Suit symbols with staggered shimmer effect */}
-                    <div className="suit-decoration mobile-suit-decoration">
-                        <span>♠</span>
-                        <span>♥</span>
-                        <span>♦</span>
-                        <span>♣</span>
+                    {/* Suit symbols - Android uses special styling class for premium look */}
+                    <div className={`suit-decoration mobile-suit-decoration ${isAndroid ? 'android-suits' : ''}`}>
+                        <span className="suit-spade">♠</span>
+                        <span className="suit-heart">♥</span>
+                        <span className="suit-diamond">♦</span>
+                        <span className="suit-club">♣</span>
                     </div>
 
                     {/* Settings Avatar Button - top right */}
