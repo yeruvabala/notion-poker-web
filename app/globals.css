@@ -3132,8 +3132,8 @@ body.native-app [class*="btn-row"]>* {
     -webkit-backdrop-filter: blur(24px);
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     /* Taller height for Instagram-like appearance */
-    height: 80px;
-    padding: 5px 8px 0 8px;
+    height: 83px;
+    padding: 7px 8px 0 8px;
     /* Bottom padding = safe area - extends bar to physical bottom */
     padding-bottom: env(safe-area-inset-bottom, 34px);
     /* content-box so padding-bottom extends BEYOND the 65px height */
