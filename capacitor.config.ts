@@ -22,7 +22,7 @@ const config: CapacitorConfig = {
   },
   ios: {
     backgroundColor: '#1c1c1c',           // Match home page background
-    contentInset: 'automatic'
+    contentInset: 'never'                 // Allow edge-to-edge display (Instagram-style)
   },
   android: {
     backgroundColor: '#1c1c1c'            // Match home page background
