@@ -3124,19 +3124,19 @@ body.native-app [class*="btn-row"]>* {
     z-index: 1000;
     display: flex;
     justify-content: space-around;
-    /* Center icons vertically in the 50px content area */
+    /* Center icons vertically */
     align-items: center;
     /* Premium dark glass background */
     background: linear-gradient(180deg, rgba(18, 18, 20, 0.98) 0%, rgba(12, 12, 14, 0.99) 100%);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-top: 1px solid rgba(255, 255, 255, 0.06);
-    /* Fixed content height for icons */
-    height: 50px;
+    /* Taller height for Instagram-like appearance */
+    height: 65px;
     padding: 0 8px;
-    /* Bottom padding = safe area - pushes bar up, icons stay in 50px area */
+    /* Bottom padding = safe area - extends bar to physical bottom */
     padding-bottom: env(safe-area-inset-bottom, 34px);
-    /* content-box so padding-bottom extends BEYOND the 50px height */
+    /* content-box so padding-bottom extends BEYOND the 65px height */
     box-sizing: content-box;
 }
 
