@@ -12781,12 +12781,12 @@ button.mobile-gto-indicator {
 /* Android needs extra top padding for status bar since it doesn't use safe-area-inset */
 body.native-android .mobile-header {
     /* Android status bar is typically 24-32dp, adding generous padding */
-    padding-top: 64px !important;
+    padding-top: 54px !important;
 }
 
 /* Adjust main content padding to match Android header */
 body.native-android .mobile-main-content {
-    padding-top: calc(64px + 75px) !important;
+    padding-top: calc(54px + 75px) !important;
     /* Status bar + header height */
 }
 
