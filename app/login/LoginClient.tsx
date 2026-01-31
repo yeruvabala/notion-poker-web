@@ -345,13 +345,20 @@ export default function LoginClient() {
       <style jsx global>{`
         /* Page Background - Premium Dark with depth */
         .login-page {
-          min-height: 100dvh;
+          /* Fixed full-screen to prevent any scrolling */
+          position: fixed;
+          inset: 0;
           display: grid;
           place-items: center;
           padding: 28px;
+          padding-top: calc(env(safe-area-inset-top, 20px) + 28px);
+          padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 28px);
           background: linear-gradient(180deg, #1c1c1c 0%, #242428 50%, #1c1c1c 100%) !important;
-          position: relative;
           overflow: hidden;
+          /* Prevent iOS rubber-band scrolling */
+          overscroll-behavior: none;
+          touch-action: none;
+          -webkit-overflow-scrolling: auto;
         }
 
         /* Subtle background grid pattern */
