@@ -203,8 +203,8 @@ export default function LoginClient() {
             <div className="login-suits">
               <span className="login-suit">♠</span>
               <span className="login-suit">♥</span>
-              <span className="login-suit">♣</span>
               <span className="login-suit">♦</span>
+              <span className="login-suit">♣</span>
             </div>
             <div className="login-line-right"></div>
           </div>
@@ -568,16 +568,16 @@ export default function LoginClient() {
           animation-delay: 0.5s;
         }
 
-        /* Club - Grey/Silver */
+        /* Diamond - Red (now 3rd) */
         .login-suit:nth-child(3) {
-          color: #9ca3af;
+          color: #f87171;
           animation: suit-pulse 3s ease-in-out infinite;
           animation-delay: 1s;
         }
 
-        /* Diamond - Red */
+        /* Club - Grey/Silver (now 4th) */
         .login-suit:nth-child(4) {
-          color: #f87171;
+          color: #9ca3af;
           animation: suit-pulse 3s ease-in-out infinite;
           animation-delay: 1.5s;
         }
