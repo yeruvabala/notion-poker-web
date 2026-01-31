@@ -12786,7 +12786,7 @@ body.native-android .mobile-header {
 
 /* HOME PAGE: Same padding as other pages */
 body.native-android .mobile-main-content {
-    padding-top: 140px !important;
+    padding-top: 130px !important;
     /* Matches other pages for consistent layout */
 }
 
@@ -12797,22 +12797,22 @@ body.native-android .mobile-main-content {
 
 /* MY HANDS PAGE - extra top padding */
 body.native-android .mobile-hands-page {
-    padding-top: 140px !important;
+    padding-top: 130px !important;
 }
 
 /* RANGES PAGE - extra top padding */
 body.native-android .mobile-ranges-page {
-    padding-top: 140px !important;
+    padding-top: 130px !important;
 }
 
 /* STUDY PAGE - extra top padding */
 body.native-android .mobile-study-page {
-    padding-top: 140px !important;
+    padding-top: 130px !important;
 }
 
 /* STATS/ANALYTICS PAGE - extra top padding */
 body.native-android .mobile-analytics-page {
-    padding-top: 140px !important;
+    padding-top: 130px !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════
