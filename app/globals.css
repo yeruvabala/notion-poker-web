@@ -12784,10 +12784,10 @@ body.native-android .mobile-header {
     padding-top: 34px !important;
 }
 
-/* HOME PAGE: Keep default content padding (no change) */
+/* HOME PAGE: Same padding as other pages */
 body.native-android .mobile-main-content {
-    padding-top: calc(34px + 65px) !important;
-    /* Status bar + header height - works for home page */
+    padding-top: 140px !important;
+    /* Matches other pages for consistent layout */
 }
 
 /* ═══════════════════════════════════════════════════════════════
