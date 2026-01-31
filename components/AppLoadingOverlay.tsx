@@ -194,7 +194,7 @@ export default function AppLoadingOverlay() {
 
                 /* LOGGED IN: Float to HOME PAGE header position */
                 .suits-container.float-to-home {
-                    transform: translateY(-38.15vh) scale(0.45);
+                    transform: translateY(-38.0vh) scale(0.45);
                 }
 
                 /* LOGGED OUT: Float to LOGIN PAGE suits position */
