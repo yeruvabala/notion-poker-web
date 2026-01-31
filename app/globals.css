@@ -12784,35 +12784,35 @@ body.native-android .mobile-header {
     padding-top: 34px !important;
 }
 
-/* HOME PAGE: Same padding as other pages */
+/* HOME PAGE: Relative padding that scales with screen size */
 body.native-android .mobile-main-content {
-    padding-top: 130px !important;
-    /* Matches other pages for consistent layout */
+    padding-top: 15vh !important;
+    /* 15% of viewport height - scales automatically */
 }
 
 /* ═══════════════════════════════════════════════════════════════
    PAGE-SPECIFIC ANDROID CONTENT PADDING
-   Other pages need more top padding to clear their unique headers
+   Using viewport-relative units for responsive scaling
    ═══════════════════════════════════════════════════════════════ */
 
-/* MY HANDS PAGE - extra top padding */
+/* MY HANDS PAGE - relative top padding */
 body.native-android .mobile-hands-page {
-    padding-top: 130px !important;
+    padding-top: 15vh !important;
 }
 
-/* RANGES PAGE - extra top padding */
+/* RANGES PAGE - relative top padding */
 body.native-android .mobile-ranges-page {
-    padding-top: 130px !important;
+    padding-top: 15vh !important;
 }
 
-/* STUDY PAGE - extra top padding */
+/* STUDY PAGE - relative top padding */
 body.native-android .mobile-study-page {
-    padding-top: 130px !important;
+    padding-top: 15vh !important;
 }
 
-/* STATS/ANALYTICS PAGE - extra top padding */
+/* STATS/ANALYTICS PAGE - relative top padding */
 body.native-android .mobile-analytics-page {
-    padding-top: 130px !important;
+    padding-top: 15vh !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════
