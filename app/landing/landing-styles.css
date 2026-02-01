@@ -467,69 +467,73 @@ body:has(.landing-page) {
     margin-bottom: 24px;
 }
 
-.btn-platinum-cta {
+/* Premium Dark Button - Primary CTA */
+.btn-premium-dark {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     padding: 16px 32px;
-    border-radius: 14px;
-    font-weight: 700;
-    font-size: 1rem;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    cursor: pointer;
-
-    /* Premium Platinum Gradient */
-    background: linear-gradient(180deg,
-            #ffffff 0%,
-            #e8e8e8 45%,
-            #bfbfbf 50%,
-            #8f8f8f 50%,
-            #aebfcc 55%,
-            #e8e8e8 100%);
-    border: 1px solid #ffffff;
-    box-shadow:
-        0px 1px 3px rgba(0, 0, 0, 0.5),
-        inset 0px 1px 0px rgba(255, 255, 255, 0.7),
-        0 8px 24px rgba(255, 255, 255, 0.15);
-    color: #1a1a1a;
-    text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.8);
-}
-
-.btn-platinum-cta:hover {
-    transform: translateY(-2px);
-    box-shadow:
-        0px 4px 8px rgba(0, 0, 0, 0.4),
-        inset 0px 1px 0px rgba(255, 255, 255, 0.9),
-        0 12px 32px rgba(255, 255, 255, 0.2);
-}
-
-.btn-secondary-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 16px 32px;
-    border-radius: 14px;
+    border-radius: 12px;
     font-weight: 600;
     font-size: 1rem;
     text-decoration: none;
     transition: all 0.3s ease;
     cursor: pointer;
+    letter-spacing: 0.5px;
 
-    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
-    border: 1px solid #3a3a3a;
-    color: var(--text-primary);
-    box-shadow: var(--shadow-md);
+    /* Dark sophisticated gradient */
+    background: linear-gradient(180deg,
+            rgba(60, 60, 60, 0.95) 0%,
+            rgba(30, 30, 30, 0.98) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #e8e8e8;
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-.btn-secondary-cta:hover {
-    background: linear-gradient(180deg, #353535 0%, #252525 100%);
-    border-color: #505050;
+.btn-premium-dark:hover {
+    background: linear-gradient(180deg,
+            rgba(70, 70, 70, 0.95) 0%,
+            rgba(40, 40, 40, 0.98) 100%);
+    border-color: rgba(255, 255, 255, 0.2);
     transform: translateY(-2px);
+    box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Premium Outline Button - Secondary CTA */
+.btn-premium-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-premium-outline:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .cta-icon {
-    font-size: 1.25rem;
+    flex-shrink: 0;
+    opacity: 0.9;
 }
 
 .platform-badges {
@@ -539,15 +543,22 @@ body:has(.landing-page) {
 }
 
 .badge {
-    padding: 6px 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 1px;
     text-transform: uppercase;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid var(--border-subtle);
-    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.badge svg {
+    opacity: 0.7;
 }
 
 .scroll-indicator {

@@ -26,33 +26,104 @@ export default function LandingPage() {
         return () => observerRef.current?.disconnect();
     }, []);
 
+    // Premium SVG Icons - monochrome, sophisticated
+    const TargetIcon = () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <circle cx="12" cy="12" r="6" />
+            <circle cx="12" cy="12" r="2" />
+        </svg>
+    );
+
+    const BrainIcon = () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 4C8 4 5 6 5 9c0 1.5 0.5 2.5 1.5 3.5C5.5 13.5 5 15 5 16.5c0 2 1.5 3.5 4 3.5h6c2.5 0 4-1.5 4-3.5 0-1.5-0.5-3-1.5-4 1-1 1.5-2 1.5-3.5 0-3-3-5-7-5z" />
+            <path d="M12 4v16" strokeDasharray="2 2" opacity="0.5" />
+        </svg>
+    );
+
+    const EyeIcon = () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+            <circle cx="12" cy="12" r="3" />
+        </svg>
+    );
+
+    const ExitIcon = () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+    );
+
+    const SpadeIcon = () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C7 8 4 11 4 14c0 3 2.5 4.5 4.5 4.5 1.5 0 2.5-.5 3.5-1.5v3h-2v2h4v-2h-2v-3c1 1 2 1.5 3.5 1.5 2 0 4.5-1.5 4.5-4.5 0-3-3-6-8-12z" />
+        </svg>
+    );
+
+    const ChipStackIcon = () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <ellipse cx="12" cy="6" rx="8" ry="3" />
+            <path d="M4 6v4c0 1.66 3.58 3 8 3s8-1.34 8-3V6" />
+            <path d="M4 10v4c0 1.66 3.58 3 8 3s8-1.34 8-3v-4" />
+            <path d="M4 14v4c0 1.66 3.58 3 8 3s8-1.34 8-3v-4" />
+        </svg>
+    );
+
+    const ChartIcon = () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
+            <line x1="2" y1="20" x2="22" y2="20" />
+        </svg>
+    );
+
+    const ClipboardIcon = () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+            <line x1="8" y1="10" x2="16" y2="10" />
+            <line x1="8" y1="14" x2="16" y2="14" />
+        </svg>
+    );
+
+    const UserIcon = () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+        </svg>
+    );
+
     const lifeLesson = [
         {
-            icon: '🎯',
+            icon: <TargetIcon />,
             title: 'Make decisions with incomplete information',
             quote: "In poker, you never see all the cards. You don't know what's coming but you still have to decide.",
             insight: "You're always operating with 40% of the information and trying to make the best call."
         },
         {
-            icon: '🧠',
+            icon: <BrainIcon />,
             title: 'Control your emotions',
             quote: "Someone just beat you with a lucky card and you're angry. That's called 'tilt' in poker. And it will destroy you.",
             insight: "Poker players know that emotions cost money. Real money. So you learn to spot when you're compromised and step away."
         },
         {
-            icon: '📖',
+            icon: <EyeIcon />,
             title: 'Read people, not words',
             quote: "In poker, everyone's lying. It's part of the game. So you stop listening to words. You watch actions.",
             insight: "Poker teaches you to ignore words and watch behavior. You're just separating signal from noise."
         },
         {
-            icon: '🏃',
+            icon: <ExitIcon />,
             title: 'Know when to walk away',
             quote: "Good poker players fold 70% of their hands. They're comfortable saying 'I don't have an edge here' and walking away.",
             insight: "Poker teaches you sunk costs fallacy. The only question is what's the right move now?"
         },
         {
-            icon: '🃏',
+            icon: <SpadeIcon />,
             title: 'Turn bad hands into winners',
             quote: "You'll get some good cards and bad cards. And you have to make the most of it.",
             insight: "The reason why Poker makes it all the more interesting is that even if you get dealt a bad hand you can still convert that to a winner."
@@ -61,22 +132,22 @@ export default function LandingPage() {
 
     const features = [
         {
-            icon: '🤖',
+            icon: <ChipStackIcon />,
             title: 'AI-Powered GTO Analysis',
             description: 'Get instant Game Theory Optimal strategy analysis for every hand you play.'
         },
         {
-            icon: '📊',
+            icon: <ChartIcon />,
             title: 'Exploitative Play Insights',
             description: 'Learn when to deviate from GTO and exploit your opponents\' tendencies.'
         },
         {
-            icon: '📝',
+            icon: <ClipboardIcon />,
             title: 'Session Hand Tracking',
             description: 'Record your sessions and review hands with detailed action breakdowns.'
         },
         {
-            icon: '🎯',
+            icon: <UserIcon />,
             title: 'Personalized Coaching',
             description: 'AI coach that adapts to your playing style and helps you improve weak spots.'
         }
@@ -125,20 +196,45 @@ export default function LandingPage() {
                     </p>
 
                     <div className="hero-cta-group">
-                        <a href="#download" className="btn-platinum-cta">
-                            <span className="cta-icon">📱</span>
-                            Download Now
+                        <a href="#download" className="btn-premium-dark">
+                            <svg className="cta-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                            Download App
                         </a>
-                        <a href="/login" className="btn-secondary-cta">
-                            <span className="cta-icon">🌐</span>
+                        <a href="/login" className="btn-premium-outline">
+                            <svg className="cta-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M2 12h20" />
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                            </svg>
                             Try Web App
                         </a>
                     </div>
 
                     <div className="platform-badges">
-                        <span className="badge">iOS</span>
-                        <span className="badge">Android</span>
-                        <span className="badge">Web</span>
+                        <span className="badge">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+                            </svg>
+                            iOS
+                        </span>
+                        <span className="badge">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17.523 15.341a.5.5 0 0 1-.464.312H6.939a.5.5 0 0 1-.465-.312l-2.5-6.25a.5.5 0 0 1 .465-.688h15.12a.5.5 0 0 1 .465.688l-2.5 6.25zM12 3a9 9 0 0 0-9 9c0 4.97 4.03 9 9 9s9-4.03 9-9a9 9 0 0 0-9-9zm-.5 5.5l4 4.5H7.5l4-4.5z" />
+                            </svg>
+                            Android
+                        </span>
+                        <span className="badge">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                                <line x1="8" y1="21" x2="16" y2="21" />
+                                <line x1="12" y1="17" x2="12" y2="21" />
+                            </svg>
+                            Web
+                        </span>
                     </div>
                 </div>
 
