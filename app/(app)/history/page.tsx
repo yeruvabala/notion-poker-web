@@ -153,17 +153,11 @@ export default function HistoryPage() {
     setIsNative(Capacitor.isNativePlatform());
   }, []);
 
-  // Don't render until mounted to prevent hydration mismatch
-  if (!mounted) {
-    return null;
-  }
-
-  // For native app, render mobile version
-  if (isNative) {
-    return <MobileHandsPage />;
-  }
-
+  // Load hands data - must be before conditional returns
   useEffect(() => {
+    // Skip if we're rendering mobile version
+    if (isNative) return;
+
     let cancelled = false;
 
     async function load() {
@@ -209,8 +203,9 @@ export default function HistoryPage() {
 
     load();
     return () => { cancelled = true; };
-  }, [router, supabase]);
+  }, [router, supabase, isNative]);
 
+  // Memos must also be before conditional returns
   const filteredHands = useMemo(() => {
     if (activeFilter === 'all') return hands;
     if (activeFilter === 'quick') return hands.filter(h => h.source === 'quick_save');
@@ -227,6 +222,16 @@ export default function HistoryPage() {
       lastActivity: lastHand ? getRelativeTime(lastHand.created_at) : '—'
     };
   }, [hands]);
+
+  // Don't render until mounted to prevent hydration mismatch
+  if (!mounted) {
+    return null;
+  }
+
+  // For native app, render mobile version
+  if (isNative) {
+    return <MobileHandsPage />;
+  }
 
   async function handleUploadChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
