@@ -99,31 +99,12 @@ export default function LandingPage() {
                     <div className="hero-video-overlay" />
                 </div>
 
-                <div className="hero-content">
+                <div className="hero-content come-to-light">
                     <div className="brand-container">
-                        {/* Animated title - letters fly in from different directions */}
-                        <h1 className="brand-title-animated">
-                            <span className="letter letter-1">O</span>
-                            <span className="letter letter-2">N</span>
-                            <span className="letter letter-3">L</span>
-                            <span className="letter letter-4">Y</span>
-                            <span className="letter-space"> </span>
-                            <span className="letter letter-5">P</span>
-                            <span className="letter letter-6">O</span>
-                            <span className="letter letter-7">K</span>
-                            <span className="letter letter-8">E</span>
-                            <span className="letter letter-9">R</span>
-                        </h1>
+                        {/* Static title with shimmer effect */}
+                        <h1 className="brand-title">ONLY POKER</h1>
 
-                        {/* Flying suits - animate up from below and fade out */}
-                        <div className="suits-flying">
-                            <span className="flying-suit flying-1">♠</span>
-                            <span className="flying-suit flying-2 red">♥</span>
-                            <span className="flying-suit flying-3 red">♦</span>
-                            <span className="flying-suit flying-4">♣</span>
-                        </div>
-
-                        {/* Static suits - appear after flying ones disappear */}
+                        {/* Static suits with decorative lines */}
                         <div className="suits-row-static">
                             <div className="line-left"></div>
                             <div className="suits-static">

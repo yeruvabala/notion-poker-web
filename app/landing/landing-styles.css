@@ -130,6 +130,30 @@ body:has(.landing-page) {
     max-width: 800px;
 }
 
+/* Come to light effect - starts dim and gradually becomes clear */
+.come-to-light {
+    opacity: 0;
+    filter: brightness(0.3) blur(2px);
+    animation: comeToLight 2s ease-out 0.3s forwards;
+}
+
+@keyframes comeToLight {
+    0% {
+        opacity: 0;
+        filter: brightness(0.3) blur(2px);
+    }
+
+    50% {
+        opacity: 0.8;
+        filter: brightness(0.8) blur(0.5px);
+    }
+
+    100% {
+        opacity: 1;
+        filter: brightness(1) blur(0);
+    }
+}
+
 .brand-container {
     display: flex;
     flex-direction: column;
@@ -338,9 +362,7 @@ body:has(.landing-page) {
     justify-content: center;
     gap: 20px;
     margin-bottom: 8px;
-    opacity: 0;
-    /* Fade in smoothly after flying suits disappear */
-    animation: staticSuitsAppear 0.8s ease-out 2.4s forwards;
+    /* No animation - comes to light with the rest of the content */
 }
 
 @keyframes staticSuitsAppear {
