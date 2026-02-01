@@ -66,15 +66,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           @keyframes showDebug {
             to { opacity: 1; }
           }
-          /* Hide this overlay once React takes over (JS is working) */
-          .js-loaded #__js-failed-overlay { display: none !important; }
+          /* Hide this overlay when JS signals it's loaded */
+          #__js-failed-overlay.hidden { display: none !important; }
           #__js-failed-overlay h1 { font-size: 18px; margin-bottom: 12px; }
           #__js-failed-overlay p { font-size: 13px; color: #9ca3af; margin-bottom: 16px; line-height: 1.5; }
           #__js-failed-overlay .debug-box { background: #2a2a2a; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
           #__js-failed-overlay code { font-size: 11px; color: #3b82f6; }
         `}} />
         {/* Pass pattern index to React via global variable */}
-        <script dangerouslySetInnerHTML={{ __html: `window.__PATTERN_INDEX__=${patternIndex}; document.body.classList.add('js-loaded');` }} />
+        <script dangerouslySetInnerHTML={{ __html: `window.__PATTERN_INDEX__=${patternIndex};` }} />
       </head>
       <body className="min-h-screen bg-[#1c1c1c] text-[#E2E8F0] antialiased" style={{ background: BG_COLOR }}>
         {/* Just dark overlay - React will fade in the symbols */}

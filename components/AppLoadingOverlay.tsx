@@ -67,6 +67,13 @@ export default function AppLoadingOverlay() {
             debugLog('Instant overlay removed');
         }
 
+        // Hide the JS-failed overlay since JS is clearly working
+        const jsFailedOverlay = document.getElementById('__js-failed-overlay');
+        if (jsFailedOverlay) {
+            jsFailedOverlay.classList.add('hidden');
+            debugLog('JS-failed overlay hidden');
+        }
+
         // NOW hide the native splash - dark background + symbols are ready!
         if (Capacitor.isNativePlatform()) {
             debugLog('Hiding native splash screen...');
