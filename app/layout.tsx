@@ -2,6 +2,7 @@ import './globals.css';
 import AuthSync from '@/components/AuthSync';
 import NativeAppDetector from '@/components/NativeAppDetector';
 import AppLoadingOverlay from '@/components/AppLoadingOverlay';
+import AppErrorBoundary from '@/components/AppErrorBoundary';
 import { Inter } from 'next/font/google';
 import { SCATTER_PATTERNS } from '@/lib/loadingSymbols';
 
@@ -59,7 +60,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AppLoadingOverlay />
         <AuthSync />
         <NativeAppDetector />
-        {children}
+        <AppErrorBoundary>
+          {children}
+        </AppErrorBoundary>
       </body>
     </html>
   );
