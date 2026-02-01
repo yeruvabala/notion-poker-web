@@ -378,20 +378,8 @@ export default function LandingPage() {
                 <div className="container">
                     <div className="footer-content">
                         <div className="footer-brand">
-                            <svg className="footer-icon-svg" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-                                <defs>
-                                    <linearGradient id="footerSpadeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stopColor="#c0c0c0" />
-                                        <stop offset="50%" stopColor="#888888" />
-                                        <stop offset="100%" stopColor="#a0a0a0" />
-                                    </linearGradient>
-                                </defs>
-                                <path
-                                    d="M50 5 C50 5 15 35 15 60 C15 80 30 90 45 85 C40 95 35 105 30 115 L70 115 C65 105 60 95 55 85 C70 90 85 80 85 60 C85 35 50 5 50 5 Z"
-                                    fill="url(#footerSpadeGradient)"
-                                />
-                            </svg>
                             <span className="footer-brand-text">ONLY POKER</span>
+                            <span className="footer-suits">♠ ♥ ♦ ♣</span>
                         </div>
 
                         <nav className="footer-links">
