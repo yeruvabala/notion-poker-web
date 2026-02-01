@@ -65,11 +65,10 @@ export default function MobileBottomNav() {
                         onClick={() => handleNavPress(path)}
                         aria-label={label}
                     >
-                        <div className="mobile-nav-icon-wrapper">
+                        <div className="mobile-nav-icon-wrapper" style={{ marginTop: '2px' }}>
                             <Icon size={24} className="mobile-nav-svg" />
                             {isActive && <div className="nav-glow" />}
                         </div>
-                        <span className="mobile-nav-label">{label}</span>
                     </button>
                 );
             })}
