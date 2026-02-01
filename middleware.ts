@@ -35,22 +35,29 @@ export async function middleware(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Public: home page + auth routes + static
+  // Redirect root to landing page (main entry point for all users)
   const pathname = req.nextUrl.pathname;
-  const publicPaths = ['/', '/login', '/auth/login', '/auth/callback', '/auth/update-password', '/auth/signout'];
+  if (pathname === '/') {
+    const url = req.nextUrl.clone();
+    url.pathname = '/landing';
+    return NextResponse.redirect(url);
+  }
+
+  // Public: landing page + login + auth routes + static
+  const publicPaths = ['/landing', '/login', '/auth/login', '/auth/callback', '/auth/update-password', '/auth/signout', '/privacy', '/delete-account'];
   const isPublic =
-    publicPaths.some((p) => pathname === p) ||
+    publicPaths.some((p) => pathname === p || pathname.startsWith(p + '/')) ||
     pathname.startsWith('/auth/') ||
     pathname.startsWith('/_next');
 
-  // Guard app sections
-  const needsAuth = ['/hands', '/ranges', '/study', '/analytics'].some((p) =>
+  // Guard app sections - require authentication
+  const needsAuth = ['/hands', '/ranges', '/study', '/analytics', '/history', '/settings'].some((p) =>
     pathname.startsWith(p)
   );
 
   if (needsAuth && !user && !isPublic) {
     const url = req.nextUrl.clone();
-    url.pathname = '/auth/login';
+    url.pathname = '/login';
     url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
   }
