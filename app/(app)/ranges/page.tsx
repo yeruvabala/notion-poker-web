@@ -1068,21 +1068,24 @@ export default function RangesPage() {
 
         /* Legend */
         .legend-content {
-          gap: 6px;
+          gap: 10px;
         }
 
         .legend-item {
           display: flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 12px;
+          align-items: flex-start;
+          gap: 12px;
+          font-size: 13px;
           color: #9ca3af;
+          line-height: 1.4;
         }
 
         .legend-color {
-          width: 18px;
-          height: 18px;
-          border-radius: 4px;
+          width: 20px;
+          height: 20px;
+          border-radius: 5px;
+          flex-shrink: 0;
+          margin-top: 1px;
         }
 
         .legend-color.action-raise {
