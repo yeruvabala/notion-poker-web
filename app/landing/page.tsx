@@ -449,7 +449,7 @@ export default function LandingPage() {
                                 </div>
                             </a>
 
-                            <a href="#" className="download-btn android">
+                            <a href="https://play.google.com/apps/testing/com.onlypoker.app" target="_blank" rel="noopener noreferrer" className="download-btn android">
                                 <div className="btn-icon">
                                     <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M3 20.5v-17c0-.83.52-1.28 1.09-1.28.22 0 .45.06.68.2L20 12l-15.23 9.58c-.23.14-.46.2-.68.2-.57 0-1.09-.45-1.09-1.28z" />
