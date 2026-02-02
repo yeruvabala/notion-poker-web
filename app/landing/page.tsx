@@ -391,11 +391,9 @@ export default function LandingPage() {
             <section className="quote-bridge">
                 <div className="container">
                     <blockquote className="bridge-quote">
-                        <span className="quote-mark">"</span>
                         The best poker players never get attached to the hand they're dealt.
                         <br />
                         <strong>Only Poker helps you focus on the right move, right now.</strong>
-                        <span className="quote-mark">"</span>
                     </blockquote>
                 </div>
             </section>
