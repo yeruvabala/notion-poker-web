@@ -860,6 +860,41 @@ export default function HomeClient() {
   const [pendingRiverAction, setPendingRiverAction] = useState<string>('');
   const [pendingRiverAmount, setPendingRiverAmount] = useState<string>('');
 
+  // Determine first actor PREFLOP (UTG acts first, blinds act last)
+  // Preflop order: UTG → UTG+1 → ... → HJ → CO → BTN → SB → BB
+  const getFirstActorPreflop = (): 'H' | 'V' | null => {
+    // Need both positions to determine order
+    const heroPos = position;
+    const villainPos = villainPosition;
+
+    // If either position is missing, return null (show both H/V buttons)
+    if (!heroPos || !villainPos) return null;
+
+    // Preflop acting order (UTG acts first, BB acts last)
+    // For 6-max: UTG → HJ → CO → BTN → SB → BB
+    // For 9-max: UTG → UTG+1 → UTG+2 → MP → HJ → CO → BTN → SB → BB
+    // For HU: SB/BTN acts first preflop, BB acts second
+    if (tableFormat === 'HU') {
+      // In HU: SB (Button) acts FIRST preflop, BB acts second
+      const positionOrderHU = ['SB', 'BB'];
+      const heroIndex = positionOrderHU.indexOf(heroPos);
+      const villainIndex = positionOrderHU.indexOf(villainPos);
+      if (heroIndex === -1 || villainIndex === -1) return null;
+      return heroIndex < villainIndex ? 'H' : 'V';
+    }
+
+    // Ring game preflop order (earlier positions act first)
+    const preflopOrder = ['UTG', 'UTG+1', 'UTG+2', 'MP', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
+    const heroIndex = preflopOrder.indexOf(heroPos);
+    const villainIndex = preflopOrder.indexOf(villainPos);
+
+    // If positions not in list, can't determine
+    if (heroIndex === -1 || villainIndex === -1) return null;
+
+    // Lower index = earlier position = acts first preflop
+    return heroIndex < villainIndex ? 'H' : 'V';
+  };
+
   // Determine first actor postflop (OOP acts first)
   // Determine first actor postflop (OOP acts first)
   const getFirstActorPostflop = (): 'H' | 'V' => {
@@ -2111,7 +2146,18 @@ Turn K♦ — ...`}
                               preflopActions[preflopActions.length - 1]?.action !== 'fold')
                           ) ? (
                             <button
-                              onClick={() => setIsAddingAction(true)}
+                              onClick={() => {
+                                setIsAddingAction(true);
+                                // For first action, auto-detect who acts first based on positions
+                                if (preflopActions.length === 0) {
+                                  const firstActor = getFirstActorPreflop();
+                                  if (firstActor) {
+                                    // Auto-select the first actor and show action pill directly
+                                    setPendingPlayer(firstActor);
+                                  }
+                                  // If null, we'll show both H/V buttons (positions not set)
+                                }
+                              }}
                               style={{
                                 display: 'flex',
                                 alignItems: 'center',
