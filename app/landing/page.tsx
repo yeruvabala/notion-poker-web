@@ -206,8 +206,8 @@ export default function LandingPage() {
         },
         {
             icon: <ChartIcon />,
-            title: 'Exploitative Play Insights',
-            description: 'Learn when to deviate from GTO and exploit your opponents\' tendencies.'
+            title: 'Performance Analytics',
+            description: 'Track your stats, spot patterns, and visualize your progress over time.'
         },
         {
             icon: <ClipboardIcon />,
