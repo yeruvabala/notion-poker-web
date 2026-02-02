@@ -433,7 +433,7 @@ export default function LandingPage() {
                     <div className="download-content">
                         <h2 className="download-title">Ready to Level Up?</h2>
                         <p className="download-subtitle">
-                            Join thousands of players improving their game with Only Poker
+                            Analyze your game. Sharpen your edge.
                         </p>
 
                         <div className="download-buttons">
