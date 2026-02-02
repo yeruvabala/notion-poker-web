@@ -795,7 +795,7 @@ export default function RangesPage() {
         /* Main Content Grid */
         .ranges-content {
           display: grid;
-          grid-template-columns: 1fr 280px;
+          grid-template-columns: 1fr 340px;
           gap: 24px;
         }
 
@@ -940,11 +940,11 @@ export default function RangesPage() {
         .stats-panel {
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 20px;
         }
 
         .stat-card {
-          padding: 16px;
+          padding: 20px;
           background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
         }
 
@@ -982,18 +982,18 @@ export default function RangesPage() {
         }
 
         .stat-label {
-          font-size: 13px;
+          font-size: 14px;
           color: #9ca3af;
         }
 
         .stat-value {
-          font-size: 14px;
+          font-size: 16px;
           font-weight: 700;
           color: #e2e8f0;
         }
 
         .stat-value.highlight {
-          font-size: 24px;
+          font-size: 28px;
           background: linear-gradient(135deg, #22c55e, #16a34a);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
