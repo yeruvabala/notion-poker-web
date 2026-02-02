@@ -343,6 +343,22 @@ export default function LandingPage() {
                 </div>
             </section>
 
+            {/* Founder's Philosophy - Be Like Water */}
+            <section className="founder-quote-section">
+                <div className="container">
+                    <blockquote className="founder-quote">
+                        <span className="quote-mark">"</span>
+                        <p className="quote-text">
+                            <em>Be like water.</em> Learn GTO to understand the perfect game.
+                            <br />
+                            Then adapt to the real table — <strong>become what it demands.</strong>
+                        </p>
+                        <span className="quote-mark">"</span>
+                    </blockquote>
+                    <p className="quote-attribution">— Founder's Philosophy, inspired by Bruce Lee</p>
+                </div>
+            </section>
+
             {/* Philosophy Section */}
             <section className="philosophy-section" id="philosophy">
                 <div className="container">

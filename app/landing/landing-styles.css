@@ -927,6 +927,92 @@ body:has(.landing-page) {
 }
 
 /* ============================================
+   FOUNDER'S PHILOSOPHY - Be Like Water
+   ============================================ */
+
+.founder-quote-section {
+    padding: 100px 20px;
+    background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 50%, var(--bg-secondary) 100%);
+    position: relative;
+    text-align: center;
+    overflow: hidden;
+}
+
+.founder-quote-section::before {
+    content: '💧';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 300px;
+    opacity: 0.03;
+    pointer-events: none;
+}
+
+.founder-quote {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    padding: 0;
+    border: none;
+}
+
+.founder-quote .quote-mark {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 4rem;
+    color: rgba(255, 255, 255, 0.15);
+    line-height: 1;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.founder-quote .quote-text {
+    font-size: 1.75rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    font-weight: 300;
+    margin: 0;
+    padding: 0 20px;
+}
+
+.founder-quote .quote-text em {
+    font-style: italic;
+    color: var(--accent-cyan);
+    font-weight: 400;
+}
+
+.founder-quote .quote-text strong {
+    color: var(--platinum-light);
+    font-weight: 600;
+}
+
+.quote-attribution {
+    margin-top: 32px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-style: italic;
+    letter-spacing: 0.5px;
+}
+
+@media (max-width: 768px) {
+    .founder-quote-section {
+        padding: 80px 20px;
+    }
+
+    .founder-quote .quote-text {
+        font-size: 1.25rem;
+    }
+
+    .founder-quote .quote-mark {
+        font-size: 2.5rem;
+    }
+
+    .founder-quote-section::before {
+        font-size: 150px;
+    }
+}
+
+/* ============================================
    PHILOSOPHY SECTION - Poker Teaches Life
    ============================================ */
 
