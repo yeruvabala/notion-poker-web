@@ -155,6 +155,20 @@ export default function LandingPage() {
 
     return (
         <div className="landing-page">
+            {/* Sticky Navigation Header */}
+            <header className="landing-nav">
+                <div className="nav-container">
+                    <a href="#" className="nav-brand">
+                        <span className="nav-brand-text">ONLY POKER</span>
+                        <span className="nav-suits">♠♥♦♣</span>
+                    </a>
+                    <nav className="nav-links">
+                        <a href="/login" className="nav-link">Login</a>
+                        <a href="/login" className="nav-cta">Try App</a>
+                    </nav>
+                </div>
+            </header>
+
             {/* Hero Section */}
             <section className="hero-section">
                 <div className="hero-video-container">

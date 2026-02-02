@@ -48,10 +48,93 @@
 html:has(.landing-page),
 body:has(.landing-page) {
     position: static !important;
+    scroll-behavior: smooth;
     overflow: auto !important;
     overflow-x: hidden !important;
     height: auto !important;
     min-height: 100vh;
+}
+
+/* ============================================
+   STICKY NAVIGATION HEADER
+   ============================================ */
+
+.landing-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    padding: 16px 0;
+    background: rgba(20, 20, 20, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.3s ease;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.nav-brand-text {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.nav-suits {
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.nav-link {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+    color: rgba(255, 255, 255, 1);
+}
+
+.nav-cta {
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.nav-cta:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.25);
 }
 
 .landing-page {
@@ -467,7 +550,7 @@ body:has(.landing-page) {
     margin-bottom: 24px;
 }
 
-/* Premium Dark Button - Primary CTA */
+/* Premium Primary Button - Download CTA (brighter, stands out) */
 .btn-premium-dark {
     display: inline-flex;
     align-items: center;
@@ -481,26 +564,26 @@ body:has(.landing-page) {
     cursor: pointer;
     letter-spacing: 0.5px;
 
-    /* Dark sophisticated gradient */
+    /* Brighter to stand out as primary action */
     background: linear-gradient(180deg,
-            rgba(60, 60, 60, 0.95) 0%,
-            rgba(30, 30, 30, 0.98) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #e8e8e8;
+            rgba(255, 255, 255, 0.15) 0%,
+            rgba(255, 255, 255, 0.08) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
     box-shadow:
-        0 4px 12px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .btn-premium-dark:hover {
     background: linear-gradient(180deg,
-            rgba(70, 70, 70, 0.95) 0%,
-            rgba(40, 40, 40, 0.98) 100%);
-    border-color: rgba(255, 255, 255, 0.2);
+            rgba(255, 255, 255, 0.22) 0%,
+            rgba(255, 255, 255, 0.12) 100%);
+    border-color: rgba(255, 255, 255, 0.35);
     transform: translateY(-2px);
     box-shadow:
-        0 8px 20px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        0 8px 24px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 /* Premium Outline Button - Secondary CTA */
@@ -866,7 +949,9 @@ body:has(.landing-page) {
 
 .download-section {
     padding: 120px 0;
-    background: linear-gradient(180deg, var(--bg-primary) 0%, #0f0f0f 100%);
+    background: linear-gradient(180deg, rgba(28, 28, 28, 0.95) 0%, rgba(15, 15, 15, 0.98) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     position: relative;
 }
 
