@@ -286,7 +286,7 @@ export default function LandingPage() {
                     ))}
                 </div>
 
-                <div className="hero-content come-to-light">
+                <div className="hero-content">
                     <div className="brand-container">
                         {/* Static title with shimmer effect */}
                         <h1 className="brand-title">ONLY POKER</h1>
