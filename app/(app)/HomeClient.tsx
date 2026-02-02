@@ -1868,7 +1868,7 @@ Turn K♦ — ...`}
               {/* Hand Input (Always Visible) */}
               <section className="card ony-card platinum-container-frame glass-card">
                 <div className="section-header section-accent-gold">
-                  <span className="section-header-icon">✍️</span>
+                  <span className="section-header-icon">♠</span>
                   <span className="section-header-title">Hand Builder</span>
                 </div>
                 <div className="hand-content">
@@ -2879,7 +2879,7 @@ Turn K♦ — ...`}
                       disabled={!canSave() || saving || currentHandSaved}
                     >
                       <span className="save-icon">
-                        {currentHandSaved ? '✓' : '📝'}
+                        {currentHandSaved ? '✓' : '♥'}
                       </span>
                       {saving
                         ? 'Saving…'
@@ -2915,7 +2915,7 @@ Turn K♦ — ...`}
               {/* GTO Strategy - FIRST */}
               <section className="card ony-card platinum-container-frame glass-card">
                 <div className="section-header section-accent-blue">
-                  <span className="section-header-icon">🤖</span>
+                  <span className="section-header-icon">♦</span>
                   <span className="section-header-title">GTO Strategy</span>
                 </div>
 
@@ -2925,7 +2925,7 @@ Turn K♦ — ...`}
               {/* Play Review - SECOND (Premium Design) */}
               <section className="card ony-card platinum-container-frame glass-card">
                 <div className="section-header section-accent-green">
-                  <span className="section-header-icon">📊</span>
+                  <span className="section-header-icon">♣</span>
                   <span className="section-header-title">Play Review</span>
                 </div>
                 <div className={`play-review-box${aiLoading ? ' loading' : fields?.exploit_deviation ? ' populated' : ''}`}>
@@ -3022,7 +3022,7 @@ Turn K♦ — ...`}
                             disabled={!canSave() || saving || currentHandSaved}
                           >
                             <span className="save-icon">
-                              {currentHandSaved ? '✓' : '📝'}
+                              {currentHandSaved ? '✓' : '♥'}
                             </span>
                             {saving
                               ? 'Saving…'
