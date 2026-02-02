@@ -91,6 +91,89 @@ function mergeRangeActions(rangeData: Record<string, Record<string, number>> | u
   return merged;
 }
 
+// Get action breakdown for a specific hand
+interface ActionBreakdown {
+  raise: number;  // 3bet, 4bet or 5bet
+  call: number;
+  fold: number;
+  raiseLabel: string;  // "Raise", "3-Bet", "4-Bet" or "5-Bet"
+}
+
+function getActionBreakdown(
+  scenario: Scenario,
+  position: string,
+  opponent: string,
+  hand: string
+): ActionBreakdown | null {
+  // RFI: raise vs fold (no calling option)
+  if (scenario === 'rfi') {
+    const rfiRange = RFI_RANGES[position];
+    if (!rfiRange) return null;
+
+    const raiseFreq = rfiRange[hand] || 0;
+    // If hand not in range at all, return null
+    if (raiseFreq === 0) return null;
+
+    const foldFreq = 1 - raiseFreq;
+
+    return {
+      raise: raiseFreq,
+      call: 0,  // No calling in RFI
+      fold: foldFreq,
+      raiseLabel: 'Raise'
+    };
+  }
+
+  let rangeData: Record<string, Record<string, number>> | undefined;
+  let raiseLabel = '4-Bet';
+  let raiseKey = '4bet';
+
+  if (scenario === '3bet') {
+    // Making a 3-bet vs opener
+    const key = `${position}_vs_${opponent}`;
+    rangeData = THREE_BET_RANGES[key];
+    raiseLabel = '3-Bet';
+    raiseKey = '3bet';
+  } else if (scenario === 'vs3bet') {
+    // Facing 3-bet after opening
+    const key = `${position}_vs_${opponent}_3bet`;
+    rangeData = VS_THREE_BET_RANGES[key];
+    raiseLabel = '4-Bet';
+    raiseKey = '4bet';
+  } else if (scenario === 'vs4bet') {
+    // Facing 4-bet after 3-betting
+    const key = `${position}_vs_${opponent}_4bet`;
+    rangeData = VS_FOUR_BET_RANGES[key];
+    raiseLabel = '5-Bet';
+    raiseKey = '5bet';
+  } else if (scenario === 'vs5bet') {
+    // Facing 5-bet after 4-betting
+    const key = `${position}_vs_${opponent}_5bet`;
+    rangeData = VS_FIVE_BET_RANGES[key];
+    raiseLabel = 'All-In';
+    raiseKey = 'allin';
+  }
+
+  if (!rangeData) return null;
+
+  const raiseFreq = rangeData[raiseKey]?.[hand] || 0;
+  const callFreq = rangeData['call']?.[hand] || 0;
+
+  // Calculate fold as remaining (1 - raise - call), but max at 1
+  const total = raiseFreq + callFreq;
+  const foldFreq = total > 0 ? Math.max(0, Math.min(1, 1 - total)) : 0;
+
+  // Only return breakdown if hand is in range at all
+  if (total === 0) return null;
+
+  return {
+    raise: raiseFreq,
+    call: callFreq,
+    fold: foldFreq,
+    raiseLabel
+  };
+}
+
 // =============================================================================
 // UTILITY FUNCTIONS
 // =============================================================================
@@ -174,6 +257,7 @@ export default function RangesPage() {
   const [selectedPosition, setSelectedPosition] = useState('BTN');
   const [selectedScenario, setSelectedScenario] = useState<Scenario>('rfi');
   const [hoveredCell, setHoveredCell] = useState<{ row: number; col: number } | null>(null);
+  const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
   const [selectedOpponent, setSelectedOpponent] = useState(''); // For multi-scenario opponent
 
   // Check for native platform on client-side only (after mount)
@@ -265,6 +349,28 @@ export default function RangesPage() {
     ? getHandNotation(hoveredCell.row, hoveredCell.col)
     : null;
   const hoveredFreq = hoveredHand ? getFrequency(hoveredHand, currentRange) : 0;
+
+  // Get selected hand data + action breakdown
+  const selectedHandData = selectedCell ? (() => {
+    const notation = getHandNotation(selectedCell.row, selectedCell.col);
+    const frequency = getFrequency(notation, currentRange);
+    const type = selectedCell.row === selectedCell.col ? 'Pocket Pair' :
+      selectedCell.row < selectedCell.col ? 'Suited' : 'Offsuit';
+    const combos = selectedCell.row === selectedCell.col ? 6 :
+      selectedCell.row < selectedCell.col ? 4 : 12;
+    const actionBreakdown = getActionBreakdown(selectedScenario, selectedPosition, selectedOpponent, notation);
+
+    return { notation, frequency, type, combos, actionBreakdown };
+  })() : null;
+
+  // Cell click handler
+  const handleCellClick = (row: number, col: number) => {
+    if (selectedCell?.row === row && selectedCell?.col === col) {
+      setSelectedCell(null);
+    } else {
+      setSelectedCell({ row, col });
+    }
+  };
 
   return (
     <div className="op-surface ranges-page">
@@ -367,24 +473,64 @@ export default function RangesPage() {
                     const isPair = rowIdx === colIdx;
                     const isSuited = rowIdx < colIdx;
                     const isHovered = hoveredCell?.row === rowIdx && hoveredCell?.col === colIdx;
+                    const isSelected = selectedCell?.row === rowIdx && selectedCell?.col === colIdx;
 
+                    // Get action breakdown for coloring
+                    const breakdown = getActionBreakdown(selectedScenario, selectedPosition, selectedOpponent, hand);
+
+                    // Use action-based coloring for hands in range
+                    if (breakdown) {
+                      // Determine color class based on action frequencies
+                      let actionClass = 'action-fold-dom'; // default
+
+                      const { raise, call, fold } = breakdown;
+                      const tolerance = 0.15; // for detecting "mix of all 3"
+
+                      // Check for 100% actions first
+                      if (raise >= 0.95) {
+                        actionClass = 'action-raise-full';
+                      } else if (call >= 0.95) {
+                        actionClass = 'action-call-full';
+                      }
+                      // Check for mix of all 3 (all within tolerance of each other)
+                      else if (Math.abs(raise - call) < tolerance &&
+                        Math.abs(call - fold) < tolerance &&
+                        Math.abs(raise - fold) < tolerance &&
+                        raise > 0.2 && call > 0.2 && fold > 0.2) {
+                        actionClass = 'action-mixed';
+                      }
+                      // Dominant action
+                      else if (raise >= call && raise >= fold) {
+                        actionClass = 'action-raise-dom';
+                      } else if (call > raise && call >= fold) {
+                        actionClass = 'action-call-dom';
+                      } else if (fold > raise && fold > call) {
+                        actionClass = 'action-fold-dom';
+                      }
+
+                      return (
+                        <div
+                          key={`${rowIdx}-${colIdx}`}
+                          className={`matrix-cell hand-cell ${actionClass} ${isPair ? 'pair' : ''} ${isSuited ? 'suited' : 'offsuit'} ${isHovered ? 'hovered' : ''} ${isSelected ? 'selected' : ''}`}
+                          onMouseEnter={() => setHoveredCell({ row: rowIdx, col: colIdx })}
+                          onMouseLeave={() => setHoveredCell(null)}
+                          onClick={() => handleCellClick(rowIdx, colIdx)}
+                        >
+                          <span className="hand-text">{hand}</span>
+                        </div>
+                      );
+                    }
+
+                    // Fold/not in range - gray background
                     return (
                       <div
                         key={`${rowIdx}-${colIdx}`}
-                        className={`matrix-cell hand-cell ${isPair ? 'pair' : ''} ${isSuited ? 'suited' : 'offsuit'} ${isHovered ? 'hovered' : ''} ${freq > 0 ? 'in-range' : ''}`}
-                        style={{
-                          '--cell-bg': frequencyToColor(freq),
-                          '--cell-glow': frequencyToGlow(freq),
-                          '--cell-opacity': Math.max(0.15, freq),
-                          '--cell-text': frequencyToTextColor(freq),
-                        } as React.CSSProperties}
+                        className={`matrix-cell hand-cell ${isPair ? 'pair' : ''} ${isSuited ? 'suited' : 'offsuit'} ${isHovered ? 'hovered' : ''} ${isSelected ? 'selected' : ''}`}
                         onMouseEnter={() => setHoveredCell({ row: rowIdx, col: colIdx })}
                         onMouseLeave={() => setHoveredCell(null)}
+                        onClick={() => handleCellClick(rowIdx, colIdx)}
                       >
                         <span className="hand-text">{hand}</span>
-                        {freq > 0 && freq < 1 && (
-                          <span className="freq-indicator">{Math.round(freq * 100)}</span>
-                        )}
                       </div>
                     );
                   })}
@@ -417,14 +563,61 @@ export default function RangesPage() {
               </div>
             </div>
 
-            {/* Hover Info */}
+            {/* Selected Hand - Action Breakdown */}
             <div className="stat-card platinum-inner-border hover-card">
               <div className="stat-card-header">
                 <span className="stat-icon">🎯</span>
-                <span className="stat-title">Selected Hand</span>
+                <span className="stat-title">Hand Details</span>
               </div>
               <div className="stat-content">
-                {hoveredHand ? (
+                {selectedHandData ? (
+                  <>
+                    <div className="selected-hand-main">
+                      <span className="hover-hand">{selectedHandData.notation}</span>
+                      <span className="hand-type-badge">{selectedHandData.type}</span>
+                    </div>
+
+                    {/* Action Breakdown with bars */}
+                    {selectedHandData.actionBreakdown ? (
+                      <div className="action-breakdown">
+                        <div className="action-row">
+                          <span className="action-label raise">{selectedHandData.actionBreakdown.raiseLabel}</span>
+                          <div className="action-bar-container">
+                            <div
+                              className="action-bar raise"
+                              style={{ width: `${selectedHandData.actionBreakdown.raise * 100}%` }}
+                            />
+                          </div>
+                          <span className="action-pct">{Math.round(selectedHandData.actionBreakdown.raise * 100)}%</span>
+                        </div>
+                        <div className="action-row">
+                          <span className="action-label call">Call</span>
+                          <div className="action-bar-container">
+                            <div
+                              className="action-bar call"
+                              style={{ width: `${selectedHandData.actionBreakdown.call * 100}%` }}
+                            />
+                          </div>
+                          <span className="action-pct">{Math.round(selectedHandData.actionBreakdown.call * 100)}%</span>
+                        </div>
+                        <div className="action-row">
+                          <span className="action-label fold">Fold</span>
+                          <div className="action-bar-container">
+                            <div
+                              className="action-bar fold"
+                              style={{ width: `${selectedHandData.actionBreakdown.fold * 100}%` }}
+                            />
+                          </div>
+                          <span className="action-pct">{Math.round(selectedHandData.actionBreakdown.fold * 100)}%</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="fold-label">Not in range</div>
+                    )}
+
+                    <div className="hover-type">{selectedHandData.combos} combos</div>
+                  </>
+                ) : hoveredHand ? (
                   <>
                     <div className="hover-hand">{hoveredHand}</div>
                     <div className="hover-freq">
@@ -444,13 +637,13 @@ export default function RangesPage() {
                   </>
                 ) : (
                   <div className="hover-placeholder">
-                    Hover over a cell to see details
+                    Click a cell to see action breakdown
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Legend */}
+            {/* Action Legend */}
             <div className="stat-card platinum-inner-border">
               <div className="stat-card-header">
                 <span className="stat-icon">🎨</span>
@@ -458,24 +651,20 @@ export default function RangesPage() {
               </div>
               <div className="stat-content legend-content">
                 <div className="legend-item">
-                  <div className="legend-color always"></div>
-                  <span>80-100% (Always)</span>
+                  <div className="legend-color action-raise"></div>
+                  <span>Raise / 3-Bet+</span>
                 </div>
                 <div className="legend-item">
-                  <div className="legend-color often"></div>
-                  <span>50-79% (Often)</span>
+                  <div className="legend-color action-call"></div>
+                  <span>Call</span>
                 </div>
                 <div className="legend-item">
-                  <div className="legend-color mixed"></div>
-                  <span>20-49% (Mixed)</span>
+                  <div className="legend-color action-fold"></div>
+                  <span>Fold</span>
                 </div>
                 <div className="legend-item">
-                  <div className="legend-color rare"></div>
-                  <span>1-19% (Rare)</span>
-                </div>
-                <div className="legend-item">
-                  <div className="legend-color fold"></div>
-                  <span>0% (Fold)</span>
+                  <div className="legend-color action-mixed-legend"></div>
+                  <span>Mixed (All 3)</span>
                 </div>
               </div>
             </div>
@@ -668,18 +857,48 @@ export default function RangesPage() {
         }
 
         .hand-cell {
-          background: var(--cell-bg, #1a1a1a);
-          color: var(--cell-text, #e2e8f0);
+          background: #1a1a1a;
+          color: #e2e8f0;
           cursor: pointer;
-          border: 1px solid transparent;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          transition: transform 0.15s ease, border 0.15s ease, box-shadow 0.15s ease;
         }
 
-        .hand-cell.in-range {
-          box-shadow: var(--cell-glow, none);
+        /* Action-based colors */
+        .hand-cell.action-raise-full {
+          background: linear-gradient(135deg, #ef4444 0%, #dc2626 40%, #b91c1c 100%);
+          border: 1px solid rgba(239, 68, 68, 0.5);
+          box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.25);
+        }
+
+        .hand-cell.action-raise-dom {
+          background: linear-gradient(135deg, rgba(239, 68, 68, 0.7) 0%, rgba(220, 38, 38, 0.6) 40%, rgba(185, 28, 28, 0.5) 100%);
+          border: 1px solid rgba(239, 68, 68, 0.35);
+        }
+
+        .hand-cell.action-call-full {
+          background: linear-gradient(135deg, #22c55e 0%, #16a34a 40%, #15803d 100%);
+          border: 1px solid rgba(34, 197, 94, 0.5);
+          box-shadow: inset 0 0 10px rgba(34, 197, 94, 0.25);
+        }
+
+        .hand-cell.action-call-dom {
+          background: linear-gradient(135deg, rgba(34, 197, 94, 0.7) 0%, rgba(22, 163, 74, 0.6) 40%, rgba(21, 128, 61, 0.5) 100%);
+          border: 1px solid rgba(34, 197, 94, 0.35);
+        }
+
+        .hand-cell.action-fold-dom {
+          background: linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(37, 99, 235, 0.4) 40%, rgba(29, 78, 216, 0.35) 100%);
+          border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .hand-cell.action-mixed {
+          background: linear-gradient(135deg, rgba(168, 85, 247, 0.65) 0%, rgba(139, 92, 246, 0.55) 40%, rgba(124, 58, 237, 0.5) 100%);
+          border: 1px solid rgba(168, 85, 247, 0.35);
         }
 
         .hand-cell.pair {
-          border: 1px solid rgba(255, 255, 255, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .hand-cell.suited {
@@ -691,22 +910,32 @@ export default function RangesPage() {
         }
 
         .hand-cell.hovered {
-          transform: scale(1.15);
+          transform: scale(1.12);
           z-index: 10;
           border: 2px solid #ffffff !important;
           box-shadow: 0 0 20px rgba(255, 255, 255, 0.3) !important;
+        }
+
+        .hand-cell.selected {
+          transform: scale(1.1);
+          z-index: 9;
+          border: 2px solid #fbbf24 !important;
+          box-shadow: 0 0 15px rgba(251, 191, 36, 0.5) !important;
         }
 
         .hand-text {
           font-weight: 700;
         }
 
-        /* Black gradient text for hands in range */
-        .hand-cell.in-range .hand-text {
-          background: linear-gradient(180deg, #2a2a2a 0%, #000000 50%, #1a1a1a 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+        /* Dark text for action-colored cells */
+        .hand-cell.action-raise-full .hand-text,
+        .hand-cell.action-raise-dom .hand-text,
+        .hand-cell.action-call-full .hand-text,
+        .hand-cell.action-call-dom .hand-text,
+        .hand-cell.action-fold-dom .hand-text,
+        .hand-cell.action-mixed .hand-text {
+          color: #1a1a1a;
+          text-shadow: 0 1px 1px rgba(255, 255, 255, 0.2);
         }
 
         .freq-indicator {
@@ -849,25 +1078,110 @@ export default function RangesPage() {
           border-radius: 4px;
         }
 
-        .legend-color.always {
-          background: linear-gradient(135deg, #22c55e, #16a34a);
+        .legend-color.action-raise {
+          background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+          box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
         }
 
-        .legend-color.often {
-          background: linear-gradient(135deg, #eab308, #ca8a04);
+        .legend-color.action-call {
+          background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+          box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
         }
 
-        .legend-color.mixed {
-          background: linear-gradient(135deg, #f97316, #ea580c);
+        .legend-color.action-fold {
+          background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+          box-shadow: 0 0 6px rgba(59, 130, 246, 0.4);
         }
 
-        .legend-color.rare {
-          background: linear-gradient(135deg, #6366f1, #4f46e5);
+        .legend-color.action-mixed-legend {
+          background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+          box-shadow: 0 0 6px rgba(168, 85, 247, 0.4);
         }
 
-        .legend-color.fold {
-          background: #1a1a1a;
-          border: 1px solid #3a3a3a;
+        /* Action Breakdown Panel */
+        .selected-hand-main {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          margin-bottom: 12px;
+        }
+
+        .hand-type-badge {
+          background: rgba(255, 255, 255, 0.1);
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: 600;
+          color: #9ca3af;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .action-breakdown {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          margin: 12px 0;
+        }
+
+        .action-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .action-label {
+          width: 50px;
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+        }
+
+        .action-label.raise {
+          color: #ef4444;
+        }
+
+        .action-label.call {
+          color: #22c55e;
+        }
+
+        .action-label.fold {
+          color: #3b82f6;
+        }
+
+        .action-bar-container {
+          flex: 1;
+          height: 8px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+          overflow: hidden;
+        }
+
+        .action-bar {
+          height: 100%;
+          border-radius: 4px;
+          transition: width 0.3s ease;
+        }
+
+        .action-bar.raise {
+          background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .action-bar.call {
+          background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+        }
+
+        .action-bar.fold {
+          background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        .action-pct {
+          width: 40px;
+          font-size: 12px;
+          font-weight: 700;
+          color: #e5e7eb;
+          text-align: right;
         }
 
         /* Current View */
