@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { getPatternSymbols } from '@/lib/loadingSymbols';
 import { Capacitor } from '@capacitor/core';
 import { SplashScreen } from '@capacitor/splash-screen';
@@ -37,9 +38,12 @@ function debugLog(message: string) {
  * 4. Seamless takeover - symbols at same positions
  * 5. Symbols float UP, main suits shimmer, then settle
  * 
+ * NOTE: Skipped entirely on /landing page for instant load
+ * 
  * Debug: Has a 15-second failsafe that shows debug info if loading gets stuck
  */
 export default function AppLoadingOverlay() {
+    const pathname = usePathname();
     const [isVisible, setIsVisible] = useState(true);
     const [isFadingOut, setIsFadingOut] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
@@ -48,6 +52,11 @@ export default function AppLoadingOverlay() {
     const [patternIndex, setPatternIndex] = useState(0);
     const [loadingTimeout, setLoadingTimeout] = useState(false);
     const [debugLogs, setDebugLogs] = useState<string[]>([]);
+
+    // Skip overlay entirely on landing page for instant load
+    if (pathname === '/landing') {
+        return null;
+    }
 
     useEffect(() => {
         debugLog('useEffect started - React component mounted');
