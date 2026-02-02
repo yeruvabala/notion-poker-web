@@ -1645,7 +1645,7 @@ export default function HomeClient() {
       <main className="p">
         <div className="wrap">
           {/* Header - Premium Animated Design */}
-          <div style={{ textAlign: 'center', marginBottom: 40, marginTop: 20 }}>
+          <div style={{ textAlign: 'center', marginBottom: 24, marginTop: 0 }}>
             <h1 className="homepage-title">Only Poker</h1>
 
             {/* Card Suit Decorations with Shimmer */}
