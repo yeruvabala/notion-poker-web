@@ -118,12 +118,16 @@ export default function AnalyticsPage() {
       <div className="dashboard-bg-pattern" />
 
       {/* Header */}
-      <header className="analytics-header">
-        <div className="header-left">
-          <h1 className="analytics-title">Analytics</h1>
-          <p className="analytics-subtitle">Performance insights & leak detection</p>
+      <header className="analytics-header" style={{ textAlign: 'center', marginBottom: 24, marginTop: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <h1 className="homepage-title">Analytics</h1>
+        {/* Card Suit Decorations with Shimmer */}
+        <div className="suit-decoration">
+          <span>♠</span>
+          <span>♥</span>
+          <span>♦</span>
+          <span>♣</span>
         </div>
-        <div className="header-filters">
+        <div className="header-filters" style={{ marginTop: 16 }}>
           <select
             value={month}
             onChange={(e) => setMonth(e.target.value)}

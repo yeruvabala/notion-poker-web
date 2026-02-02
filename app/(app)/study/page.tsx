@@ -171,14 +171,15 @@ export default function StudyPage() {
     <main className="min-h-screen px-4 py-8 sm:px-6 op-surface text-[#f3f4f6]">
       <div className="mx-auto flex max-w-6xl flex-col gap-8">
         {/* Page header */}
-        <header className="flex flex-col gap-2">
-          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-b from-white via-gray-200 to-gray-500 text-transparent bg-clip-text drop-shadow-sm">
-            Study
-          </h1>
-          <p className="text-sm text-[#a3a3a3] max-w-2xl leading-relaxed">
-            Ask the coach about leaks or spots. We'll use your notes and hands to
-            answer, then turn it into drills you can practice.
-          </p>
+        <header style={{ textAlign: 'center', marginBottom: 24, marginTop: 0 }}>
+          <h1 className="homepage-title">Study</h1>
+          {/* Card Suit Decorations with Shimmer */}
+          <div className="suit-decoration">
+            <span>♠</span>
+            <span>♥</span>
+            <span>♦</span>
+            <span>♣</span>
+          </div>
         </header>
 
         {/* Smart Search Header */}

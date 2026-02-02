@@ -284,9 +284,15 @@ export default function HistoryPage() {
     <main className="op-surface mh-page">
       <div className="mh-container">
         {/* Header */}
-        <header className="mh-header">
-          <h1 className="mh-title platinum-text-gradient">My Hands</h1>
-          <p className="mh-subtitle">Your poker hand history with GTO analysis and coaching insights.</p>
+        <header className="mh-header" style={{ textAlign: 'center', marginBottom: 24, marginTop: 0 }}>
+          <h1 className="homepage-title">My Hands</h1>
+          {/* Card Suit Decorations with Shimmer */}
+          <div className="suit-decoration">
+            <span>♠</span>
+            <span>♥</span>
+            <span>♦</span>
+            <span>♣</span>
+          </div>
         </header>
 
         {/* Filter Bar */}
