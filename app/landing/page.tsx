@@ -180,33 +180,21 @@ export default function LandingPage() {
     const lifeLesson = [
         {
             icon: <TargetIcon />,
-            title: 'Make decisions with incomplete information',
-            quote: "In poker, you never see all the cards. You don't know what's coming but you still have to decide.",
-            insight: "You're always operating with 40% of the information and trying to make the best call."
+            title: 'Master Your Decisions',
+            quote: "You never see all the cards. You're operating with 40% of the information. Good players fold 70% of their hands — comfortable saying 'I don't have an edge here' and walking away.",
+            insight: "Poker teaches you to make the best call with incomplete information, and escape the sunk cost fallacy."
         },
         {
             icon: <BrainIcon />,
-            title: 'Control your emotions',
-            quote: "Someone just beat you with a lucky card and you're angry. That's called 'tilt' in poker. And it will destroy you.",
-            insight: "Poker players know that emotions cost money. Real money. So you learn to spot when you're compromised and step away."
+            title: 'Control Your Mind',
+            quote: "Someone beat you with a lucky card. You're angry. That's 'tilt' — and it will destroy you. But you'll also get bad hands you can still convert to winners.",
+            insight: "Emotions cost real money. You learn to spot when you're compromised and step away, while making the most of every situation."
         },
         {
             icon: <EyeIcon />,
-            title: 'Read people, not words',
-            quote: "In poker, everyone's lying. It's part of the game. So you stop listening to words. You watch actions.",
-            insight: "Poker teaches you to ignore words and watch behavior. You're just separating signal from noise."
-        },
-        {
-            icon: <ExitIcon />,
-            title: 'Know when to walk away',
-            quote: "Good poker players fold 70% of their hands. They're comfortable saying 'I don't have an edge here' and walking away.",
-            insight: "Poker teaches you sunk costs fallacy. The only question is what's the right move now?"
-        },
-        {
-            icon: <SpadeIcon />,
-            title: 'Turn bad hands into winners',
-            quote: "You'll get some good cards and bad cards. And you have to make the most of it.",
-            insight: "The reason why Poker makes it all the more interesting is that even if you get dealt a bad hand you can still convert that to a winner."
+            title: 'Read the Game',
+            quote: "In poker, everyone's lying. It's part of the game. So you stop listening to words. You watch actions, build baselines, and spot changes.",
+            insight: "Poker teaches you to separate signal from noise. You're just watching what people do, not what they say."
         }
     ];
 
@@ -357,7 +345,47 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Philosophy Section */}
+            {/* Features Section - Now First */}
+            <section className="features-section" id="features">
+                <div className="container">
+                    <div className="section-header animate-on-scroll" id="features-header">
+                        <h2 className={`section-title ${isVisible['features-header'] ? 'visible' : ''}`}>
+                            Your AI Poker Coach
+                        </h2>
+                        <p className={`section-subtitle ${isVisible['features-header'] ? 'visible' : ''}`}>
+                            Powerful tools to elevate your game
+                        </p>
+                    </div>
+
+                    <div className="features-grid">
+                        {features.map((feature, index) => (
+                            <div
+                                key={index}
+                                id={`feature-${index}`}
+                                className={`feature-card animate-on-scroll ${isVisible[`feature-${index}`] ? 'visible' : ''}`}
+                                style={{ animationDelay: `${index * 0.1}s` }}
+                            >
+                                <div className="feature-icon">{feature.icon}</div>
+                                <h3 className="feature-title">{feature.title}</h3>
+                                <p className="feature-description">{feature.description}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Quote Bridge */}
+            <section className="quote-bridge">
+                <div className="container">
+                    <blockquote className="bridge-quote">
+                        The best poker players never get attached to the hand they're dealt.
+                        <br />
+                        <strong>Only Poker helps you focus on the right move, right now.</strong>
+                    </blockquote>
+                </div>
+            </section>
+
+            {/* Philosophy Section - Now After Features */}
             <section className="philosophy-section" id="philosophy">
                 <div className="container">
                     <div className="section-header animate-on-scroll" id="philosophy-header">
@@ -381,46 +409,6 @@ export default function LandingPage() {
                                 <h3 className="lesson-title">{lesson.title}</h3>
                                 <blockquote className="lesson-quote">"{lesson.quote}"</blockquote>
                                 <p className="lesson-insight">{lesson.insight}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Feature Quote Bridge */}
-            <section className="quote-bridge">
-                <div className="container">
-                    <blockquote className="bridge-quote">
-                        The best poker players never get attached to the hand they're dealt.
-                        <br />
-                        <strong>Only Poker helps you focus on the right move, right now.</strong>
-                    </blockquote>
-                </div>
-            </section>
-
-            {/* Features Section */}
-            <section className="features-section" id="features">
-                <div className="container">
-                    <div className="section-header animate-on-scroll" id="features-header">
-                        <h2 className={`section-title ${isVisible['features-header'] ? 'visible' : ''}`}>
-                            Your AI Poker Coach
-                        </h2>
-                        <p className={`section-subtitle ${isVisible['features-header'] ? 'visible' : ''}`}>
-                            Powerful tools to elevate your game
-                        </p>
-                    </div>
-
-                    <div className="features-grid">
-                        {features.map((feature, index) => (
-                            <div
-                                key={index}
-                                id={`feature-${index}`}
-                                className={`feature-card animate-on-scroll ${isVisible[`feature-${index}`] ? 'visible' : ''}`}
-                                style={{ animationDelay: `${index * 0.1}s` }}
-                            >
-                                <div className="feature-icon">{feature.icon}</div>
-                                <h3 className="feature-title">{feature.title}</h3>
-                                <p className="feature-description">{feature.description}</p>
                             </div>
                         ))}
                     </div>
