@@ -35,12 +35,19 @@ export async function middleware(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Redirect root to landing page (main entry point for all users)
+  // Redirect root based on authentication status
   const pathname = req.nextUrl.pathname;
   if (pathname === '/') {
     const url = req.nextUrl.clone();
-    url.pathname = '/landing';
-    return NextResponse.redirect(url);
+    // Authenticated users go to app, unauthenticated users go to landing
+    if (user) {
+      // User is logged in - let them through to the app (no redirect needed)
+      // The (app)/page.tsx will render for authenticated users
+    } else {
+      // User is not logged in - redirect to landing page
+      url.pathname = '/landing';
+      return NextResponse.redirect(url);
+    }
   }
 
   // Public: landing page + login + auth routes + static
