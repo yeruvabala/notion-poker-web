@@ -1,12 +1,79 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import './landing-styles.css';
+
+// Floating suit/letter type
+interface FloatingElement {
+    char: string;
+    top?: string;
+    bottom?: string;
+    left?: string;
+    right?: string;
+    fontSize: string;
+    color: string;
+    animationDuration: string;
+    animationDelay: string;
+    isSlow: boolean;
+    fontWeight?: number;
+}
 
 export default function LandingPage() {
     const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
     const [navVisible, setNavVisible] = useState(false);
+    const [floatingElements, setFloatingElements] = useState<FloatingElement[]>([]);
     const observerRef = useRef<IntersectionObserver | null>(null);
+
+    // Generate random floating elements on mount (client-side only)
+    useEffect(() => {
+        const suits = ['♠', '♥', '♦', '♣'];
+        const ranks = ['A', 'K', 'Q', 'J'];
+        const elements: FloatingElement[] = [];
+
+        // Generate 8 random suit positions
+        for (let i = 0; i < 8; i++) {
+            const suit = suits[i % 4];
+            const isRed = suit === '♥' || suit === '♦';
+            const isTop = i < 4;
+
+            elements.push({
+                char: suit,
+                ...(isTop
+                    ? { top: `${5 + Math.random() * 25}%` }
+                    : { bottom: `${5 + Math.random() * 25}%` }),
+                ...(Math.random() > 0.5
+                    ? { left: `${3 + Math.random() * 40}%` }
+                    : { right: `${3 + Math.random() * 40}%` }),
+                fontSize: `${1.8 + Math.random() * 1.2}rem`,
+                color: isRed ? 'rgba(239,68,68,0.2)' : 'rgba(180,180,180,0.2)',
+                animationDuration: `${8 + Math.random() * 6}s`,
+                animationDelay: `${Math.random() * 5}s`,
+                isSlow: i >= 4,
+            });
+        }
+
+        // Generate 4 random rank positions (A, K, Q, J)
+        for (let i = 0; i < 4; i++) {
+            const isTop = i < 2;
+            elements.push({
+                char: ranks[i],
+                ...(isTop
+                    ? { top: `${15 + Math.random() * 15}%` }
+                    : { bottom: `${15 + Math.random() * 15}%` }),
+                ...(i % 2 === 0
+                    ? { left: `${2 + Math.random() * 8}%` }
+                    : { right: `${2 + Math.random() * 8}%` }),
+                fontSize: `${2.8 + Math.random() * 1}rem`,
+                color: 'rgba(200,200,200,0.07)',
+                animationDuration: `${14 + Math.random() * 6}s`,
+                animationDelay: `${Math.random() * 8}s`,
+                isSlow: true,
+                fontWeight: 700,
+            });
+        }
+
+        setFloatingElements(elements);
+    }, []);
 
     // Scroll detection for smart sticky nav
     useEffect(() => {
@@ -196,23 +263,27 @@ export default function LandingPage() {
                     <div className="hero-video-overlay" />
                 </div>
 
-                {/* Floating Card Suits Animation - same as login page */}
+                {/* Floating Card Suits Animation - random positions each load */}
                 <div className="landing-floating-bg">
-                    {/* Top row */}
-                    <span className="landing-float-suit s1">♠</span>
-                    <span className="landing-float-suit s2">♥</span>
-                    <span className="landing-float-suit s3">♦</span>
-                    <span className="landing-float-suit s4">♣</span>
-                    {/* Bottom row */}
-                    <span className="landing-float-suit s5">♠</span>
-                    <span className="landing-float-suit s6">♥</span>
-                    <span className="landing-float-suit s7">♦</span>
-                    <span className="landing-float-suit s8">♣</span>
-                    {/* Card letters at corners */}
-                    <span className="landing-float-suit s9">A</span>
-                    <span className="landing-float-suit s10">K</span>
-                    <span className="landing-float-suit s11">Q</span>
-                    <span className="landing-float-suit s12">J</span>
+                    {floatingElements.map((el, index) => (
+                        <span
+                            key={index}
+                            className={`landing-float-suit-dynamic ${el.isSlow ? 'slow' : ''}`}
+                            style={{
+                                top: el.top,
+                                bottom: el.bottom,
+                                left: el.left,
+                                right: el.right,
+                                fontSize: el.fontSize,
+                                color: el.color,
+                                animationDuration: el.animationDuration,
+                                animationDelay: el.animationDelay,
+                                fontWeight: el.fontWeight,
+                            }}
+                        >
+                            {el.char}
+                        </span>
+                    ))}
                 </div>
 
                 <div className="hero-content come-to-light">

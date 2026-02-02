@@ -203,6 +203,19 @@ body:has(.landing-page) {
     }
 }
 
+/* Dynamic floating elements - positions set via inline styles */
+.landing-float-suit-dynamic {
+    position: absolute;
+    font-family: serif;
+    animation: landing-float-drift 8s ease-in-out infinite;
+    filter: blur(0.5px);
+    pointer-events: none;
+}
+
+.landing-float-suit-dynamic.slow {
+    animation-name: landing-float-slow;
+}
+
 .landing-float-suit {
     position: absolute;
     font-size: 3rem;
