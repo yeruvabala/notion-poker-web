@@ -731,18 +731,7 @@ export default function RangesPage() {
           letter-spacing: -1px;
         }
 
-        .suit-decoration {
-          display: flex;
-          justify-content: center;
-          gap: 16px;
-          font-size: 20px;
-          opacity: 0.6;
-        }
-
-        .suit-decoration span:nth-child(2),
-        .suit-decoration span:nth-child(3) {
-          color: #ef4444;
-        }
+        /* Use global suit-decoration styles for shimmer effect */
 
         /* Controls Bar */
         .ranges-controls {
