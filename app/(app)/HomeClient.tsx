@@ -1884,10 +1884,15 @@ Turn K♦ — ...`}
                           onChange={(e) => { setPosition(e.target.value); setUserOverrodeFields(prev => ({ ...prev, position: true })); }}
                           style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '14px', fontWeight: 500, color: '#e5e7eb', cursor: 'pointer', width: '100%', outline: 'none' }}
                         >
-                          <option value="">{preview.position || '(auto-detect)'}</option>
-                          {TABLE_FORMATS[tableFormat].positions.map((pos) => (
-                            <option key={pos} value={pos}>{pos}</option>
-                          ))}
+                          <option value="">Select</option>
+                          {TABLE_FORMATS[tableFormat].positions.map((pos) => {
+                            const isUsedByVillain = villainPosition === pos;
+                            return (
+                              <option key={pos} value={pos} disabled={isUsedByVillain} style={{ color: isUsedByVillain ? '#555' : undefined }}>
+                                {pos}{isUsedByVillain ? ' (Villain)' : ''}
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
                     </div>
@@ -2051,10 +2056,15 @@ Turn K♦ — ...`}
                           onChange={(e) => { setVillainPosition(e.target.value); setUserOverrodeFields(prev => ({ ...prev, position: true })); }}
                           style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '14px', fontWeight: 500, color: '#e5e7eb', cursor: 'pointer', width: '100%', outline: 'none' }}
                         >
-                          <option value="">(auto-detect)</option>
-                          {TABLE_FORMATS[tableFormat].positions.map((pos) => (
-                            <option key={pos} value={pos}>{pos}</option>
-                          ))}
+                          <option value="">Select</option>
+                          {TABLE_FORMATS[tableFormat].positions.map((pos) => {
+                            const isUsedByHero = position === pos;
+                            return (
+                              <option key={pos} value={pos} disabled={isUsedByHero} style={{ color: isUsedByHero ? '#555' : undefined }}>
+                                {pos}{isUsedByHero ? ' (Hero)' : ''}
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
                     </div>
