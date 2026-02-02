@@ -165,8 +165,9 @@ export default function RangesPage() {
 
       <main className="ranges-main">
         {/* Header */}
-        <div className="ranges-header">
-          <h1 className="ranges-title">Preflop Ranges</h1>
+        <div style={{ textAlign: 'center', marginBottom: 24, marginTop: 0 }}>
+          <h1 className="homepage-title">Ranges</h1>
+          {/* Card Suit Decorations with Shimmer */}
           <div className="suit-decoration">
             <span>♠</span>
             <span>♥</span>
