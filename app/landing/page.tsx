@@ -196,6 +196,25 @@ export default function LandingPage() {
                     <div className="hero-video-overlay" />
                 </div>
 
+                {/* Floating Card Suits Animation - same as login page */}
+                <div className="landing-floating-bg">
+                    {/* Top row */}
+                    <span className="landing-float-suit s1">♠</span>
+                    <span className="landing-float-suit s2">♥</span>
+                    <span className="landing-float-suit s3">♦</span>
+                    <span className="landing-float-suit s4">♣</span>
+                    {/* Bottom row */}
+                    <span className="landing-float-suit s5">♠</span>
+                    <span className="landing-float-suit s6">♥</span>
+                    <span className="landing-float-suit s7">♦</span>
+                    <span className="landing-float-suit s8">♣</span>
+                    {/* Card letters at corners */}
+                    <span className="landing-float-suit s9">A</span>
+                    <span className="landing-float-suit s10">K</span>
+                    <span className="landing-float-suit s11">Q</span>
+                    <span className="landing-float-suit s12">J</span>
+                </div>
+
                 <div className="hero-content come-to-light">
                     <div className="brand-container">
                         {/* Static title with shimmer effect */}

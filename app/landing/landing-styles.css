@@ -152,6 +152,173 @@ body:has(.landing-page) {
     border-color: rgba(255, 255, 255, 0.25);
 }
 
+/* ============================================
+   FLOATING CARD SUITS ANIMATION
+   Same as login page - wave effect
+   ============================================ */
+
+.landing-floating-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+}
+
+@keyframes landing-float-drift {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0.08;
+    }
+
+    25% {
+        transform: translateY(-20px) rotate(5deg);
+        opacity: 0.15;
+    }
+
+    50% {
+        transform: translateY(-10px) rotate(-3deg);
+        opacity: 0.12;
+    }
+
+    75% {
+        transform: translateY(-25px) rotate(8deg);
+        opacity: 0.1;
+    }
+}
+
+@keyframes landing-float-slow {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg) scale(1);
+        opacity: 0.06;
+    }
+
+    50% {
+        transform: translateY(-30px) rotate(-5deg) scale(1.05);
+        opacity: 0.1;
+    }
+}
+
+.landing-float-suit {
+    position: absolute;
+    font-size: 3rem;
+    color: rgba(200, 200, 200, 0.15);
+    font-family: serif;
+    animation: landing-float-drift 8s ease-in-out infinite;
+    filter: blur(0.5px);
+}
+
+/* TOP ROW - Visible above content */
+.landing-float-suit.s1 {
+    top: 8%;
+    left: 8%;
+    font-size: 2.5rem;
+    color: rgba(180, 180, 180, 0.2);
+    animation-delay: 0s;
+}
+
+.landing-float-suit.s2 {
+    top: 12%;
+    right: 12%;
+    font-size: 2.2rem;
+    color: rgba(239, 68, 68, 0.2);
+    animation-delay: 0.5s;
+}
+
+.landing-float-suit.s3 {
+    top: 15%;
+    left: 45%;
+    font-size: 1.8rem;
+    color: rgba(239, 68, 68, 0.18);
+    animation-delay: 1s;
+}
+
+.landing-float-suit.s4 {
+    top: 5%;
+    right: 30%;
+    font-size: 2rem;
+    color: rgba(180, 180, 180, 0.15);
+    animation-delay: 1.5s;
+}
+
+/* BOTTOM ROW - Visible below content */
+.landing-float-suit.s5 {
+    bottom: 15%;
+    left: 10%;
+    font-size: 2.2rem;
+    color: rgba(180, 180, 180, 0.18);
+    animation: landing-float-slow 10s ease-in-out infinite;
+}
+
+.landing-float-suit.s6 {
+    bottom: 12%;
+    right: 8%;
+    font-size: 2rem;
+    color: rgba(239, 68, 68, 0.2);
+    animation: landing-float-slow 12s ease-in-out infinite;
+    animation-delay: 2s;
+}
+
+.landing-float-suit.s7 {
+    bottom: 18%;
+    left: 35%;
+    font-size: 1.8rem;
+    color: rgba(239, 68, 68, 0.15);
+    animation-delay: 3s;
+}
+
+.landing-float-suit.s8 {
+    bottom: 8%;
+    right: 35%;
+    font-size: 2.5rem;
+    color: rgba(180, 180, 180, 0.18);
+    animation-delay: 4s;
+}
+
+/* Card rank letters - CORNERS */
+.landing-float-suit.s9 {
+    top: 20%;
+    left: 3%;
+    font-size: 3.5rem;
+    color: rgba(200, 200, 200, 0.08);
+    animation: landing-float-slow 15s ease-in-out infinite;
+    font-weight: 700;
+}
+
+.landing-float-suit.s10 {
+    top: 18%;
+    right: 3%;
+    font-size: 3rem;
+    color: rgba(200, 200, 200, 0.06);
+    animation: landing-float-slow 18s ease-in-out infinite;
+    animation-delay: 5s;
+    font-weight: 700;
+}
+
+.landing-float-suit.s11 {
+    bottom: 22%;
+    left: 2%;
+    font-size: 2.8rem;
+    color: rgba(200, 200, 200, 0.07);
+    animation: landing-float-slow 14s ease-in-out infinite;
+    animation-delay: 8s;
+    font-weight: 700;
+}
+
+.landing-float-suit.s12 {
+    bottom: 20%;
+    right: 5%;
+    font-size: 3.2rem;
+    color: rgba(200, 200, 200, 0.06);
+    animation: landing-float-slow 16s ease-in-out infinite;
+    animation-delay: 3s;
+    font-weight: 700;
+}
+
 .landing-page {
     min-height: 100vh;
     background: var(--bg-primary);
