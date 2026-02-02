@@ -5,7 +5,20 @@ import './landing-styles.css';
 
 export default function LandingPage() {
     const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
+    const [navVisible, setNavVisible] = useState(false);
     const observerRef = useRef<IntersectionObserver | null>(null);
+
+    // Scroll detection for smart sticky nav
+    useEffect(() => {
+        const handleScroll = () => {
+            // Show nav when scrolled past hero section (approx 80% of viewport height)
+            const scrollThreshold = window.innerHeight * 0.8;
+            setNavVisible(window.scrollY > scrollThreshold);
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     useEffect(() => {
         observerRef.current = new IntersectionObserver(
@@ -155,16 +168,15 @@ export default function LandingPage() {
 
     return (
         <div className="landing-page">
-            {/* Sticky Navigation Header */}
-            <header className="landing-nav">
+            {/* Smart Sticky Navigation - shows only when scrolled past hero */}
+            <header className={`landing-nav ${navVisible ? 'nav-visible' : 'nav-hidden'}`}>
                 <div className="nav-container">
                     <a href="#" className="nav-brand">
                         <span className="nav-brand-text">ONLY POKER</span>
                         <span className="nav-suits">♠♥♦♣</span>
                     </a>
                     <nav className="nav-links">
-                        <a href="/login" className="nav-link">Login</a>
-                        <a href="/login" className="nav-cta">Try App</a>
+                        <a href="/login" className="nav-cta">Try Web App</a>
                     </nav>
                 </div>
             </header>
