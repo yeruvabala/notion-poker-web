@@ -2879,7 +2879,7 @@ Turn K♦ — ...`}
                       disabled={!canSave() || saving || currentHandSaved}
                     >
                       <span className="save-icon">
-                        {currentHandSaved ? '✓' : '♥'}
+                        {currentHandSaved ? '✓' : '+'}
                       </span>
                       {saving
                         ? 'Saving…'
@@ -3022,7 +3022,7 @@ Turn K♦ — ...`}
                             disabled={!canSave() || saving || currentHandSaved}
                           >
                             <span className="save-icon">
-                              {currentHandSaved ? '✓' : '♥'}
+                              {currentHandSaved ? '✓' : '+'}
                             </span>
                             {saving
                               ? 'Saving…'
