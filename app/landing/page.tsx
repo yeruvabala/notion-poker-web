@@ -176,7 +176,7 @@ export default function LandingPage() {
                         <span className="nav-suits">♠♥♦♣</span>
                     </a>
                     <nav className="nav-links">
-                        <a href="/login" className="nav-cta">Try Web App</a>
+                        <a href="/login" className="nav-cta">Login</a>
                     </nav>
                 </div>
             </header>
