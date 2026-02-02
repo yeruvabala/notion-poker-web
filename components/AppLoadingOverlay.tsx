@@ -53,8 +53,23 @@ export default function AppLoadingOverlay() {
     const [loadingTimeout, setLoadingTimeout] = useState(false);
     const [debugLogs, setDebugLogs] = useState<string[]>([]);
 
-    // Skip overlay entirely on landing page for instant load
-    if (pathname === '/landing') {
+    // For landing page: remove instant overlays immediately but skip the animation
+    const isLandingPage = pathname === '/landing';
+
+    // Remove instant overlays on mount (needed for all pages including landing)
+    useEffect(() => {
+        const instantOverlay = document.getElementById('__instant-overlay');
+        if (instantOverlay) {
+            instantOverlay.remove();
+        }
+        const jsFailedOverlay = document.getElementById('__js-failed-overlay');
+        if (jsFailedOverlay) {
+            jsFailedOverlay.classList.add('hidden');
+        }
+    }, []);
+
+    // Skip the animated overlay UI on landing page for instant load
+    if (isLandingPage) {
         return null;
     }
 
