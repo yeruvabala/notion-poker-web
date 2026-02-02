@@ -2,7 +2,13 @@
 
 import { useState, useMemo } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { RFI_RANGES, VS_THREE_BET_RANGES } from '@/app/api/coach/utils/gtoRangesV2';
+import {
+  RFI_RANGES,
+  THREE_BET_RANGES,
+  VS_THREE_BET_RANGES,
+  VS_FOUR_BET_RANGES,
+  VS_FIVE_BET_RANGES
+} from '@/app/api/coach/utils/gtoRangesV2';
 import MobileRangesPage from './mobile-page';
 
 // =============================================================================
@@ -11,18 +17,79 @@ import MobileRangesPage from './mobile-page';
 
 const RANKS = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
 
+// All positions for 6-max
+const ALL_POSITIONS = ['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
+
 const POSITIONS = [
   { id: 'UTG', label: 'UTG', tooltip: 'Under The Gun' },
   { id: 'HJ', label: 'HJ', tooltip: 'Hijack' },
   { id: 'CO', label: 'CO', tooltip: 'Cutoff' },
   { id: 'BTN', label: 'BTN', tooltip: 'Button' },
   { id: 'SB', label: 'SB', tooltip: 'Small Blind' },
+  { id: 'BB', label: 'BB', tooltip: 'Big Blind' },
 ];
 
-const SCENARIOS = [
+type Scenario = 'rfi' | '3bet' | 'vs3bet' | 'vs4bet' | 'vs5bet';
+
+const SCENARIOS: { id: Scenario; label: string; tooltip: string }[] = [
   { id: 'rfi', label: 'RFI', tooltip: 'Raise First In - Opening ranges' },
+  { id: '3bet', label: '3-Bet', tooltip: 'Making a 3-bet vs opener' },
   { id: 'vs3bet', label: 'vs 3-Bet', tooltip: 'When you open and face a 3-bet' },
+  { id: 'vs4bet', label: 'vs 4-Bet', tooltip: 'When you 3-bet and face a 4-bet' },
+  { id: 'vs5bet', label: 'vs 5-Bet', tooltip: 'When you 4-bet and face a 5-bet' },
 ];
+
+// Available hero positions per scenario
+const HERO_POSITIONS: Record<Scenario, string[]> = {
+  rfi: ['UTG', 'HJ', 'CO', 'BTN', 'SB'],
+  '3bet': ['HJ', 'CO', 'BTN', 'SB', 'BB'],
+  vs3bet: ['UTG', 'HJ', 'CO', 'BTN', 'SB'],
+  vs4bet: ['UTG', 'HJ', 'CO', 'BTN', 'SB'],
+  vs5bet: ['UTG', 'HJ', 'CO', 'BTN'],
+};
+
+// Get valid opponent positions given hero position and scenario
+function getOpponentPositions(scenario: Scenario, heroPos: string): string[] {
+  const heroIdx = ALL_POSITIONS.indexOf(heroPos);
+
+  if (scenario === '3bet') {
+    // 3-betting: opponent opened before us (earlier positions)
+    return ALL_POSITIONS.filter((_, idx) => idx < heroIdx);
+  }
+  if (scenario === 'vs3bet') {
+    // Facing 3-bet: opponent is behind us (later positions)
+    return ALL_POSITIONS.filter((_, idx) => idx > heroIdx);
+  }
+  if (scenario === 'vs4bet') {
+    // Facing 4-bet after we 3-bet: original opener
+    return ALL_POSITIONS.filter((_, idx) => idx < heroIdx);
+  }
+  if (scenario === 'vs5bet') {
+    // Facing 5-bet after we 4-bet: the 3-bettor
+    return ALL_POSITIONS.filter((_, idx) => idx > heroIdx);
+  }
+  return [];
+}
+
+// Merge action frequencies into single range view
+function mergeRangeActions(rangeData: Record<string, Record<string, number>> | undefined): Record<string, number> {
+  if (!rangeData) return {};
+
+  const merged: Record<string, number> = {};
+  const actionPriority = ['5bet', '4bet', '3bet', 'call'];
+
+  for (const action of actionPriority) {
+    if (rangeData[action]) {
+      Object.entries(rangeData[action]).forEach(([hand, freq]) => {
+        if (!merged[hand]) {
+          merged[hand] = freq as number;
+        }
+      });
+    }
+  }
+
+  return merged;
+}
 
 // =============================================================================
 // UTILITY FUNCTIONS
@@ -105,9 +172,9 @@ function calculateRangeStats(range: Record<string, number>) {
 export default function RangesPage() {
   const [isNative, setIsNative] = useState<boolean | null>(null); // null = not checked yet
   const [selectedPosition, setSelectedPosition] = useState('BTN');
-  const [selectedScenario, setSelectedScenario] = useState('rfi');
+  const [selectedScenario, setSelectedScenario] = useState<Scenario>('rfi');
   const [hoveredCell, setHoveredCell] = useState<{ row: number; col: number } | null>(null);
-  const [vs3betOpener, setVs3betOpener] = useState('BTN'); // For vs 3-bet scenario
+  const [selectedOpponent, setSelectedOpponent] = useState(''); // For multi-scenario opponent
 
   // Check for native platform on client-side only (after mount)
   useMemo(() => {
@@ -125,32 +192,72 @@ export default function RangesPage() {
     return <MobileRangesPage />;
   }
 
+  // Get available positions for current scenario
+  const availablePositions = HERO_POSITIONS[selectedScenario];
+  const opponentPositions = selectedScenario !== 'rfi'
+    ? getOpponentPositions(selectedScenario, selectedPosition)
+    : [];
+
+  // Reset position if not available in new scenario
+  useMemo(() => {
+    if (!availablePositions.includes(selectedPosition)) {
+      setSelectedPosition(availablePositions[0] || 'BTN');
+    }
+  }, [selectedScenario, availablePositions, selectedPosition]);
+
+  // Set default opponent when switching scenarios
+  useMemo(() => {
+    if (opponentPositions.length > 0 && !opponentPositions.includes(selectedOpponent)) {
+      setSelectedOpponent(opponentPositions[0]);
+    }
+  }, [opponentPositions, selectedOpponent]);
+
   // Get the current range based on selection
   const currentRange = useMemo(() => {
     if (selectedScenario === 'rfi') {
       return RFI_RANGES[selectedPosition] || {};
-    } else {
-      // vs 3-bet scenario - get the appropriate range
-      const key = `${selectedPosition}_vs_${vs3betOpener}_3bet`;
-      const rangeData = VS_THREE_BET_RANGES[key];
+    }
+
+    if (selectedScenario === '3bet') {
+      // Making a 3-bet vs opener
+      const key = `${selectedPosition}_vs_${selectedOpponent}`;
+      const rangeData = THREE_BET_RANGES[key];
       if (rangeData) {
-        // Merge 4bet and call ranges, prioritizing 4bet
+        // Merge 3bet action frequencies
         const merged: Record<string, number> = {};
-        if (rangeData['4bet']) {
-          Object.entries(rangeData['4bet']).forEach(([hand, freq]) => {
-            merged[hand] = (merged[hand] || 0) + (freq as number);
-          });
-        }
-        if (rangeData['call']) {
-          Object.entries(rangeData['call']).forEach(([hand, freq]) => {
-            merged[hand] = Math.max(merged[hand] || 0, freq as number);
+        if (rangeData['3bet']) {
+          Object.entries(rangeData['3bet']).forEach(([hand, freq]) => {
+            merged[hand] = freq as number;
           });
         }
         return merged;
       }
       return {};
     }
-  }, [selectedPosition, selectedScenario, vs3betOpener]);
+
+    if (selectedScenario === 'vs3bet') {
+      // Facing 3-bet after opening
+      const key = `${selectedPosition}_vs_${selectedOpponent}_3bet`;
+      const rangeData = VS_THREE_BET_RANGES[key];
+      return mergeRangeActions(rangeData);
+    }
+
+    if (selectedScenario === 'vs4bet') {
+      // Facing 4-bet after 3-betting
+      const key = `${selectedPosition}_vs_${selectedOpponent}_4bet`;
+      const rangeData = VS_FOUR_BET_RANGES[key];
+      return mergeRangeActions(rangeData);
+    }
+
+    if (selectedScenario === 'vs5bet') {
+      // Facing 5-bet after 4-betting
+      const key = `${selectedPosition}_vs_${selectedOpponent}_5bet`;
+      const rangeData = VS_FIVE_BET_RANGES[key];
+      return mergeRangeActions(rangeData);
+    }
+
+    return {};
+  }, [selectedPosition, selectedScenario, selectedOpponent]);
 
   const stats = useMemo(() => calculateRangeStats(currentRange), [currentRange]);
 
@@ -182,16 +289,19 @@ export default function RangesPage() {
           <div className="control-group">
             <span className="control-label">Position</span>
             <div className="position-selector">
-              {POSITIONS.map((pos) => (
-                <button
-                  key={pos.id}
-                  className={`position-btn ${selectedPosition === pos.id ? 'active' : ''}`}
-                  onClick={() => setSelectedPosition(pos.id)}
-                  title={pos.tooltip}
-                >
-                  {pos.label}
-                </button>
-              ))}
+              {availablePositions.map((posId) => {
+                const pos = POSITIONS.find(p => p.id === posId) || { id: posId, label: posId, tooltip: posId };
+                return (
+                  <button
+                    key={posId}
+                    className={`position-btn ${selectedPosition === posId ? 'active' : ''}`}
+                    onClick={() => setSelectedPosition(posId)}
+                    title={pos.tooltip}
+                  >
+                    {pos.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -212,16 +322,16 @@ export default function RangesPage() {
             </div>
           </div>
 
-          {/* vs 3-bet Opener Selector (only shown when vs3bet is selected) */}
-          {selectedScenario === 'vs3bet' && (
+          {/* Opponent Selector (shown for all non-RFI scenarios) */}
+          {selectedScenario !== 'rfi' && opponentPositions.length > 0 && (
             <div className="control-group">
-              <span className="control-label">3-Bettor</span>
+              <span className="control-label">vs</span>
               <div className="position-selector">
-                {['CO', 'BTN', 'SB', 'BB'].map((pos) => (
+                {opponentPositions.map((pos) => (
                   <button
                     key={pos}
-                    className={`position-btn small ${vs3betOpener === pos ? 'active' : ''}`}
-                    onClick={() => setVs3betOpener(pos)}
+                    className={`position-btn small ${selectedOpponent === pos ? 'active' : ''}`}
+                    onClick={() => setSelectedOpponent(pos)}
                   >
                     {pos}
                   </button>
@@ -380,7 +490,11 @@ export default function RangesPage() {
                 <div className="current-view">
                   <span className="view-position">{selectedPosition}</span>
                   <span className="view-scenario">
-                    {selectedScenario === 'rfi' ? 'RFI Range' : `vs ${vs3betOpener} 3-Bet`}
+                    {selectedScenario === 'rfi' ? 'RFI Range' :
+                      selectedScenario === '3bet' ? `3-Bet vs ${selectedOpponent}` :
+                        selectedScenario === 'vs3bet' ? `vs ${selectedOpponent} 3-Bet` :
+                          selectedScenario === 'vs4bet' ? `vs ${selectedOpponent} 4-Bet` :
+                            `vs ${selectedOpponent} 5-Bet`}
                   </span>
                 </div>
               </div>
