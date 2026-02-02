@@ -15,10 +15,17 @@ html,
 body {
     background: #1c1c1c !important;
     color: #E2E8F0 !important;
-    /* iOS WebView critical fixes - use dvh for true viewport */
+    /* Allow scrolling on web - use min-height for flexible layout */
+    min-height: 100dvh;
+    min-height: 100vh;
+}
+
+/* iOS Native App - fixed viewport to prevent rubber-band scrolling */
+/* This class is added by NativeAppDetector when running in Capacitor */
+html.native-app,
+html.native-app body {
     height: 100dvh;
     height: 100vh;
-    /* Fallback */
     min-height: -webkit-fill-available;
     overflow: hidden;
     position: fixed;

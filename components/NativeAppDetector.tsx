@@ -15,6 +15,7 @@ export default function NativeAppDetector() {
     useEffect(() => {
         if (Capacitor.isNativePlatform()) {
             // Running in native iOS/Android app
+            document.documentElement.classList.add('native-app'); // Add to html element
             document.body.classList.add('native-app');
 
             // Also add platform-specific class
