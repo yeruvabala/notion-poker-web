@@ -544,7 +544,10 @@ export default function RangesPage() {
             {/* Current Selection Info */}
             <div className="stat-card platinum-inner-border">
               <div className="stat-card-header">
-                <span className="stat-icon">📊</span>
+                <svg className="stat-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M3 3v18h18" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M7 16l4-5 4 3 5-7" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
                 <span className="stat-title">Range Stats</span>
               </div>
               <div className="stat-content">
@@ -566,7 +569,11 @@ export default function RangesPage() {
             {/* Selected Hand - Action Breakdown */}
             <div className="stat-card platinum-inner-border hover-card">
               <div className="stat-card-header">
-                <span className="stat-icon">🎯</span>
+                <svg className="stat-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <circle cx="12" cy="12" r="10" />
+                  <circle cx="12" cy="12" r="6" />
+                  <circle cx="12" cy="12" r="2" />
+                </svg>
                 <span className="stat-title">Hand Details</span>
               </div>
               <div className="stat-content">
@@ -646,7 +653,12 @@ export default function RangesPage() {
             {/* Action Legend */}
             <div className="stat-card platinum-inner-border">
               <div className="stat-card-header">
-                <span className="stat-icon">🎨</span>
+                <svg className="stat-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                  <rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
                 <span className="stat-title">Legend</span>
               </div>
               <div className="stat-content legend-content">
@@ -672,7 +684,10 @@ export default function RangesPage() {
             {/* Position Info */}
             <div className="stat-card platinum-inner-border">
               <div className="stat-card-header">
-                <span className="stat-icon">📍</span>
+                <svg className="stat-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <circle cx="12" cy="10" r="3" />
+                  <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" />
+                </svg>
                 <span className="stat-title">Current View</span>
               </div>
               <div className="stat-content">
@@ -951,14 +966,17 @@ export default function RangesPage() {
         .stat-card-header {
           display: flex;
           align-items: center;
-          gap: 8px;
-          margin-bottom: 12px;
-          padding-bottom: 8px;
-          border-bottom: 1px solid #3a3a3a;
+          gap: 10px;
+          margin-bottom: 14px;
+          padding-bottom: 10px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .stat-icon {
-          font-size: 16px;
+        .stat-icon-svg {
+          width: 18px;
+          height: 18px;
+          color: #9ca3af;
+          flex-shrink: 0;
         }
 
         .stat-title {
