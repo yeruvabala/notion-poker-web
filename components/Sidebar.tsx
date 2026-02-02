@@ -11,7 +11,6 @@ import {
   RangeMatrixIcon,
   StudyBrainIcon,
   ChipStacksIcon,
-  SettingsGearIcon,
 } from './icons/PokerIcons';
 
 const links = [
@@ -75,25 +74,11 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           md:flex
         `}
       >
-        {/* Logo - hidden on mobile (already in MobileHeader) */}
-        <div className="sidebar-brand hidden md:block px-5 pt-6 pb-4">
-          <Link href="/" className="sidebar-brand-title block">Only Poker</Link>
-          <div className="sidebar-version-badge mt-2">
-            <span>v0.1</span>
-            <span>·</span>
-            <span>preview</span>
-          </div>
-          {/* Suit decoration - poker theming */}
-          <div className="sidebar-suit-decoration">
-            <span>♠</span><span>♥</span><span>♦</span><span>♣</span>
-          </div>
-        </div>
-
         {/* Mobile spacer to account for MobileHeader height */}
         <div className="md:hidden h-14" />
 
-        {/* Divider */}
-        <div className="sidebar-divider mx-4 hidden md:block" />
+        {/* Top padding for desktop */}
+        <div className="hidden md:block pt-6" />
 
         <nav className="flex-1 px-3 space-y-1 mt-2">
           {links.map(({ href, label, Icon }) => {
@@ -116,14 +101,6 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         <div className="sidebar-divider mx-4" />
 
         <div className="px-3 pb-6 mt-2 space-y-1">
-          <Link
-            href="/settings"
-            onClick={onClose}
-            className="sidebar-nav-item"
-          >
-            <SettingsGearIcon className="sidebar-nav-icon" />
-            Settings
-          </Link>
           <button
             onClick={handleSignOut}
             className="sidebar-nav-item sidebar-signout w-full text-left"
