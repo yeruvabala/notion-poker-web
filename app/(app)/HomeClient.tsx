@@ -1872,55 +1872,21 @@ Turn K♦ — ...`}
                   <span className="section-header-title">Hand Builder</span>
                 </div>
                 <div className="hand-content">
-                  {/* Row 1: Table Format + Position */}
-                  <div style={{ display: 'grid', gridTemplateColumns: isNativeApp ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                  {/* Row 1: Hero Position + Effective Stack + Table Format (3 columns) */}
+                  <div style={{ display: 'grid', gridTemplateColumns: isNativeApp ? '1fr' : '1fr 1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                    {/* Hero Position dropdown */}
                     <div className="ibox platinum-inner-border">
-                      <div className="lblSmall">Table Format</div>
+                      <div className="lblSmall">Hero Position</div>
                       <div style={{ display: 'flex', alignItems: 'center', background: '#1f1f1f', borderRadius: '8px', padding: '6px 10px', border: '1px solid #3a3a3a' }}>
                         <select
                           className="option-selector"
-                          value={tableFormat}
-                          onChange={(e) => setTableFormat(e.target.value as 'HU' | '6max' | '9max')}
+                          value={position}
+                          onChange={(e) => { setPosition(e.target.value); setUserOverrodeFields(prev => ({ ...prev, position: true })); }}
                           style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '14px', fontWeight: 500, color: '#e5e7eb', cursor: 'pointer', width: '100%', outline: 'none' }}
                         >
-                          {Object.entries(TABLE_FORMATS).map(([key, val]) => (
-                            <option key={key} value={key}>{val.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="ibox platinum-inner-border">
-                      <div className="lblSmall">Villain Position</div>
-                      <div style={{ display: 'flex', alignItems: 'center', background: '#1f1f1f', borderRadius: '8px', padding: '6px 10px', border: '1px solid #3a3a3a' }}>
-                        <select
-                          className="option-selector"
-                          value={villainPosition}
-                          onChange={(e) => { setVillainPosition(e.target.value); setUserOverrodeFields(prev => ({ ...prev, position: true })); }}
-                          style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '14px', fontWeight: 500, color: '#e5e7eb', cursor: 'pointer', width: '100%', outline: 'none' }}
-                        >
-                          <option value="">(auto-detect)</option>
+                          <option value="">{preview.position || '(auto-detect)'}</option>
                           {TABLE_FORMATS[tableFormat].positions.map((pos) => (
                             <option key={pos} value={pos}>{pos}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Row 2: Action Type + Effective Stack */}
-                  <div style={{ display: 'grid', gridTemplateColumns: isNativeApp ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                    <div className="ibox platinum-inner-border">
-                      <div className="lblSmall">Action Type</div>
-                      <div style={{ display: 'flex', alignItems: 'center', background: '#1f1f1f', borderRadius: '8px', padding: '6px 10px', border: '1px solid #3a3a3a' }}>
-                        <select
-                          className="option-selector"
-                          value={actionType}
-                          onChange={(e) => setActionType(e.target.value)}
-                          style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '14px', fontWeight: 500, color: '#e5e7eb', cursor: 'pointer', width: '100%', outline: 'none' }}
-                        >
-                          {ACTION_TYPES.map((at) => (
-                            <option key={at.value} value={at.value}>{at.label}</option>
                           ))}
                         </select>
                       </div>
@@ -1938,9 +1904,25 @@ Turn K♦ — ...`}
                         />
                       </div>
                     </div>
+
+                    <div className="ibox platinum-inner-border">
+                      <div className="lblSmall">Table Format</div>
+                      <div style={{ display: 'flex', alignItems: 'center', background: '#1f1f1f', borderRadius: '8px', padding: '6px 10px', border: '1px solid #3a3a3a' }}>
+                        <select
+                          className="option-selector"
+                          value={tableFormat}
+                          onChange={(e) => setTableFormat(e.target.value as 'HU' | '6max' | '9max')}
+                          style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '14px', fontWeight: 500, color: '#e5e7eb', cursor: 'pointer', width: '100%', outline: 'none' }}
+                        >
+                          {Object.entries(TABLE_FORMATS).map(([key, val]) => (
+                            <option key={key} value={key}>{val.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Row 3: Hero Hand + Hero Position */}
+                  {/* Row 2: Hero Hand + Villain Position */}
                   <div style={{ display: 'grid', gridTemplateColumns: isNativeApp ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                     {/* Hero Hand - Card selectors */}
                     <div className="ibox platinum-inner-border">
@@ -2060,17 +2042,16 @@ Turn K♦ — ...`}
                       </div>
                     </div>
 
-                    {/* Hero Position dropdown */}
                     <div className="ibox platinum-inner-border">
-                      <div className="lblSmall">Hero Position</div>
+                      <div className="lblSmall">Villain Position</div>
                       <div style={{ display: 'flex', alignItems: 'center', background: '#1f1f1f', borderRadius: '8px', padding: '6px 10px', border: '1px solid #3a3a3a' }}>
                         <select
                           className="option-selector"
-                          value={position}
-                          onChange={(e) => { setPosition(e.target.value); setUserOverrodeFields(prev => ({ ...prev, position: true })); }}
+                          value={villainPosition}
+                          onChange={(e) => { setVillainPosition(e.target.value); setUserOverrodeFields(prev => ({ ...prev, position: true })); }}
                           style={{ appearance: 'none', WebkitAppearance: 'none', background: 'transparent', border: 'none', fontSize: '14px', fontWeight: 500, color: '#e5e7eb', cursor: 'pointer', width: '100%', outline: 'none' }}
                         >
-                          <option value="">{preview.position || '(auto-detect)'}</option>
+                          <option value="">(auto-detect)</option>
                           {TABLE_FORMATS[tableFormat].positions.map((pos) => (
                             <option key={pos} value={pos}>{pos}</option>
                           ))}
