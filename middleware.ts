@@ -39,19 +39,31 @@ export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
   if (pathname === '/') {
     const url = req.nextUrl.clone();
-    // Authenticated users go to app, unauthenticated users go to landing
+    // Authenticated users go to app, unauthenticated users go to landing/login
     if (user) {
       // User is logged in - let them through to the app (no redirect needed)
       // The (app)/page.tsx will render for authenticated users
     } else {
-      // User is not logged in - redirect to landing page
-      url.pathname = '/landing';
+      // User is not logged in
+      // Check if this is a native app (iOS/Android) via user-agent
+      const userAgent = req.headers.get('user-agent') || '';
+      const isNativeApp = userAgent.includes('Capacitor') ||
+        userAgent.includes('OnlyPoker') ||
+        (userAgent.includes('Mobile') && (userAgent.includes('iPhone') || userAgent.includes('iPad') || userAgent.includes('Android')));
+
+      if (isNativeApp) {
+        // Native app users go directly to login
+        url.pathname = '/login';
+      } else {
+        // Web users go to landing page
+        url.pathname = '/landing';
+      }
       return NextResponse.redirect(url);
     }
   }
 
   // Public: landing page + login + auth routes + static
-  const publicPaths = ['/landing', '/login', '/auth/login', '/auth/callback', '/auth/update-password', '/auth/signout', '/privacy', '/delete-account'];
+  const publicPaths = ['/landing', '/login', '/auth/login', '/auth/callback', '/auth/update-password', '/auth/signout', '/privacy', '/delete-account', '/support', '/terms'];
   const isPublic =
     publicPaths.some((p) => pathname === p || pathname.startsWith(p + '/')) ||
     pathname.startsWith('/auth/') ||
