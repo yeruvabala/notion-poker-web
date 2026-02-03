@@ -552,8 +552,14 @@ export default function HomeClient() {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Native app detection for mobile-specific layouts
-  const isNativeApp = typeof window !== 'undefined' && Capacitor.isNativePlatform();
+  // Mobile detection - detect both native apps AND mobile browsers
+  const [isNativeApp, setIsNativeApp] = useState(false);
+
+  useEffect(() => {
+    const isNative = Capacitor.isNativePlatform();
+    const isMobileBrowser = typeof window !== 'undefined' && window.innerWidth < 768;
+    setIsNativeApp(isNative || isMobileBrowser);
+  }, []);
 
   // ════════════════════════════════════════════════════════════════════════════
   // SESSION MODE STATE
