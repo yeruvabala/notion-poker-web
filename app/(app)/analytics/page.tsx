@@ -3,7 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import "@/styles/onlypoker-theme.css";
+import "@/app/globals.css";
 import MobileAnalyticsPage from "./mobile-page";
+import {
+  ChipStacksIcon,
+  PokerChipIcon,
+  HoleCardsIcon,
+} from "@/components/icons/PokerIcons";
+import { Trophy, Target, Droplets, TrendingUp, BarChart3 } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -114,21 +121,22 @@ export default function AnalyticsPage() {
   }, [seatDial]);
 
   return (
-    <div className="analytics-premium">
-      {/* Animated background */}
+    <div className="analytics-premium op-surface">
+      {/* Subtle Background Pattern */}
       <div className="premium-bg">
-        <div className="bg-orb bg-orb-1" />
-        <div className="bg-orb bg-orb-2" />
         <div className="bg-grid" />
       </div>
 
-      {/* Header with filters */}
-      <header className="premium-header">
-        <div className="header-content">
-          <h1 className="premium-title">Analytics</h1>
-          <p className="premium-subtitle">Track your performance and find your edge</p>
+      {/* Header with title and filters - centered like other pages */}
+      <header className="analytics-header" style={{ textAlign: 'center', marginBottom: 24, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <h1 className="homepage-title">Analytics</h1>
+        <div className="suit-decoration">
+          <span>♠</span>
+          <span>♥</span>
+          <span>♦</span>
+          <span>♣</span>
         </div>
-        <div className="header-filters">
+        <div className="header-filters" style={{ marginTop: 16 }}>
           <select
             value={month}
             onChange={(e) => setMonth(e.target.value)}
@@ -183,7 +191,7 @@ export default function AnalyticsPage() {
       {/* Quick Stats Row */}
       <section className="stats-grid">
         <div className="glass-card stat-item">
-          <div className="stat-icon trophy">🏆</div>
+          <div className="stat-icon trophy"><Trophy size={24} /></div>
           <div className="stat-info">
             <div className="stat-label">Best Position</div>
             <div className="stat-value green">{bestPosition?.pos ?? "—"}</div>
@@ -192,7 +200,7 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="glass-card stat-item">
-          <div className="stat-icon target">🎯</div>
+          <div className="stat-icon target"><Target size={24} /></div>
           <div className="stat-info">
             <div className="stat-label">Focus Area</div>
             <div className="stat-value orange">{overview?.weakest_seat ?? "—"}</div>
@@ -201,7 +209,7 @@ export default function AnalyticsPage() {
         </div>
 
         <div className="glass-card stat-item">
-          <div className="stat-icon leak">💧</div>
+          <div className="stat-icon leak"><Droplets size={24} /></div>
           <div className="stat-info">
             <div className="stat-label">Primary Leak</div>
             <div className="stat-value yellow">{formatLeakName(overview?.primary_leak)}</div>
@@ -216,7 +224,7 @@ export default function AnalyticsPage() {
         <section className="glass-card section-card">
           <div className="section-header">
             <div className="section-title">
-              <span className="title-icon">📊</span>
+              <BarChart3 size={18} className="title-icon" />
               Position Performance
             </div>
           </div>
@@ -243,7 +251,7 @@ export default function AnalyticsPage() {
           </div>
           {worstPosition && worstPosition.bb < 0 && (
             <div className="insight-banner">
-              <span className="insight-bulb">💡</span>
+              <Target size={16} className="insight-bulb" />
               <span>Focus on <strong>{worstPosition.pos}</strong> — you're leaking {fmt(Math.abs(worstPosition.bb))} bb/hand there</span>
             </div>
           )}
@@ -253,7 +261,7 @@ export default function AnalyticsPage() {
         <section className="glass-card section-card">
           <div className="section-header">
             <div className="section-title">
-              <span className="title-icon">🔍</span>
+              <Droplets size={18} className="title-icon" />
               Top Leaks to Fix
             </div>
             {leaks.length > 0 && <span className="section-badge">{leaks.length} found</span>}
@@ -276,7 +284,7 @@ export default function AnalyticsPage() {
       <section className="glass-card chart-section">
         <div className="section-header">
           <div className="section-title">
-            <span className="title-icon">📈</span>
+            <TrendingUp size={18} className="title-icon" />
             Performance Trend
           </div>
           <span className="section-badge">Last 200 hands</span>
@@ -586,9 +594,9 @@ export default function AnalyticsPage() {
           flex-shrink: 0;
         }
 
-        .stat-icon.trophy { background: rgba(34, 197, 94, 0.15); }
-        .stat-icon.target { background: rgba(249, 115, 22, 0.15); }
-        .stat-icon.leak { background: rgba(234, 179, 8, 0.15); }
+        .stat-icon.trophy { background: rgba(34, 197, 94, 0.08); color: #4ade80; }
+        .stat-icon.target { background: rgba(249, 115, 22, 0.08); color: #fb923c; }
+        .stat-icon.leak { background: rgba(234, 179, 8, 0.08); color: #facc15; }
 
         .stat-info {
           flex: 1;
