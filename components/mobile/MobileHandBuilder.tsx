@@ -1459,13 +1459,35 @@ export default function MobileHandBuilder({
                 <button
                     className="action-bar-button analyze-button"
                     onClick={() => {
-                        // Haptic feedback on Analyze tap!
+                        // ═══════════════════════════════════════════════════════════════
+                        // VALIDATION: Check all required fields before analyzing
+                        // ═══════════════════════════════════════════════════════════════
+                        const missingFields: string[] = [];
+
+                        if (!heroPosition) missingFields.push('Hero Position');
+                        if (!villainPosition) missingFields.push('Villain Position');
+                        if (!heroCard1 || !heroCard2) missingFields.push('Hero Cards');
+                        if (preflopActions.length === 0) missingFields.push('Preflop Action');
+
+                        if (missingFields.length > 0) {
+                            // Show alert with missing fields
+                            const message = `Please enter:\n• ${missingFields.join('\n• ')}`;
+                            alert(message);
+
+                            // Haptic feedback for error
+                            if (Capacitor.isNativePlatform()) {
+                                Haptics.notification({ type: 'ERROR' as any }).catch(() => { });
+                            }
+                            return;
+                        }
+
+                        // All required fields present - proceed with analysis
                         if (Capacitor.isNativePlatform()) {
                             Haptics.impact({ style: ImpactStyle.Medium }).catch(() => { });
                         }
                         onAnalyze();
                     }}
-                    disabled={isLoading || !heroCard1 || !heroCard2}
+                    disabled={isLoading}
                 >
                     <SparkleIcon className="action-bar-icon-svg" size={18} />
                     <span className="action-bar-text">{isLoading ? 'Analyzing...' : 'Analyze'}</span>
