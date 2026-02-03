@@ -153,6 +153,35 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
                         </div>
                     </div>
 
+                    {/* Support & Legal Section */}
+                    <div className="settings-drawer-section">
+                        <div className="settings-drawer-section-title">Support & Legal</div>
+                        <a
+                            href="/support"
+                            className="settings-drawer-item"
+                            style={{ textDecoration: 'none', cursor: 'pointer' }}
+                        >
+                            <span className="settings-drawer-item-label">Help & Support</span>
+                            <span className="settings-drawer-item-value" style={{ color: '#9ca3af' }}>→</span>
+                        </a>
+                        <a
+                            href="/privacy"
+                            className="settings-drawer-item"
+                            style={{ textDecoration: 'none', cursor: 'pointer' }}
+                        >
+                            <span className="settings-drawer-item-label">Privacy Policy</span>
+                            <span className="settings-drawer-item-value" style={{ color: '#9ca3af' }}>→</span>
+                        </a>
+                        <a
+                            href="/terms"
+                            className="settings-drawer-item"
+                            style={{ textDecoration: 'none', cursor: 'pointer' }}
+                        >
+                            <span className="settings-drawer-item-label">Terms of Service</span>
+                            <span className="settings-drawer-item-value" style={{ color: '#9ca3af' }}>→</span>
+                        </a>
+                    </div>
+
                     {/* Account Section */}
                     <div className="settings-drawer-section">
                         <div className="settings-drawer-section-title">Account</div>
