@@ -482,6 +482,7 @@ export default function LandingPage() {
                         </div>
 
                         <nav className="footer-links">
+                            <a href="/support">Support</a>
                             <a href="/privacy">Privacy Policy</a>
                             <a href="/delete-account">Delete Account</a>
                         </nav>
