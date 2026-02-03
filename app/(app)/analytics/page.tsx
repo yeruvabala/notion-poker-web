@@ -170,7 +170,7 @@ export default function AnalyticsPage() {
 
       {/* HERO WINRATE CARD - The Star of the Show */}
       <section className="hero-section">
-        <div className="hero-card">
+        <div className="hero-card platinum-inner-border">
           <div className="hero-glow" style={{ '--glow-color': getWinrateColor(overview?.winrate_bb ?? 0) } as React.CSSProperties} />
           <div className="hero-border" />
           <div className="hero-content">
@@ -190,7 +190,7 @@ export default function AnalyticsPage() {
 
       {/* Quick Stats Row */}
       <section className="stats-grid">
-        <div className="glass-card stat-item">
+        <div className="glass-card stat-item platinum-inner-border">
           <div className="stat-icon trophy"><Trophy size={24} /></div>
           <div className="stat-info">
             <div className="stat-label">Best Position</div>
@@ -199,7 +199,7 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        <div className="glass-card stat-item">
+        <div className="glass-card stat-item platinum-inner-border">
           <div className="stat-icon target"><Target size={24} /></div>
           <div className="stat-info">
             <div className="stat-label">Focus Area</div>
@@ -208,7 +208,7 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        <div className="glass-card stat-item">
+        <div className="glass-card stat-item platinum-inner-border">
           <div className="stat-icon leak"><Droplets size={24} /></div>
           <div className="stat-info">
             <div className="stat-label">Primary Leak</div>
@@ -221,7 +221,7 @@ export default function AnalyticsPage() {
       {/* Main Content Grid */}
       <div className="content-grid">
         {/* Position Performance - Left side */}
-        <section className="glass-card section-card">
+        <section className="glass-card section-card platinum-inner-border">
           <div className="section-header">
             <div className="section-title">
               <BarChart3 size={18} className="title-icon" />
@@ -258,7 +258,7 @@ export default function AnalyticsPage() {
         </section>
 
         {/* Top Leaks - Right side */}
-        <section className="glass-card section-card">
+        <section className="glass-card section-card platinum-inner-border">
           <div className="section-header">
             <div className="section-title">
               <Droplets size={18} className="title-icon" />
@@ -281,7 +281,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Performance Trend Chart */}
-      <section className="glass-card chart-section">
+      <section className="glass-card chart-section platinum-inner-border">
         <div className="section-header">
           <div className="section-title">
             <TrendingUp size={18} className="title-icon" />
