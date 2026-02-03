@@ -144,15 +144,9 @@ export default function SupportPage() {
                 <div style={{ textAlign: 'center', paddingTop: '20px' }}>
                     <Link
                         href="/privacy"
-                        style={{ color: '#9ca3af', fontSize: '14px', marginRight: '24px', textDecoration: 'none' }}
-                    >
-                        Privacy Policy
-                    </Link>
-                    <Link
-                        href="/terms"
                         style={{ color: '#9ca3af', fontSize: '14px', textDecoration: 'none' }}
                     >
-                        Terms of Service
+                        Privacy Policy
                     </Link>
                 </div>
 

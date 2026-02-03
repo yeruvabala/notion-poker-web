@@ -172,14 +172,6 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
                             <span className="settings-drawer-item-label">Privacy Policy</span>
                             <span className="settings-drawer-item-value" style={{ color: '#9ca3af' }}>→</span>
                         </a>
-                        <a
-                            href="/terms"
-                            className="settings-drawer-item"
-                            style={{ textDecoration: 'none', cursor: 'pointer' }}
-                        >
-                            <span className="settings-drawer-item-label">Terms of Service</span>
-                            <span className="settings-drawer-item-value" style={{ color: '#9ca3af' }}>→</span>
-                        </a>
                     </div>
 
                     {/* Account Section */}
