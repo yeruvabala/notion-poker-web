@@ -51,9 +51,16 @@ function getPositionColor(bb: number): string {
 }
 
 export default function AnalyticsPage() {
-  // Mobile detection - render mobile page on native platforms
-  const isNative = typeof window !== 'undefined' && Capacitor.isNativePlatform();
-  if (isNative) {
+  // Mobile detection - render mobile page on native platforms OR mobile browsers
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const isNative = Capacitor.isNativePlatform();
+    const isMobileBrowser = typeof window !== 'undefined' && window.innerWidth < 768;
+    setIsMobile(isNative || isMobileBrowser);
+  }, []);
+
+  if (isMobile) {
     return <MobileAnalyticsPage />;
   }
 

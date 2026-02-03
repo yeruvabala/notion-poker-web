@@ -2,7 +2,7 @@
 'use client';
 
 import "@/styles/onlypoker-theme.css";
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { createClient } from '@/lib/supabase/client';
 import MobileStudyPage from './mobile-page';
@@ -70,9 +70,16 @@ const STREET_OPTIONS = [
 ];
 
 export default function StudyPage() {
-  // Mobile detection - render mobile page on native platforms
-  const isNative = typeof window !== 'undefined' && Capacitor.isNativePlatform();
-  if (isNative) {
+  // Mobile detection - render mobile page on native platforms OR mobile browsers
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const isNative = Capacitor.isNativePlatform();
+    const isMobileBrowser = typeof window !== 'undefined' && window.innerWidth < 768;
+    setIsMobile(isNative || isMobileBrowser);
+  }, []);
+
+  if (isMobile) {
     return <MobileStudyPage />;
   }
 
