@@ -260,20 +260,18 @@ export default function RangesPage() {
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
   const [selectedOpponent, setSelectedOpponent] = useState(''); // For multi-scenario opponent
 
-  // Check for native platform or mobile browser on client-side only (after mount)
+  // Check for native platform on client-side only (after mount)
   useMemo(() => {
     if (typeof window !== 'undefined' && isNative === null) {
       try {
-        const isNativePlatform = Capacitor.isNativePlatform();
-        const isMobileBrowser = window.innerWidth < 768;
-        setIsNative(isNativePlatform || isMobileBrowser);
+        setIsNative(Capacitor.isNativePlatform());
       } catch {
         setIsNative(false);
       }
     }
   }, [isNative]);
 
-  // Mobile detection - render mobile page on native platforms OR mobile browsers
+  // Mobile detection - render mobile page on native platforms
   if (isNative === true) {
     return <MobileRangesPage />;
   }

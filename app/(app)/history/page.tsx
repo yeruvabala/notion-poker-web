@@ -147,12 +147,10 @@ export default function HistoryPage() {
   const [uploadExpanded, setUploadExpanded] = useState(false);
   const [selectedHand, setSelectedHand] = useState<Hand | null>(null);
 
-  // Detect native platform or mobile browser after mount to prevent hydration mismatch
+  // Detect native platform after mount to prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
-    const isNativePlatform = Capacitor.isNativePlatform();
-    const isMobileBrowser = typeof window !== 'undefined' && window.innerWidth < 768;
-    setIsNative(isNativePlatform || isMobileBrowser);
+    setIsNative(Capacitor.isNativePlatform());
   }, []);
 
   // Load hands data - must be before conditional returns

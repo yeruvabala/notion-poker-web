@@ -14,14 +14,12 @@ export default function AppLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isNativeApp, setIsNativeApp] = useState(false);
 
-  // Detect if running in Capacitor native app OR mobile browser
+  // Detect if running in Capacitor native app
   useEffect(() => {
-    const isNative = Capacitor.isNativePlatform();
-    const isMobileBrowser = typeof window !== 'undefined' && window.innerWidth < 768;
-    setIsNativeApp(isNative || isMobileBrowser);
+    setIsNativeApp(Capacitor.isNativePlatform());
   }, []);
 
-  // Native app or mobile browser: just render children (pages handle their own mobile layout)
+  // Native app: just render children (HomeClient handles its own layout)
   if (isNativeApp) {
     return <>{children}</>;
   }
