@@ -114,24 +114,25 @@ export default function AnalyticsPage() {
   }, [seatDial]);
 
   return (
-    <div className="analytics-page op-surface">
-      <div className="dashboard-bg-pattern" />
+    <div className="analytics-premium">
+      {/* Animated background */}
+      <div className="premium-bg">
+        <div className="bg-orb bg-orb-1" />
+        <div className="bg-orb bg-orb-2" />
+        <div className="bg-grid" />
+      </div>
 
-      {/* Header */}
-      <header className="analytics-header" style={{ textAlign: 'center', marginBottom: 24, marginTop: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <h1 className="homepage-title">Analytics</h1>
-        {/* Card Suit Decorations with Shimmer */}
-        <div className="suit-decoration">
-          <span>♠</span>
-          <span>♥</span>
-          <span>♦</span>
-          <span>♣</span>
+      {/* Header with filters */}
+      <header className="premium-header">
+        <div className="header-content">
+          <h1 className="premium-title">Analytics</h1>
+          <p className="premium-subtitle">Track your performance and find your edge</p>
         </div>
-        <div className="header-filters" style={{ marginTop: 16 }}>
+        <div className="header-filters">
           <select
             value={month}
             onChange={(e) => setMonth(e.target.value)}
-            className="filter-select"
+            className="premium-select"
           >
             {Array.from({ length: 12 }).map((_, i) => {
               const d = new Date();
@@ -144,7 +145,7 @@ export default function AnalyticsPage() {
           <select
             value={stakes}
             onChange={(e) => setStakes(e.target.value)}
-            className="filter-select"
+            className="premium-select"
           >
             {["2NL", "5NL", "10NL", "25NL", "50NL", "100NL", "200NL"].map((s) => (
               <option key={s} value={s}>{s}</option>
@@ -154,142 +155,170 @@ export default function AnalyticsPage() {
       </header>
 
       {error && (
-        <div className="error-banner platinum-inner-border">
+        <div className="premium-error">
           <span>⚠️</span> {error}
         </div>
       )}
 
-      {/* Hero Stats Row */}
-      <section className="stats-row">
-        <StatCard
-          label="Winrate"
-          value={`${fmt(overview?.winrate_bb ?? 0)} bb/100`}
-          subtitle={`${overview?.total_hands ?? 0} hands`}
-          color={getWinrateColor(overview?.winrate_bb ?? 0)}
-        />
-        <StatCard
-          label="Best Position"
-          value={bestPosition?.pos ?? "—"}
-          subtitle={bestPosition ? `+${fmt(bestPosition.bb)} bb/hand` : "0 hands"}
-          color={colors.green}
-        />
-        <StatCard
-          label="Weakest Position"
-          value={overview?.weakest_seat ?? "—"}
-          subtitle={`${fmt(overview?.weakest_bb ?? 0)} bb/hand`}
-          color={colors.red}
-        />
-        <StatCard
-          label="Primary Leak"
-          value={formatLeakName(overview?.primary_leak)}
-          subtitle={`${fmt(overview?.primary_leak_bb ?? 0)} bb impact`}
-          color={colors.yellow}
-        />
+      {/* HERO WINRATE CARD - The Star of the Show */}
+      <section className="hero-section">
+        <div className="hero-card">
+          <div className="hero-glow" style={{ '--glow-color': getWinrateColor(overview?.winrate_bb ?? 0) } as React.CSSProperties} />
+          <div className="hero-border" />
+          <div className="hero-content">
+            <div className="hero-label">WIN RATE</div>
+            <div className="hero-value" style={{ color: getWinrateColor(overview?.winrate_bb ?? 0) }}>
+              {(overview?.winrate_bb ?? 0) >= 0 ? '+' : ''}{fmt(overview?.winrate_bb ?? 0)}
+              <span className="hero-unit">bb/100</span>
+            </div>
+            <div className="hero-meta">
+              <span className="hero-hands">{overview?.total_hands?.toLocaleString() ?? 0} hands analyzed</span>
+              <span className="hero-divider">•</span>
+              <span className="hero-positions">{seatDial.length} positions tracked</span>
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* Main Grid */}
-      <div className="analytics-grid">
-        {/* Position Performance */}
-        <section className="grid-section position-section platinum-inner-border">
-          <div className="section-header">
-            <h2 className="section-title">
-              <span className="section-indicator" style={{ background: colors.blue }} />
-              Position Performance
-            </h2>
+      {/* Quick Stats Row */}
+      <section className="stats-grid">
+        <div className="glass-card stat-item">
+          <div className="stat-icon trophy">🏆</div>
+          <div className="stat-info">
+            <div className="stat-label">Best Position</div>
+            <div className="stat-value green">{bestPosition?.pos ?? "—"}</div>
+            <div className="stat-detail">{bestPosition ? `+${fmt(bestPosition.bb)} bb/hand` : "No data yet"}</div>
           </div>
-          <div className="position-grid">
+        </div>
+
+        <div className="glass-card stat-item">
+          <div className="stat-icon target">🎯</div>
+          <div className="stat-info">
+            <div className="stat-label">Focus Area</div>
+            <div className="stat-value orange">{overview?.weakest_seat ?? "—"}</div>
+            <div className="stat-detail">{overview?.weakest_seat ? `${fmt(overview?.weakest_bb ?? 0)} bb/hand` : "No data yet"}</div>
+          </div>
+        </div>
+
+        <div className="glass-card stat-item">
+          <div className="stat-icon leak">💧</div>
+          <div className="stat-info">
+            <div className="stat-label">Primary Leak</div>
+            <div className="stat-value yellow">{formatLeakName(overview?.primary_leak)}</div>
+            <div className="stat-detail">{overview?.primary_leak ? `${fmt(overview?.primary_leak_bb ?? 0)} bb impact` : "No leaks detected"}</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Content Grid */}
+      <div className="content-grid">
+        {/* Position Performance - Left side */}
+        <section className="glass-card section-card">
+          <div className="section-header">
+            <div className="section-title">
+              <span className="title-icon">📊</span>
+              Position Performance
+            </div>
+          </div>
+          <div className="positions-grid">
             {seatDial.length > 0 ? (
               seatDial.map((seat) => (
                 <div
                   key={seat.pos}
-                  className={`position-card ${seat.bb >= 0 ? 'profitable' : 'losing'}`}
-                  style={{ '--pos-color': getPositionColor(seat.bb) } as React.CSSProperties}
+                  className="position-chip"
+                  style={{ '--chip-color': getPositionColor(seat.bb) } as React.CSSProperties}
                 >
-                  <div className="pos-indicator" />
-                  <div className="pos-name">{seat.pos}</div>
-                  <div className="pos-bb">{seat.bb >= 0 ? '+' : ''}{fmt(seat.bb)}</div>
-                  <div className="pos-hands">{seat.n} hands</div>
+                  <div className="chip-glow" />
+                  <div className="chip-name">{seat.pos}</div>
+                  <div className="chip-bb">{seat.bb >= 0 ? '+' : ''}{fmt(seat.bb)}</div>
+                  <div className="chip-hands">{seat.n} hands</div>
                 </div>
               ))
             ) : (
-              <div className="empty-positions">
-                <span>Play some hands to see position stats</span>
+              <div className="empty-state">
+                <div className="empty-icon">♠️</div>
+                <div className="empty-text">Play some hands to see position stats</div>
               </div>
             )}
           </div>
           {worstPosition && worstPosition.bb < 0 && (
-            <div className="position-insight">
-              <span className="insight-icon">💡</span>
-              <span className="insight-text">
-                Focus on improving your <strong>{worstPosition.pos}</strong> play.
-                You're losing {fmt(Math.abs(worstPosition.bb))} bb/hand there.
-              </span>
+            <div className="insight-banner">
+              <span className="insight-bulb">💡</span>
+              <span>Focus on <strong>{worstPosition.pos}</strong> — you're leaking {fmt(Math.abs(worstPosition.bb))} bb/hand there</span>
             </div>
           )}
         </section>
 
-        {/* Top Leaks */}
-        <section className="grid-section leaks-section platinum-inner-border">
+        {/* Top Leaks - Right side */}
+        <section className="glass-card section-card">
           <div className="section-header">
-            <h2 className="section-title">
-              <span className="section-indicator" style={{ background: colors.red }} />
-              Top Leaks
-            </h2>
+            <div className="section-title">
+              <span className="title-icon">🔍</span>
+              Top Leaks to Fix
+            </div>
+            {leaks.length > 0 && <span className="section-badge">{leaks.length} found</span>}
           </div>
           <div className="leaks-list">
             {leaks.slice(0, 5).map((leak, idx) => (
               <LeakRow key={leak.learning_tag} leak={leak} rank={idx + 1} />
             ))}
             {!leaks.length && (
-              <div className="empty-leaks">
-                <span>No significant leaks detected</span>
+              <div className="empty-state">
+                <div className="empty-icon">✨</div>
+                <div className="empty-text">No significant leaks detected</div>
               </div>
             )}
           </div>
         </section>
       </div>
 
-      {/* Trend Chart */}
-      <section className="trend-section platinum-inner-border">
+      {/* Performance Trend Chart */}
+      <section className="glass-card chart-section">
         <div className="section-header">
-          <h2 className="section-title">
-            <span className="section-indicator" style={{ background: colors.green }} />
+          <div className="section-title">
+            <span className="title-icon">📈</span>
             Performance Trend
-          </h2>
+          </div>
           <span className="section-badge">Last 200 hands</span>
         </div>
-        <div className="trend-chart">
-          <ResponsiveContainer width="100%" height={280}>
+        <div className="chart-container">
+          <ResponsiveContainer width="100%" height={300}>
             <LineChart data={trend} margin={{ top: 20, right: 30, left: 0, bottom: 10 }}>
               <defs>
-                <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor={colors.blue} />
-                  <stop offset="100%" stopColor={colors.green} />
+                <linearGradient id="premiumGradient" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#6366f1" />
+                  <stop offset="50%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#10b981" />
+                </linearGradient>
+                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" vertical={false} />
               <XAxis
                 dataKey="hand_date"
-                stroke="#6b7280"
+                stroke="#4a4a4a"
                 tickFormatter={(v) => v.slice(5)}
                 tick={{ fill: '#6b7280', fontSize: 11 }}
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
-                stroke="#6b7280"
+                stroke="#4a4a4a"
                 tick={{ fill: '#6b7280', fontSize: 11 }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v) => `${v > 0 ? '+' : ''}${v.toFixed(1)}`}
               />
-              <ReferenceLine y={0} stroke="#4b5563" strokeDasharray="5 5" />
+              <ReferenceLine y={0} stroke="#404040" strokeDasharray="5 5" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1e1e1e',
-                  borderColor: '#333',
-                  borderRadius: '10px',
-                  padding: '12px'
+                  backgroundColor: 'rgba(20, 20, 20, 0.95)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '12px',
+                  padding: '12px 16px',
+                  backdropFilter: 'blur(10px)'
                 }}
                 labelStyle={{ color: '#9ca3af', marginBottom: '4px' }}
                 formatter={(v: any) => [`${fmt(Number(v))} bb`, "Cumulative"]}
@@ -297,45 +326,114 @@ export default function AnalyticsPage() {
               <Line
                 type="monotone"
                 dataKey="cum_avg_bb"
-                stroke="url(#lineGradient)"
+                stroke="url(#premiumGradient)"
                 strokeWidth={3}
                 dot={false}
-                activeDot={{ r: 6, fill: colors.green, stroke: '#1a1a1a', strokeWidth: 2 }}
+                activeDot={{ r: 8, fill: '#10b981', stroke: '#1a1a1a', strokeWidth: 3 }}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </section>
 
-      {loading && <div className="loading-indicator">Loading analytics data…</div>}
+      {loading && (
+        <div className="loading-overlay">
+          <div className="loading-spinner" />
+          <span>Loading analytics...</span>
+        </div>
+      )}
 
       <style jsx>{`
-        .analytics-page {
+        /* ═══════════════════════════════════════════════════════════════════
+           PREMIUM ANALYTICS - World-class Dashboard Design
+           ═══════════════════════════════════════════════════════════════════ */
+        
+        .analytics-premium {
           min-height: 100vh;
-          padding: 24px 32px;
+          padding: 32px 40px;
           position: relative;
+          background: #0a0a0a;
+          overflow: hidden;
         }
 
-        /* Header */
-        .analytics-header {
+        /* Animated Background */
+        .premium-bg {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          overflow: hidden;
+        }
+
+        .bg-orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(80px);
+          opacity: 0.4;
+          animation: float 20s ease-in-out infinite;
+        }
+
+        .bg-orb-1 {
+          width: 400px;
+          height: 400px;
+          background: radial-gradient(circle, #6366f1 0%, transparent 70%);
+          top: -100px;
+          left: -100px;
+        }
+
+        .bg-orb-2 {
+          width: 500px;
+          height: 500px;
+          background: radial-gradient(circle, #10b981 0%, transparent 70%);
+          bottom: -150px;
+          right: -150px;
+          animation-delay: -10s;
+        }
+
+        .bg-grid {
+          position: absolute;
+          inset: 0;
+          background-image: 
+            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+          background-size: 60px 60px;
+        }
+
+        @keyframes float {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(30px, -30px) scale(1.1); }
+        }
+
+        /* Premium Header */
+        .premium-header {
+          position: relative;
           display: flex;
           justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 28px;
+          align-items: center;
+          margin-bottom: 40px;
+          flex-wrap: wrap;
+          gap: 20px;
         }
 
-        .analytics-title {
-          font-size: 36px;
+        .header-content {
+          flex: 1;
+        }
+
+        .premium-title {
+          font-size: 42px;
           font-weight: 800;
-          background: linear-gradient(135deg, #ffffff 0%, #a3a3a3 50%, #ffffff 100%);
+          background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 50%, #ffffff 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
-          margin-bottom: 4px;
+          background-clip: text;
+          margin: 0 0 8px 0;
+          letter-spacing: -1px;
         }
 
-        .analytics-subtitle {
-          font-size: 14px;
-          color: #6b7280;
+        .premium-subtitle {
+          font-size: 15px;
+          color: #71717a;
+          margin: 0;
+          font-weight: 400;
         }
 
         .header-filters {
@@ -343,255 +441,428 @@ export default function AnalyticsPage() {
           gap: 12px;
         }
 
-        .filter-select {
-          padding: 10px 16px;
-          border-radius: 10px;
-          border: 1px solid #333;
-          background: linear-gradient(145deg, #1e1e1e, #141414);
-          color: #e2e8f0;
-          font-size: 13px;
+        .premium-select {
+          padding: 12px 20px;
+          border-radius: 12px;
+          border: 1px solid rgba(255,255,255,0.1);
+          background: rgba(255,255,255,0.05);
+          backdrop-filter: blur(10px);
+          color: #e4e4e7;
+          font-size: 14px;
           font-weight: 500;
           cursor: pointer;
           outline: none;
-          transition: all 0.15s ease;
+          transition: all 0.2s ease;
         }
 
-        .filter-select:hover {
-          border-color: #505050;
-          background: #1e1e1e;
+        .premium-select:hover {
+          border-color: rgba(255,255,255,0.2);
+          background: rgba(255,255,255,0.08);
         }
 
-        .filter-select option {
+        .premium-select option {
           background: #1a1a1a;
+          color: #e4e4e7;
         }
 
-        /* Error Banner */
-        .error-banner {
+        .premium-error {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 14px 18px;
-          margin-bottom: 20px;
-          background: linear-gradient(145deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
-          border-color: rgba(239, 68, 68, 0.3) !important;
+          gap: 12px;
+          padding: 16px 20px;
+          margin-bottom: 24px;
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.3);
+          border-radius: 12px;
           color: #fca5a5;
           font-size: 14px;
         }
 
-        /* Stats Row */
-        .stats-row {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 16px;
-          margin-bottom: 24px;
+        /* ═══════════════════════════════════════════════════════════════════
+           HERO WINRATE CARD - The Star of the Show
+           ═══════════════════════════════════════════════════════════════════ */
+        
+        .hero-section {
+          position: relative;
+          margin-bottom: 32px;
         }
 
-        /* Main Grid */
-        .analytics-grid {
+        .hero-card {
+          position: relative;
+          padding: 48px 40px;
+          background: rgba(15, 15, 15, 0.8);
+          border-radius: 24px;
+          text-align: center;
+          overflow: hidden;
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .hero-glow {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 300px;
+          height: 300px;
+          transform: translate(-50%, -50%);
+          background: radial-gradient(circle, var(--glow-color) 0%, transparent 70%);
+          opacity: 0.2;
+          filter: blur(60px);
+          animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+          0%, 100% { opacity: 0.2; transform: translate(-50%, -50%) scale(1); }
+          50% { opacity: 0.35; transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        .hero-border {
+          position: absolute;
+          inset: 0;
+          border-radius: 24px;
+          padding: 1px;
+          background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.05) 100%);
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          pointer-events: none;
+        }
+
+        .hero-content {
+          position: relative;
+          z-index: 1;
+        }
+
+        .hero-label {
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 3px;
+          color: #71717a;
+          margin-bottom: 12px;
+        }
+
+        .hero-value {
+          font-size: 72px;
+          font-weight: 800;
+          line-height: 1;
+          margin-bottom: 8px;
+          font-family: 'SF Pro Display', -apple-system, sans-serif;
+          letter-spacing: -2px;
+        }
+
+        .hero-unit {
+          font-size: 24px;
+          font-weight: 500;
+          opacity: 0.6;
+          margin-left: 8px;
+        }
+
+        .hero-meta {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 16px;
+          margin-top: 16px;
+          color: #71717a;
+          font-size: 14px;
+        }
+
+        .hero-divider {
+          opacity: 0.3;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           GLASS CARDS - Premium Glassmorphism
+           ═══════════════════════════════════════════════════════════════════ */
+        
+        .glass-card {
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 20px;
+          transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+          border-color: rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 20px;
+          margin-bottom: 32px;
+        }
+
+        .stat-item {
+          padding: 24px;
+          display: flex;
+          align-items: flex-start;
+          gap: 16px;
+        }
+
+        .stat-icon {
+          width: 48px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 14px;
+          font-size: 24px;
+          flex-shrink: 0;
+        }
+
+        .stat-icon.trophy { background: rgba(34, 197, 94, 0.15); }
+        .stat-icon.target { background: rgba(249, 115, 22, 0.15); }
+        .stat-icon.leak { background: rgba(234, 179, 8, 0.15); }
+
+        .stat-info {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .stat-label {
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          color: #71717a;
+          margin-bottom: 6px;
+        }
+
+        .stat-value {
+          font-size: 28px;
+          font-weight: 800;
+          margin-bottom: 4px;
+          letter-spacing: -0.5px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .stat-value.green { color: #22c55e; }
+        .stat-value.orange { color: #f97316; }
+        .stat-value.yellow { color: #eab308; }
+
+        .stat-detail {
+          font-size: 13px;
+          color: #71717a;
+        }
+
+        /* Content Grid */
+        .content-grid {
           display: grid;
           grid-template-columns: 1.6fr 1fr;
-          gap: 20px;
-          margin-bottom: 24px;
+          gap: 24px;
+          margin-bottom: 32px;
         }
 
-        .grid-section {
-          padding: 20px;
-          background: linear-gradient(145deg, #1e1e1e, #141414);
+        .section-card {
+          padding: 28px;
         }
 
         .section-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 20px;
+          margin-bottom: 24px;
         }
 
         .section-title {
           display: flex;
           align-items: center;
           gap: 10px;
-          font-size: 14px;
+          font-size: 16px;
           font-weight: 700;
-          color: #e2e8f0;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
+          color: #e4e4e7;
         }
 
-        .section-indicator {
-          width: 10px;
-          height: 10px;
-          border-radius: 3px;
-          flex-shrink: 0;
-          box-shadow: 0 0 6px currentColor;
+        .title-icon {
+          font-size: 18px;
         }
 
         .section-badge {
           font-size: 11px;
-          color: #6b7280;
-          padding: 4px 10px;
-          background: #252525;
+          font-weight: 600;
+          color: #a1a1aa;
+          padding: 6px 12px;
+          background: rgba(255,255,255,0.05);
           border-radius: 20px;
         }
 
-        /* Position Grid - flexible for 6-max or 9-handed */
-        .position-grid {
+        /* Position Chips */
+        .positions-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-          gap: 10px;
+          grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+          gap: 12px;
         }
 
-        .position-card {
-          padding: 16px 12px;
-          background: #1a1a1a;
-          border-radius: 10px;
-          text-align: center;
-          transition: all 0.2s ease;
-          border: 1px solid #2a2a2a;
+        .position-chip {
           position: relative;
+          padding: 20px 16px;
+          background: rgba(255,255,255,0.02);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 16px;
+          text-align: center;
+          transition: all 0.25s ease;
           overflow: hidden;
         }
 
-        .position-card::before {
-          content: '';
+        .position-chip:hover {
+          transform: translateY(-4px);
+          border-color: var(--chip-color);
+          box-shadow: 0 8px 30px -10px var(--chip-color);
+        }
+
+        .chip-glow {
           position: absolute;
           top: 0;
           left: 0;
           right: 0;
           height: 3px;
-          background: var(--pos-color);
+          background: var(--chip-color);
+          box-shadow: 0 0 20px var(--chip-color);
         }
 
-        .position-card:hover {
-          transform: translateY(-2px);
-          border-color: #3a3a3a;
-        }
-
-        .pos-name {
-          font-size: 14px;
+        .chip-name {
+          font-size: 15px;
           font-weight: 700;
-          color: #e2e8f0;
-          margin-bottom: 6px;
+          color: #e4e4e7;
+          margin-bottom: 8px;
         }
 
-        .pos-bb {
-          font-size: 18px;
+        .chip-bb {
+          font-size: 20px;
           font-weight: 800;
-          color: var(--pos-color);
+          color: var(--chip-color);
           margin-bottom: 4px;
-          font-family: 'SF Mono', monospace;
+          font-family: 'SF Mono', ui-monospace, monospace;
         }
 
-        .pos-hands {
-          font-size: 10px;
-          color: #6b7280;
+        .chip-hands {
+          font-size: 11px;
+          color: #71717a;
         }
 
-        .empty-positions {
+        /* Empty State */
+        .empty-state {
           grid-column: 1 / -1;
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 12px;
-          padding: 40px 20px;
-          color: #6b7280;
+          padding: 48px 24px;
+          color: #52525b;
+        }
+
+        .empty-icon {
+          font-size: 32px;
+          margin-bottom: 12px;
+          opacity: 0.5;
+        }
+
+        .empty-text {
           font-size: 14px;
         }
 
-        .empty-positions .empty-icon {
-          font-size: 24px;
-        }
-
-        .position-insight {
+        /* Insight Banner */
+        .insight-banner {
           display: flex;
           align-items: center;
-          gap: 10px;
-          margin-top: 16px;
-          padding: 12px 14px;
-          background: rgba(234, 179, 8, 0.1);
+          gap: 12px;
+          margin-top: 20px;
+          padding: 16px 20px;
+          background: rgba(234, 179, 8, 0.08);
           border: 1px solid rgba(234, 179, 8, 0.2);
-          border-radius: 8px;
-          font-size: 13px;
+          border-radius: 14px;
+          font-size: 14px;
           color: #fcd34d;
         }
 
-        .insight-icon {
-          font-size: 16px;
+        .insight-banner strong {
+          color: #fef08a;
         }
 
-        .insight-text strong {
-          color: #fde68a;
+        .insight-bulb {
+          font-size: 18px;
         }
 
         /* Leaks List */
         .leaks-list {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 10px;
         }
 
-        .empty-leaks {
+        /* Chart Section */
+        .chart-section {
+          padding: 28px;
+        }
+
+        .chart-container {
+          margin-top: 8px;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+          position: fixed;
+          inset: 0;
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 10px;
-          padding: 40px;
-          color: #6b7280;
+          gap: 16px;
+          background: rgba(0, 0, 0, 0.8);
+          backdrop-filter: blur(10px);
+          z-index: 1000;
+          color: #a1a1aa;
           font-size: 14px;
         }
 
-        .empty-icon {
-          font-size: 20px;
+        .loading-spinner {
+          width: 40px;
+          height: 40px;
+          border: 3px solid rgba(255,255,255,0.1);
+          border-top-color: #8b5cf6;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
         }
 
-        /* Trend Section */
-        .trend-section {
-          padding: 20px;
-          background: linear-gradient(145deg, #1e1e1e, #141414);
-        }
-
-        .trend-chart {
-          margin-top: 10px;
-        }
-
-        /* Loading */
-        .loading-indicator {
-          text-align: center;
-          padding: 20px;
-          color: #6b7280;
-          font-size: 13px;
-          animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
 
         /* Responsive */
         @media (max-width: 1200px) {
-          .stats-row {
+          .stats-grid {
             grid-template-columns: repeat(2, 1fr);
           }
-          .analytics-grid {
+          .content-grid {
             grid-template-columns: 1fr;
-          }
-          .position-grid {
-            grid-template-columns: repeat(3, 1fr);
           }
         }
 
         @media (max-width: 768px) {
-          .analytics-page {
-            padding: 16px;
+          .analytics-premium {
+            padding: 20px;
           }
-          .analytics-header {
+          .premium-header {
             flex-direction: column;
-            gap: 16px;
+            align-items: flex-start;
           }
-          .stats-row {
+          .hero-value {
+            font-size: 48px;
+          }
+          .hero-unit {
+            font-size: 18px;
+          }
+          .stats-grid {
             grid-template-columns: 1fr;
           }
-          .position-grid {
+          .positions-grid {
             grid-template-columns: repeat(2, 1fr);
           }
         }
