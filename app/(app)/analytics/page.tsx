@@ -350,57 +350,28 @@ export default function AnalyticsPage() {
         
         .analytics-premium {
           min-height: 100vh;
-          padding: 32px 40px;
+          padding: 24px 32px;
           position: relative;
-          background: #0a0a0a;
-          overflow: hidden;
+          background: #1c1c1c;
         }
 
-        /* Animated Background */
+        /* Subtle Background Pattern - matches other pages */
         .premium-bg {
           position: absolute;
           inset: 0;
           pointer-events: none;
-          overflow: hidden;
-        }
-
-        .bg-orb {
-          position: absolute;
-          border-radius: 50%;
-          filter: blur(80px);
           opacity: 0.4;
-          animation: float 20s ease-in-out infinite;
         }
 
-        .bg-orb-1 {
-          width: 400px;
-          height: 400px;
-          background: radial-gradient(circle, #6366f1 0%, transparent 70%);
-          top: -100px;
-          left: -100px;
-        }
-
-        .bg-orb-2 {
-          width: 500px;
-          height: 500px;
-          background: radial-gradient(circle, #10b981 0%, transparent 70%);
-          bottom: -150px;
-          right: -150px;
-          animation-delay: -10s;
+        .bg-orb, .bg-orb-1, .bg-orb-2 {
+          display: none;
         }
 
         .bg-grid {
           position: absolute;
           inset: 0;
           background-image: 
-            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-          background-size: 60px 60px;
-        }
-
-        @keyframes float {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(30px, -30px) scale(1.1); }
+            radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.03) 0%, transparent 50%);
         }
 
         /* Premium Header */
@@ -489,12 +460,13 @@ export default function AnalyticsPage() {
 
         .hero-card {
           position: relative;
-          padding: 48px 40px;
-          background: rgba(15, 15, 15, 0.8);
-          border-radius: 24px;
+          padding: 40px 32px;
+          background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+          border-radius: 16px;
           text-align: center;
           overflow: hidden;
-          border: 1px solid rgba(255,255,255,0.08);
+          border: 1px solid #333;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
         .hero-glow {
@@ -576,17 +548,16 @@ export default function AnalyticsPage() {
            ═══════════════════════════════════════════════════════════════════ */
         
         .glass-card {
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 20px;
-          transition: all 0.3s ease;
+          background: linear-gradient(145deg, #1e1e1e, #141414);
+          border: 1px solid #333;
+          border-radius: 12px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+          transition: all 0.2s ease;
         }
 
         .glass-card:hover {
-          border-color: rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.05);
+          border-color: #444;
+          box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.4);
         }
 
         /* Stats Grid */
