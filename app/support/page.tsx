@@ -10,14 +10,22 @@ import Link from 'next/link';
 export default function SupportPage() {
     return (
         <div style={{
-            minHeight: '100vh',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
             background: 'linear-gradient(180deg, #0a0a0a 0%, #111111 100%)',
             color: '#f3f4f6',
-            padding: '40px 20px',
+            overflowY: 'scroll',
+            WebkitOverflowScrolling: 'touch',
+            zIndex: 9999,
         }}>
             <div style={{
                 maxWidth: '600px',
                 margin: '0 auto',
+                padding: '40px 20px',
+                paddingBottom: '100px',
             }}>
                 {/* Header */}
                 <div style={{ textAlign: 'center', marginBottom: '40px' }}>

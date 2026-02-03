@@ -32,15 +32,23 @@ export default function PrivacyPolicyPage() {
 
     return (
         <div style={{
-            minHeight: '100vh',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
             backgroundColor: '#1c1c1c',
             color: '#E2E8F0',
-            padding: '40px 20px',
-            fontFamily: 'system-ui, -apple-system, sans-serif'
+            overflowY: 'scroll',
+            WebkitOverflowScrolling: 'touch',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            zIndex: 9999,
         }}>
             <div style={{
                 maxWidth: '800px',
-                margin: '0 auto'
+                margin: '0 auto',
+                padding: '40px 20px',
+                paddingBottom: '100px',
             }}>
                 <h1 style={{
                     fontSize: '2rem',
