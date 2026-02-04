@@ -12,21 +12,31 @@ interface State {
     hasError: boolean;
     error: Error | null;
     errorInfo: string;
+    retryCount: number;
+    isRetrying: boolean;
 }
 
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 500; // ms
+
 /**
- * AppErrorBoundary - Catches React errors and displays helpful debug info
+ * AppErrorBoundary - Catches React errors with auto-retry
  * 
- * This is especially useful for debugging why the app doesn't load on mobile.
- * When an error occurs:
- * 1. Hides the splash screen (so user can see the error)
- * 2. Displays the error message and stack trace
- * 3. Provides a reload button
+ * Features:
+ * 1. Auto-retries up to 2 times before showing error (handles cold start issues)
+ * 2. Clean user-friendly error UI (no technical details)
+ * 3. Reload button for manual retry
  */
 export default class AppErrorBoundary extends Component<Props, State> {
     constructor(props: Props) {
         super(props);
-        this.state = { hasError: false, error: null, errorInfo: '' };
+        this.state = {
+            hasError: false,
+            error: null,
+            errorInfo: '',
+            retryCount: 0,
+            isRetrying: false,
+        };
     }
 
     static getDerivedStateFromError(error: Error): Partial<State> {
@@ -34,26 +44,83 @@ export default class AppErrorBoundary extends Component<Props, State> {
     }
 
     componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-        // Log to console for debugging
-        console.error('[AppErrorBoundary] React error caught:', error);
-        console.error('[AppErrorBoundary] Component stack:', errorInfo.componentStack);
+        console.error('[AppErrorBoundary] Error:', error.message);
+
+        // Check if we should auto-retry
+        if (this.state.retryCount < MAX_RETRIES) {
+            console.log(`[AppErrorBoundary] Auto-retry ${this.state.retryCount + 1}/${MAX_RETRIES}...`);
+
+            this.setState({
+                isRetrying: true,
+                retryCount: this.state.retryCount + 1,
+            });
+
+            // Delay then reload
+            setTimeout(() => {
+                window.location.reload();
+            }, RETRY_DELAY);
+
+            return;
+        }
+
+        // Max retries reached, show error to user
+        console.error('[AppErrorBoundary] Max retries reached, showing error');
 
         // Hide splash screen so user can see the error
         if (Capacitor.isNativePlatform()) {
             SplashScreen.hide({ fadeOutDuration: 0 }).catch(() => { });
         }
 
-        // Store error info for display
         this.setState({
-            errorInfo: errorInfo.componentStack || 'No component stack available'
+            errorInfo: errorInfo.componentStack || '',
+            isRetrying: false,
         });
     }
 
     handleReload = () => {
+        // Reset retry count and reload
+        this.setState({ retryCount: 0 });
         window.location.reload();
     };
 
     render() {
+        // Show loading state while retrying
+        if (this.state.isRetrying) {
+            return (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: '#0a0a0a',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                }}>
+                    <div style={{ textAlign: 'center', color: '#9ca3af' }}>
+                        <div style={{
+                            width: '40px',
+                            height: '40px',
+                            border: '3px solid #333',
+                            borderTopColor: '#3b82f6',
+                            borderRadius: '50%',
+                            margin: '0 auto 16px',
+                            animation: 'spin 1s linear infinite',
+                        }} />
+                        <p>Loading...</p>
+                        <style>{`
+                            @keyframes spin {
+                                to { transform: rotate(360deg); }
+                            }
+                        `}</style>
+                    </div>
+                </div>
+            );
+        }
+
+        // Show clean error page (no technical details)
         if (this.state.hasError) {
             return (
                 <div style={{
@@ -62,112 +129,48 @@ export default class AppErrorBoundary extends Component<Props, State> {
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    background: '#1c1c1c',
-                    color: '#ef4444',
-                    padding: '20px',
-                    paddingTop: 'max(60px, env(safe-area-inset-top))',
-                    overflowY: 'auto',
+                    background: '#0a0a0a',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
-                    zIndex: 999999,
+                    padding: '20px',
                 }}>
-                    <h1 style={{ fontSize: '24px', marginBottom: '16px', color: '#ef4444' }}>
-                        ⚠️ App Error
-                    </h1>
-
-                    <p style={{ color: '#9ca3af', marginBottom: '16px' }}>
-                        Something went wrong while loading the app. Here's the debug info:
-                    </p>
-
-                    <div style={{
-                        background: '#2a2a2a',
-                        borderRadius: '8px',
-                        padding: '16px',
-                        marginBottom: '16px',
-                    }}>
-                        <h2 style={{ fontSize: '14px', color: '#f59e0b', marginBottom: '8px' }}>
-                            Error Message:
-                        </h2>
-                        <pre style={{
-                            fontSize: '12px',
-                            color: '#ef4444',
-                            whiteSpace: 'pre-wrap',
-                            wordBreak: 'break-word',
-                            margin: 0,
+                    <div style={{ textAlign: 'center', maxWidth: '300px' }}>
+                        <div style={{ fontSize: '48px', marginBottom: '16px' }}>♠️</div>
+                        <h1 style={{
+                            fontSize: '20px',
+                            color: '#f3f4f6',
+                            marginBottom: '12px',
+                            fontWeight: 600,
                         }}>
-                            {this.state.error?.message || 'Unknown error'}
-                        </pre>
-                    </div>
-
-                    <div style={{
-                        background: '#2a2a2a',
-                        borderRadius: '8px',
-                        padding: '16px',
-                        marginBottom: '16px',
-                    }}>
-                        <h2 style={{ fontSize: '14px', color: '#f59e0b', marginBottom: '8px' }}>
-                            Stack Trace:
-                        </h2>
-                        <pre style={{
-                            fontSize: '10px',
+                            Connection Issue
+                        </h1>
+                        <p style={{
                             color: '#9ca3af',
-                            whiteSpace: 'pre-wrap',
-                            wordBreak: 'break-word',
-                            margin: 0,
-                            maxHeight: '200px',
-                            overflowY: 'auto',
+                            marginBottom: '24px',
+                            fontSize: '14px',
+                            lineHeight: 1.5,
                         }}>
-                            {this.state.error?.stack || 'No stack trace available'}
-                        </pre>
+                            Unable to load the app. Please check your connection and try again.
+                        </p>
+                        <button
+                            onClick={this.handleReload}
+                            style={{
+                                width: '100%',
+                                padding: '14px 24px',
+                                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '12px',
+                                fontSize: '16px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            Reload App
+                        </button>
                     </div>
-
-                    <div style={{
-                        background: '#2a2a2a',
-                        borderRadius: '8px',
-                        padding: '16px',
-                        marginBottom: '24px',
-                    }}>
-                        <h2 style={{ fontSize: '14px', color: '#f59e0b', marginBottom: '8px' }}>
-                            Component Stack:
-                        </h2>
-                        <pre style={{
-                            fontSize: '10px',
-                            color: '#9ca3af',
-                            whiteSpace: 'pre-wrap',
-                            wordBreak: 'break-word',
-                            margin: 0,
-                            maxHeight: '150px',
-                            overflowY: 'auto',
-                        }}>
-                            {this.state.errorInfo}
-                        </pre>
-                    </div>
-
-                    <button
-                        onClick={this.handleReload}
-                        style={{
-                            width: '100%',
-                            padding: '16px',
-                            background: '#3b82f6',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontSize: '16px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                        }}
-                    >
-                        Reload App
-                    </button>
-
-                    <p style={{
-                        marginTop: '16px',
-                        fontSize: '12px',
-                        color: '#6b7280',
-                        textAlign: 'center',
-                    }}>
-                        Platform: {Capacitor.getPlatform()} |
-                        Native: {Capacitor.isNativePlatform() ? 'Yes' : 'No'}
-                    </p>
                 </div>
             );
         }
@@ -175,3 +178,4 @@ export default class AppErrorBoundary extends Component<Props, State> {
         return this.props.children;
     }
 }
+
