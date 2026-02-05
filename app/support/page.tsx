@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 /**
@@ -10,7 +9,6 @@ import Link from 'next/link';
  * This page provides users with information on how to get help and contact support.
  */
 export default function SupportPage() {
-    const router = useRouter();
     const [swipeProgress, setSwipeProgress] = useState(0);
     const touchStartX = useRef<number | null>(null);
     const touchStartY = useRef<number | null>(null);
@@ -50,8 +48,8 @@ export default function SupportPage() {
 
     const handleTouchEnd = () => {
         if (swipeProgress >= 100) {
-            // Complete the navigation
-            router.push('/');
+            // Use window.location for navigation to avoid Mobile Safari parallelRoutes error
+            window.location.href = '/';
         }
         // Reset
         touchStartX.current = null;
