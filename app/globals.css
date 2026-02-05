@@ -12759,10 +12759,12 @@ button.mobile-gto-indicator {
 }
 
 .settings-drawer-item-icon {
-    font-size: 18px;
     width: 28px;
-    text-align: center;
-    filter: grayscale(30%);
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .settings-drawer-item-label {

@@ -237,6 +237,200 @@ export const SettingsGearIcon: React.FC<IconProps> = ({ className = '', size = 1
     </svg>
 );
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// SETTINGS DRAWER ICONS - Premium SVG icons for settings menu items
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Version Icon - Phone/Device with version badge
+export const AppVersionIcon: React.FC<IconProps> = ({ className = '', size = 18 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        {/* Phone outline */}
+        <rect x="5" y="2" width="14" height="20" rx="2.5" stroke="currentColor" strokeWidth="1.5" fill="none" />
+        {/* Screen */}
+        <rect x="7" y="5" width="10" height="12" rx="1" fill="currentColor" opacity="0.15" />
+        {/* Home button/notch */}
+        <circle cx="12" cy="19" r="1" fill="currentColor" opacity="0.5" />
+        {/* Version badge - V */}
+        <path
+            d="M10 8l2 5 2-5"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+    </svg>
+);
+
+// Build/Wrench Icon - Wrench tool
+export const WrenchIcon: React.FC<IconProps> = ({ className = '', size = 18 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        {/* Wrench body */}
+        <path
+            d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+        />
+    </svg>
+);
+
+// Chat Bubble Icon - for Help & Support
+export const ChatBubbleIcon: React.FC<IconProps> = ({ className = '', size = 18 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        {/* Chat bubble */}
+        <path
+            d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+        />
+        {/* Dots inside bubble */}
+        <circle cx="9" cy="12" r="1" fill="currentColor" opacity="0.6" />
+        <circle cx="12" cy="12" r="1" fill="currentColor" opacity="0.6" />
+        <circle cx="15" cy="12" r="1" fill="currentColor" opacity="0.6" />
+    </svg>
+);
+
+// Shield Lock Icon - for Privacy
+export const ShieldLockIcon: React.FC<IconProps> = ({ className = '', size = 18 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        {/* Shield */}
+        <path
+            d="M12 2L4 5v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V5l-8-3z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+        />
+        {/* Lock body */}
+        <rect x="9" y="10" width="6" height="5" rx="1" stroke="currentColor" strokeWidth="1.2" fill="none" />
+        {/* Lock shackle */}
+        <path
+            d="M10 10V8a2 2 0 0 1 4 0v2"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            fill="none"
+        />
+        {/* Keyhole */}
+        <circle cx="12" cy="12.5" r="0.8" fill="currentColor" />
+    </svg>
+);
+
+// Door Exit Icon - for Sign Out
+export const DoorExitIcon: React.FC<IconProps> = ({ className = '', size = 18 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        {/* Door frame */}
+        <path
+            d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+        />
+        {/* Arrow */}
+        <path
+            d="M16 17l5-5-5-5"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <path
+            d="M21 12H9"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+        />
+    </svg>
+);
+
+// Trash Warning Icon - for Delete Account
+export const TrashWarningIcon: React.FC<IconProps> = ({ className = '', size = 18 }) => (
+    <svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+    >
+        {/* Trash can body */}
+        <path
+            d="M3 6h18"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+        />
+        <path
+            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+        />
+        {/* Trash lid */}
+        <path
+            d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+        />
+        {/* Warning exclamation */}
+        <path
+            d="M12 10v4"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+        />
+        <circle cx="12" cy="17" r="0.8" fill="currentColor" />
+    </svg>
+);
+
 // Export all icons
 export const PokerIcons = {
     PokerChip: PokerChipIcon,
@@ -245,4 +439,10 @@ export const PokerIcons = {
     StudyBrain: StudyBrainIcon,
     ChipStacks: ChipStacksIcon,
     SettingsGear: SettingsGearIcon,
+    AppVersion: AppVersionIcon,
+    Wrench: WrenchIcon,
+    ChatBubble: ChatBubbleIcon,
+    ShieldLock: ShieldLockIcon,
+    DoorExit: DoorExitIcon,
+    TrashWarning: TrashWarningIcon,
 };
