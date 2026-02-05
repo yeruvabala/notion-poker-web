@@ -12760,11 +12760,18 @@ button.mobile-gto-indicator {
 
 .settings-drawer-item-icon {
     width: 28px;
-    height: 20px;
+    min-width: 28px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
     color: rgba(255, 255, 255, 0.6);
+}
+
+.settings-drawer-item-icon svg {
+    width: 20px;
+    height: 20px;
 }
 
 .settings-drawer-item-label {
@@ -12823,7 +12830,15 @@ button.mobile-gto-indicator {
 }
 
 .settings-drawer-logout-icon {
-    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.settings-drawer-logout-icon svg {
+    width: 20px;
+    height: 20px;
 }
 
 .settings-drawer-logout-text {
@@ -12861,7 +12876,15 @@ button.mobile-gto-indicator {
 }
 
 .settings-drawer-delete-icon {
-    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ef4444;
+}
+
+.settings-drawer-delete-icon svg {
+    width: 20px;
+    height: 20px;
 }
 
 .settings-drawer-delete-text {
