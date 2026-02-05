@@ -69,12 +69,13 @@ export default function AppLoadingOverlay() {
         }
     }, []);
 
-    // Skip the animated overlay UI on landing/support/privacy pages for instant load
-    if (isLandingPage || isStaticPage) {
-        return null;
-    }
-
+    // Main animation/loading logic - only runs for pages that show the overlay
     useEffect(() => {
+        // Skip logic for static pages (landing, support, privacy)
+        if (isLandingPage || isStaticPage) {
+            return;
+        }
+
         debugLog('useEffect started - React component mounted');
         debugLog(`Platform: ${Capacitor.getPlatform()}, Native: ${Capacitor.isNativePlatform()}`);
 
@@ -174,7 +175,13 @@ export default function AppLoadingOverlay() {
             clearTimeout(hideTimer);
             clearTimeout(failsafeTimer);
         };
-    }, []);
+    }, [isLandingPage, isStaticPage]);
+
+    // Skip the animated overlay UI on landing/support/privacy pages for instant load
+    // This must come AFTER all hooks to comply with Rules of Hooks
+    if (isLandingPage || isStaticPage) {
+        return null;
+    }
 
     if (!isVisible) return null;
 
