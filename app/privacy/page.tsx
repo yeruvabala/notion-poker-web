@@ -96,6 +96,7 @@ export default function PrivacyPolicyPage() {
                 WebkitOverflowScrolling: 'touch',
                 fontFamily: 'system-ui, -apple-system, sans-serif',
                 zIndex: 9999,
+                animation: 'none',
             }}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}

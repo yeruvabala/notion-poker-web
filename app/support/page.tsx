@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 /**
@@ -8,19 +10,113 @@ import Link from 'next/link';
  * This page provides users with information on how to get help and contact support.
  */
 export default function SupportPage() {
+    const router = useRouter();
+    const [swipeProgress, setSwipeProgress] = useState(0);
+    const touchStartX = useRef<number | null>(null);
+    const touchStartY = useRef<number | null>(null);
+    const isSwipeGesture = useRef(false);
+
+    // Swipe-from-left gesture to go back
+    const handleTouchStart = (e: React.TouchEvent) => {
+        const touch = e.touches[0];
+        // Only track swipes starting from left edge (first 40px)
+        if (touch.clientX < 40) {
+            touchStartX.current = touch.clientX;
+            touchStartY.current = touch.clientY;
+            isSwipeGesture.current = true;
+        }
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (!isSwipeGesture.current || touchStartX.current === null || touchStartY.current === null) return;
+
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - touchStartX.current;
+        const deltaY = Math.abs(touch.clientY - touchStartY.current);
+
+        // If vertical movement is greater, it's a scroll, not a swipe
+        if (deltaY > 50) {
+            isSwipeGesture.current = false;
+            setSwipeProgress(0);
+            return;
+        }
+
+        // Calculate swipe progress (0-100), threshold is 120px
+        if (deltaX > 0) {
+            const progress = Math.min((deltaX / 120) * 100, 100);
+            setSwipeProgress(progress);
+        }
+    };
+
+    const handleTouchEnd = () => {
+        if (swipeProgress >= 100) {
+            // Complete the navigation
+            router.push('/');
+        }
+        // Reset
+        touchStartX.current = null;
+        touchStartY.current = null;
+        isSwipeGesture.current = false;
+        setSwipeProgress(0);
+    };
+
     return (
-        <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'linear-gradient(180deg, #0a0a0a 0%, #111111 100%)',
-            color: '#f3f4f6',
-            overflowY: 'scroll',
-            WebkitOverflowScrolling: 'touch',
-            zIndex: 9999,
-        }}>
+        <div
+            style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'linear-gradient(180deg, #0a0a0a 0%, #111111 100%)',
+                color: '#f3f4f6',
+                overflowY: 'scroll',
+                WebkitOverflowScrolling: 'touch',
+                zIndex: 9999,
+                animation: 'none',
+            }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+        >
+            {/* Swipe indicator - shows when swiping from left */}
+            {swipeProgress > 0 && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    bottom: 0,
+                    width: '60px',
+                    background: `linear-gradient(90deg, rgba(34, 197, 94, ${swipeProgress / 100 * 0.4}) 0%, transparent 100%)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10000,
+                    pointerEvents: 'none',
+                }}>
+                    <div style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        background: `rgba(34, 197, 94, ${swipeProgress / 100})`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transform: `scale(${0.5 + swipeProgress / 200})`,
+                        opacity: swipeProgress / 100,
+                        boxShadow: swipeProgress >= 100 ? '0 0 20px rgba(34, 197, 94, 0.8)' : 'none',
+                    }}>
+                        <span style={{
+                            color: '#fff',
+                            fontSize: '20px',
+                            fontWeight: 'bold',
+                        }}>
+                            ←
+                        </span>
+                    </div>
+                </div>
+            )}
+
             <div style={{
                 maxWidth: '600px',
                 margin: '0 auto',
@@ -172,3 +268,4 @@ export default function SupportPage() {
         </div>
     );
 }
+
