@@ -53,8 +53,9 @@ export default function AppLoadingOverlay() {
     const [loadingTimeout, setLoadingTimeout] = useState(false);
     const [debugLogs, setDebugLogs] = useState<string[]>([]);
 
-    // For landing page: remove instant overlays immediately but skip the animation
+    // For landing, support, and privacy pages: remove instant overlays immediately but skip the animation
     const isLandingPage = pathname === '/landing';
+    const isStaticPage = pathname === '/support' || pathname === '/privacy';
 
     // Remove instant overlays on mount (needed for all pages including landing)
     useEffect(() => {
@@ -68,8 +69,8 @@ export default function AppLoadingOverlay() {
         }
     }, []);
 
-    // Skip the animated overlay UI on landing page for instant load
-    if (isLandingPage) {
+    // Skip the animated overlay UI on landing/support/privacy pages for instant load
+    if (isLandingPage || isStaticPage) {
         return null;
     }
 
