@@ -125,16 +125,18 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
             {/* Drawer */}
             <div className={`settings-drawer ${isOpen ? 'open' : ''}`}>
 
-                {/* Profile Section */}
+                {/* Profile Section - Premium redesign */}
                 <div className="settings-drawer-profile">
-                    <div className="settings-profile-avatar">
-                        <span className="settings-profile-initial">
-                            {userEmail ? userEmail[0].toUpperCase() : '?'}
-                        </span>
+                    <div className="settings-profile-avatar-ring">
+                        <div className="settings-profile-avatar">
+                            <span className="settings-profile-initial">
+                                {userEmail ? userEmail[0].toUpperCase() : '?'}
+                            </span>
+                        </div>
                     </div>
                     <div className="settings-profile-info">
                         <span className="settings-profile-email">{userEmail || 'Loading...'}</span>
-                        <span className="settings-profile-plan">Pro Player</span>
+                        <span className="settings-profile-member">♠️ Member</span>
                     </div>
                 </div>
 
@@ -144,10 +146,12 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
                     <div className="settings-drawer-section">
                         <div className="settings-drawer-section-title">About</div>
                         <div className="settings-drawer-item">
+                            <span className="settings-drawer-item-icon">📱</span>
                             <span className="settings-drawer-item-label">Version</span>
                             <span className="settings-drawer-item-value">1.0.0</span>
                         </div>
                         <div className="settings-drawer-item">
+                            <span className="settings-drawer-item-icon">🔧</span>
                             <span className="settings-drawer-item-label">Build</span>
                             <span className="settings-drawer-item-value">Production</span>
                         </div>
@@ -158,19 +162,21 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
                         <div className="settings-drawer-section-title">Support & Legal</div>
                         <a
                             href="/support"
-                            className="settings-drawer-item"
-                            style={{ textDecoration: 'none', cursor: 'pointer' }}
+                            className="settings-drawer-item settings-drawer-item-link"
+                            onClick={() => haptic()}
                         >
+                            <span className="settings-drawer-item-icon">💬</span>
                             <span className="settings-drawer-item-label">Help & Support</span>
-                            <span className="settings-drawer-item-value" style={{ color: '#9ca3af' }}>→</span>
+                            <span className="settings-drawer-item-arrow">→</span>
                         </a>
                         <a
                             href="/privacy"
-                            className="settings-drawer-item"
-                            style={{ textDecoration: 'none', cursor: 'pointer' }}
+                            className="settings-drawer-item settings-drawer-item-link"
+                            onClick={() => haptic()}
                         >
+                            <span className="settings-drawer-item-icon">🔒</span>
                             <span className="settings-drawer-item-label">Privacy Policy</span>
-                            <span className="settings-drawer-item-value" style={{ color: '#9ca3af' }}>→</span>
+                            <span className="settings-drawer-item-arrow">→</span>
                         </a>
                     </div>
 
@@ -182,6 +188,7 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
                             onClick={handleSignOut}
                             disabled={loading}
                         >
+                            <span className="settings-drawer-logout-icon">🚪</span>
                             <span className="settings-drawer-logout-text">
                                 {loading ? 'Signing out...' : 'Sign Out'}
                             </span>
@@ -189,30 +196,24 @@ export default function SettingsDrawer({ isOpen, onClose }: SettingsDrawerProps)
 
                         {/* Delete Account Button */}
                         <button
+                            className="settings-drawer-delete"
                             onClick={() => setShowDeleteConfirm(true)}
                             disabled={deleting}
-                            style={{
-                                width: '100%',
-                                padding: '14px 16px',
-                                marginTop: '12px',
-                                background: 'transparent',
-                                border: '1px solid #dc2626',
-                                borderRadius: '12px',
-                                color: '#dc2626',
-                                fontSize: '16px',
-                                fontWeight: 600,
-                                cursor: deleting ? 'not-allowed' : 'pointer',
-                                opacity: deleting ? 0.5 : 1,
-                            }}
                         >
-                            {deleting ? 'Deleting...' : 'Delete Account'}
+                            <span className="settings-drawer-delete-icon">⚠️</span>
+                            <span className="settings-drawer-delete-text">
+                                {deleting ? 'Deleting...' : 'Delete Account'}
+                            </span>
                         </button>
                     </div>
                 </div>
 
-                {/* Footer */}
+                {/* Footer - Premium poker themed */}
                 <div className="settings-drawer-footer">
-                    <span>Made with ♠️ by Only Poker</span>
+                    <div className="settings-footer-suits">
+                        <span>♠</span><span>♥</span><span>♦</span><span>♣</span>
+                    </div>
+                    <span className="settings-footer-text">Only Poker</span>
                 </div>
             </div>
 
