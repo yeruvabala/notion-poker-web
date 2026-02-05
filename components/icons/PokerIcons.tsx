@@ -250,6 +250,7 @@ export const AppVersionIcon: React.FC<IconProps> = ({ className = '', size = 18 
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className={className}
+        style={{ display: 'block', color: 'inherit' }}
     >
         {/* Phone outline */}
         <rect x="5" y="2" width="14" height="20" rx="2.5" stroke="currentColor" strokeWidth="1.5" fill="none" />
@@ -277,6 +278,7 @@ export const WrenchIcon: React.FC<IconProps> = ({ className = '', size = 18 }) =
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className={className}
+        style={{ display: 'block', color: 'inherit' }}
     >
         {/* Wrench body */}
         <path
@@ -299,6 +301,7 @@ export const ChatBubbleIcon: React.FC<IconProps> = ({ className = '', size = 18 
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className={className}
+        style={{ display: 'block', color: 'inherit' }}
     >
         {/* Chat bubble */}
         <path
@@ -325,6 +328,7 @@ export const ShieldLockIcon: React.FC<IconProps> = ({ className = '', size = 18 
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className={className}
+        style={{ display: 'block', color: 'inherit' }}
     >
         {/* Shield */}
         <path
@@ -359,6 +363,7 @@ export const DoorExitIcon: React.FC<IconProps> = ({ className = '', size = 18 })
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className={className}
+        style={{ display: 'block', color: 'inherit' }}
     >
         {/* Door frame */}
         <path
@@ -395,6 +400,7 @@ export const TrashWarningIcon: React.FC<IconProps> = ({ className = '', size = 1
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className={className}
+        style={{ display: 'block', color: 'inherit' }}
     >
         {/* Trash can body */}
         <path
