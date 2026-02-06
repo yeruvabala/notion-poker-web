@@ -499,59 +499,11 @@ export default function MobileStudyPage() {
                     {error && <div className="study-error">{error}</div>}
                 </div>
 
-                {/* My Notes Section */}
+                {/* NOTE: My Notes section temporarily removed - restore when ready
                 <div className="study-notes-section">
-                    <button
-                        className="notes-toggle"
-                        onClick={() => { haptic(); setShowNotes(!showNotes); }}
-                    >
-                        <NoteIcon size={16} />
-                        <span>My Notes</span>
-                        <span className="notes-count">{notes.length}</span>
-                        <span className="notes-arrow">{showNotes ? '▲' : '▼'}</span>
-                    </button>
-
-                    {showNotes && (
-                        <div className="notes-panel">
-                            <div className="note-input-row">
-                                <textarea
-                                    className="note-textarea"
-                                    placeholder="Add a study note (e.g., leaks, reminders, concepts)..."
-                                    value={noteInput}
-                                    onChange={(e) => setNoteInput(e.target.value)}
-                                    rows={2}
-                                />
-                                <button
-                                    className="save-note-btn"
-                                    onClick={handleSaveNote}
-                                    disabled={savingNote || noteInput.length < 10}
-                                >
-                                    {savingNote ? '...' : '💾'}
-                                </button>
-                            </div>
-
-                            {notes.length > 0 && (
-                                <div className="notes-list">
-                                    {notes.slice(0, 5).map((note) => (
-                                        <div key={note.id} className="note-item">
-                                            <span className="note-content">{note.content.slice(0, 100)}{note.content.length > 100 ? '...' : ''}</span>
-                                            <button
-                                                className="delete-note-btn"
-                                                onClick={() => handleDeleteNote(note.id)}
-                                            >
-                                                ✕
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {notes.length === 0 && (
-                                <div className="notes-empty">No notes yet. Add your first study note above!</div>
-                            )}
-                        </div>
-                    )}
+                    ... notes UI code ...
                 </div>
+                */}
             </div>
 
             {/* Streaming Status & Text Display */}
