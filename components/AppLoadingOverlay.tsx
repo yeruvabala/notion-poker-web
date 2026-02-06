@@ -79,12 +79,10 @@ export default function AppLoadingOverlay() {
         debugLog('useEffect started - React component mounted');
         debugLog(`Platform: ${Capacitor.getPlatform()}, Native: ${Capacitor.isNativePlatform()}`);
 
-        // Read pattern index from server (set in layout.tsx)
-        const serverPatternIndex = typeof window !== 'undefined'
-            ? (window.__PATTERN_INDEX__ ?? 0)
-            : 0;
-        setPatternIndex(serverPatternIndex);
-        debugLog(`Pattern index set: ${serverPatternIndex}`);
+        // Generate random pattern client-side (avoids hydration mismatch)
+        const randomPatternIndex = Math.floor(Math.random() * 17);
+        setPatternIndex(randomPatternIndex);
+        debugLog(`Pattern index set: ${randomPatternIndex}`);
 
         // Remove the instant overlay now that React is ready
         const instantOverlay = document.getElementById('__instant-overlay');

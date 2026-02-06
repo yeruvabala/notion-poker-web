@@ -4,7 +4,6 @@ import NativeAppDetector from '@/components/NativeAppDetector';
 import AppLoadingOverlay from '@/components/AppLoadingOverlay';
 import AppErrorBoundary from '@/components/AppErrorBoundary';
 import { Inter } from 'next/font/google';
-import { SCATTER_PATTERNS } from '@/lib/loadingSymbols';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -34,8 +33,6 @@ export const viewport = {
 const BG_COLOR = '#1c1c1c';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  // Pick a random pattern (0-16) on each page load
-  const patternIndex = Math.floor(Math.random() * SCATTER_PATTERNS.length);
 
   return (
     <html lang="en" className={inter.variable} style={{ background: BG_COLOR }}>
@@ -73,8 +70,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           #__js-failed-overlay .debug-box { background: #2a2a2a; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
           #__js-failed-overlay code { font-size: 11px; color: #3b82f6; }
         `}} />
-        {/* Pass pattern index to React via global variable */}
-        <script dangerouslySetInnerHTML={{ __html: `window.__PATTERN_INDEX__=${patternIndex};` }} />
       </head>
       <body className="min-h-screen bg-[#1c1c1c] text-[#E2E8F0] antialiased" style={{ background: BG_COLOR }}>
         {/* Just dark overlay - React will fade in the symbols */}
@@ -103,7 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </p>
           </div>
           <div className="debug-box">
-            <code>Timestamp: {new Date().toISOString()}</code>
+            <code suppressHydrationWarning>Timestamp: {new Date().toISOString()}</code>
           </div>
         </div>
 
